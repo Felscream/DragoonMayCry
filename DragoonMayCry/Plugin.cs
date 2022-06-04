@@ -1,8 +1,12 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Reflection;
+using System.Xml.Linq;
+
 using Dalamud.Game;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Command;
+using Dalamud.Game.Gui;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
@@ -20,6 +24,7 @@ namespace DragoonMayCry
         private CommandManager CommandManager { get; init; }
         private Configuration Configuration { get; init; }
         private PluginUI PluginUi { get; init; }
+        private ChatGui ChatGui { get; init; }
         private Framework Framework { get; init; }
         private Condition Condition { get; init; }
         private AudioHandler AudioHandler { get; init; }
@@ -29,18 +34,24 @@ namespace DragoonMayCry
         private string bgmPath;
 
 
-        public DragoonMayCry(DalamudPluginInterface pluginInterface, CommandManager commandManager, Framework frameworkP, Condition conditionP)
+        public DragoonMayCry(DalamudPluginInterface pluginInterface, CommandManager commandManager, Framework frameworkP, Condition conditionP, ChatGui ChatGuiP)
         {
             PluginInterface = pluginInterface;
             CommandManager = commandManager;
+            ChatGui = ChatGuiP;
             Framework = frameworkP;
             Condition = conditionP;
 
-            bgmPath = new(Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "cerberus.wav"));
+            bgmPath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "cerberus.wav");
+            PluginLog.Debug(bgmPath);
             AudioHandler = new(bgmPath, "", "", "", "", "", "", "");
+            
             this.Configuration = this.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             this.Configuration.Initialize(this.PluginInterface);
-
+            AudioHandler.SFXVolume = Configuration.SFXVolume;
+            CommandManager.AddHandler(commandName, new CommandInfo(OnCommand) {
+                HelpMessage = "Used to control the volume of the audio using \"bgm 0-100\" or \"sfx 0-100\""
+            });
             // you might normally want to embed resources and load them from the manifest stream
             /*var imagePath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "goat.png");
             var goatImage = this.PluginInterface.UiBuilder.LoadImage(imagePath);
@@ -62,35 +73,61 @@ namespace DragoonMayCry
             this.CommandManager.RemoveHandler(commandName);
         }
 
-        private void OnCommand(string command, string args)
-        {
-            // in response to the slash command, just display our main ui
-            this.PluginUi.Visible = true;
-        }
-
-        private void DrawUI()
-        {
-            this.PluginUi.Draw();
-        }
-
-        private void DrawConfigUI()
-        {
-            this.PluginUi.SettingsVisible = true;
-        }
-
         private void OnFrameWorkUpdate(Framework framework) {
             var inCombat = Condition[ConditionFlag.InCombat];
-            if (inCombat && !lastUpdateInCombat) {
-                // start BGM
-                PluginLog.Debug("Combat started");
-                AudioHandler.PlaySound(AudioTrigger.CombatStart);
-            } else if (lastUpdateInCombat && !inCombat) {
-                // stop BGM
-                PluginLog.Debug("Combat ended");
+            if (inCombat == lastUpdateInCombat) { 
+                return;
+            }
+            
+            lastUpdateInCombat = inCombat;
+            PluginLog.Debug($"lastUpdateInCombat = {lastUpdateInCombat}, inCombat = {inCombat}");
+            if (inCombat) {
+                PluginLog.Debug("Entering combat");
+                AudioHandler.PlayBGM();
+            } else { 
+                PluginLog.Debug("Leaving Combat");
                 AudioHandler.StopBGM();
             }
+                
+             
+        }
 
-            lastUpdateInCombat = inCombat;
+        private void SetSFX(string volume) {
+            try {
+                var newVol = int.Parse(volume) / 100f;
+                PluginLog.Debug($"{Name}: Setting sfx volume to {newVol}");
+                this.AudioHandler.SFXVolume = newVol;
+                this.Configuration.SFXVolume = newVol;
+                this.ChatGui.Print($"SFX Volume set to {volume}%");
+            } catch (Exception) {
+                ChatGui.PrintError("Please use a number between 0-100");
+            }
+        }
+
+        private void OnCommand(string command, string args) {
+            PluginLog.Debug("{Command} - {Args}", command, args);
+            var argList = args.Split(' ');
+
+            PluginLog.Debug(argList.Length.ToString());
+
+            if (argList.Length == 0)
+                return;
+
+
+            switch (argList[0]) {
+                case "sfx":
+                    if (argList.Length != 2)
+                        return;
+                    SetSFX(argList[1]);
+                    break;
+                case "":
+                    ChatGui.PrintError("Please use \"/bgm vol <num>\" to control volume");
+                    break;
+                default:
+                    break;
+            }
         }
     }
+
+   
 }

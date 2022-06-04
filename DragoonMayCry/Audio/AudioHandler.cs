@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
-
+using Dalamud.Logging;
 namespace DragoonMayCry.Audio
 {
     public enum AudioTrigger
     {
-        CombatStart,
+        BGM,
         D,
         C,
         B,
@@ -62,15 +62,39 @@ namespace DragoonMayCry.Audio
         public WaveFormat WaveFormat { get { return cachedSound.WaveFormat; } }
     }
 
+    class AutoDisposeFileReader : ISampleProvider {
+        private readonly AudioFileReader reader;
+        private bool isDisposed;
+        public AutoDisposeFileReader(AudioFileReader reader) {
+            this.reader = reader;
+            this.WaveFormat = reader.WaveFormat;
+        }
+
+        public int Read(float[] buffer, int offset, int count) {
+            if (isDisposed)
+                return 0;
+            int read = reader.Read(buffer, offset, count);
+            if (read == 0) {
+                reader.Dispose();
+                isDisposed = true;
+            }
+            return read;
+        }
+
+        public WaveFormat WaveFormat { get; private set; }
+    }
+
     public class AudioHandler
     {
         private readonly IWavePlayer outputDevice;
+        private readonly IWavePlayer bgmOutputDevice;
         private readonly Dictionary<AudioTrigger, CachedSound> sounds;
         private readonly VolumeSampleProvider sampleProvider;
         private readonly MixingSampleProvider mixer;
-        private bool bgmPlaying;
+        private ISampleProvider bgmSampleProvider;
+        private string bgmPath;
 
-        public float Volume
+        public float SFXVolume
         {
             get => sampleProvider.Volume;
             set
@@ -83,18 +107,15 @@ namespace DragoonMayCry.Audio
         public AudioHandler(string combatMusic, string dAnnouncer, string cAnnouncer, string bAnnouncer, string aAnnouncer, string sAnnouncer, string ssAnnouncer, string sssAnnouncer)
         {
             outputDevice = new WaveOutEvent();
+            bgmOutputDevice = new WaveOutEvent();
             sounds = new Dictionary<AudioTrigger, CachedSound>();
-            sounds.Add(AudioTrigger.CombatStart, new(combatMusic));
-            sounds.Add(AudioTrigger.D, new(dAnnouncer));
-            sounds.Add(AudioTrigger.C, new(cAnnouncer));
-            sounds.Add(AudioTrigger.B, new(bAnnouncer));
-            sounds.Add(AudioTrigger.A, new(aAnnouncer));
-            sounds.Add(AudioTrigger.S, new(sAnnouncer));
-            sounds.Add(AudioTrigger.SS, new(ssAnnouncer));
-            sounds.Add(AudioTrigger.SSS, new(sssAnnouncer));
-            mixer = new(WaveFormat.CreateIeeeFloatWaveFormat(48000, 2));
+            //sounds.Add(AudioTrigger.BGM, new(combatMusic));
+            mixer = new(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2));
             mixer.ReadFully = true;
+
+            bgmPath = combatMusic;
             sampleProvider = new(mixer);
+
             outputDevice.Init(sampleProvider);
             outputDevice.Play();
         }
@@ -113,22 +134,27 @@ namespace DragoonMayCry.Audio
         }
 
 
-        private void AddMixerInput(ISampleProvider input)
+        private ISampleProvider AddMixerInput(ISampleProvider input)
         {
-            mixer.AddMixerInput(ConvertToRightChannelCount(input));
+            ISampleProvider mixerInput = ConvertToRightChannelCount(input);
+            mixer.AddMixerInput(mixerInput);
+            return mixerInput;
         }
 
         public void PlaySound(AudioTrigger trigger)
         {
             AddMixerInput(new CachedSoundSampleProvider(sounds[trigger]));
-            bgmPlaying = trigger == AudioTrigger.CombatStart || bgmPlaying;
         }
 
+
+        public void PlayBGM() {
+            var input = new AudioFileReader(bgmPath);
+            bgmSampleProvider = AddMixerInput(new AutoDisposeFileReader(input));
+            PluginLog.Debug("Playing BGM");
+        }
         public void StopBGM() {
-            if (bgmPlaying) {
-                mixer.RemoveMixerInput(ConvertToRightChannelCount(new CachedSoundSampleProvider((sounds[AudioTrigger.CombatStart]))));
-            }
+            mixer.RemoveMixerInput(bgmSampleProvider);
+            PluginLog.Debug("Stopping BGM");
         }
-
     }
 }
