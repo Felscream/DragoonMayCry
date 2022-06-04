@@ -36,7 +36,7 @@ namespace DragoonMayCry
             Framework = frameworkP;
             Condition = conditionP;
 
-            bgmPath = new(Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "cerberus.mp3"));
+            bgmPath = new(Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "cerberus.wav"));
             AudioHandler = new(bgmPath, "", "", "", "", "", "", "");
             this.Configuration = this.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             this.Configuration.Initialize(this.PluginInterface);

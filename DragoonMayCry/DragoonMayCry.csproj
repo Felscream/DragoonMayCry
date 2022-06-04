@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-	  <Content Include="..\Data\cerberus.mp3">
+	  <Content Include="..\Data\cerberus.wav">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		  <Visible>false</Visible>
 	  </Content>
@@ -33,9 +33,9 @@
 
   <ItemGroup>
     <PackageReference Include="DalamudPackager" Version="2.1.6" />
-    <PackageReference Include="System.Windows.Extensions" Version="6.0.0" />
-    <PackageReference Include="System.ComponentModel.EventBasedAsync" Version="4.3.0" />
     <PackageReference Include="NAudio" Version="2.1.0" />
+    <PackageReference Include="System.ComponentModel.EventBasedAsync" Version="4.3.0" />
+    <PackageReference Include="System.Windows.Extensions" Version="6.0.0" />
     <Reference Include="FFXIVClientStructs">
       <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
       <Private>false</Private>
