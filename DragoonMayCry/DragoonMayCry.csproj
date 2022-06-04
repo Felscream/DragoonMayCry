@@ -17,17 +17,18 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="..\Data\goat.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Visible>false</Visible>
-    </Content>
+	  <Content Include="..\Data\cerberus.mp3">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		  <Visible>false</Visible>
+	  </Content>
   </ItemGroup>
 
   <PropertyGroup>
-    <DalamudLibPath>/home/felscream/Projects/XIVLauncherPlugins/XIVLauncher/addon/Hooks/dev/</DalamudLibPath>
+	  <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
   </PropertyGroup>
 
   <ItemGroup>

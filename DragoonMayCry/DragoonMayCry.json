@@ -1,13 +1,12 @@
 {
-  "Author": "your name here",
-  "Name": "Sample Plugin",
+  "Author": "Felscream",
+  "Name": "Dragoon May Cry",
   "Punchline": "A short one-liner that shows up in /xlplugins.",
   "Description": "A description that shows up in /xlplugins. List any major slash-command(s).",
-  "InternalName": "samplePlugin",
+  "InternalName": "dragoonMayCry",
   "ApplicableVersion": "any",
   "Tags": [
-    "sample",
-    "plugin",
-    "goats"
+    "combat",
+    "music"
   ]
 }

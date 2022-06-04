@@ -1,13 +1,17 @@
-﻿using Dalamud.Game.Command;
-using Dalamud.IoC;
-using Dalamud.Plugin;
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
+using Dalamud.Game;
+using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.Command;
+using Dalamud.IoC;
+using Dalamud.Logging;
+using Dalamud.Plugin;
+using DragoonMayCry.Audio;
+using Condition = Dalamud.Game.ClientState.Conditions.Condition;
 
 namespace DragoonMayCry
 {
-    public sealed class Plugin : IDalamudPlugin
-    {
+    public class DragoonMayCry : IDalamudPlugin {
         public string Name => "Dragoon May Cry";
 
         private const string commandName = "/dmc";
@@ -16,14 +20,24 @@ namespace DragoonMayCry
         private CommandManager CommandManager { get; init; }
         private Configuration Configuration { get; init; }
         private PluginUI PluginUi { get; init; }
+        private Framework Framework { get; init; }
+        private Condition Condition { get; init; }
+        private AudioHandler AudioHandler { get; init; }
 
-        public Plugin(
-            [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
-            [RequiredVersion("1.0")] CommandManager commandManager)
+        private bool lastUpdateInCombat;
+
+        private string bgmPath;
+
+
+        public DragoonMayCry(DalamudPluginInterface pluginInterface, CommandManager commandManager, Framework frameworkP, Condition conditionP)
         {
-            this.PluginInterface = pluginInterface;
-            this.CommandManager = commandManager;
+            PluginInterface = pluginInterface;
+            CommandManager = commandManager;
+            Framework = frameworkP;
+            Condition = conditionP;
 
+            bgmPath = new(Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "cerberus.mp3"));
+            AudioHandler = new(bgmPath, "", "", "", "", "", "", "");
             this.Configuration = this.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             this.Configuration.Initialize(this.PluginInterface);
 
@@ -39,6 +53,7 @@ namespace DragoonMayCry
 
             //this.PluginInterface.UiBuilder.Draw += DrawUI;
             //this.PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
+            Framework.Update += OnFrameWorkUpdate;
         }
 
         public void Dispose()
@@ -61,6 +76,21 @@ namespace DragoonMayCry
         private void DrawConfigUI()
         {
             this.PluginUi.SettingsVisible = true;
+        }
+
+        private void OnFrameWorkUpdate(Framework framework) {
+            var inCombat = Condition[ConditionFlag.InCombat];
+            if (inCombat && !lastUpdateInCombat) {
+                // start BGM
+                PluginLog.Debug("Combat started");
+                AudioHandler.PlaySound(AudioTrigger.CombatStart);
+            } else if (lastUpdateInCombat && !inCombat) {
+                // stop BGM
+                PluginLog.Debug("Combat ended");
+                AudioHandler.StopBGM();
+            }
+
+            lastUpdateInCombat = inCombat;
         }
     }
 }

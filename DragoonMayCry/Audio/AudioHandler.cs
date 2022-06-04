@@ -4,11 +4,18 @@ using System.Linq;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
-namespace EldenRing.Audio
+namespace DragoonMayCry.Audio
 {
     public enum AudioTrigger
     {
-        Death
+        CombatStart,
+        D,
+        C,
+        B,
+        A,
+        S,
+        SS,
+        SSS
     }
 
     // Cached sound concept lovingly borrowed from: https://markheath.net/post/fire-and-forget-audio-playback-with
@@ -61,6 +68,7 @@ namespace EldenRing.Audio
         private readonly Dictionary<AudioTrigger, CachedSound> sounds;
         private readonly VolumeSampleProvider sampleProvider;
         private readonly MixingSampleProvider mixer;
+        private bool bgmPlaying;
 
         public float Volume
         {
@@ -68,15 +76,22 @@ namespace EldenRing.Audio
             set
             {
                 sampleProvider.Volume = value;
-                
+
             }
         }
 
-        public AudioHandler(string deathPath)
+        public AudioHandler(string combatMusic, string dAnnouncer, string cAnnouncer, string bAnnouncer, string aAnnouncer, string sAnnouncer, string ssAnnouncer, string sssAnnouncer)
         {
             outputDevice = new WaveOutEvent();
             sounds = new Dictionary<AudioTrigger, CachedSound>();
-            sounds.Add(AudioTrigger.Death, new(deathPath));
+            sounds.Add(AudioTrigger.CombatStart, new(combatMusic));
+            sounds.Add(AudioTrigger.D, new(dAnnouncer));
+            sounds.Add(AudioTrigger.C, new(cAnnouncer));
+            sounds.Add(AudioTrigger.B, new(bAnnouncer));
+            sounds.Add(AudioTrigger.A, new(aAnnouncer));
+            sounds.Add(AudioTrigger.S, new(sAnnouncer));
+            sounds.Add(AudioTrigger.SS, new(ssAnnouncer));
+            sounds.Add(AudioTrigger.SSS, new(sssAnnouncer));
             mixer = new(WaveFormat.CreateIeeeFloatWaveFormat(48000, 2));
             mixer.ReadFully = true;
             sampleProvider = new(mixer);
@@ -106,7 +121,14 @@ namespace EldenRing.Audio
         public void PlaySound(AudioTrigger trigger)
         {
             AddMixerInput(new CachedSoundSampleProvider(sounds[trigger]));
+            bgmPlaying = trigger == AudioTrigger.CombatStart || bgmPlaying;
         }
-        
+
+        public void StopBGM() {
+            if (bgmPlaying) {
+                mixer.RemoveMixerInput(ConvertToRightChannelCount(new CachedSoundSampleProvider((sounds[AudioTrigger.CombatStart]))));
+            }
+        }
+
     }
 }
