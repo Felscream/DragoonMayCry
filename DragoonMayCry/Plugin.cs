@@ -69,8 +69,13 @@ namespace DragoonMayCry
 
         public void Dispose()
         {
-            this.PluginUi.Dispose();
-            this.CommandManager.RemoveHandler(commandName);
+            if (lastUpdateInCombat) {
+                AudioHandler.StopBGM();
+            }
+            CommandManager.RemoveHandler(commandName);
+            Framework.Update -= OnFrameWorkUpdate;
+
+            Configuration.Save();
         }
 
         private void OnFrameWorkUpdate(Framework framework) {

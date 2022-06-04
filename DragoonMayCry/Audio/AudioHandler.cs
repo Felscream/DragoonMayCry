@@ -62,36 +62,13 @@ namespace DragoonMayCry.Audio
         public WaveFormat WaveFormat { get { return cachedSound.WaveFormat; } }
     }
 
-    class AutoDisposeFileReader : ISampleProvider {
-        private readonly AudioFileReader reader;
-        private bool isDisposed;
-        public AutoDisposeFileReader(AudioFileReader reader) {
-            this.reader = reader;
-            this.WaveFormat = reader.WaveFormat;
-        }
-
-        public int Read(float[] buffer, int offset, int count) {
-            if (isDisposed)
-                return 0;
-            int read = reader.Read(buffer, offset, count);
-            if (read == 0) {
-                reader.Dispose();
-                isDisposed = true;
-            }
-            return read;
-        }
-
-        public WaveFormat WaveFormat { get; private set; }
-    }
-
     public class AudioHandler
     {
         private readonly IWavePlayer outputDevice;
-        private readonly IWavePlayer bgmOutputDevice;
         private readonly Dictionary<AudioTrigger, CachedSound> sounds;
         private readonly VolumeSampleProvider sampleProvider;
         private readonly MixingSampleProvider mixer;
-        private ISampleProvider bgmSampleProvider;
+        private ISampleProvider? bgmLoopStream;
         private string bgmPath;
 
         public float SFXVolume
@@ -107,7 +84,6 @@ namespace DragoonMayCry.Audio
         public AudioHandler(string combatMusic, string dAnnouncer, string cAnnouncer, string bAnnouncer, string aAnnouncer, string sAnnouncer, string ssAnnouncer, string sssAnnouncer)
         {
             outputDevice = new WaveOutEvent();
-            bgmOutputDevice = new WaveOutEvent();
             sounds = new Dictionary<AudioTrigger, CachedSound>();
             //sounds.Add(AudioTrigger.BGM, new(combatMusic));
             mixer = new(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2));
@@ -133,7 +109,6 @@ namespace DragoonMayCry.Audio
             throw new NotImplementedException("Not yet implemented this channel count conversion");
         }
 
-
         private ISampleProvider AddMixerInput(ISampleProvider input)
         {
             ISampleProvider mixerInput = ConvertToRightChannelCount(input);
@@ -146,14 +121,15 @@ namespace DragoonMayCry.Audio
             AddMixerInput(new CachedSoundSampleProvider(sounds[trigger]));
         }
 
-
         public void PlayBGM() {
-            var input = new AudioFileReader(bgmPath);
-            bgmSampleProvider = AddMixerInput(new AutoDisposeFileReader(input));
+            var input = new LoopStream(new AudioFileReader(bgmPath));
+            FadeInOutSampleProvider sample = new FadeInOutSampleProvider(input.ToSampleProvider(), true);
+            sample.BeginFadeIn(4000);
+            bgmLoopStream = AddMixerInput(sample);
             PluginLog.Debug("Playing BGM");
         }
         public void StopBGM() {
-            mixer.RemoveMixerInput(bgmSampleProvider);
+            ((FadeInOutSampleProvider)bgmLoopStream).BeginFadeOut(4000);
             PluginLog.Debug("Stopping BGM");
         }
     }

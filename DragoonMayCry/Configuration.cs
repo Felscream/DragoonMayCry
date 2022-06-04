@@ -9,9 +9,9 @@ namespace DragoonMayCry
     {
         public int Version { get; set; } = 0;
 
-        public float SFXVolume { get; set; } = 1;
+        public float SFXVolume { get; set; } = 0.2f;
 
-        public float BGMVolume { get; set; } = 1;
+        public float BGMVolume { get; set; } = 0.2f;
 
         public bool SomePropertyToBeSavedAndWithADefault { get; set; } = true;
 
