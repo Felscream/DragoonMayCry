@@ -70,7 +70,7 @@ namespace DragoonMayCry
             Framework = frameworkP;
             Condition = conditionP;
             clientState = client;
-            partyList = partyList;
+            PartyList = partyList;
 
             string bgmPath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "cerberus.wav");
             string dAnnouncerPath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "dead_weight.wav");
@@ -171,7 +171,7 @@ namespace DragoonMayCry
             DragoonMayCryUI.CurrentRank = currentStyle;
             if (!currenlyInCombat) { return; }
 
-            if (died && currentStyle.StyleType == StyleType.D || previousStyle.NextStyle != null && previousStyle.NextStyle.Equals(currentStyle)) {
+            if (died && currentStyle.StyleType == StyleType.D || previousStyle.NextStyle != null && previousStyle.NextStyle.Equals(currentStyle) && currentStyle.StyleType != StyleType.D) {
                 AudioHandler.PlaySFX(currentStyle.StyleType);
             }
         }

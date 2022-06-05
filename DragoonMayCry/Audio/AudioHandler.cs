@@ -131,11 +131,10 @@ namespace DragoonMayCry.Audio
             throw new NotImplementedException("Not yet implemented this channel count conversion");
         }
 
-        private ISampleProvider AddSFXMixerInput(ISampleProvider input)
+        private void AddSFXMixerInput(ISampleProvider input)
         {
             ISampleProvider mixerInput = ConvertToRightChannelCount(input);
             sfxMixer.AddMixerInput(mixerInput);
-            return mixerInput;
         }
         
         private ISampleProvider AddBGMMixerInput(ISampleProvider input)
@@ -150,6 +149,7 @@ namespace DragoonMayCry.Audio
             if (trigger == StyleType.NO_STYLE) {
                 return;
             }
+            PluginLog.Debug($"Playing SFX for trigger {trigger}");
             AddSFXMixerInput(new CachedSoundSampleProvider(sounds[trigger]));
         }
 
