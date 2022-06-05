@@ -8,7 +8,6 @@ namespace DragoonMayCry.Audio
 {
     public enum AudioTrigger
     {
-        BGM,
         D,
         C,
         B,
@@ -64,73 +63,109 @@ namespace DragoonMayCry.Audio
 
     public class AudioHandler
     {
-        private readonly IWavePlayer outputDevice;
+        private readonly IWavePlayer sfxOutputDevice;
+        private readonly IWavePlayer bgmOutputDevice;
         private readonly Dictionary<AudioTrigger, CachedSound> sounds;
-        private readonly VolumeSampleProvider sampleProvider;
-        private readonly MixingSampleProvider mixer;
+        private readonly VolumeSampleProvider sfxSampleProvider;
+        private readonly VolumeSampleProvider bgmSampleProvider;
+        private readonly MixingSampleProvider sfxMixer;
+        private readonly MixingSampleProvider bgmMixer;
         private ISampleProvider? bgmLoopStream;
         private string bgmPath;
 
         public float SFXVolume
         {
-            get => sampleProvider.Volume;
+            get => sfxSampleProvider.Volume;
             set
             {
-                sampleProvider.Volume = value;
+                sfxSampleProvider.Volume = value;
+
+            }
+        }
+
+        public float BGMVolume {
+            get => bgmSampleProvider.Volume;
+            set {
+                bgmSampleProvider.Volume = value;
 
             }
         }
 
         public AudioHandler(string combatMusic, string dAnnouncer, string cAnnouncer, string bAnnouncer, string aAnnouncer, string sAnnouncer, string ssAnnouncer, string sssAnnouncer)
         {
-            outputDevice = new WaveOutEvent();
+            sfxOutputDevice = new WaveOutEvent();
+            bgmOutputDevice = new WaveOutEvent();
+
             sounds = new Dictionary<AudioTrigger, CachedSound>();
-            //sounds.Add(AudioTrigger.BGM, new(combatMusic));
-            mixer = new(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2));
-            mixer.ReadFully = true;
-
+            sounds.Add(AudioTrigger.D, new(dAnnouncer));
+            sounds.Add(AudioTrigger.C, new(cAnnouncer));
+            sounds.Add(AudioTrigger.B, new(bAnnouncer));
+            sounds.Add(AudioTrigger.A, new(aAnnouncer));
+            sounds.Add(AudioTrigger.S, new(sAnnouncer));
+            sounds.Add(AudioTrigger.SS, new(ssAnnouncer));
+            sounds.Add(AudioTrigger.SSS, new(sssAnnouncer));
             bgmPath = combatMusic;
-            sampleProvider = new(mixer);
 
-            outputDevice.Init(sampleProvider);
-            outputDevice.Play();
+            sfxMixer = new(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2)) {
+                ReadFully = true
+            };
+
+            bgmMixer = new(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2)) {
+                ReadFully = true
+            };
+
+            sfxSampleProvider = new(sfxMixer);
+            bgmSampleProvider = new(bgmMixer);
+
+            sfxOutputDevice.Init(sfxSampleProvider);
+            sfxOutputDevice.Play();
+
+            bgmOutputDevice.Init(bgmSampleProvider);
+            bgmOutputDevice.Play();
         }
 
         private ISampleProvider ConvertToRightChannelCount(ISampleProvider input)
         {
-            if (input.WaveFormat.Channels == mixer.WaveFormat.Channels)
+            if (input.WaveFormat.Channels == sfxMixer.WaveFormat.Channels)
             {
                 return input;
             }
-            if (input.WaveFormat.Channels == 1 && mixer.WaveFormat.Channels == 2)
+            if (input.WaveFormat.Channels == 1 && sfxMixer.WaveFormat.Channels == 2)
             {
                 return new MonoToStereoSampleProvider(input);
             }
             throw new NotImplementedException("Not yet implemented this channel count conversion");
         }
 
-        private ISampleProvider AddMixerInput(ISampleProvider input)
+        private ISampleProvider AddSFXMixerInput(ISampleProvider input)
         {
             ISampleProvider mixerInput = ConvertToRightChannelCount(input);
-            mixer.AddMixerInput(mixerInput);
+            sfxMixer.AddMixerInput(mixerInput);
+            return mixerInput;
+        }
+        
+        private ISampleProvider AddBGMMixerInput(ISampleProvider input)
+        {
+            ISampleProvider mixerInput = ConvertToRightChannelCount(input);
+            bgmMixer.AddMixerInput(mixerInput);
             return mixerInput;
         }
 
-        public void PlaySound(AudioTrigger trigger)
+        public void PlaySFX(AudioTrigger trigger)
         {
-            AddMixerInput(new CachedSoundSampleProvider(sounds[trigger]));
+            AddSFXMixerInput(new CachedSoundSampleProvider(sounds[trigger]));
         }
 
         public void PlayBGM() {
             var input = new LoopStream(new AudioFileReader(bgmPath));
-            FadeInOutSampleProvider sample = new FadeInOutSampleProvider(input.ToSampleProvider(), true);
+            var sample = new FadeInOutSampleProvider(input.ToSampleProvider(), true);
             sample.BeginFadeIn(4000);
-            bgmLoopStream = AddMixerInput(sample);
-            PluginLog.Debug("Playing BGM");
+            bgmLoopStream = AddBGMMixerInput(sample);
+            PluginLog.Debug("[DRAGOON MAY CRY] Playing BGM");
         }
         public void StopBGM() {
             ((FadeInOutSampleProvider)bgmLoopStream).BeginFadeOut(4000);
-            PluginLog.Debug("Stopping BGM");
+            PluginLog.Debug("[DRAGOON MAY CRY] Stopping BGM");
         }
     }
 }

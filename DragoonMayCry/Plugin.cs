@@ -31,8 +31,6 @@ namespace DragoonMayCry
 
         private bool lastUpdateInCombat;
 
-        private string bgmPath;
-
 
         public DragoonMayCry(DalamudPluginInterface pluginInterface, CommandManager commandManager, Framework frameworkP, Condition conditionP, ChatGui ChatGuiP)
         {
@@ -42,9 +40,15 @@ namespace DragoonMayCry
             Framework = frameworkP;
             Condition = conditionP;
 
-            bgmPath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "cerberus.wav");
-            PluginLog.Debug(bgmPath);
-            AudioHandler = new(bgmPath, "", "", "", "", "", "", "");
+            string bgmPath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "cerberus.wav");
+            string dAnnouncerPath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "dead_weight.wav");
+            string cAnnouncerPath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "cruel.wav");
+            string bAnnouncerPath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "brutal.wav");
+            string aAnnouncerPath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "anarchic.wav");
+            string sAnnouncerPath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "savage.wav");
+            string ssAnnouncerPath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "sadistic.wav");
+            string sssAnnouncerPath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "sensational.wav");
+            AudioHandler = new AudioHandler(bgmPath, dAnnouncerPath, cAnnouncerPath, bAnnouncerPath, aAnnouncerPath, sAnnouncerPath, ssAnnouncerPath, sssAnnouncerPath);
             
             this.Configuration = this.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             this.Configuration.Initialize(this.PluginInterface);
@@ -109,6 +113,18 @@ namespace DragoonMayCry
             }
         }
 
+        private void SetBGM(string volume) {
+            try {
+                var newVol = int.Parse(volume) / 100f;
+                PluginLog.Debug($"{Name}: Setting bgm volume to {newVol}");
+                this.AudioHandler.BGMVolume = newVol;
+                this.Configuration.BGMVolume = newVol;
+                this.ChatGui.Print($"BGM Volume set to {volume}%");
+            } catch (Exception) {
+                ChatGui.PrintError("Please use a number between 0-100");
+            }
+        }
+
         private void OnCommand(string command, string args) {
             PluginLog.Debug("{Command} - {Args}", command, args);
             var argList = args.Split(' ');
@@ -125,8 +141,13 @@ namespace DragoonMayCry
                         return;
                     SetSFX(argList[1]);
                     break;
+                case "bgm":
+                    if (argList.Length != 2)
+                        return;
+                    SetBGM(argList[1]);
+                    break;
                 case "":
-                    ChatGui.PrintError("Please use \"/bgm vol <num>\" to control volume");
+                    ChatGui.PrintError("Please use \"/dmc [bgm, sfx] <num>\" to control volume");
                     break;
                 default:
                     break;
