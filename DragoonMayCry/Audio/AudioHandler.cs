@@ -4,18 +4,9 @@ using System.Linq;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using Dalamud.Logging;
+using DragoonMayCry.Style;
 namespace DragoonMayCry.Audio
 {
-    public enum AudioTrigger
-    {
-        D,
-        C,
-        B,
-        A,
-        S,
-        SS,
-        SSS
-    }
 
     // Cached sound concept lovingly borrowed from: https://markheath.net/post/fire-and-forget-audio-playback-with
     class CachedSound
@@ -65,7 +56,7 @@ namespace DragoonMayCry.Audio
     {
         private readonly IWavePlayer sfxOutputDevice;
         private readonly IWavePlayer bgmOutputDevice;
-        private readonly Dictionary<AudioTrigger, CachedSound> sounds;
+        private readonly Dictionary<StyleType, CachedSound> sounds;
         private readonly VolumeSampleProvider sfxSampleProvider;
         private readonly VolumeSampleProvider bgmSampleProvider;
         private readonly MixingSampleProvider sfxMixer;
@@ -96,14 +87,14 @@ namespace DragoonMayCry.Audio
             sfxOutputDevice = new WaveOutEvent();
             bgmOutputDevice = new WaveOutEvent();
 
-            sounds = new Dictionary<AudioTrigger, CachedSound>();
-            sounds.Add(AudioTrigger.D, new(dAnnouncer));
-            sounds.Add(AudioTrigger.C, new(cAnnouncer));
-            sounds.Add(AudioTrigger.B, new(bAnnouncer));
-            sounds.Add(AudioTrigger.A, new(aAnnouncer));
-            sounds.Add(AudioTrigger.S, new(sAnnouncer));
-            sounds.Add(AudioTrigger.SS, new(ssAnnouncer));
-            sounds.Add(AudioTrigger.SSS, new(sssAnnouncer));
+            sounds = new Dictionary<StyleType, CachedSound>();
+            sounds.Add(StyleType.D, new(dAnnouncer));
+            sounds.Add(StyleType.C, new(cAnnouncer));
+            sounds.Add(StyleType.B, new(bAnnouncer));
+            sounds.Add(StyleType.A, new(aAnnouncer));
+            sounds.Add(StyleType.S, new(sAnnouncer));
+            sounds.Add(StyleType.SS, new(ssAnnouncer));
+            sounds.Add(StyleType.SSS, new(sssAnnouncer));
             bgmPath = combatMusic;
 
             sfxMixer = new(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2)) {
@@ -116,6 +107,9 @@ namespace DragoonMayCry.Audio
 
             sfxSampleProvider = new(sfxMixer);
             bgmSampleProvider = new(bgmMixer);
+
+            SFXVolume = 0.1f;
+            BGMVolume = 0.1f;
 
             sfxOutputDevice.Init(sfxSampleProvider);
             sfxOutputDevice.Play();
@@ -151,8 +145,11 @@ namespace DragoonMayCry.Audio
             return mixerInput;
         }
 
-        public void PlaySFX(AudioTrigger trigger)
+        public void PlaySFX(StyleType trigger)
         {
+            if (trigger == StyleType.NO_STYLE) {
+                return;
+            }
             AddSFXMixerInput(new CachedSoundSampleProvider(sounds[trigger]));
         }
 
