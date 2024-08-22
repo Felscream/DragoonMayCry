@@ -1,22 +1,23 @@
-﻿using System;
+using System;
 using System.Numerics;
 using Dalamud.Interface.Internal;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
+using DragoonMayCry.Configuration;
 using ImGuiNET;
 
-namespace SamplePlugin.Windows;
+namespace DragoonMayCry.Windows;
 
 public class MainWindow : Window, IDisposable
 {
     private string GoatImagePath;
-    private Plugin Plugin;
-
+    private readonly DmcConfiguration configuration;
+    private readonly Plugin plugin;
     // We give this window a hidden ID using ##
     // So that the user will see "My Amazing Window" as window title,
     // but for ImGui the ID is "My Amazing Window##With a hidden ID"
-    public MainWindow(Plugin plugin, string goatImagePath)
+    public MainWindow(Plugin plugin, DmcConfiguration configuration, string goatImagePath)
         : base("My Amazing Window##With a hidden ID", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         SizeConstraints = new WindowSizeConstraints
@@ -26,18 +27,19 @@ public class MainWindow : Window, IDisposable
         };
 
         GoatImagePath = goatImagePath;
-        Plugin = plugin;
+        this.configuration = configuration;
+        this.plugin = plugin;
     }
 
     public void Dispose() { }
 
     public override void Draw()
     {
-        ImGui.Text($"The random config bool is {Plugin.Configuration.SomePropertyToBeSavedAndWithADefault}");
+        ImGui.Text($"The random config bool is {configuration.SomePropertyToBeSavedAndWithADefault}");
 
         if (ImGui.Button("Show Settings"))
         {
-            Plugin.ToggleConfigUI();
+            Plugin.PluginUI.ToggleConfigUI();
         }
 
         ImGui.Spacing();

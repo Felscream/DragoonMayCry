@@ -1,18 +1,19 @@
-﻿using System;
+using System;
 using System.Numerics;
 using Dalamud.Interface.Windowing;
+using DragoonMayCry.Configuration;
 using ImGuiNET;
 
-namespace SamplePlugin.Windows;
+namespace DragoonMayCry.Windows;
 
 public class ConfigWindow : Window, IDisposable
 {
-    private Configuration Configuration;
+    private DmcConfiguration Configuration;
 
     // We give this window a constant ID using ###
     // This allows for labels being dynamic, like "{FPS Counter}fps###XYZ counter window",
     // and the window ID will always be "###XYZ counter window" for ImGui
-    public ConfigWindow(Plugin plugin) : base("A Wonderful Configuration Window###With a constant ID")
+    public ConfigWindow(DmcConfiguration configuration) : base("A Wonderful Configuration Window###With a constant ID")
     {
         Flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
                 ImGuiWindowFlags.NoScrollWithMouse;
@@ -20,7 +21,7 @@ public class ConfigWindow : Window, IDisposable
         Size = new Vector2(232, 90);
         SizeCondition = ImGuiCond.Always;
 
-        Configuration = plugin.Configuration;
+        Configuration = Plugin.Configuration;
     }
 
     public void Dispose() { }
