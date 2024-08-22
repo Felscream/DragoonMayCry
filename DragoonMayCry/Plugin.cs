@@ -1,10 +1,7 @@
 using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using System.IO;
-using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
-using DragoonMayCry.Windows;
 using Dalamud.Game.Gui.FlyText;
 using Dalamud.Hooking;
 using System.Collections.Generic;
@@ -17,26 +14,17 @@ using System.Linq;
 using DragoonMayCry.Style;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.UI;
+using Microsoft.VisualBasic.Logging;
 
 namespace DragoonMayCry;
 
 public unsafe class Plugin : IDalamudPlugin
 {
-    [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
-    [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
-    [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
-    [PluginService] internal static ISigScanner Scanner { get; set; }
-    [PluginService] internal static IGameInteropProvider Hook { get; set; }
-    [PluginService] internal static IPluginLog Log { get; set; }
-    [PluginService] internal static IGameGui GameGui { get; set; }
-    [PluginService] internal static IFlyTextGui FTGui { get; set; }
+    [PluginService] public static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     public static DmcConfiguration? Configuration { get; private set; } = null;
 
     private const string CommandName = "/dmc";
     private const char SpecialChar = '\u00A7';
-   
-
-
 
     private HashSet<FlyTextKind> _validKinds = new HashSet<FlyTextKind>() {
             FlyTextKind.Damage,
@@ -58,33 +46,37 @@ public unsafe class Plugin : IDalamudPlugin
         int unknown);
     private readonly Hook<AddFlyTextDelegate> _addFlyTextHook;
 
-    public static StyleRankHandler StyleRankHandler { get; private set; } = null;
+    public static ScoreManager ScoreManager { get; private set; } = null;
     public static PluginUI PluginUI { get; private set; } = null;
 
+    private static object[] _ftLocks = Enumerable.Repeat(new object(), 50).ToArray();
+    private readonly IPluginLog logger;
 
-    internal static object[] _ftLocks = Enumerable.Repeat(new object(), 50).ToArray();
-
-    public Plugin()
+    public Plugin(IDalamudPluginInterface pluginInterface)
     {
+        PluginInterface.Create<Service>();
+        logger = Service.Log;
         Configuration = PluginInterface.GetPluginConfig() as DmcConfiguration ?? new DmcConfiguration();
-        StyleRankHandler = new StyleRankHandler();
-        PluginUI = new(this);
+        ScoreManager = new ();
+        PluginUI = new();
 
-        CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
+        Service.ClientState.Logout += ScoreManager.OnLogout;
+
+        Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
             HelpMessage = "A useful message to display in /xlhelp"
         });
 
         try
         {
-            var addFlyTextAddress = Scanner.ScanText("E8 ?? ?? ?? ?? FF C7 41 D1 C7");
-            _addFlyTextHook = Hook.HookFromAddress<AddFlyTextDelegate>(addFlyTextAddress, AddFlyTextDetour);
+            var addFlyTextAddress = Service.Scanner.ScanText("E8 ?? ?? ?? ?? FF C7 41 D1 C7");
+            _addFlyTextHook = Service.Hook.HookFromAddress<AddFlyTextDelegate>(addFlyTextAddress, AddFlyTextDetour);
 
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"An error occurred loading DragoonMayCry Plugin.");
-            Log.Error("Plugin will not be loaded.");
+            logger.Error(ex, $"An error occurred loading DragoonMayCry Plugin.");
+            logger.Error("Plugin will not be loaded.");
 
             _addFlyTextHook?.Disable();
             _addFlyTextHook?.Dispose();
@@ -99,14 +91,17 @@ public unsafe class Plugin : IDalamudPlugin
     {
         PluginUI.Dispose();
         _addFlyTextHook?.Disable();
-        
-        CommandManager.RemoveHandler(CommandName);
+        _addFlyTextHook?.Dispose();
+
+        Service.ClientState.Logout -= ScoreManager.OnLogout;
+
+        Service.CommandManager.RemoveHandler(CommandName);
     }
 
     private void OnCommand(string command, string args)
     {
         // in response to the slash command, just toggle the display status of our main ui
-        PluginUI.ToggleMainUI();
+        PluginUI.ToggleConfigUI();
     }
 
 
@@ -145,8 +140,8 @@ public unsafe class Plugin : IDalamudPlugin
             // actual index
             var strIndex = 27;
             var numIndex = 30;
-            var atkArrayDataHolder = ((UIModule*)GameGui.GetUIModule())->GetRaptureAtkModule()->AtkModule.AtkArrayDataHolder;
-            Log.Debug($"addonFlyText: {addonFlyText:X} actorIndex:{actorIndex} offsetNum: {offsetNum} offsetNumMax: {offsetNumMax} offsetStr: {offsetStr} offsetStrMax: {offsetStrMax} unknown:{unknown}");
+            var atkArrayDataHolder = ((UIModule*)Service.GameGui.GetUIModule())->GetRaptureAtkModule()->AtkModule.AtkArrayDataHolder;
+            logger.Debug($"addonFlyText: {addonFlyText:X} actorIndex:{actorIndex} offsetNum: {offsetNum} offsetNumMax: {offsetNumMax} offsetStr: {offsetStr} offsetStrMax: {offsetStrMax} unknown:{unknown}");
             try
             {
                 var strArray = atkArrayDataHolder._StringArrays[strIndex];
@@ -179,7 +174,7 @@ public unsafe class Plugin : IDalamudPlugin
                 var text1 = Marshal.PtrToStringUTF8((nint)flyText1Ptr);
                 var flyText2Ptr = strArray->StringArray[offsetStr + 1];
                 var text2 = Marshal.PtrToStringUTF8((nint)flyText2Ptr);
-                Log.Debug($"text1:{text1} text2:{text2}");
+                logger.Debug($"text1:{text1} text2:{text2}");
                 if (text1 == null || text2 == null)
                 {
                     lock (_ftLocks[actorIndex])
@@ -228,7 +223,7 @@ public unsafe class Plugin : IDalamudPlugin
                 }
                 if (shownActionName == null || val1 <= 0 || val1 > int.MaxValue)
                 {
-                    Log.Debug($"val1:{val1} is not valid");
+                    logger.Debug($"val1:{val1} is not valid");
                     lock (_ftLocks[actorIndex])
                     {
                         _addFlyTextHook.Original(
@@ -245,17 +240,17 @@ public unsafe class Plugin : IDalamudPlugin
                     }
                     return;
                 }
-                Log.Debug($"val1:{val1} val2:{val2} kind:{Enum.GetName(typeof(FlyTextKind), kind)}");
-                StyleRankHandler.goToNextStyle();
+                logger.Debug($"val1:{val1} val2:{val2} kind:{Enum.GetName(typeof(FlyTextKind), kind)}");
+                ScoreManager.GoToNextRank();
             }
             catch (Exception e)
             {
-                Log.Error(e, "Skipping");
+                logger.Error(e, "Skipping");
             }
         }
         catch (Exception e)
         {
-            Log.Error(e, "An error has occurred in MultiHit");
+            logger.Error(e, "An error has occurred in MultiHit");
         }
 
         _addFlyTextHook.Original(

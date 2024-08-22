@@ -1,43 +1,58 @@
 
-using Dalamud.IoC;
-using Dalamud.Plugin.Services;
+using System.IO;
+using DragoonMayCry.Audio;
 using DragoonMayCry.Util;
-using ImGuiScene;
-using System.Collections.Generic;
-using static Dalamud.Interface.Utility.Raii.ImRaii;
 
 namespace DragoonMayCry.Style {
 
     public class StyleRankHandler {
 
-        public DoubleNode<StyleRank> CurrentStyle { get; private set; }
+        public DoubleLinkedNode<StyleRank> CurrentStyle { get; private set; }
         private readonly DoubleLinkedList<StyleRank> styles;
+        private readonly AudioHandler audioHandler;
 
-        public StyleRankHandler() {
+        public StyleRankHandler()
+        {
             styles = new ();
-
-            styles.Add(new (StyleType.NO_STYLE));
-            styles.Add(new(StyleType.D));
-            styles.Add(new(StyleType.C));
-            styles.Add(new(StyleType.B));
-            styles.Add(new(StyleType.A));
-            styles.Add(new (StyleType.S));
-            styles.Add(new(StyleType.SS));
-            styles.Add(new(StyleType.SSS));
+            styles.Add(new (StyleType.NO_STYLE, null, null));
+            styles.Add(new(StyleType.D,  "DragoonMayCry.Assets.D.png", GetPathToAudio("dirty")));
+            styles.Add(new(StyleType.C, "DragoonMayCry.Assets.C.png", GetPathToAudio("cruel")));
+            styles.Add(new(StyleType.B, "DragoonMayCry.Assets.B.png", GetPathToAudio("brutal")));
+            styles.Add(new(StyleType.A, "DragoonMayCry.Assets.A.png", GetPathToAudio("anarchic")));
+            styles.Add(new (StyleType.S, "DragoonMayCry.Assets.S.png", GetPathToAudio("savage")));
+            styles.Add(new(StyleType.SS, "DragoonMayCry.Assets.SS.png", GetPathToAudio("sadistic")));
+            styles.Add(new(StyleType.SSS, "DragoonMayCry.Assets.SSS.png", GetPathToAudio("sensational")));
 
             CurrentStyle = styles.Head;
 
+            audioHandler = new AudioHandler();
+            audioHandler.Init(styles);
+
         }
 
-        public StyleRank goToNextStyle()
+        public StyleRank GoToNextRank(bool playSfx)
         {
-            if(CurrentStyle.Next == null && styles.Head != null) {
+            
+            if (CurrentStyle.Next == null && styles.Head != null) {
                 CurrentStyle = styles.Head;
             } else if(CurrentStyle.Next != null) {
                 CurrentStyle = CurrentStyle.Next;
             }
-            Plugin.Log.Debug($"New rank reached {CurrentStyle.Value.StyleType}");
+            Service.Log.Debug($"New rank reached {CurrentStyle.Value.StyleType}");
+            audioHandler.PlaySFX(CurrentStyle.Value.StyleType);
             return CurrentStyle.Value;
+        }
+
+        public void Reset()
+        {
+            CurrentStyle = styles.Head;
+        }
+
+        private string GetPathToAudio(string name)
+        {
+            return Path.Combine(
+                Plugin.PluginInterface.AssemblyLocation.Directory?.FullName!,
+                $"Assets\\Audio\\{name}.wav");
         }
     }
 }

@@ -7,7 +7,7 @@ using Dalamud.Plugin.Services;
 using DragoonMayCry.Configuration;
 using ImGuiNET;
 
-namespace DragoonMayCry.Windows;
+namespace DragoonMayCry.UI;
 
 public class MainWindow : Window, IDisposable
 {
@@ -45,7 +45,7 @@ public class MainWindow : Window, IDisposable
         ImGui.Spacing();
 
         ImGui.Text("Have a goat:");
-        var goatImage = Plugin.TextureProvider.GetFromFile(GoatImagePath).GetWrapOrDefault();
+        var goatImage = Service.TextureProvider.GetFromFile(GoatImagePath).GetWrapOrDefault();
         if (goatImage != null)
         {
             ImGuiHelpers.ScaledIndent(55f);

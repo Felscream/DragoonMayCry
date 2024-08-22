@@ -4,7 +4,7 @@ using Dalamud.Interface.Windowing;
 using DragoonMayCry.Configuration;
 using ImGuiNET;
 
-namespace DragoonMayCry.Windows;
+namespace DragoonMayCry.UI;
 
 public class ConfigWindow : Window, IDisposable
 {
@@ -18,26 +18,13 @@ public class ConfigWindow : Window, IDisposable
         Flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
                 ImGuiWindowFlags.NoScrollWithMouse;
 
-        Size = new Vector2(232, 90);
+        Size = new Vector2(232, 120);
         SizeCondition = ImGuiCond.Always;
 
-        Configuration = Plugin.Configuration;
+        Configuration = configuration;
     }
 
     public void Dispose() { }
-
-    public override void PreDraw()
-    {
-        // Flags must be added or removed before Draw() is being called, or they won't apply
-        if (Configuration.IsConfigWindowMovable)
-        {
-            Flags &= ~ImGuiWindowFlags.NoMove;
-        }
-        else
-        {
-            Flags |= ImGuiWindowFlags.NoMove;
-        }
-    }
 
     public override void Draw()
     {
@@ -50,11 +37,17 @@ public class ConfigWindow : Window, IDisposable
             Configuration.Save();
         }
 
-        var movable = Configuration.IsConfigWindowMovable;
-        if (ImGui.Checkbox("Movable Config Window", ref movable))
+        var lockScoreWindow = Configuration.StyleRankUiConfiguration.LockScoreWindow;
+        if (ImGui.Checkbox("Lock Score Window", ref lockScoreWindow))
         {
-            Configuration.IsConfigWindowMovable = movable;
+            Configuration.StyleRankUiConfiguration.LockScoreWindow = lockScoreWindow;
             Configuration.Save();
         }
+
+        if (ImGui.Button("Next rank"))
+        {
+            Plugin.ScoreManager.GoToNextRank();
+        }
+
     }
 }

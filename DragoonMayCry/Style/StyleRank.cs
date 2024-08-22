@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Dalamud.Interface.Textures.TextureWraps;
 using ImGuiScene;
 
 namespace DragoonMayCry.Style {
@@ -19,10 +21,14 @@ namespace DragoonMayCry.Style {
     }
 
     public class StyleRank {
-        public TextureWrap? Icon { get; init; }
         public StyleType StyleType { get; init; }
-        public StyleRank(StyleType styleType) {
+        public string? IconPath { get; init; }
+        public string? SfxPath { get; init; }
+        
+        public StyleRank(StyleType styleType, string iconPath, string sfxPath) {
             StyleType = styleType;
+            IconPath = iconPath;
+            SfxPath = sfxPath;
         }
 
         public override bool Equals(object? obj) {

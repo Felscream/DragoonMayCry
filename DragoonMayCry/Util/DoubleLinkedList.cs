@@ -10,8 +10,8 @@ namespace DragoonMayCry.Util
 {
     public class DoubleLinkedList<T>
     {
-        public DoubleNode<T>? Head { get; private set; }
-        DoubleNode<T>? tail;
+        public DoubleLinkedNode<T>? Head { get; private set; }
+        DoubleLinkedNode<T>? tail;
         int size;
 
         public DoubleLinkedList()
@@ -23,7 +23,7 @@ namespace DragoonMayCry.Util
 
         public DoubleLinkedList(T value)
         {
-            var node = new DoubleNode<T>(value);
+            var node = new DoubleLinkedNode<T>(value);
             Head = node;
             tail = node;
             size = 1;
@@ -31,7 +31,7 @@ namespace DragoonMayCry.Util
 
         public void Add(T value)
         {
-            var node = new DoubleNode<T>(value);
+            var node = new DoubleLinkedNode<T>(value);
             Head ??= node;
             
             if(tail == null)
@@ -47,13 +47,13 @@ namespace DragoonMayCry.Util
         }
     }
 
-    public class DoubleNode<T>
+    public class DoubleLinkedNode<T>
     {
         public T Value { get; set; }
-        public DoubleNode<T>? Previous { get; set; }
-        public DoubleNode<T>? Next { get; set; }
+        public DoubleLinkedNode<T>? Previous { get; set; }
+        public DoubleLinkedNode<T>? Next { get; set; }
 
-        public DoubleNode(T value){
+        public DoubleLinkedNode(T value){
             Value = value;
         }
     }

@@ -16,8 +16,55 @@
       <Visible>false</Visible>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+      <EmbeddedResource Include="Assets\A.png" />
+      <EmbeddedResource Include="Assets\B.png" />
+      <EmbeddedResource Include="Assets\C.png" />
+      <EmbeddedResource Include="Assets\D.png" />
+      <EmbeddedResource Include="Assets\S.png" />
+      <EmbeddedResource Include="Assets\SS.png" />
+      <EmbeddedResource Include="Assets\SSS.png" />
+  </ItemGroup>
+  <ItemGroup>
+      <Content Include="Assets\Audio\dead_weight.wav">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <Visible>false</Visible>
+      </Content>
+      <Content Include="Assets\Audio\dirty.wav">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <Visible>false</Visible>
+      </Content>
+      <Content Include="Assets\Audio\cruel.wav">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <Visible>false</Visible>
+      </Content>
+      <Content Include="Assets\Audio\brutal.wav">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <Visible>false</Visible>
+      </Content>
+      <Content Include="Assets\Audio\anarchic.wav">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <Visible>false</Visible>
+      </Content>
+      <Content Include="Assets\Audio\savage.wav">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <Visible>false</Visible>
+      </Content>
+      <Content Include="Assets\Audio\sadistic.wav">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <Visible>false</Visible>
+      </Content>
+      <Content Include="Assets\Audio\sensational.wav">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <Visible>false</Visible>
+      </Content>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="NAudio" Version="2.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Assets\" />
   </ItemGroup>
 </Project>

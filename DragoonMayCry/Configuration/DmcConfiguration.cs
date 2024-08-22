@@ -15,7 +15,7 @@ public class DmcConfiguration : IPluginConfiguration
 
     public bool Enabled = true;
     public float SFXVolume { get; set; } = 0.2f;
-    public FloatingWindowConfiguration FloatingWindowConfiguration = new();
+    public StyleRankUiConfiguration StyleRankUiConfiguration = new();
 
     // the below exist just to make saving less cumbersome
     public void Save()
