@@ -19,5 +19,8 @@ namespace DragoonMayCry
         [PluginService] public static IGameInteropProvider Hook { get; set; } = null!;
         [PluginService] public static IPluginLog Log { get; set; } = null!;
         [PluginService] public static IGameGui GameGui { get; set; } = null!;
+        [PluginService] public static ICondition Condition { get; set; } = null!;
+        [PluginService] public static IFramework Framework { get; set; } = null!;
+        [PluginService] public static IGameConfig GameConfig { get; set; } = null!;
     }
 }

@@ -4,7 +4,8 @@
   "Punchline": "A plugin that ranks you based on your DPS compared to others",
   "Description": "A description that shows up in /xlplugins. List any major slash-command(s).",
   "ApplicableVersion": "any",
-  "Tags": [
-    "plugin"
-  ]
+    "Tags": [
+        "plugin"
+    ],
+  "LoadPriority":  2
 }

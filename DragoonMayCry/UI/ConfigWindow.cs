@@ -1,8 +1,8 @@
-using System;
-using System.Numerics;
 using Dalamud.Interface.Windowing;
 using DragoonMayCry.Configuration;
 using ImGuiNET;
+using System;
+using System.Numerics;
 
 namespace DragoonMayCry.UI;
 
@@ -18,7 +18,7 @@ public class ConfigWindow : Window, IDisposable
         Flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
                 ImGuiWindowFlags.NoScrollWithMouse;
 
-        Size = new Vector2(232, 120);
+        Size = new Vector2(0,0);
         SizeCondition = ImGuiCond.Always;
 
         Configuration = configuration;
@@ -28,15 +28,6 @@ public class ConfigWindow : Window, IDisposable
 
     public override void Draw()
     {
-        // can't ref a property, so use a local copy
-        var configValue = Configuration.SomePropertyToBeSavedAndWithADefault;
-        if (ImGui.Checkbox("Random Config Bool", ref configValue))
-        {
-            Configuration.SomePropertyToBeSavedAndWithADefault = configValue;
-            // can save immediately on change, if you don't want to provide a "Save and Close" button
-            Configuration.Save();
-        }
-
         var lockScoreWindow = Configuration.StyleRankUiConfiguration.LockScoreWindow;
         if (ImGui.Checkbox("Lock Score Window", ref lockScoreWindow))
         {
@@ -44,9 +35,32 @@ public class ConfigWindow : Window, IDisposable
             Configuration.Save();
         }
 
+        var activeOutsideInstance = Configuration.ActiveOutsideInstance;
+        if (ImGui.Checkbox("Active outside instance",
+                           ref activeOutsideInstance))
+        {
+            Configuration.ActiveOutsideInstance = activeOutsideInstance;
+            Configuration.Save();
+        }
+
+        var playSoundEffects = Configuration.PlaySoundEffects;
+        if (ImGui.Checkbox("Play sound effects", ref playSoundEffects))
+        {
+            Configuration.PlaySoundEffects = playSoundEffects;
+            Configuration.Save();
+        }
+
+        var soundEffectVolume = Configuration.SfxVolume;
+        if (ImGui.SliderInt("Sound effect volume", ref soundEffectVolume, 0,
+                            100))
+        {
+            Configuration.SfxVolume = soundEffectVolume;
+            Configuration.Save();
+        }
+
         if (ImGui.Button("Next rank"))
         {
-            Plugin.ScoreManager.GoToNextRank();
+            Plugin.ScoreManager.GoToNextRank(true);
         }
 
     }

@@ -1,15 +1,16 @@
 
-using System.IO;
 using DragoonMayCry.Audio;
 using DragoonMayCry.Util;
+using System.IO;
 
-namespace DragoonMayCry.Style {
+namespace DragoonMayCry.Style
+{
 
     public class StyleRankHandler {
 
-        public DoubleLinkedNode<StyleRank> CurrentStyle { get; private set; }
+        public DoubleLinkedNode<StyleRank> CurrentRank { get; private set; }
         private readonly DoubleLinkedList<StyleRank> styles;
-        private readonly AudioHandler audioHandler;
+        private readonly AudioEngine audioEngine;
 
         public StyleRankHandler()
         {
@@ -23,29 +24,38 @@ namespace DragoonMayCry.Style {
             styles.Add(new(StyleType.SS, "DragoonMayCry.Assets.SS.png", GetPathToAudio("sadistic")));
             styles.Add(new(StyleType.SSS, "DragoonMayCry.Assets.SSS.png", GetPathToAudio("sensational")));
 
-            CurrentStyle = styles.Head;
+            CurrentRank = styles.Head;
 
-            audioHandler = new AudioHandler();
-            audioHandler.Init(styles);
+            audioEngine = new AudioEngine();
+            audioEngine.Init(styles);
 
         }
 
         public StyleRank GoToNextRank(bool playSfx)
         {
             
-            if (CurrentStyle.Next == null && styles.Head != null) {
-                CurrentStyle = styles.Head;
-            } else if(CurrentStyle.Next != null) {
-                CurrentStyle = CurrentStyle.Next;
+            if (CurrentRank.Next == null && styles.Head != null) {
+                CurrentRank = styles.Head;
+            } else if(CurrentRank.Next != null) {
+                CurrentRank = CurrentRank.Next;
             }
-            Service.Log.Debug($"New rank reached {CurrentStyle.Value.StyleType}");
-            audioHandler.PlaySFX(CurrentStyle.Value.StyleType);
-            return CurrentStyle.Value;
+            Service.Log.Debug($"New rank reached {CurrentRank.Value.StyleType}");
+            if (Plugin.Configuration.PlaySoundEffects)
+            {
+                audioEngine.PlaySFX(CurrentRank.Value.StyleType);
+            }
+            
+            return CurrentRank.Value;
         }
 
         public void Reset()
         {
-            CurrentStyle = styles.Head;
+            CurrentRank = styles.Head;
+        }
+
+        public bool ReachedLastRank()
+        {
+            return CurrentRank.Next == null;
         }
 
         private string GetPathToAudio(string name)

@@ -1,14 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Dalamud.Interface.Textures.TextureWraps;
-using ImGuiScene;
 
-namespace DragoonMayCry.Style {
-    
+namespace DragoonMayCry.Style
+{
+
     public enum StyleType { 
         NO_STYLE,
         D,

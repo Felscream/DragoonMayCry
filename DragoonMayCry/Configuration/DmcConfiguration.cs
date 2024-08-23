@@ -9,12 +9,14 @@ namespace DragoonMayCry.Configuration;
 public class DmcConfiguration : IPluginConfiguration
 {
     public int Version { get; set; } = 0;
-
-    public bool IsConfigWindowMovable { get; set; } = true;
     public bool SomePropertyToBeSavedAndWithADefault { get; set; } = true;
 
     public bool Enabled = true;
-    public float SFXVolume { get; set; } = 0.2f;
+    public int SfxVolume { get; set; } = 80;
+    public bool PlaySoundEffects { get; set; } = true;
+    public bool ActiveOutsideInstance { get; set; } = false;
+
+    public int TimeToResetScoreAfterCombat { get; set; } = 10000;
     public StyleRankUiConfiguration StyleRankUiConfiguration = new();
 
     // the below exist just to make saving less cumbersome

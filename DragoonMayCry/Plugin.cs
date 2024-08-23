@@ -1,20 +1,18 @@
 using Dalamud.Game.Command;
+using Dalamud.Game.Gui.FlyText;
+using Dalamud.Hooking;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
-using Dalamud.Game.Gui.FlyText;
-using Dalamud.Hooking;
-using System.Collections.Generic;
-using System;
-using Dalamud.Game;
+using DragoonMayCry.Configuration;
+using DragoonMayCry.State;
+using DragoonMayCry.UI;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Linq;
-using DragoonMayCry.Style;
-using DragoonMayCry.Configuration;
-using DragoonMayCry.UI;
-using Microsoft.VisualBasic.Logging;
 
 namespace DragoonMayCry;
 
@@ -44,21 +42,26 @@ public unsafe class Plugin : IDalamudPlugin
         uint offsetStr,
         uint offsetStrMax,
         int unknown);
-    private readonly Hook<AddFlyTextDelegate> _addFlyTextHook;
+    private readonly Hook<AddFlyTextDelegate> addFlyTextHook;
 
     public static ScoreManager ScoreManager { get; private set; } = null;
     public static PluginUI PluginUI { get; private set; } = null;
 
     private static object[] _ftLocks = Enumerable.Repeat(new object(), 50).ToArray();
     private readonly IPluginLog logger;
+    private readonly PlayerState playerState;
 
     public Plugin(IDalamudPluginInterface pluginInterface)
     {
         PluginInterface.Create<Service>();
         logger = Service.Log;
         Configuration = PluginInterface.GetPluginConfig() as DmcConfiguration ?? new DmcConfiguration();
-        ScoreManager = new ();
-        PluginUI = new();
+        
+        
+        playerState = new();
+        PluginUI = new(playerState);
+        ScoreManager = new(playerState);
+
 
         Service.ClientState.Logout += ScoreManager.OnLogout;
 
@@ -70,7 +73,7 @@ public unsafe class Plugin : IDalamudPlugin
         try
         {
             var addFlyTextAddress = Service.Scanner.ScanText("E8 ?? ?? ?? ?? FF C7 41 D1 C7");
-            _addFlyTextHook = Service.Hook.HookFromAddress<AddFlyTextDelegate>(addFlyTextAddress, AddFlyTextDetour);
+            addFlyTextHook = Service.Hook.HookFromAddress<AddFlyTextDelegate>(addFlyTextAddress, AddFlyTextDetour);
 
         }
         catch (Exception ex)
@@ -78,20 +81,22 @@ public unsafe class Plugin : IDalamudPlugin
             logger.Error(ex, $"An error occurred loading DragoonMayCry Plugin.");
             logger.Error("Plugin will not be loaded.");
 
-            _addFlyTextHook?.Disable();
-            _addFlyTextHook?.Dispose();
+            addFlyTextHook?.Disable();
+            addFlyTextHook?.Dispose();
 
             throw;
         }
 
-        _addFlyTextHook?.Enable();
+        addFlyTextHook?.Enable();
     }
 
     public void Dispose()
     {
         PluginUI.Dispose();
-        _addFlyTextHook?.Disable();
-        _addFlyTextHook?.Dispose();
+        playerState.Dispose();
+        addFlyTextHook?.Disable();
+        addFlyTextHook?.Dispose();
+        ScoreManager.Dispose();
 
         Service.ClientState.Logout -= ScoreManager.OnLogout;
 
@@ -103,8 +108,6 @@ public unsafe class Plugin : IDalamudPlugin
         // in response to the slash command, just toggle the display status of our main ui
         PluginUI.ToggleConfigUI();
     }
-
-
 
     private void AddFlyTextDetour(
             IntPtr addonFlyText,
@@ -121,7 +124,7 @@ public unsafe class Plugin : IDalamudPlugin
         if (!Configuration.Enabled || actorIndex <= 1 || actorIndex >= 50)
         {
             // don't lock this since locks may not be enough
-            _addFlyTextHook.Original(
+            addFlyTextHook.Original(
                 addonFlyText,
                 actorIndex,
                 messageMax,
@@ -150,7 +153,7 @@ public unsafe class Plugin : IDalamudPlugin
                 {
                     lock (_ftLocks[actorIndex])
                     {
-                        _addFlyTextHook.Original(
+                        addFlyTextHook.Original(
                             addonFlyText,
                             actorIndex,
                             messageMax,
@@ -174,12 +177,13 @@ public unsafe class Plugin : IDalamudPlugin
                 var text1 = Marshal.PtrToStringUTF8((nint)flyText1Ptr);
                 var flyText2Ptr = strArray->StringArray[offsetStr + 1];
                 var text2 = Marshal.PtrToStringUTF8((nint)flyText2Ptr);
+               
                 logger.Debug($"text1:{text1} text2:{text2}");
                 if (text1 == null || text2 == null)
                 {
                     lock (_ftLocks[actorIndex])
                     {
-                        _addFlyTextHook.Original(
+                        addFlyTextHook.Original(
                             addonFlyText,
                             actorIndex,
                             messageMax,
@@ -199,7 +203,7 @@ public unsafe class Plugin : IDalamudPlugin
                     Marshal.WriteByte((nint)flyText1Ptr + bytes.Length, 0);
                     lock (_ftLocks[actorIndex])
                     {
-                        _addFlyTextHook.Original(
+                        addFlyTextHook.Original(
                             addonFlyText,
                             actorIndex,
                             messageMax,
@@ -216,17 +220,16 @@ public unsafe class Plugin : IDalamudPlugin
 
                 FlyTextKind flyKind = (FlyTextKind)kind;
                 String? shownActionName = null;
-                var tempName = text1;
                 if (text1 != string.Empty)
                 {
                     shownActionName = text1;
                 }
-                if (shownActionName == null || val1 <= 0 || val1 > int.MaxValue)
+                if (shownActionName == null || val1 <= 0)
                 {
                     logger.Debug($"val1:{val1} is not valid");
                     lock (_ftLocks[actorIndex])
                     {
-                        _addFlyTextHook.Original(
+                        addFlyTextHook.Original(
                             addonFlyText,
                             actorIndex,
                             messageMax,
@@ -241,7 +244,7 @@ public unsafe class Plugin : IDalamudPlugin
                     return;
                 }
                 logger.Debug($"val1:{val1} val2:{val2} kind:{Enum.GetName(typeof(FlyTextKind), kind)}");
-                ScoreManager.GoToNextRank();
+                ScoreManager.AddScore(val1);
             }
             catch (Exception e)
             {
@@ -252,8 +255,8 @@ public unsafe class Plugin : IDalamudPlugin
         {
             logger.Error(e, "An error has occurred in MultiHit");
         }
-
-        _addFlyTextHook.Original(
+        
+        addFlyTextHook.Original(
                             addonFlyText,
                             actorIndex,
                             messageMax,

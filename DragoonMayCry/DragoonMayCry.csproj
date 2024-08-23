@@ -4,18 +4,12 @@
 
   <PropertyGroup>
     <Version>0.0.0.1</Version>
-    <Description>A sample plugin.</Description>
+    <Description>DragoonMayCry</Description>
     <PackageProjectUrl>https://github.com/goatcorp/SamplePlugin</PackageProjectUrl>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Content Include="..\Data\goat.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Visible>false</Visible>
-    </Content>
-  </ItemGroup>
   <ItemGroup>
       <EmbeddedResource Include="Assets\A.png" />
       <EmbeddedResource Include="Assets\B.png" />
@@ -24,6 +18,7 @@
       <EmbeddedResource Include="Assets\S.png" />
       <EmbeddedResource Include="Assets\SS.png" />
       <EmbeddedResource Include="Assets\SSS.png" />
+      <EmbeddedResource Include="Assets\GaugeDefault.png" />
   </ItemGroup>
   <ItemGroup>
       <Content Include="Assets\Audio\dead_weight.wav">
@@ -62,9 +57,5 @@
 
   <ItemGroup>
     <PackageReference Include="NAudio" Version="2.2.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Assets\" />
   </ItemGroup>
 </Project>

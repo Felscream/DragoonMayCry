@@ -1,17 +1,15 @@
+using DragoonMayCry.Style;
+using DragoonMayCry.Util;
+using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NAudio.Wave;
-using NAudio.Wave.SampleProviders;
-using Dalamud.Logging;
-using Dalamud.Utility;
-using DragoonMayCry.Style;
-using DragoonMayCry.Util;
 
 namespace DragoonMayCry.Audio
 {
 
-    // Cached sound concept lovingly borrowed from: https://markheath.net/post/fire-and-forget-audio-playback-with
+    // Stolen from: https://markheath.net/post/fire-and-forget-audio-playback-with
     class CachedSound
     {
         internal float[] AudioData { get; private set; }
@@ -55,24 +53,14 @@ namespace DragoonMayCry.Audio
         public WaveFormat WaveFormat { get { return cachedSound.WaveFormat; } }
     }
 
-    public class AudioHandler
+    public class AudioEngine
     {
         private readonly IWavePlayer sfxOutputDevice;
         private readonly VolumeSampleProvider sfxSampleProvider;
         private readonly MixingSampleProvider sfxMixer;
         private Dictionary<StyleType, CachedSound> sounds;
 
-        public float SFXVolume
-        {
-            get => sfxSampleProvider.Volume;
-            set
-            {
-                sfxSampleProvider.Volume = value;
-
-            }
-        }
-
-        public AudioHandler()
+        public AudioEngine()
         {
             sfxOutputDevice = new WaveOutEvent();
 
@@ -83,8 +71,6 @@ namespace DragoonMayCry.Audio
             };
 
             sfxSampleProvider = new(sfxMixer);
-
-            SFXVolume = 0.1f;
 
             sfxOutputDevice.Init(sfxSampleProvider);
             sfxOutputDevice.Play();
@@ -101,11 +87,27 @@ namespace DragoonMayCry.Audio
                     current = current.Next;
                     continue;
                 }
-
+                
                 StyleRank rank = current.Value;
+                Service.Log.Debug($"Registering sound for {rank.StyleType}, {rank.SfxPath}");
                 sounds.Add(rank.StyleType, new CachedSound(rank.SfxPath));
                 current = current.Next;
             }
+        }
+
+        public void PlaySFX(StyleType trigger)
+        {
+            if (!sounds.ContainsKey(trigger))
+            {
+                Service.Log.Warning($"Audio trigger {trigger} has no audio associated");
+                return;
+            }
+            
+            Service.Log.Debug($"volume : {(Plugin.Configuration.SfxVolume / 100f) * GetGameSfxVolume()}");
+
+            sfxSampleProvider.Volume = (Plugin.Configuration.SfxVolume / 100f) * GetGameSfxVolume() ;
+            Service.Log.Debug($"Playing audio for trigger {trigger}");
+            AddSFXMixerInput(new CachedSoundSampleProvider(sounds[trigger]));
         }
 
         private ISampleProvider ConvertToRightChannelCount(ISampleProvider input)
@@ -127,14 +129,14 @@ namespace DragoonMayCry.Audio
             sfxMixer.AddMixerInput(mixerInput);
         }
 
-        public void PlaySFX(StyleType trigger)
+        private float GetGameSfxVolume()
         {
-            if (!sounds.ContainsKey(trigger))
+            if (Service.GameConfig.System.GetBool("IsSndSe") ||
+                Service.GameConfig.System.GetBool("IsSndMaster"))
             {
-                Service.Log.Warning($"Audio trigger {trigger} has no audio associated");
+                return 0;
             }
-            Service.Log.Debug($"Playing audio for trigger {trigger}");
-            AddSFXMixerInput(new CachedSoundSampleProvider(sounds[trigger]));
+            return Service.GameConfig.System.GetUInt("SoundSe") / 100f * (Service.GameConfig.System.GetUInt("SoundMaster") / 100f);
         }
     }
 }
