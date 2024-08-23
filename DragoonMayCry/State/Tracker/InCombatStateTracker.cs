@@ -4,21 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DragoonMayCry.State
+namespace DragoonMayCry.State.Tracker
 {
-    internal class OnEnteringInstanceStateTracker : StateTracker<bool>
+    internal class InCombatStateTracker : StateTracker<bool>
     {
         public override void Update(PlayerState playerState)
         {
-            CurrentValue = playerState.IsInsideInstance;
+            CurrentValue = playerState.IsInCombat;
             if (CurrentValue && !LastValue)
             {
-                Service.Log.Debug("Player entered instance");
+                Service.Log.Debug("Entered combat");
                 OnChange?.Invoke(this, CurrentValue);
             }
             else if (!CurrentValue && LastValue)
             {
-                Service.Log.Debug("Player left instance");
+                Service.Log.Debug("Exited combat");
                 OnChange?.Invoke(this, CurrentValue);
             }
 

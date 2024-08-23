@@ -35,6 +35,7 @@ namespace DragoonMayCry.UI
             //ImGui.SetNextWindowSize(new System.Numerics.Vector2(150,180));
             if (rank != null && ImGui.Begin("DragoonMayCry score", flags))
             {
+                ImGui.Text($"{rank.Score}");
                 if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), rank.Rank.IconPath).TryGetWrap(out var rankIcon, out var _))
                 {
                     var size = new Vector2(130, 130);

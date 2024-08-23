@@ -60,7 +60,11 @@ public class ConfigWindow : Window, IDisposable
 
         if (ImGui.Button("Next rank"))
         {
-            Plugin.ScoreManager.GoToNextRank(true, 0);
+            Plugin.StyleRankHandler.GoToNextRank(true);
+        }
+        if (ImGui.Button("Previous rank"))
+        {
+            Plugin.StyleRankHandler.ReturnToPreviousRank();
         }
 
     }

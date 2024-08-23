@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using DragoonMayCry.Style;
 
 namespace DragoonMayCry;
 
@@ -46,6 +47,7 @@ public unsafe class Plugin : IDalamudPlugin
     private readonly Hook<AddFlyTextDelegate> addFlyTextHook;
 
     public static ScoreManager ScoreManager { get; private set; } = null;
+    public static StyleRankHandler StyleRankHandler { get; private set; } = null;
     public static PluginUI PluginUI { get; private set; } = null;
 
     private static object[] _ftLocks = Enumerable.Repeat(new object(), 50).ToArray();
@@ -61,9 +63,9 @@ public unsafe class Plugin : IDalamudPlugin
         
         
         playerState = new();
-        
-        ScoreManager = new(playerState);
-        scoreProgressBar = new(ScoreManager);
+        StyleRankHandler = new(playerState);
+        ScoreManager = new(playerState, StyleRankHandler);
+        scoreProgressBar = new(ScoreManager, StyleRankHandler);
         PluginUI = new(playerState, scoreProgressBar);
 
 

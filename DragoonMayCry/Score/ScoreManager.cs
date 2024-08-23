@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Sources;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin.Services;
+using DragoonMayCry.Data;
 using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using ImGuiNET;
@@ -15,91 +16,133 @@ using static Dalamud.Interface.Utility.Raii.ImRaii;
 
 namespace DragoonMayCry.Score
 {
-    public class ScoreManager
+    public class ScoreManager : IDisposable
+
     {
 
-        public class ScoreRank
+    public class ScoreRank
+    {
+        public double Score { get; set; }
+        public StyleRank Rank { get; set; }
+
+        public ScoreRank(int score, StyleRank styleRank)
         {
-            public int Score { get; set; }
-            public StyleRank Rank { get; set; }
+            Score = score;
+            Rank = styleRank;
 
-            public ScoreRank(int score, StyleRank styleRank)
-            {
-                Score = score;
-                Rank = styleRank;
+        }
+    }
 
-            }
+
+    public ScoreRank CurrentScoreRank { get; private set; }
+
+    private readonly StyleRankHandler styleRankHandler;
+    private readonly PlayerState playerState;
+
+    private readonly CombatStopwatch combatStopwatch;
+    private static readonly double OPENER_COEFFICIENT = 1d;
+    private static readonly double OPENER_DURATION = 23;
+
+    private ScoreRank previousScoreRank;
+    private Double totalScore;
+
+    public ScoreManager(
+        PlayerState playerState, StyleRankHandler styleRankHandler)
+    {
+        combatStopwatch = new();
+        this.styleRankHandler = styleRankHandler;
+        CurrentScoreRank = new(0, styleRankHandler.CurrentRank.Value);
+        ResetScore();
+        this.playerState = playerState;
+        this.playerState.RegisterInstanceChangeHandler(OnInstanceChange);
+        this.playerState.RegisterCombatStateChangeHandler(OnCombatChange);
+
+        styleRankHandler.OnStyleRankChange += OnRankChange;
+        Service.Framework.Update += UpdateScore;
+    }
+
+    public void Dispose()
+    {
+        
+        Service.Framework.Update -= UpdateScore;
+    }
+
+    public void AddScore(double val)
+    {
+        if (combatStopwatch.TimeInCombat < 1)
+        {
+            return;
         }
 
-       
-        public ScoreRank CurrentScoreRank { get; private set; }
-        
-        private StyleRankHandler styleRankHandler;
-        private PlayerState playerState;
-        private ScoreRank previousScoreRank;
-        
-
-        public ScoreManager(PlayerState playerState)
+        var points = val;
+        if (combatStopwatch.TimeInCombat < OPENER_DURATION)
         {
-            styleRankHandler = new();
-            CurrentScoreRank = new(0, styleRankHandler.CurrentRank.Value);
+            points *= OPENER_COEFFICIENT;
+        }
+
+        totalScore += points;
+    }
+
+    public void UpdateScore(IFramework framework)
+    {
+        if (!IsActive())
+        {
+            return;
+        }
+        CurrentScoreRank.Score = totalScore / combatStopwatch.TimeInCombat;
+    }
+
+    public ScoreRank GetScoreRankToDisplay()
+    {
+        if (playerState.IsInCombat)
+        {
+            return CurrentScoreRank;
+        }
+
+        return previousScoreRank;
+    }
+
+
+
+    private void OnInstanceChange(object send, bool value)
+    {
+        ResetScore();
+    }
+
+    private void OnCombatChange(object send, bool enteringCombat)
+    {
+        if (!enteringCombat)
+        {
+            previousScoreRank = CurrentScoreRank;
             ResetScore();
-            this.playerState = playerState;
-            this.playerState.RegisterInstanceChangeHandler(OnInstanceChange);
-            this.playerState.RegisterCombatStateChangeHandler(OnCombatChange);
+            combatStopwatch.Stop();
         }
-
-        
-
-        public void GoToNextRank(bool loop, double lastThreshold)
+        else
         {
-            if (styleRankHandler.ReachedLastRank() && !loop)
-            {
-                return;
-            }
-            styleRankHandler.GoToNextRank(true);
-            CurrentScoreRank.Rank = styleRankHandler.CurrentRank.Value;
-            CurrentScoreRank.Score = (int)Math.Floor(CurrentScoreRank.Score - lastThreshold);
+            combatStopwatch.Start();
         }
+    }
 
-        public void AddScore(int val)
-        {
-            CurrentScoreRank.Score += val;
-        }
+    private void OnRankChange(object sender, StyleRank rank)
+    {
+        CurrentScoreRank.Rank = rank;
+    }
 
-        public ScoreRank GetScoreRankToDisplay()
-        {
-            if (playerState.IsInCombat)
-            {
-                return CurrentScoreRank;
-            }
-            return previousScoreRank;
-        }
-
-        
-
-        private void OnInstanceChange(object send, bool value)
-        {
-            ResetScore();
-        }
-
-        private void OnCombatChange(object send, bool enteringCombat)
-        {
-            if (!enteringCombat)
-            {
-                previousScoreRank = CurrentScoreRank;
-                ResetScore();
-            }
-        }
-
-        private void ResetScore()
-        {
-            styleRankHandler.Reset();
-            CurrentScoreRank = new ScoreRank(0, styleRankHandler.CurrentRank.Value);
-        }
+    private void ResetScore()
+    {
+        styleRankHandler.Reset();
+        totalScore = 0;
+    }
 
 
-        public void OnLogout() => ResetScore();
-        public bool IsActive() => playerState.IsInCombat;
+    public void OnLogout() => ResetScore();
+
+    public bool IsActive()
+    {
+        return playerState.IsInCombat &&
+               ((!playerState.IsInsideInstance &&
+                 Plugin.Configuration.ActiveOutsideInstance)
+                || playerState.IsInsideInstance);
+    }
     }
 }

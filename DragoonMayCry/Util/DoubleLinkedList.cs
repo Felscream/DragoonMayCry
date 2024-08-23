@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FFXIVClientStructs.Havok.Animation.Rig;
 
 namespace DragoonMayCry.Util
 {
@@ -19,6 +20,28 @@ namespace DragoonMayCry.Util
             Head = null;
             tail = null;
             size = 0;
+        }
+        public DoubleLinkedList(params T[] values)
+        {
+            Head = null;
+            tail = null;
+            size = 0;
+            for (int i = 0; i < values.Length; i++)
+            {
+                DoubleLinkedNode<T> node = new(values[i]);
+                if (size == 0)
+                {
+                    Head = node;
+                    tail = node;
+                }
+                else if(tail != null)
+                {
+                    node.Previous = tail;
+                    tail.Next = node;
+                    tail = node;
+                }
+                size++;
+            }
         }
 
         public DoubleLinkedList(T value)
@@ -39,6 +62,7 @@ namespace DragoonMayCry.Util
                 tail = node;
             } else
             {
+                node.Previous = tail;
                 tail.Next = node;
                 tail = node;
             }

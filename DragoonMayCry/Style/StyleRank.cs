@@ -18,20 +18,13 @@ namespace DragoonMayCry.Style
         public StyleType StyleType { get; init; }
         public string? IconPath { get; init; }
         public string? SfxPath { get; init; }
+        public double Threshold { get; init; }
         
-        public StyleRank(StyleType styleType, string iconPath, string sfxPath) {
+        public StyleRank(StyleType styleType, string iconPath, string sfxPath, double threshold) {
             StyleType = styleType;
             IconPath = iconPath;
             SfxPath = sfxPath;
-        }
-
-        public override bool Equals(object? obj) {
-            return obj is StyleRank rank &&
-                   StyleType == rank.StyleType;
-        }
-
-        public override int GetHashCode() {
-            return HashCode.Combine(StyleType);
+            Threshold = threshold;
         }
     }
 }

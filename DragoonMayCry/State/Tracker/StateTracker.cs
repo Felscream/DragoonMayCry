@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DragoonMayCry.State
+namespace DragoonMayCry.State.Tracker
 {
     public abstract class StateTracker<T>
     {

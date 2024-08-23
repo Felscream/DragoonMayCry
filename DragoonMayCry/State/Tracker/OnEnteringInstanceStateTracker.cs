@@ -4,21 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DragoonMayCry.State
+namespace DragoonMayCry.State.Tracker
 {
-    internal class OnDeathStateTracker : StateTracker<bool>
+    internal class OnEnteringInstanceStateTracker : StateTracker<bool>
     {
         public override void Update(PlayerState playerState)
         {
-            CurrentValue = playerState.IsDead;
+            CurrentValue = playerState.IsInsideInstance;
             if (CurrentValue && !LastValue)
             {
-                Service.Log.Debug("Player died");
+                Service.Log.Debug("Player entered instance");
                 OnChange?.Invoke(this, CurrentValue);
             }
             else if (!CurrentValue && LastValue)
             {
-                Service.Log.Debug("Player revived");
+                Service.Log.Debug("Player left instance");
                 OnChange?.Invoke(this, CurrentValue);
             }
 
