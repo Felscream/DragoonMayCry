@@ -4,12 +4,18 @@ using DragoonMayCry.Style;
 using FFXIVClientStructs.FFXIV.Common.Math;
 using ImGuiNET;
 using System.Reflection;
+using DragoonMayCry.Score;
 using static DragoonMayCry.Score.ScoreManager;
 
 namespace DragoonMayCry.UI
 {
     public sealed class StyleRankUI
     {
+        private readonly ScoreProgressBar scoreProgressBar;
+        public StyleRankUI(ScoreProgressBar scoreProgressBar)
+        {
+            this.scoreProgressBar = scoreProgressBar;
+        }
 
         public void Draw() {
             var flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoScrollbar |
@@ -45,7 +51,7 @@ namespace DragoonMayCry.UI
                     var gaugeHeight = (gauge.Height / 6.0f) * textureToElementScale;
                     var offsetX = 10f;
                     var offsetY = 150f;
-                    var progress = rank.Progress;
+                    var progress = scoreProgressBar.Progress;
                     RenderBackgroundUIElement(gauge, offsetX, offsetY, gaugeWidth, gaugeHeight, textureToElementScale, true);
                     RenderBarUIElement(gauge, offsetX, offsetY, gaugeWidth,
                                        gaugeHeight, textureToElementScale, progress);

@@ -51,7 +51,7 @@ namespace DragoonMayCry.Score
 
         
 
-        public void GoToNextRank(bool loop)
+        public void GoToNextRank(bool loop, double lastThreshold)
         {
             if (styleRankHandler.ReachedLastRank() && !loop)
             {
@@ -59,7 +59,7 @@ namespace DragoonMayCry.Score
             }
             styleRankHandler.GoToNextRank(true);
             CurrentScoreRank.Rank = styleRankHandler.CurrentRank.Value;
-            CurrentScoreRank.Score = 0;
+            CurrentScoreRank.Score = (int)Math.Floor(CurrentScoreRank.Score - lastThreshold);
         }
 
         public void AddScore(int val)

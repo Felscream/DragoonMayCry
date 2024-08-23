@@ -51,6 +51,7 @@ public unsafe class Plugin : IDalamudPlugin
     private static object[] _ftLocks = Enumerable.Repeat(new object(), 50).ToArray();
     private readonly IPluginLog logger;
     private readonly PlayerState playerState;
+    private readonly ScoreProgressBar scoreProgressBar;
 
     public Plugin(IDalamudPluginInterface pluginInterface)
     {
@@ -60,8 +61,10 @@ public unsafe class Plugin : IDalamudPlugin
         
         
         playerState = new();
-        PluginUI = new(playerState);
+        
         ScoreManager = new(playerState);
+        scoreProgressBar = new(ScoreManager);
+        PluginUI = new(playerState, scoreProgressBar);
 
 
         Service.ClientState.Logout += ScoreManager.OnLogout;
@@ -97,7 +100,7 @@ public unsafe class Plugin : IDalamudPlugin
         playerState.Dispose();
         addFlyTextHook?.Disable();
         addFlyTextHook?.Dispose();
-        ScoreManager.Dispose();
+        scoreProgressBar.Dispose();
 
         Service.ClientState.Logout -= ScoreManager.OnLogout;
 

@@ -11,6 +11,7 @@ using DragoonMayCry.State;
 using DragoonMayCry.Style;
 using Lumina.Excel.GeneratedSheets2;
 using System.Threading;
+using DragoonMayCry.Score;
 
 namespace DragoonMayCry.UI
 {
@@ -19,14 +20,15 @@ namespace DragoonMayCry.UI
         private readonly WindowSystem WindowSystem = new("DragoonMayCry");
         private ConfigWindow ConfigWindow { get; init; }
 
-        private readonly StyleRankUI _styleRankUI = new();
+        private readonly StyleRankUI styleRankUI;
         private readonly IDalamudPluginInterface pluginInterface;
         private readonly PlayerState playerState;
         private Timer hideRankUiTimer;
         private bool displayRankUi = false;
-        public PluginUI(PlayerState playerState)
+        public PluginUI(PlayerState playerState, ScoreProgressBar scoreProgressBar)
         {
             ConfigWindow = new ConfigWindow(Plugin.Configuration);
+            styleRankUI = new StyleRankUI(scoreProgressBar);
 
             WindowSystem.AddWindow(ConfigWindow);
 
@@ -55,7 +57,7 @@ namespace DragoonMayCry.UI
             WindowSystem.Draw();
             if (displayRankUi)
             {
-                _styleRankUI.Draw();
+                styleRankUI.Draw();
             }
             
         }

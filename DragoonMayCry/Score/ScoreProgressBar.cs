@@ -40,8 +40,9 @@ namespace DragoonMayCry.Score
 
             if (Progress >= 0.995f)
             {
-                scoreManager.GoToNextRank(false);
                 interpolatedScore = 0;
+                scoreManager.GoToNextRank(false, THRESHOLD);
+                
             }
         }
     }
