@@ -4,7 +4,7 @@ using DragoonMayCry.Style;
 using FFXIVClientStructs.FFXIV.Common.Math;
 using ImGuiNET;
 using System.Reflection;
-using static DragoonMayCry.ScoreManager;
+using static DragoonMayCry.Score.ScoreManager;
 
 namespace DragoonMayCry.UI
 {
@@ -25,7 +25,7 @@ namespace DragoonMayCry.UI
             }
 
 
-            ScoreRank rank = Plugin.ScoreManager.GetScoreRank();
+            ScoreRank rank = Plugin.ScoreManager.GetScoreRankToDisplay();
             //ImGui.SetNextWindowSize(new System.Numerics.Vector2(150,180));
             if (rank != null && ImGui.Begin("DragoonMayCry score", flags))
             {

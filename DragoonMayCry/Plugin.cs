@@ -5,6 +5,7 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Configuration;
+using DragoonMayCry.Score;
 using DragoonMayCry.State;
 using DragoonMayCry.UI;
 using FFXIVClientStructs.FFXIV.Client.UI;
