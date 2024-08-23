@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Style;
+using ImGuiNET;
 
 namespace DragoonMayCry.Score
 {
@@ -16,16 +17,14 @@ namespace DragoonMayCry.Score
         private readonly ScoreManager scoreManager;
         private readonly StyleRankHandler styleRankHandler;
         private double interpolatedScore = 0;
+        private double lastRankChange = 0;
 
-        private double previousThreshold;
         public ScoreProgressBar(ScoreManager scoreManager, StyleRankHandler styleRankHandler)
         {
             this.scoreManager = scoreManager;
             Service.Framework.Update += UpdateScoreInterpolation;
             this.styleRankHandler = styleRankHandler;
             this.styleRankHandler.OnStyleRankChange += OnRankChange;
-            var previousStyleRank = styleRankHandler.GetPreviousStyleRank();
-            previousThreshold = previousStyleRank == null ? 0 : previousStyleRank.Threshold;
         }
 
         public void Dispose()
@@ -42,18 +41,22 @@ namespace DragoonMayCry.Score
 
             var currentScoreRank = scoreManager.CurrentScoreRank;
             var threshold = currentScoreRank.Rank.Threshold;
-            var tempScore = currentScoreRank.Score - previousThreshold;
             interpolatedScore = double.Lerp(
-                interpolatedScore, tempScore,
+                interpolatedScore, currentScoreRank.Score,
                 InterpolationWeight);
-            Progress = Math.Min(tempScore / (threshold - previousThreshold), 1);
-            Service.Log.Debug($"Progress : {Progress}, interpolated : {interpolatedScore}, score ${currentScoreRank.Score}, threshold : {threshold} previous threshold {previousThreshold} style {currentScoreRank.Rank.StyleType}");
-            if (Progress >= 0.995f)
+            Progress = Math.Min(interpolatedScore / threshold , 1);
+
+            double time = ImGui.GetTime();
+            double timeSinceLastRankChange = time - lastRankChange;
+            double scoreToThresholdRatio =
+                currentScoreRank.Score / threshold;
+            if (Progress >= 0.995f && timeSinceLastRankChange > 3 || scoreToThresholdRatio > 1.1)
             {
-                styleRankHandler.GoToNextRank(false);
+                styleRankHandler.GoToNextRank(true, false);
             }
 
-            if (Progress <= 0.005f)
+            
+            if (currentScoreRank.Score == 0 && (timeSinceLastRankChange > 2.5 ))
             {
                 styleRankHandler.ReturnToPreviousRank();
             }
@@ -62,11 +65,7 @@ namespace DragoonMayCry.Score
         private void OnRankChange(object? sender, StyleRank rank)
         {
             interpolatedScore = 0;
-            var previousStyleRank = styleRankHandler.GetPreviousStyleRank();
-            previousThreshold = previousStyleRank == null
-                                    ? 0
-                                    : previousStyleRank.Threshold;
-
+            lastRankChange = ImGui.GetTime();
         }
     }
 }
