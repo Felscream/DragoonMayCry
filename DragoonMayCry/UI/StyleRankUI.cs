@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Dalamud.Interface;
 using Dalamud.Interface.Textures.TextureWraps;
 using DragoonMayCry.Style;
@@ -18,6 +19,7 @@ namespace DragoonMayCry.UI
     public sealed class StyleRankUI
     {
         private readonly ScoreProgressBar scoreProgressBar;
+        private readonly ScoreManager scoreManager;
         private readonly Random random;
         private readonly StyleRankHandler styleRankHandler;
         private readonly Vector2 rankPosition = new (8, 8);
@@ -27,21 +29,32 @@ namespace DragoonMayCry.UI
         private bool showProgressGauge;
 
         private Easing rankTransition;
-        public StyleRankUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, PlayerState playerState)
+        private Stopwatch shakeStopwatch;
+        private float shakeDuration = 400f;
+        private float shakeIntensity = 6f;
+
+        public StyleRankUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, PlayerState playerState, ScoreManager scoreManager)
         {
             this.scoreProgressBar = scoreProgressBar;
             this.styleRankHandler = styleRankHandler;
+            this.scoreManager = scoreManager;
+            this.scoreManager.OnScoring += OnScoring;
             playerState.RegisterCombatStateChangeHandler(OnCombatChange);
             
             this.styleRankHandler.OnStyleRankChange += OnRankChange;
 
-            long duration = 2500000;
+            long duration = 1500000;
             rankTransition = new OutCubic(new(duration));
+            shakeStopwatch = new Stopwatch();
 
             random = new();
         }
 
         public void Draw() {
+            if (shakeStopwatch.IsRunning && shakeStopwatch.ElapsedMilliseconds > shakeDuration)
+            {
+                shakeStopwatch.Reset();
+            }
             var windowFlags = Plugin.Configuration.StyleRankUiConfiguration.LockScoreWindow ?
                                   ImGuiWindowFlags.NoTitleBar |
                                   ImGuiWindowFlags.NoResize |
@@ -80,10 +93,10 @@ namespace DragoonMayCry.UI
                 }
 
                 // Stolen from https://github.com/marconsou/mp-tick-bar
-                if (Service.TextureProvider
-                           .GetFromManifestResource(Assembly.GetExecutingAssembly(),
-                                                    "DragoonMayCry.Assets.GaugeDefault.png")
-                           .TryGetWrap(out var gauge, out var _))
+                if ((showProgressGauge || Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay) && Service.TextureProvider
+                                            .GetFromManifestResource(Assembly.GetExecutingAssembly(),
+                                                "DragoonMayCry.Assets.GaugeDefault.png")
+                                            .TryGetWrap(out var gauge, out var _))
                 {
                     DrawProgressGauge(gauge);
                 }
@@ -91,9 +104,14 @@ namespace DragoonMayCry.UI
             }
         }
 
+        public void Shake()
+        {
+            shakeStopwatch.Restart();
+        }
+
         private void DrawScore()
         {
-            var score = Plugin.ScoreManager.CurrentScoreRank.Score;
+            var score = scoreManager.CurrentScoreRank.Score;
             ImGui.Text($"{score}");
         }
 
@@ -113,8 +131,7 @@ namespace DragoonMayCry.UI
 
         private void DrawCurrentRank(IDalamudTextureWrap rankIcon)
         {
-            var animationTransitionValue = rankTransition.IsRunning ? (float)rankTransition.Value : 1f;
-            var size = rankSize * animationTransitionValue;
+            
 
             var lerpedCoordinates = (float)double.Lerp(
                 rankTransitionStartPosition.X, rankPosition.X,
@@ -124,14 +141,21 @@ namespace DragoonMayCry.UI
                 new Vector2(lerpedCoordinates, lerpedCoordinates);
 
             var intensity =
-                CustomEasing.InCube((float)scoreProgressBar.Progress) * 0.6f;
-            var offset = new System.Numerics.Vector2(
+                CustomEasing.InCube(scoreProgressBar.Progress) * 1.5f;
+            if (shakeStopwatch.IsRunning)
+            {
+                intensity = shakeIntensity;
+            }
+            var offset = new Vector2(
                 random.NextSingle() * intensity * 2 - intensity / 2,
                 random.NextSingle() * intensity * 2 - intensity / 2);
                     
             var pos = transitionPosition + offset;
+            
+            var animationTransitionValue = rankTransition.IsRunning ? (float)rankTransition.Value : 1f;
+            var size = rankSize * animationTransitionValue;
+            
             ImGui.SetCursorPos(pos);
-                    
             ImGui.Image(rankIcon.ImGuiHandle, size);
         }
 
@@ -177,21 +201,23 @@ namespace DragoonMayCry.UI
 
             if (currentStyleRank.StyleType < rank.StyleType)
             {
-                rankTransition.Reset();
-                rankTransition.Start();
+                rankTransition.Restart();
             }
             else
             {
-                rankTransition.Stop();
                 rankTransition.Reset();
             }
             currentStyleRank = rank;
-            
         }
 
-        private void OnCombatChange(object send, bool inCombat)
+        private void OnCombatChange(object send, bool enteringCombat)
         {
-            showProgressGauge = inCombat;
+            showProgressGauge = enteringCombat;
+        }
+
+        private void OnScoring(object sender, double points)
+        {
+            Shake();
         }
     }
 }

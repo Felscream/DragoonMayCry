@@ -65,7 +65,6 @@ namespace DragoonMayCry.Score
                 interpolatedScore, currentScoreRank.Score,
                 InterpolationWeight);
             Progress = (float)Math.Min(interpolatedScore / threshold , 1);
-            Service.Log.Information($"Progress {Progress}");
             double time = ImGui.GetTime();
             double timeSinceLastRankChange = time - lastRankChange;
 

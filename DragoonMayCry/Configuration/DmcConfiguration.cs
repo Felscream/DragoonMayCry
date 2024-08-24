@@ -9,7 +9,6 @@ namespace DragoonMayCry.Configuration;
 public class DmcConfiguration : IPluginConfiguration
 {
     public int Version { get; set; } = 0;
-    public bool SomePropertyToBeSavedAndWithADefault { get; set; } = true;
 
     public bool Enabled = true;
     public int SfxVolume { get; set; } = 80;

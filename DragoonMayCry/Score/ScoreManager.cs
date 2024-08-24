@@ -23,15 +23,16 @@ namespace DragoonMayCry.Score
         }
     }
 
-
+    public EventHandler<double> OnScoring;
     public ScoreRank CurrentScoreRank { get; private set; }
+    public ScoreRank PreviousScoreRank { get; private set; }
     private readonly StyleRankHandler styleRankHandler;
     private readonly PlayerState playerState;
 
     private readonly CombatStopwatch combatStopwatch;
     private static readonly double OPENER_COEFFICIENT = .6d;
     private static readonly double MALUS_DURATION = 15;
-    private ScoreRank previousScoreRank;
+    
     private Double totalScore;
 
     public ScoreManager(
@@ -58,8 +59,6 @@ namespace DragoonMayCry.Score
     public void AddScore(double val)
     {
         var points = val;
-        Service.Log.Debug($"Damage {val}");
-        Service.Log.Debug($"Time in combat {combatStopwatch.TimeInCombat}");
         if (combatStopwatch.TimeInCombat < 2)
         {
             return;
@@ -70,7 +69,8 @@ namespace DragoonMayCry.Score
         }
 
         CurrentScoreRank.Score += points;
-        }
+        OnScoring?.Invoke(this, points);
+    }
 
     public void UpdateScore(IFramework framework)
     {
@@ -82,8 +82,6 @@ namespace DragoonMayCry.Score
         CurrentScoreRank.Score -=
             framework.UpdateDelta.TotalSeconds * CurrentScoreRank.Rank.ReductionPerSecond;
         CurrentScoreRank.Score = Math.Max(CurrentScoreRank.Score, 0);
-
-        Service.Log.Information($"Score {CurrentScoreRank.Score}");
     }
 
     private void OnInstanceChange(object send, bool value)
@@ -95,19 +93,19 @@ namespace DragoonMayCry.Score
     {
         if (!enteringCombat)
         {
-            previousScoreRank = CurrentScoreRank;
-            ResetScore();
+            PreviousScoreRank = CurrentScoreRank;
             combatStopwatch.Stop();
         }
         else
         {
+            ResetScore();
             combatStopwatch.Start();
         }
     }
 
     private void OnRankChange(object sender, StyleRank rank)
     {
-        previousScoreRank = CurrentScoreRank;
+        PreviousScoreRank = CurrentScoreRank;
         if ((int)CurrentScoreRank.Rank.StyleType < (int)rank.StyleType)
         {
             CurrentScoreRank.Score -= CurrentScoreRank.Rank.Threshold;

@@ -67,7 +67,7 @@ public unsafe class Plugin : IDalamudPlugin
         StyleRankHandler = new(playerState);
         ScoreManager = new(playerState, StyleRankHandler);
         scoreProgressBar = new(ScoreManager, StyleRankHandler);
-        PluginUI = new(playerState, scoreProgressBar, StyleRankHandler);
+        PluginUI = new(playerState, scoreProgressBar, StyleRankHandler, ScoreManager);
 
 
         Service.ClientState.Logout += ScoreManager.OnLogout;

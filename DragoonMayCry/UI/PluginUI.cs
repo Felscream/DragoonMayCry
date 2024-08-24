@@ -1,6 +1,7 @@
 using Dalamud.Interface.Windowing;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -23,12 +24,12 @@ namespace DragoonMayCry.UI
         private readonly StyleRankUI styleRankUI;
         private readonly IDalamudPluginInterface pluginInterface;
         private readonly PlayerState playerState;
-        private Timer hideRankUiTimer;
-        private bool displayRankUi = false;
-        public PluginUI(PlayerState playerState, ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler)
+        private readonly float timeToHideRankUi = 10000f;
+        private Stopwatch hideRankUiStopwatch;
+        public PluginUI(PlayerState playerState, ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager)
         {
             ConfigWindow = new ConfigWindow(Plugin.Configuration);
-            styleRankUI = new StyleRankUI(scoreProgressBar, styleRankHandler, playerState);
+            styleRankUI = new StyleRankUI(scoreProgressBar, styleRankHandler, playerState, scoreManager);
 
             WindowSystem.AddWindow(ConfigWindow);
 
@@ -38,7 +39,10 @@ namespace DragoonMayCry.UI
             pluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUI;
             this.playerState = playerState;
             playerState.RegisterCombatStateChangeHandler(OnCombatChange);
-            
+
+            hideRankUiStopwatch = new Stopwatch();
+
+
         }
 
         public void Dispose()
@@ -54,8 +58,14 @@ namespace DragoonMayCry.UI
 
         private void DrawUI()
         {
+            if (hideRankUiStopwatch.IsRunning &&
+                hideRankUiStopwatch.ElapsedMilliseconds > timeToHideRankUi)
+            {
+                hideRankUiStopwatch.Stop();
+            }
+
             WindowSystem.Draw();
-            if (displayRankUi || Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay)
+            if (CanDrawStyleRank() || Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay)
             {
                 styleRankUI.Draw();
             }
@@ -70,34 +80,22 @@ namespace DragoonMayCry.UI
                 return false;
             }
 
-            return playerState.IsInCombat || playerState.IsInsideInstance;
+
+
+            return playerState.IsInCombat || playerState.IsInsideInstance || hideRankUiStopwatch.IsRunning;
         }
 
         private void OnCombatChange(object send, bool enteringCombat)
         {
             if (!enteringCombat)
             {
-                hideRankUiTimer = new Timer(HideRankUi, null, Plugin.Configuration.TimeToResetScoreAfterCombat, Timeout.Infinite);
+                hideRankUiStopwatch.Restart();
             }
             else
             {
-                displayRankUi = CanDrawStyleRank();
-                if (hideRankUiTimer != null)
-                {
-                    hideRankUiTimer.Dispose();
-                }
+                hideRankUiStopwatch.Reset();
             }
         }
-
-        private void HideRankUi(object state)
-        {
-            displayRankUi = false;
-            if (hideRankUiTimer != null)
-            {
-                hideRankUiTimer.Dispose();
-            }
-        }
-
 
         public void ToggleConfigUI()
         {

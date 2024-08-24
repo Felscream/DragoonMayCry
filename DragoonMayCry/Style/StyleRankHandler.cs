@@ -93,12 +93,10 @@ namespace DragoonMayCry.Style
 
         private void OnCombatChange(object send, bool enteringCombat)
         {
-            if (!enteringCombat)
+            if (enteringCombat)
             {
-                PreviousRank = CurrentRank;
-                
+                Reset();
             }
-            Reset();
         }
         private void OnJobChange(object sender, JobIds newJob)
         {
