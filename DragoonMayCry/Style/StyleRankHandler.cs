@@ -5,6 +5,8 @@ using DragoonMayCry.Util;
 using System.IO;
 using DragoonMayCry.Data;
 using DragoonMayCry.State;
+using DragoonMayCry.Score;
+using static FFXIVClientStructs.FFXIV.Client.UI.RaptureAtkHistory.Delegates;
 
 namespace DragoonMayCry.Style
 {
@@ -21,6 +23,7 @@ namespace DragoonMayCry.Style
 
         public EventHandler<StyleRank> OnStyleRankChange;
         public DoubleLinkedNode<StyleRank>? CurrentRank { get; private set; }
+        public DoubleLinkedNode<StyleRank>? PreviousRank { get; private set; }
         private DoubleLinkedList<StyleRank> styles;
         private readonly AudioEngine audioEngine;
 
@@ -29,30 +32,10 @@ namespace DragoonMayCry.Style
             ChangeStylesTo(DEFAULT_STYLE_RANK);
             audioEngine = new AudioEngine();
             audioEngine.Init(styles);
-            
+
             playerState.RegisterJobChangeHandler(OnJobChange);
             playerState.RegisterLoginStateChangeHandler(OnLogin);
-        }
-
-        public void OnJobChange(object sender, JobIds newJob)
-        {
-            ChangeStylesTo(DEFAULT_STYLE_RANK);
-        }
-
-        public void OnLogin(object send, bool loggedIn)
-        {
-            if (!loggedIn)
-            {
-                return;
-            }
-            var currentJob = JobHelper.GetCurrentJob();
-            if (currentJob == JobIds.OTHER)
-            {
-                ChangeStylesTo(DEFAULT_STYLE_RANK);
-                return;
-            }
-            ChangeStylesTo(DEFAULT_STYLE_RANK);
-
+            playerState.RegisterCombatStateChangeHandler(OnCombatChange);
         }
 
         public void GoToNextRank(bool playSfx, bool loop)
@@ -88,6 +71,12 @@ namespace DragoonMayCry.Style
             OnStyleRankChange?.Invoke(this, CurrentRank.Value);
         }
 
+        public void GoToLastStyleNode()
+        {
+            CurrentRank = styles.Tail;
+            OnStyleRankChange?.Invoke(this, CurrentRank.Value);
+        }
+
         private static string GetPathToAudio(string name)
         {
             return Path.Combine(
@@ -100,6 +89,36 @@ namespace DragoonMayCry.Style
             styles = newStyles;
             CurrentRank = styles.Head;
             OnStyleRankChange?.Invoke(this, CurrentRank.Value);
+        }
+
+        private void OnCombatChange(object send, bool enteringCombat)
+        {
+            if (!enteringCombat)
+            {
+                PreviousRank = CurrentRank;
+                
+            }
+            Reset();
+        }
+        private void OnJobChange(object sender, JobIds newJob)
+        {
+            ChangeStylesTo(DEFAULT_STYLE_RANK);
+        }
+
+        private void OnLogin(object send, bool loggedIn)
+        {
+            if (!loggedIn)
+            {
+                return;
+            }
+            var currentJob = JobHelper.GetCurrentJob();
+            if (currentJob == JobIds.OTHER)
+            {
+                ChangeStylesTo(DEFAULT_STYLE_RANK);
+                return;
+            }
+            ChangeStylesTo(DEFAULT_STYLE_RANK);
+
         }
     }
 }

@@ -25,10 +25,10 @@ namespace DragoonMayCry.UI
         private readonly PlayerState playerState;
         private Timer hideRankUiTimer;
         private bool displayRankUi = false;
-        public PluginUI(PlayerState playerState, ScoreProgressBar scoreProgressBar)
+        public PluginUI(PlayerState playerState, ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler)
         {
             ConfigWindow = new ConfigWindow(Plugin.Configuration);
-            styleRankUI = new StyleRankUI(scoreProgressBar);
+            styleRankUI = new StyleRankUI(scoreProgressBar, styleRankHandler, playerState);
 
             WindowSystem.AddWindow(ConfigWindow);
 
@@ -55,7 +55,7 @@ namespace DragoonMayCry.UI
         private void DrawUI()
         {
             WindowSystem.Draw();
-            if (displayRankUi)
+            if (displayRankUi || Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay)
             {
                 styleRankUI.Draw();
             }

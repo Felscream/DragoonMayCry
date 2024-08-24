@@ -2,6 +2,7 @@ using Dalamud.Plugin.Services;
 using DragoonMayCry.State;
 using DragoonMayCry.Style;
 using System;
+using DragoonMayCry.Util;
 
 namespace DragoonMayCry.Score
 {
@@ -14,7 +15,7 @@ namespace DragoonMayCry.Score
         public double Score { get; set; }
         public StyleRank Rank { get; set; }
 
-        public ScoreRank(int score, StyleRank styleRank)
+        public ScoreRank(double score, StyleRank styleRank)
         {
             Score = score;
             Rank = styleRank;
@@ -24,14 +25,12 @@ namespace DragoonMayCry.Score
 
 
     public ScoreRank CurrentScoreRank { get; private set; }
-
     private readonly StyleRankHandler styleRankHandler;
     private readonly PlayerState playerState;
 
     private readonly CombatStopwatch combatStopwatch;
     private static readonly double OPENER_COEFFICIENT = .6d;
     private static readonly double MALUS_DURATION = 15;
-    private static readonly double reductionPerSecond = 2000;
     private ScoreRank previousScoreRank;
     private Double totalScore;
 
@@ -43,6 +42,7 @@ namespace DragoonMayCry.Score
         CurrentScoreRank = new(0, styleRankHandler.CurrentRank.Value);
         ResetScore();
         this.playerState = playerState;
+        this.playerState.RegisterJobChangeHandler(((sender, ids) => ResetScore()));
         this.playerState.RegisterInstanceChangeHandler(OnInstanceChange);
         this.playerState.RegisterCombatStateChangeHandler(OnCombatChange);
 
@@ -60,14 +60,16 @@ namespace DragoonMayCry.Score
         var points = val;
         Service.Log.Debug($"Damage {val}");
         Service.Log.Debug($"Time in combat {combatStopwatch.TimeInCombat}");
-            if (combatStopwatch.TimeInCombat < MALUS_DURATION)
+        if (combatStopwatch.TimeInCombat < 2)
+        {
+            return;
+        }
+        if (combatStopwatch.TimeInCombat < MALUS_DURATION)
         {
             points *= OPENER_COEFFICIENT;
         }
 
-        totalScore += points;
         CurrentScoreRank.Score += points;
-        Service.Log.Debug($"Score {CurrentScoreRank.Score}");
         }
 
     public void UpdateScore(IFramework framework)
@@ -80,19 +82,9 @@ namespace DragoonMayCry.Score
         CurrentScoreRank.Score -=
             framework.UpdateDelta.TotalSeconds * CurrentScoreRank.Rank.ReductionPerSecond;
         CurrentScoreRank.Score = Math.Max(CurrentScoreRank.Score, 0);
+
+        Service.Log.Information($"Score {CurrentScoreRank.Score}");
     }
-
-    public ScoreRank GetScoreRankToDisplay()
-    {
-        if (playerState.IsInCombat)
-        {
-            return CurrentScoreRank;
-        }
-
-        return previousScoreRank;
-    }
-
-
 
     private void OnInstanceChange(object send, bool value)
     {
@@ -115,6 +107,7 @@ namespace DragoonMayCry.Score
 
     private void OnRankChange(object sender, StyleRank rank)
     {
+        previousScoreRank = CurrentScoreRank;
         if ((int)CurrentScoreRank.Rank.StyleType < (int)rank.StyleType)
         {
             CurrentScoreRank.Score -= CurrentScoreRank.Rank.Threshold;
@@ -123,12 +116,13 @@ namespace DragoonMayCry.Score
         {
             CurrentScoreRank.Score = rank.Threshold * 0.8;
         }
+
+        
         CurrentScoreRank.Rank = rank;
     }
 
     private void ResetScore()
     {
-        styleRankHandler.Reset();
         totalScore = 0;
         CurrentScoreRank.Score = 0;
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -12,12 +13,30 @@ namespace DragoonMayCry.Score
 {
     public class ScoreProgressBar : IDisposable
     {
-        public double Progress { get; private set; }
+        public float Progress
+        {
+            get
+            {
+                if (Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay)
+                {
+                    return Plugin.Configuration.StyleRankUiConfiguration
+                                 .DebugProgressValue;
+                }
+                return _progress;
+            }
+            private set
+            {
+                _progress = value;
+            }
+        }
+
         private static readonly double InterpolationWeight = 0.09d;
         private readonly ScoreManager scoreManager;
         private readonly StyleRankHandler styleRankHandler;
+        private Stopwatch rankFloorStopwatch;
         private double interpolatedScore = 0;
         private double lastRankChange = 0;
+        private float _progress;
 
         public ScoreProgressBar(ScoreManager scoreManager, StyleRankHandler styleRankHandler)
         {
@@ -25,6 +44,7 @@ namespace DragoonMayCry.Score
             Service.Framework.Update += UpdateScoreInterpolation;
             this.styleRankHandler = styleRankHandler;
             this.styleRankHandler.OnStyleRankChange += OnRankChange;
+            rankFloorStopwatch = new Stopwatch();
         }
 
         public void Dispose()
@@ -44,19 +64,26 @@ namespace DragoonMayCry.Score
             interpolatedScore = double.Lerp(
                 interpolatedScore, currentScoreRank.Score,
                 InterpolationWeight);
-            Progress = Math.Min(interpolatedScore / threshold , 1);
-
+            Progress = (float)Math.Min(interpolatedScore / threshold , 1);
+            Service.Log.Information($"Progress {Progress}");
             double time = ImGui.GetTime();
             double timeSinceLastRankChange = time - lastRankChange;
-            double scoreToThresholdRatio =
-                currentScoreRank.Score / threshold;
-            if (Progress >= 0.995f && timeSinceLastRankChange > 3 || scoreToThresholdRatio > 1.1)
+
+            if (Progress >= 0.995f && timeSinceLastRankChange > 1.5)
             {
                 styleRankHandler.GoToNextRank(true, false);
             }
 
+            if (currentScoreRank.Score == 0 && !rankFloorStopwatch.IsRunning)
+            {
+                rankFloorStopwatch.Restart();
+            } else if (currentScoreRank.Score > 0)
+            {
+                rankFloorStopwatch.Stop();
+                rankFloorStopwatch.Reset();
+            }
             
-            if (currentScoreRank.Score == 0 && (timeSinceLastRankChange > 2.5 ))
+            if (currentScoreRank.Score == 0 && (timeSinceLastRankChange > 2.5  && rankFloorStopwatch.ElapsedMilliseconds > 2000))
             {
                 styleRankHandler.ReturnToPreviousRank();
             }

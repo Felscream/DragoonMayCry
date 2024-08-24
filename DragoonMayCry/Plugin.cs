@@ -15,6 +15,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using DragoonMayCry.Style;
+using DragoonMayCry.Util;
 
 namespace DragoonMayCry;
 
@@ -66,7 +67,7 @@ public unsafe class Plugin : IDalamudPlugin
         StyleRankHandler = new(playerState);
         ScoreManager = new(playerState, StyleRankHandler);
         scoreProgressBar = new(ScoreManager, StyleRankHandler);
-        PluginUI = new(playerState, scoreProgressBar);
+        PluginUI = new(playerState, scoreProgressBar, StyleRankHandler);
 
 
         Service.ClientState.Logout += ScoreManager.OnLogout;

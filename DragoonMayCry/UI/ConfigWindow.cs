@@ -67,5 +67,23 @@ public class ConfigWindow : Window, IDisposable
             Plugin.StyleRankHandler.ReturnToPreviousRank();
         }
 
+        var testing = Configuration.StyleRankUiConfiguration.TestRankDisplay;
+        if (ImGui.Checkbox("Test rank display", ref testing))
+        {
+            Configuration.StyleRankUiConfiguration.TestRankDisplay = testing;
+            Configuration.Save();
+        }
+
+        if (testing)
+        {
+            var debugProgressValue = (float)Configuration.StyleRankUiConfiguration.DebugProgressValue;
+            if (ImGui.SliderFloat("Progress value", ref debugProgressValue, 0,
+                                1))
+            {
+                Configuration.StyleRankUiConfiguration.DebugProgressValue = debugProgressValue;
+                Configuration.Save();
+            }
+        }
+
     }
 }

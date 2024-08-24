@@ -12,19 +12,19 @@ namespace DragoonMayCry.Util
     public class DoubleLinkedList<T>
     {
         public DoubleLinkedNode<T>? Head { get; private set; }
-        DoubleLinkedNode<T>? tail;
+        public DoubleLinkedNode<T>? Tail { get; private set; }
         int size;
 
         public DoubleLinkedList()
         {
             Head = null;
-            tail = null;
+            Tail = null;
             size = 0;
         }
         public DoubleLinkedList(params T[] values)
         {
             Head = null;
-            tail = null;
+            Tail = null;
             size = 0;
             for (int i = 0; i < values.Length; i++)
             {
@@ -32,13 +32,13 @@ namespace DragoonMayCry.Util
                 if (size == 0)
                 {
                     Head = node;
-                    tail = node;
+                    Tail = node;
                 }
-                else if(tail != null)
+                else if(Tail != null)
                 {
-                    node.Previous = tail;
-                    tail.Next = node;
-                    tail = node;
+                    node.Previous = Tail;
+                    Tail.Next = node;
+                    Tail = node;
                 }
                 size++;
             }
@@ -48,7 +48,7 @@ namespace DragoonMayCry.Util
         {
             var node = new DoubleLinkedNode<T>(value);
             Head = node;
-            tail = node;
+            Tail = node;
             size = 1;
         }
 
@@ -57,14 +57,14 @@ namespace DragoonMayCry.Util
             var node = new DoubleLinkedNode<T>(value);
             Head ??= node;
             
-            if(tail == null)
+            if(Tail == null)
             {
-                tail = node;
+                Tail = node;
             } else
             {
-                node.Previous = tail;
-                tail.Next = node;
-                tail = node;
+                node.Previous = Tail;
+                Tail.Next = node;
+                Tail = node;
             }
             
             size++;
