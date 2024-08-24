@@ -55,6 +55,7 @@ public unsafe class Plugin : IDalamudPlugin
     private readonly IPluginLog logger;
     private readonly PlayerState playerState;
     private readonly ScoreProgressBar scoreProgressBar;
+    private readonly ActionTracker actionTracker;
 
     public Plugin(IDalamudPluginInterface pluginInterface)
     {
@@ -68,6 +69,7 @@ public unsafe class Plugin : IDalamudPlugin
         ScoreManager = new(playerState, StyleRankHandler);
         scoreProgressBar = new(ScoreManager, StyleRankHandler);
         PluginUI = new(playerState, scoreProgressBar, StyleRankHandler, ScoreManager);
+        actionTracker = new(playerState);
 
 
         Service.ClientState.Logout += ScoreManager.OnLogout;
@@ -104,6 +106,7 @@ public unsafe class Plugin : IDalamudPlugin
         addFlyTextHook?.Disable();
         addFlyTextHook?.Dispose();
         scoreProgressBar.Dispose();
+        actionTracker.Dispose();
 
         Service.ClientState.Logout -= ScoreManager.OnLogout;
 
@@ -151,7 +154,7 @@ public unsafe class Plugin : IDalamudPlugin
             var strIndex = 27;
             var numIndex = 30;
             var atkArrayDataHolder = ((UIModule*)Service.GameGui.GetUIModule())->GetRaptureAtkModule()->AtkModule.AtkArrayDataHolder;
-            logger.Debug($"addonFlyText: {addonFlyText:X} actorIndex:{actorIndex} offsetNum: {offsetNum} offsetNumMax: {offsetNumMax} offsetStr: {offsetStr} offsetStrMax: {offsetStrMax} unknown:{unknown}");
+            
             try
             {
                 var strArray = atkArrayDataHolder._StringArrays[strIndex];
@@ -185,7 +188,7 @@ public unsafe class Plugin : IDalamudPlugin
                 var flyText2Ptr = strArray->StringArray[offsetStr + 1];
                 var text2 = Marshal.PtrToStringUTF8((nint)flyText2Ptr);
                
-                logger.Debug($"text1:{text1} text2:{text2}");
+                
                 if (text1 == null || text2 == null)
                 {
                     lock (_ftLocks[actorIndex])
@@ -250,7 +253,7 @@ public unsafe class Plugin : IDalamudPlugin
                     }
                     return;
                 }
-                logger.Debug($"val1:{val1} val2:{val2} kind:{Enum.GetName(typeof(FlyTextKind), kind)}");
+                
                 ScoreManager.AddScore(val1);
             }
             catch (Exception e)

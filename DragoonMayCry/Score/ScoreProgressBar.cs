@@ -30,6 +30,8 @@ namespace DragoonMayCry.Score
             }
         }
 
+        public bool DemotionAlertStarted { get; private set; }
+
         private static readonly double InterpolationWeight = 0.09d;
         private readonly ScoreManager scoreManager;
         private readonly StyleRankHandler styleRankHandler;
@@ -73,18 +75,30 @@ namespace DragoonMayCry.Score
                 styleRankHandler.GoToNextRank(true, false);
             }
 
+            ApplyDemotion(currentScoreRank, timeSinceLastRankChange);
+        }
+
+        private void ApplyDemotion(ScoreManager.ScoreRank currentScoreRank,
+                                   double timeSinceLastRankChange)
+        {
             if (currentScoreRank.Score == 0 && !rankFloorStopwatch.IsRunning)
             {
                 rankFloorStopwatch.Restart();
-            } else if (currentScoreRank.Score > 0)
-            {
-                rankFloorStopwatch.Stop();
-                rankFloorStopwatch.Reset();
+                DemotionAlertStarted = true;
+                return;
             }
-            
-            if (currentScoreRank.Score == 0 && (timeSinceLastRankChange > 2.5  && rankFloorStopwatch.ElapsedMilliseconds > 2000))
+            if (rankFloorStopwatch.IsRunning && currentScoreRank.Score > 0)
+            {
+                DemotionAlertStarted = false;
+                rankFloorStopwatch.Reset();
+                return;
+            }
+
+            if (currentScoreRank.Score == 0 && (timeSinceLastRankChange > 2.5  && rankFloorStopwatch.ElapsedMilliseconds > Plugin.Configuration.TimeBeforeDemotion))
             {
                 styleRankHandler.ReturnToPreviousRank();
+                rankFloorStopwatch.Reset();
+                DemotionAlertStarted = false;
             }
         }
 

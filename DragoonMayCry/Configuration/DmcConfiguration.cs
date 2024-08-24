@@ -14,6 +14,7 @@ public class DmcConfiguration : IPluginConfiguration
     public int SfxVolume { get; set; } = 80;
     public bool PlaySoundEffects { get; set; } = true;
     public bool ActiveOutsideInstance { get; set; } = false;
+    public int TimeBeforeDemotion { get; set; } = 2000; //milliseconds
 
     public int TimeToResetScoreAfterCombat { get; set; } = 10000;
     public StyleRankUiConfiguration StyleRankUiConfiguration = new();

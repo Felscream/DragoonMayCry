@@ -1,9 +1,9 @@
 using System;
 using System.Diagnostics;
+using System.Numerics;
 using Dalamud.Interface;
 using Dalamud.Interface.Textures.TextureWraps;
 using DragoonMayCry.Style;
-using FFXIVClientStructs.FFXIV.Common.Math;
 using ImGuiNET;
 using System.Reflection;
 using Dalamud.Interface.Animation;
@@ -13,6 +13,7 @@ using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using static DragoonMayCry.Score.ScoreManager;
 using Vector2 = System.Numerics.Vector2;
+using Vector4 = FFXIVClientStructs.FFXIV.Common.Math.Vector4;
 
 namespace DragoonMayCry.UI
 {
@@ -22,6 +23,7 @@ namespace DragoonMayCry.UI
         private readonly ScoreManager scoreManager;
         private readonly Random random;
         private readonly StyleRankHandler styleRankHandler;
+        private readonly PlayerState playerState;
         private readonly Vector2 rankPosition = new (8, 8);
         private readonly Vector2 rankSize = new(130, 130);
         private readonly Vector2 rankTransitionStartPosition = new(83, 83);
@@ -39,7 +41,8 @@ namespace DragoonMayCry.UI
             this.styleRankHandler = styleRankHandler;
             this.scoreManager = scoreManager;
             this.scoreManager.OnScoring += OnScoring;
-            playerState.RegisterCombatStateChangeHandler(OnCombatChange);
+            this.playerState = playerState;
+            this.playerState.RegisterCombatStateChangeHandler(OnCombatChange);
             
             this.styleRankHandler.OnStyleRankChange += OnRankChange;
 
@@ -55,6 +58,7 @@ namespace DragoonMayCry.UI
             {
                 shakeStopwatch.Reset();
             }
+
             var windowFlags = Plugin.Configuration.StyleRankUiConfiguration.LockScoreWindow ?
                                   ImGuiWindowFlags.NoTitleBar |
                                   ImGuiWindowFlags.NoResize |
@@ -131,32 +135,49 @@ namespace DragoonMayCry.UI
 
         private void DrawCurrentRank(IDalamudTextureWrap rankIcon)
         {
-            
-
-            var lerpedCoordinates = (float)double.Lerp(
-                rankTransitionStartPosition.X, rankPosition.X,
-                rankTransition.Value);
-
-            var transitionPosition =
-                new Vector2(lerpedCoordinates, lerpedCoordinates);
-
-            var intensity =
-                CustomEasing.InCube(scoreProgressBar.Progress) * 1.5f;
-            if (shakeStopwatch.IsRunning)
-            {
-                intensity = shakeIntensity;
-            }
-            var offset = new Vector2(
-                random.NextSingle() * intensity * 2 - intensity / 2,
-                random.NextSingle() * intensity * 2 - intensity / 2);
-                    
-            var pos = transitionPosition + offset;
-            
+            var pos = ComputeRankPosition();
             var animationTransitionValue = rankTransition.IsRunning ? (float)rankTransition.Value : 1f;
             var size = rankSize * animationTransitionValue;
+
             
+            var textureUV0 = Vector2.Zero;
+            var textureUV1 = Vector2.One;
+            var color = scoreProgressBar.DemotionAlertStarted
+                            ? new Vector4(1, 1, 1,
+                                          AlphaModificationFunction(
+                                              (float)ImGui.GetTime()))
+                            : Vector4.One;
+
             ImGui.SetCursorPos(pos);
-            ImGui.Image(rankIcon.ImGuiHandle, size);
+            ImGui.Image(rankIcon.ImGuiHandle, size, textureUV0, textureUV1, color);
+        }
+
+        private Vector2 ComputeRankPosition()
+        {
+            var pos = rankPosition;
+            if (playerState.IsInCombat)
+            {
+                var lerpedCoordinates = (float)double.Lerp(
+                    rankTransitionStartPosition.X, rankPosition.X,
+                    rankTransition.Value);
+
+                var transitionPosition =
+                    new Vector2(lerpedCoordinates, lerpedCoordinates);
+
+                var intensity =
+                    CustomEasing.InCube(scoreProgressBar.Progress) * 1.5f;
+                if (shakeStopwatch.IsRunning)
+                {
+                    intensity = shakeIntensity;
+                }
+                var offset = new Vector2(
+                    random.NextSingle() * intensity * 2 - intensity / 2,
+                    random.NextSingle() * intensity * 2 - intensity / 2);
+
+                pos = transitionPosition + offset;
+            }
+
+            return pos;
         }
 
 
@@ -218,6 +239,11 @@ namespace DragoonMayCry.UI
         private void OnScoring(object sender, double points)
         {
             Shake();
+        }
+
+        private float AlphaModificationFunction(float t)
+        {
+            return (float)((Math.Sin(3*Math.PI * t + Math.PI / 2) + 1) / 4) + 0.5f;
         }
     }
 }

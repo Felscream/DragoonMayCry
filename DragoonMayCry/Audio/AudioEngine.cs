@@ -102,8 +102,6 @@ namespace DragoonMayCry.Audio
                 Service.Log.Warning($"Audio trigger {trigger} has no audio associated");
                 return;
             }
-            
-            Service.Log.Debug($"volume : {(Plugin.Configuration.SfxVolume / 100f) * GetGameSfxVolume()}");
 
             sfxSampleProvider.Volume = (Plugin.Configuration.SfxVolume / 100f) * GetGameSfxVolume() ;
             Service.Log.Debug($"Playing audio for trigger {trigger}");

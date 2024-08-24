@@ -80,9 +80,7 @@ namespace DragoonMayCry.UI
                 return false;
             }
 
-
-
-            return playerState.IsInCombat || playerState.IsInsideInstance || hideRankUiStopwatch.IsRunning;
+            return playerState.IsInCombat || hideRankUiStopwatch.IsRunning;
         }
 
         private void OnCombatChange(object send, bool enteringCombat)

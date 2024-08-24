@@ -14,7 +14,7 @@ namespace DragoonMayCry.State
         public bool IsInsideInstance => CheckCondition([ConditionFlag.BoundByDuty]);
         public bool IsDead { get; set; }
         public bool IsLoggedIn => Service.ClientState != null && Player != null;
-        private IPlayerCharacter Player => Service.ClientState?.LocalPlayer;
+        public IPlayerCharacter Player => Service.ClientState?.LocalPlayer;
         private ICondition Condition => Service.Condition;
         
         private bool CheckCondition(ConditionFlag[] conditionFlags) => (Condition != null) && conditionFlags.Any(x => Condition[x]);

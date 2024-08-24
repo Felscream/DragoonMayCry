@@ -22,5 +22,6 @@ namespace DragoonMayCry
         [PluginService] public static ICondition Condition { get; set; } = null!;
         [PluginService] public static IFramework Framework { get; set; } = null!;
         [PluginService] public static IGameConfig GameConfig { get; set; } = null!;
+        [PluginService] public static IDataManager DataManager { get; private set; } = null!;
     }
 }
