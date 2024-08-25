@@ -1,11 +1,17 @@
 {
-  "Author": "Felscream",
-  "Name": "DragoonMayCry",
-  "Punchline": "A plugin that ranks you based on your DPS compared to others",
-  "Description": "A description that shows up in /xlplugins. List any major slash-command(s).",
-  "ApplicableVersion": "any",
+    "Author": "Felscream",
+    "Name": "DragoonMayCry",
+    "Punchline": "A plugin that ranks your performance based on your fundamentals in combat",
+    "Description": "??",
+    "ApplicableVersion": "any",
     "Tags": [
         "plugin"
     ],
-  "LoadPriority":  2
+    "LoadPriority": 0,
+    "InternalName": "DragoonMayCry",
+    "AssemblyVersion": "1.6.6",
+    "RepoUrl": "https://github.com/Felscream/DragoonMayCry",
+    "ApplicableVersion": "any",
+    "Tags": [ "dmc", "style", "dragoon", "combo", "cry" ],
+    "DalamudApiLevel": 10
 }

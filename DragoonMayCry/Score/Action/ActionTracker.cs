@@ -190,6 +190,7 @@ namespace DragoonMayCry.Score.Action
             {
                 return;
             }
+            Service.Log.Warning("cast cancel");
             // send a cast cancel event
         }
 
@@ -205,7 +206,7 @@ namespace DragoonMayCry.Score.Action
 
             int value = Marshal.ReadInt16(ptr);
             var actionId = value < 0 ? (uint)(value + 65536) : (uint)value;
-            RegisterNewAction(actionId);
+            //RegisterNewAction(actionId);
         }
 
         private void RegisterNewAction(uint actionId)
