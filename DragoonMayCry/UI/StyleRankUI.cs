@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Numerics;
 using Dalamud.Interface;
 using Dalamud.Interface.Textures.TextureWraps;
-using DragoonMayCry.Style;
 using ImGuiNET;
 using System.Reflection;
 using Dalamud.Interface.Animation;
@@ -16,6 +15,7 @@ using Vector2 = System.Numerics.Vector2;
 using Vector4 = FFXIVClientStructs.FFXIV.Common.Math.Vector4;
 using System.Drawing;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using DragoonMayCry.Score.Style;
 
 namespace DragoonMayCry.UI
 {
@@ -266,14 +266,14 @@ namespace DragoonMayCry.UI
             return new(color, 1);
         }
 
-        private void OnRankChange(object send, StyleRank rank)
+        private void OnRankChange(object send, StyleRankHandler.RankChangeData data)
         {
             if (currentStyleRank == null)
             {
-                currentStyleRank = rank;
+                currentStyleRank = data.NewRank;
             }
 
-            if (currentStyleRank.StyleType < rank.StyleType)
+            if (currentStyleRank.StyleType < data.NewRank.StyleType)
             {
                 rankTransition.Restart();
             }
@@ -283,7 +283,7 @@ namespace DragoonMayCry.UI
             }
 
             previousStyle = currentStyleRank;
-            currentStyleRank = rank;
+            currentStyleRank = data.NewRank;
         }
 
         private void OnCombatChange(object send, bool enteringCombat)

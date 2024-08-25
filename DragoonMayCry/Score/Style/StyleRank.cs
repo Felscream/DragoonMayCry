@@ -1,10 +1,11 @@
 using System;
 using FFXIVClientStructs.FFXIV.Common.Math;
 
-namespace DragoonMayCry.Style
+namespace DragoonMayCry.Score.Style
 {
 
-    public enum StyleType { 
+    public enum StyleType
+    {
         NO_STYLE = 0,
         D = 1,
         C = 2,
@@ -15,15 +16,17 @@ namespace DragoonMayCry.Style
         SSS = 7
     }
 
-    public class StyleRank {
+    public class StyleRank
+    {
         public StyleType StyleType { get; init; }
         public string IconPath { get; init; }
         public string? SfxPath { get; init; }
-        public double Threshold { get; init; }
-        public double ReductionPerSecond { get; init; }
+        public float Threshold { get; init; }
+        public float ReductionPerSecond { get; init; }
         public Vector3 ProgressBarColor { get; init; }
-        
-        public StyleRank(StyleType styleType, string iconPath, string sfxPath, double threshold, double reductionPerSecond, Vector3 barColor) {
+
+        public StyleRank(StyleType styleType, string iconPath, string sfxPath, float threshold, float reductionPerSecond, Vector3 barColor)
+        {
             StyleType = styleType;
             IconPath = iconPath;
             SfxPath = sfxPath;

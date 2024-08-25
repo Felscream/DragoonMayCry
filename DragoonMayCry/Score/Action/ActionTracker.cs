@@ -272,7 +272,7 @@ namespace DragoonMayCry.Score.Action
             {
                 if (Plugin.ActionManager->animationLock > 0) return;
                 currentWastedGCD += ImGui.GetIO().DeltaTime;
-                if (!isInactive && currentWastedGCD > 0.1f)
+                if (!isInactive && currentWastedGCD > Plugin.Configuration.GcdDropThreshold)
                 {
                     isInactive = true;
                     Service.Log.Debug($"GCD dropped");

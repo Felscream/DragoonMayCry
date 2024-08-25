@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Plugin.Services;
-using DragoonMayCry.Style;
+using DragoonMayCry.Score.Style;
 using ImGuiNET;
 
 namespace DragoonMayCry.Score
@@ -96,13 +96,13 @@ namespace DragoonMayCry.Score
 
             if (currentScoreRank.Score == 0 && timeSinceLastRankChange > 2.5  && rankFloorStopwatch.ElapsedMilliseconds > Plugin.Configuration.TimeBeforeDemotion && !Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay)
             {
-                styleRankHandler.ReturnToPreviousRank();
+                styleRankHandler.ReturnToPreviousRank(false);
                 rankFloorStopwatch.Reset();
                 DemotionAlertStarted = false;
             }
         }
 
-        private void OnRankChange(object? sender, StyleRank rank)
+        private void OnRankChange(object? sender, StyleRankHandler.RankChangeData data)
         {
             interpolatedScore = 0;
             lastRankChange = ImGui.GetTime();

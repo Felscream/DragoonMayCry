@@ -1,4 +1,4 @@
-using DragoonMayCry.Style;
+using DragoonMayCry.Score.Style;
 using DragoonMayCry.Util;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;

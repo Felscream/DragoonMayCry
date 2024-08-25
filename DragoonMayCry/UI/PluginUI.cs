@@ -9,10 +9,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Plugin;
 using DragoonMayCry.State;
-using DragoonMayCry.Style;
 using Lumina.Excel.GeneratedSheets2;
 using System.Threading;
 using DragoonMayCry.Score;
+using DragoonMayCry.Score.Style;
 
 namespace DragoonMayCry.UI
 {

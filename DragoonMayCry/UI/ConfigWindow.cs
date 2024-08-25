@@ -65,7 +65,7 @@ public class ConfigWindow : Window, IDisposable
         }
         if (ImGui.Button("Previous rank"))
         {
-            Plugin.StyleRankHandler.ReturnToPreviousRank();
+            Plugin.StyleRankHandler.ReturnToPreviousRank(false);
         }
 
         var testing = Configuration.StyleRankUiConfiguration.TestRankDisplay;

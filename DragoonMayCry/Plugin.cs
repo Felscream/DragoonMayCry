@@ -16,10 +16,10 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
-using DragoonMayCry.Style;
 using DragoonMayCry.Util;
 using Action = Lumina.Excel.GeneratedSheets.Action;
 using DragoonMayCry.Score.Action;
+using DragoonMayCry.Score.Style;
 
 namespace DragoonMayCry;
 
@@ -53,13 +53,9 @@ public unsafe class Plugin : IDalamudPlugin
         actionTracker = new();
 
         StyleRankHandler = new(actionTracker);
-        ScoreManager = new(StyleRankHandler);
+        ScoreManager = new(StyleRankHandler, actionTracker);
         scoreProgressBar = new(ScoreManager, StyleRankHandler);
         PluginUI = new(scoreProgressBar, StyleRankHandler, ScoreManager);
-        
-
-
-        Service.ClientState.Logout += ScoreManager.OnLogout;
 
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
@@ -73,8 +69,7 @@ public unsafe class Plugin : IDalamudPlugin
         playerState.Dispose();
         scoreProgressBar.Dispose();
         actionTracker.Dispose();
-
-        Service.ClientState.Logout -= ScoreManager.OnLogout;
+        ScoreManager.Dispose();
 
         Service.CommandManager.RemoveHandler(CommandName);
     }
