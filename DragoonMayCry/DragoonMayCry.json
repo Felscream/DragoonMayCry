@@ -6,7 +6,7 @@
     "ApplicableVersion": "any",
     "LoadPriority": 0,
     "InternalName": "DragoonMayCry",
-    "AssemblyVersion": "1.6.6",
+    "AssemblyVersion": "0.0.1",
     "RepoUrl": "https://github.com/Felscream/DragoonMayCry",
     "Tags": [ "dmc", "style", "dragoon", "combo", "cry" ],
     "DalamudApiLevel": 10
