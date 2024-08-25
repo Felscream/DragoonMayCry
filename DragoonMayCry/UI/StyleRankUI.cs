@@ -104,7 +104,7 @@ namespace DragoonMayCry.UI
 
             if (ImGui.Begin("DmC", windowFlags))
             {
-                if (currentStyleRank!.IconPath == null)
+                if (currentStyleRank == null || currentStyleRank.IconPath == null)
                 {
                     return;
                 }
