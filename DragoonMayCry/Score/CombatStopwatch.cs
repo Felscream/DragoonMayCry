@@ -13,9 +13,9 @@ namespace DragoonMayCry.Score
 {
     public class CombatStopwatch
     {
-        public double TimeInCombat() => Math.Floor((double)stopwatch.ElapsedMilliseconds / 1000);
+        public float TimeInCombat() => (float)stopwatch.ElapsedMilliseconds / 1000;
         
-        private Stopwatch stopwatch;
+        private readonly Stopwatch stopwatch;
         private readonly IFramework framework = Service.Framework;
         private static CombatStopwatch _instance;
 

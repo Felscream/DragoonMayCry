@@ -18,7 +18,6 @@ using Dalamud.Game.Gui.FlyText;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using System.Text;
 
-// Thanks to Tischel https://github.com/Tischel/ActionTimeline
 namespace DragoonMayCry.Score.Action
 {
     
@@ -80,7 +79,6 @@ namespace DragoonMayCry.Score.Action
         private bool isInactive;
         private PlayerAction currentAction;
         private PlayerAction previousAction;
-
         public ActionTracker()
         {
             playerState = PlayerState.Instance();
@@ -146,29 +144,31 @@ namespace DragoonMayCry.Score.Action
             }
 
             var actionId = Marshal.ReadInt32(effectHeader, 0x8);
+            
             var type = TypeForActionID((uint)actionId);
-            if (!type.HasValue)
+            if (type == PlayerActionType.Other)
             {
                 return;
             }
-
+            RegisterNewAction((uint)actionId);
         }
 
-        private PlayerActionType? TypeForActionID(uint actionId)
+        private PlayerActionType TypeForActionID(uint actionId)
         {
             var action = sheet?.GetRow(actionId);
             if (action == null)
             {
-                return null;
+                return PlayerActionType.Other;
             }
 
             return action.ActionCategory.Row switch
             {
+                2 => PlayerActionType.Spell,
                 4 => PlayerActionType.OffGCD,
                 6 => PlayerActionType.Other,
                 7 => PlayerActionType.Other,
                 15 => PlayerActionType.LimitBreak,
-                _ => PlayerActionType.Action,
+                _ => PlayerActionType.Weaponskill,
             };
         }
 
@@ -205,12 +205,35 @@ namespace DragoonMayCry.Score.Action
 
             int value = Marshal.ReadInt16(ptr);
             var actionId = value < 0 ? (uint)(value + 65536) : (uint)value;
-
+            RegisterNewAction(actionId);
         }
 
         private void RegisterNewAction(uint actionId)
         {
+            var luminaAction = sheet.GetRow(actionId);
+            if (luminaAction == null || !luminaAction.IsPlayerAction)
+            {
+                return;
+            }
 
+            PlayerActionType type = TypeForActionID(actionId);
+            if (type != PlayerActionType.Weaponskill && type != PlayerActionType.Spell && type != PlayerActionType.LimitBreak)
+            {
+                return;
+            }
+
+            var duration = type == PlayerActionType.Weaponskill
+                               ? GetGCDTime(actionId)
+                               : GetCastTime(actionId);
+
+            var playerAction = new PlayerAction(
+                actionId, type, luminaAction.ActionCombo?.Value.RowId,
+                luminaAction.PreservesCombo, combatStopwatch.TimeInCombat(), duration);
+            Service.Log.Warning($"Registering new action");
+            Service.Log.Warning($"{luminaAction.Name} type {type} has combo {luminaAction.ActionCombo?.Value != null && luminaAction.ActionCombo?.Value.RowId != 0}");
+            Service.Log.Warning($"start {combatStopwatch.TimeInCombat()} duration { duration}");
+            
+            
         }
 
         private unsafe float GetGCDTime(uint actionId)
@@ -361,7 +384,6 @@ namespace DragoonMayCry.Score.Action
                         Service.Log.Debug($"Ignoring action of kind {flyKind}");
                         return;
                     }
-                    Service.Log.Debug($"Registering action of kind {flyKind}");
                     OnFlyTextCreation?.Invoke(this, val1);
                 }
                 catch (Exception e)

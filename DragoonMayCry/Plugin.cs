@@ -47,6 +47,7 @@ public unsafe class Plugin : IDalamudPlugin
         PluginInterface.Create<Service>();
         ActionManager =
             (ActionManager*)FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
+        
         logger = Service.Log;
         playerState = PlayerState.Instance();
         Configuration = PluginInterface.GetPluginConfig() as DmcConfiguration ?? new DmcConfiguration();

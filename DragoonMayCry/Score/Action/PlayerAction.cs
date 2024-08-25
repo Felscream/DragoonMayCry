@@ -8,30 +8,32 @@ namespace DragoonMayCry.Score.Action
 {
     public enum PlayerActionType
     {
-        Action = 0,
-        CastStart = 1,
-        CastCancel = 2,
-        OffGCD = 3,
-        AutoAttack = 4,
-        LimitBreak = 5,
-        Other = 6
+        Weaponskill = 0,
+        Spell = 1,
+        CastStart = 2,
+        CastCancel = 3,
+        OffGCD = 4,
+        AutoAttack = 5,
+        LimitBreak = 6,
+        Other = 7
     }
     public class PlayerAction
     {
         public uint Id { get; private set; }
         public PlayerActionType Type { get; private set; }
-        public uint ComboId { get; private set; }
+        public uint? ComboId { get; private set; }
         public bool PreservesCombo { get; private set; }
-        public float EndTime { get; private set; }
-        public bool Canceled { get; set; }
+        public float StartTime { get; private set; }
+        public float Duration { get; private set; }
 
-        public PlayerAction(uint id, PlayerActionType type, uint comboId, bool preservesCombo, float endTime)
+        public PlayerAction(uint id, PlayerActionType type, uint? comboId, bool preservesCombo, float startTime, float duration)
         {
             Id = id;
             Type = type;
             ComboId = comboId;
             PreservesCombo = preservesCombo;
-            EndTime = endTime;
+            StartTime = startTime;
+            Duration = duration;
         }
     }
 }
