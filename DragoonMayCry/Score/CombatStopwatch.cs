@@ -1,44 +1,59 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Dalamud.Plugin.Services;
+using DragoonMayCry.State;
+using FFXIVClientStructs;
 using ImGuiNET;
 
 namespace DragoonMayCry.Score
 {
-    public class CombatStopwatch : IDisposable
+    public class CombatStopwatch
     {
-        public double TimeInCombat
-        {
-            get { return _timeInCombat; }
-        }
-        private double _timeInCombat;
-        private double _combatTimeStart;
-        private double _combatTimeEnd;
+        public double TimeInCombat() => Math.Floor((double)stopwatch.ElapsedMilliseconds / 1000);
+        
+        private Stopwatch stopwatch;
         private readonly IFramework framework = Service.Framework;
+        private static CombatStopwatch _instance;
 
-        public void Start()
+        private CombatStopwatch()
         {
-            _combatTimeStart = ImGui.GetTime();
-            framework.Update += UpdateTime;
+            stopwatch = new Stopwatch();
+            PlayerState.Instance().RegisterCombatStateChangeHandler(OnCombat);
         }
 
-        public void Stop()
+        public static CombatStopwatch Instance()
         {
-            _combatTimeEnd = ImGui.GetTime();
-            framework.Update -= UpdateTime;
+            if (_instance == null)
+            {
+                _instance = new();
+            }
+
+            return _instance;
+        }
+        private void Start()
+        {
+            stopwatch.Reset();
+            stopwatch.Start();
         }
 
-        private void UpdateTime(IFramework framewok)
+        private void Stop()
         {
-            _timeInCombat = ImGui.GetTime() - _combatTimeStart;
+            stopwatch.Stop();
         }
-
-        public void Dispose()
+        private void OnCombat(object? sender, bool inCombat)
         {
-            framework.Update -= UpdateTime;
+            if (inCombat)
+            {
+                Start();
+            }
+            else
+            {
+                Stop();
+            }
         }
     }
 }

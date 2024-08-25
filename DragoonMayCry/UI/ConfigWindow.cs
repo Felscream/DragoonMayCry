@@ -58,6 +58,7 @@ public class ConfigWindow : Window, IDisposable
             Configuration.Save();
         }
 
+#if DEBUG
         if (ImGui.Button("Next rank"))
         {
             Plugin.StyleRankHandler.GoToNextRank(true, true);
@@ -83,7 +84,17 @@ public class ConfigWindow : Window, IDisposable
                 Configuration.StyleRankUiConfiguration.DebugProgressValue = debugProgressValue;
                 Configuration.Save();
             }
-        }
 
+            /*var progressBarTint =
+                Configuration.StyleRankUiConfiguration.ProgressBarTint;
+
+            if (ImGui.ColorPicker4("Progress bar tint", ref progressBarTint))
+            {
+                Configuration.StyleRankUiConfiguration.ProgressBarTint =
+                    progressBarTint;
+            }*/
+
+        }
+#endif
     }
 }

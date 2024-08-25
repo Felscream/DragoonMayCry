@@ -4,22 +4,21 @@ using DragoonMayCry.Audio;
 using DragoonMayCry.Util;
 using System.IO;
 using DragoonMayCry.Data;
+using DragoonMayCry.Score.Action;
 using DragoonMayCry.State;
-using DragoonMayCry.Score;
-using static FFXIVClientStructs.FFXIV.Client.UI.RaptureAtkHistory.Delegates;
 
 namespace DragoonMayCry.Style
 {
     public class StyleRankHandler {
         private static readonly DoubleLinkedList<StyleRank> DEFAULT_STYLE_RANK = new DoubleLinkedList<StyleRank>(
-            new StyleRank(StyleType.NO_STYLE, null, null, 6000, 500),
-            new StyleRank(StyleType.D, "DragoonMayCry.Assets.D.png", GetPathToAudio("dirty"), 13000, 1000),
-            new StyleRank(StyleType.C, "DragoonMayCry.Assets.C.png", GetPathToAudio("cruel"), 20000, 2000),
-            new StyleRank(StyleType.B, "DragoonMayCry.Assets.B.png", GetPathToAudio("brutal"), 32000, 3900),
-            new StyleRank(StyleType.A, "DragoonMayCry.Assets.A.png", GetPathToAudio("anarchic"), 48000, 4700),
-            new StyleRank(StyleType.S, "DragoonMayCry.Assets.S.png", GetPathToAudio("savage"), 56000, 5500),
-            new StyleRank(StyleType.SS, "DragoonMayCry.Assets.SS.png", GetPathToAudio("sadistic"), 65000, 8000),
-            new StyleRank(StyleType.SSS, "DragoonMayCry.Assets.SSS.png", GetPathToAudio("sensational"), 80000, 10000));
+            new StyleRank(StyleType.NO_STYLE, null, null, 60000, 500, new(135,135,135)),
+            new StyleRank(StyleType.D, "DragoonMayCry.Assets.D.png", GetPathToAudio("dirty"), 80000, 1000, new(223,152,30)),
+            new StyleRank(StyleType.C, "DragoonMayCry.Assets.C.png", GetPathToAudio("cruel"), 90000, 1500, new(95, 160, 213)),
+            new StyleRank(StyleType.B, "DragoonMayCry.Assets.B.png", GetPathToAudio("brutal"), 90000, 2000, new(95, 160, 213)),
+            new StyleRank(StyleType.A, "DragoonMayCry.Assets.A.png", GetPathToAudio("anarchic"), 100000, 4000, new(95, 160, 213)),
+            new StyleRank(StyleType.S, "DragoonMayCry.Assets.S.png", GetPathToAudio("savage"), 100000, 8000, new (233, 216, 95)),
+            new StyleRank(StyleType.SS, "DragoonMayCry.Assets.SS.png", GetPathToAudio("sadistic"), 100000, 10000, new (233, 216, 95)),
+            new StyleRank(StyleType.SSS, "DragoonMayCry.Assets.SSS.png", GetPathToAudio("sensational"), 80000, 12000, new (233, 216, 95) ));
 
         public EventHandler<StyleRank> OnStyleRankChange;
         public DoubleLinkedNode<StyleRank>? CurrentRank { get; private set; }
@@ -27,12 +26,13 @@ namespace DragoonMayCry.Style
         private DoubleLinkedList<StyleRank> styles;
         private readonly AudioEngine audioEngine;
 
-        public StyleRankHandler(PlayerState playerState)
+        public StyleRankHandler(ActionTracker actionTracker)
         {
             ChangeStylesTo(DEFAULT_STYLE_RANK);
             audioEngine = new AudioEngine();
             audioEngine.Init(styles);
 
+            PlayerState playerState = PlayerState.Instance();
             playerState.RegisterJobChangeHandler(OnJobChange);
             playerState.RegisterLoginStateChangeHandler(OnLogin);
             playerState.RegisterCombatStateChangeHandler(OnCombatChange);

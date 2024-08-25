@@ -24,12 +24,11 @@ namespace DragoonMayCry.UI
         private readonly StyleRankUI styleRankUI;
         private readonly IDalamudPluginInterface pluginInterface;
         private readonly PlayerState playerState;
-        private readonly float timeToHideRankUi = 10000f;
         private Stopwatch hideRankUiStopwatch;
-        public PluginUI(PlayerState playerState, ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager)
+        public PluginUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager)
         {
             ConfigWindow = new ConfigWindow(Plugin.Configuration);
-            styleRankUI = new StyleRankUI(scoreProgressBar, styleRankHandler, playerState, scoreManager);
+            styleRankUI = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager);
 
             WindowSystem.AddWindow(ConfigWindow);
 
@@ -37,7 +36,7 @@ namespace DragoonMayCry.UI
             pluginInterface.UiBuilder.Draw += DrawUI;
 
             pluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUI;
-            this.playerState = playerState;
+            this.playerState = PlayerState.Instance();
             playerState.RegisterCombatStateChangeHandler(OnCombatChange);
 
             hideRankUiStopwatch = new Stopwatch();
@@ -59,7 +58,7 @@ namespace DragoonMayCry.UI
         private void DrawUI()
         {
             if (hideRankUiStopwatch.IsRunning &&
-                hideRankUiStopwatch.ElapsedMilliseconds > timeToHideRankUi)
+                hideRankUiStopwatch.ElapsedMilliseconds > Plugin.Configuration.TimeToResetScoreAfterCombat)
             {
                 hideRankUiStopwatch.Stop();
             }
@@ -74,6 +73,10 @@ namespace DragoonMayCry.UI
 
         private bool CanDrawStyleRank()
         {
+            if (!Plugin.Configuration.StyleRankUiConfiguration.LockScoreWindow)
+            {
+                return true;
+            }
             if (!playerState.IsInsideInstance &&
                 !Plugin.Configuration.ActiveOutsideInstance)
             {

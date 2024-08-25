@@ -2,6 +2,7 @@ using Dalamud.Plugin.Services;
 using DragoonMayCry.State;
 using DragoonMayCry.Style;
 using System;
+using System.Diagnostics;
 using DragoonMayCry.Util;
 
 namespace DragoonMayCry.Score
@@ -26,23 +27,17 @@ namespace DragoonMayCry.Score
     public EventHandler<double> OnScoring;
     public ScoreRank CurrentScoreRank { get; private set; }
     public ScoreRank PreviousScoreRank { get; private set; }
-    private readonly StyleRankHandler styleRankHandler;
     private readonly PlayerState playerState;
 
     private readonly CombatStopwatch combatStopwatch;
-    private static readonly double OPENER_COEFFICIENT = .6d;
-    private static readonly double MALUS_DURATION = 15;
-    
-    private Double totalScore;
 
-    public ScoreManager(
-        PlayerState playerState, StyleRankHandler styleRankHandler)
+    public ScoreManager(StyleRankHandler styleRankHandler)
     {
-        combatStopwatch = new();
-        this.styleRankHandler = styleRankHandler;
+        combatStopwatch = CombatStopwatch.Instance();
         CurrentScoreRank = new(0, styleRankHandler.CurrentRank.Value);
         ResetScore();
-        this.playerState = playerState;
+
+        this.playerState = PlayerState.Instance();
         this.playerState.RegisterJobChangeHandler(((sender, ids) => ResetScore()));
         this.playerState.RegisterInstanceChangeHandler(OnInstanceChange);
         this.playerState.RegisterCombatStateChangeHandler(OnCombatChange);
@@ -59,14 +54,7 @@ namespace DragoonMayCry.Score
     public void AddScore(double val)
     {
         var points = val;
-        if (combatStopwatch.TimeInCombat < 2)
-        {
-            return;
-        }
-        if (combatStopwatch.TimeInCombat < MALUS_DURATION)
-        {
-            points *= OPENER_COEFFICIENT;
-        }
+        Service.Log.Debug($"Time in combat {combatStopwatch.TimeInCombat()}");
 
         CurrentScoreRank.Score += points;
         OnScoring?.Invoke(this, points);
@@ -94,12 +82,10 @@ namespace DragoonMayCry.Score
         if (!enteringCombat)
         {
             PreviousScoreRank = CurrentScoreRank;
-            combatStopwatch.Stop();
         }
         else
         {
             ResetScore();
-            combatStopwatch.Start();
         }
     }
 
@@ -121,7 +107,6 @@ namespace DragoonMayCry.Score
 
     private void ResetScore()
     {
-        totalScore = 0;
         CurrentScoreRank.Score = 0;
     }
 

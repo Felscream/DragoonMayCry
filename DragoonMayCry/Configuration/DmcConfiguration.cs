@@ -19,6 +19,7 @@ public class DmcConfiguration : IPluginConfiguration
     public int TimeToResetScoreAfterCombat { get; set; } = 10000;
     public StyleRankUiConfiguration StyleRankUiConfiguration = new();
 
+
     // the below exist just to make saving less cumbersome
     public void Save()
     {

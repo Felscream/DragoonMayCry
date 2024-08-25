@@ -94,7 +94,7 @@ namespace DragoonMayCry.Score
                 return;
             }
 
-            if (currentScoreRank.Score == 0 && (timeSinceLastRankChange > 2.5  && rankFloorStopwatch.ElapsedMilliseconds > Plugin.Configuration.TimeBeforeDemotion))
+            if (currentScoreRank.Score == 0 && timeSinceLastRankChange > 2.5  && rankFloorStopwatch.ElapsedMilliseconds > Plugin.Configuration.TimeBeforeDemotion && !Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay)
             {
                 styleRankHandler.ReturnToPreviousRank();
                 rankFloorStopwatch.Reset();

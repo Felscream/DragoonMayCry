@@ -24,7 +24,8 @@ namespace DragoonMayCry.State
         private readonly OnEnteringInstanceStateTracker onEnteringInstanceStateTracker;
         private readonly LoginStateTracker loginStateTracker;
         private readonly JobChangeTracker jobChangeTracker;
-        public PlayerState()
+        private static PlayerState _instance;
+        private PlayerState()
         {
             Service.Framework.Update += Update;
             inCombatStateTracker = new();
@@ -32,6 +33,16 @@ namespace DragoonMayCry.State
             onEnteringInstanceStateTracker = new();
             loginStateTracker = new();
             jobChangeTracker = new();
+        }
+
+        public static PlayerState Instance()
+        {
+            if (_instance == null)
+            {
+                _instance = new PlayerState();
+            }
+
+            return _instance;
         }
 
         public void Update(IFramework framework)

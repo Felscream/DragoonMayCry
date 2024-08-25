@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -12,5 +13,6 @@ namespace DragoonMayCry.Configuration
         public bool LockScoreWindow { get; set; } = false;
         public bool TestRankDisplay { get; set; } = false;
         public float DebugProgressValue { get; set; } = 0.5f;
+        public Vector4 ProgressBarTint { get; set; } = Vector4.One;
     }
 }
