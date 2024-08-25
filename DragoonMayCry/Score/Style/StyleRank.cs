@@ -13,7 +13,8 @@ namespace DragoonMayCry.Score.Style
         A = 4,
         S = 5,
         SS = 6,
-        SSS = 7
+        SSS = 7,
+        DEAD_WEIGHT
     }
 
     public class StyleRank

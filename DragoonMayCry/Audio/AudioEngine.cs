@@ -94,6 +94,16 @@ namespace DragoonMayCry.Audio
                 current = current.Next!;
             }
         }
+        // TODO remove later
+        public void AddSfx(StyleType type, string path)
+        {
+            if (sounds.ContainsKey(type))
+            {
+                return;
+            }
+            Service.Log.Debug($"Registering sound for {type}, {path}");
+            sounds.Add(type, new CachedSound(path));
+        }
 
         public void PlaySfx(StyleType trigger)
         {

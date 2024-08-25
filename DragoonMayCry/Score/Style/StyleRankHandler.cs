@@ -48,6 +48,7 @@ namespace DragoonMayCry.Score.Style
             Reset();
             audioEngine = new AudioEngine();
             audioEngine.Init(styles!);
+            audioEngine.AddSfx(StyleType.DEAD_WEIGHT, GetPathToAudio("dead_weight.wav"));
 
             var playerState = PlayerState.GetInstance();
             playerState.RegisterJobChangeHandler(OnJobChange!);
@@ -142,6 +143,10 @@ namespace DragoonMayCry.Score.Style
         private void OnGcdDropped(object? sender, EventArgs args)
         {
             ReturnToPreviousRank(true);
+            if (Plugin.Configuration!.PlaySoundEffects)
+            {
+                audioEngine.PlaySfx(CurrentRank.Value.StyleType);
+            }
         }
     }
 }
