@@ -26,26 +26,26 @@ namespace DragoonMayCry.Score
             }
         }
 
-        public EventHandler<double> OnScoring;
+        public EventHandler<double>? OnScoring;
         public ScoreRank CurrentScoreRank { get; private set; }
-        public ScoreRank PreviousScoreRank { get; private set; }
+        public ScoreRank? PreviousScoreRank { get; private set; }
         private readonly PlayerState playerState;
         private readonly StyleRankHandler rankHandler;
         private readonly CombatStopwatch combatStopwatch;
 
         public ScoreManager(StyleRankHandler styleRankHandler, ActionTracker actionTracker)
         {
-            combatStopwatch = CombatStopwatch.Instance();
-            CurrentScoreRank = new(0, styleRankHandler.CurrentRank.Value);
+            combatStopwatch = CombatStopwatch.GetInstance();
+            CurrentScoreRank = new(0, styleRankHandler.CurrentRank!.Value);
             ResetScore();
 
-            this.playerState = PlayerState.Instance();
+            this.playerState = PlayerState.GetInstance();
             this.playerState.RegisterJobChangeHandler(((sender, ids) => ResetScore()));
-            this.playerState.RegisterInstanceChangeHandler(OnInstanceChange);
-            this.playerState.RegisterCombatStateChangeHandler(OnCombatChange);
+            this.playerState.RegisterInstanceChangeHandler(OnInstanceChange!);
+            this.playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
 
             this.rankHandler = styleRankHandler;
-            this.rankHandler.OnStyleRankChange += OnRankChange;
+            this.rankHandler.StyleRankChange += OnRankChange!;
 
             actionTracker.OnFlyTextCreation += AddScore;
             actionTracker.OnGcdClip += OnGcdClip;
@@ -63,7 +63,7 @@ namespace DragoonMayCry.Score
         {
             return playerState.IsInCombat &&
                    ((!playerState.IsInsideInstance &&
-                     Plugin.Configuration.ActiveOutsideInstance)
+                     Plugin.Configuration!.ActiveOutsideInstance)
                     || playerState.IsInsideInstance);
         }
 
@@ -110,11 +110,12 @@ namespace DragoonMayCry.Score
             PreviousScoreRank = CurrentScoreRank;
             if ((int)CurrentScoreRank.Rank.StyleType < (int)data.NewRank.StyleType)
             {
-                CurrentScoreRank.Score = (CurrentScoreRank.Score % CurrentScoreRank.Rank.Threshold) * 0.01f;
+                CurrentScoreRank.Score = (float)Math.Clamp(CurrentScoreRank.Score %
+                    data.NewRank.Threshold, 0, data.NewRank.Threshold * 0.5); ;
             }
             else if (data.IsBlunder)
             {
-                if (data.NewRank.StyleType == data.PreviousRank.StyleType)
+                if (data.NewRank.StyleType == data.PreviousRank?.StyleType)
                 {
                     CurrentScoreRank.Score = 0;
                 }

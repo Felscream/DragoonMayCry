@@ -17,16 +17,16 @@ namespace DragoonMayCry.Score
         {
             get
             {
-                if (Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay)
+                if (Plugin.Configuration!.StyleRankUiConfiguration.TestRankDisplay)
                 {
                     return Plugin.Configuration.StyleRankUiConfiguration
                                  .DebugProgressValue;
                 }
-                return _progress;
+                return progress;
             }
             private set
             {
-                _progress = value;
+                progress = value;
             }
         }
 
@@ -38,14 +38,14 @@ namespace DragoonMayCry.Score
         private Stopwatch rankFloorStopwatch;
         private double interpolatedScore = 0;
         private double lastRankChange = 0;
-        private float _progress;
+        private float progress;
 
         public ScoreProgressBar(ScoreManager scoreManager, StyleRankHandler styleRankHandler)
         {
             this.scoreManager = scoreManager;
             Service.Framework.Update += UpdateScoreInterpolation;
             this.styleRankHandler = styleRankHandler;
-            this.styleRankHandler.OnStyleRankChange += OnRankChange;
+            this.styleRankHandler.StyleRankChange += OnRankChange;
             rankFloorStopwatch = new Stopwatch();
         }
 
@@ -94,7 +94,7 @@ namespace DragoonMayCry.Score
                 return;
             }
 
-            if (currentScoreRank.Score == 0 && timeSinceLastRankChange > 2.5  && rankFloorStopwatch.ElapsedMilliseconds > Plugin.Configuration.TimeBeforeDemotion && !Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay)
+            if (currentScoreRank.Score == 0 && timeSinceLastRankChange > 2.5  && rankFloorStopwatch.ElapsedMilliseconds > Plugin.Configuration!.TimeBeforeDemotion && !Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay)
             {
                 styleRankHandler.ReturnToPreviousRank(false);
                 rankFloorStopwatch.Reset();

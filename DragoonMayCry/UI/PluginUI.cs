@@ -1,43 +1,36 @@
 using Dalamud.Interface.Windowing;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Dalamud.Plugin;
-using DragoonMayCry.State;
-using Lumina.Excel.GeneratedSheets2;
-using System.Threading;
 using DragoonMayCry.Score;
 using DragoonMayCry.Score.Style;
+using DragoonMayCry.State;
+using System;
+using System.Diagnostics;
 
 namespace DragoonMayCry.UI
 {
     public sealed class PluginUI : IDisposable
     {
-        private readonly WindowSystem WindowSystem = new("DragoonMayCry");
+        private readonly WindowSystem windowSystem = new("DragoonMayCry");
         private ConfigWindow ConfigWindow { get; init; }
 
-        private readonly StyleRankUI styleRankUI;
+        private readonly StyleRankUI styleRankUi;
         private readonly IDalamudPluginInterface pluginInterface;
         private readonly PlayerState playerState;
         private Stopwatch hideRankUiStopwatch;
         public PluginUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager)
         {
-            ConfigWindow = new ConfigWindow(Plugin.Configuration);
-            styleRankUI = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager);
+            ConfigWindow = new ConfigWindow(Plugin.Configuration!);
+            styleRankUi = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager);
 
-            WindowSystem.AddWindow(ConfigWindow);
+            windowSystem.AddWindow(ConfigWindow);
 
             pluginInterface = Plugin.PluginInterface;
             pluginInterface.UiBuilder.Draw += DrawUI;
-
+            pluginInterface.UiBuilder.OpenMainUi += ToggleConfigUI;
             pluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUI;
-            this.playerState = PlayerState.Instance();
-            playerState.RegisterCombatStateChangeHandler(OnCombatChange);
+
+            this.playerState = PlayerState.GetInstance();
+            playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
 
             hideRankUiStopwatch = new Stopwatch();
 
@@ -47,9 +40,10 @@ namespace DragoonMayCry.UI
         public void Dispose()
         {
             pluginInterface.UiBuilder.Draw -= DrawUI;
+            pluginInterface.UiBuilder.OpenMainUi -= ToggleConfigUI;
             pluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUI;
 
-            WindowSystem.RemoveAllWindows();
+            windowSystem.RemoveAllWindows();
 
             ConfigWindow.Dispose();
 
@@ -58,22 +52,22 @@ namespace DragoonMayCry.UI
         private void DrawUI()
         {
             if (hideRankUiStopwatch.IsRunning &&
-                hideRankUiStopwatch.ElapsedMilliseconds > Plugin.Configuration.TimeToResetScoreAfterCombat)
+                hideRankUiStopwatch.ElapsedMilliseconds > Plugin.Configuration!.TimeToResetScoreAfterCombat)
             {
                 hideRankUiStopwatch.Stop();
             }
 
-            WindowSystem.Draw();
-            if (CanDrawStyleRank() || Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay)
+            windowSystem.Draw();
+            if (CanDrawStyleRank() || Plugin.Configuration!.StyleRankUiConfiguration.TestRankDisplay)
             {
-                styleRankUI.Draw();
+                styleRankUi.Draw();
             }
             
         }
 
         private bool CanDrawStyleRank()
         {
-            if (!Plugin.Configuration.StyleRankUiConfiguration.LockScoreWindow)
+            if (!Plugin.Configuration!.StyleRankUiConfiguration.LockScoreWindow)
             {
                 return true;
             }

@@ -17,22 +17,22 @@ namespace DragoonMayCry.Score
         
         private readonly Stopwatch stopwatch;
         private readonly IFramework framework = Service.Framework;
-        private static CombatStopwatch _instance;
+        private static CombatStopwatch? Instance;
 
         private CombatStopwatch()
         {
             stopwatch = new Stopwatch();
-            PlayerState.Instance().RegisterCombatStateChangeHandler(OnCombat);
+            PlayerState.GetInstance().RegisterCombatStateChangeHandler(OnCombat);
         }
 
-        public static CombatStopwatch Instance()
+        public static CombatStopwatch GetInstance()
         {
-            if (_instance == null)
+            if (Instance == null)
             {
-                _instance = new();
+                Instance = new();
             }
 
-            return _instance;
+            return Instance;
         }
         private void Start()
         {

@@ -14,7 +14,7 @@ namespace DragoonMayCry.State
         public bool IsInsideInstance => CheckCondition([ConditionFlag.BoundByDuty]);
         public bool IsDead { get; set; }
         public bool IsLoggedIn => Service.ClientState != null && Player != null;
-        public IPlayerCharacter Player => Service.ClientState?.LocalPlayer;
+        public IPlayerCharacter? Player => Service.ClientState?.LocalPlayer;
         private ICondition Condition => Service.Condition;
         
         private bool CheckCondition(ConditionFlag[] conditionFlags) => (Condition != null) && conditionFlags.Any(x => Condition[x]);
@@ -24,7 +24,7 @@ namespace DragoonMayCry.State
         private readonly OnEnteringInstanceStateTracker onEnteringInstanceStateTracker;
         private readonly LoginStateTracker loginStateTracker;
         private readonly JobChangeTracker jobChangeTracker;
-        private static PlayerState _instance;
+        private static PlayerState? Instance;
         private PlayerState()
         {
             Service.Framework.Update += Update;
@@ -35,14 +35,14 @@ namespace DragoonMayCry.State
             jobChangeTracker = new();
         }
 
-        public static PlayerState Instance()
+        public static PlayerState GetInstance()
         {
-            if (_instance == null)
+            if (Instance == null)
             {
-                _instance = new PlayerState();
+                Instance = new PlayerState();
             }
 
-            return _instance;
+            return Instance;
         }
 
         public void Update(IFramework framework)

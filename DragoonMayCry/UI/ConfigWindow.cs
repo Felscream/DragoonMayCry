@@ -8,7 +8,7 @@ namespace DragoonMayCry.UI;
 
 public class ConfigWindow : Window, IDisposable
 {
-    private DmcConfiguration Configuration;
+    private DmcConfiguration configuration;
 
     // We give this window a constant ID using ###
     // This allows for labels being dynamic, like "{FPS Counter}fps###XYZ counter window",
@@ -21,68 +21,68 @@ public class ConfigWindow : Window, IDisposable
         Size = new Vector2(0,0);
         SizeCondition = ImGuiCond.Always;
 
-        Configuration = configuration;
+        this.configuration = configuration;
     }
 
     public void Dispose() { }
 
     public override void Draw()
     {
-        var lockScoreWindow = Configuration.StyleRankUiConfiguration.LockScoreWindow;
+        var lockScoreWindow = configuration.StyleRankUiConfiguration.LockScoreWindow;
         if (ImGui.Checkbox("Lock Score Window", ref lockScoreWindow))
         {
-            Configuration.StyleRankUiConfiguration.LockScoreWindow = lockScoreWindow;
-            Configuration.Save();
+            configuration.StyleRankUiConfiguration.LockScoreWindow = lockScoreWindow;
+            configuration.Save();
         }
 
-        var activeOutsideInstance = Configuration.ActiveOutsideInstance;
+        var activeOutsideInstance = configuration.ActiveOutsideInstance;
         if (ImGui.Checkbox("Active outside instance",
                            ref activeOutsideInstance))
         {
-            Configuration.ActiveOutsideInstance = activeOutsideInstance;
-            Configuration.Save();
+            configuration.ActiveOutsideInstance = activeOutsideInstance;
+            configuration.Save();
         }
 
-        var playSoundEffects = Configuration.PlaySoundEffects;
+        var playSoundEffects = configuration.PlaySoundEffects;
         if (ImGui.Checkbox("Play sound effects", ref playSoundEffects))
         {
-            Configuration.PlaySoundEffects = playSoundEffects;
-            Configuration.Save();
+            configuration.PlaySoundEffects = playSoundEffects;
+            configuration.Save();
         }
 
-        var soundEffectVolume = Configuration.SfxVolume;
+        var soundEffectVolume = configuration.SfxVolume;
         if (ImGui.SliderInt("Sound effect volume", ref soundEffectVolume, 0,
                             100))
         {
-            Configuration.SfxVolume = soundEffectVolume;
-            Configuration.Save();
+            configuration.SfxVolume = soundEffectVolume;
+            configuration.Save();
         }
 
 #if DEBUG
         if (ImGui.Button("Next rank"))
         {
-            Plugin.StyleRankHandler.GoToNextRank(true, true);
+            Plugin.StyleRankHandler!.GoToNextRank(true, true);
         }
         if (ImGui.Button("Previous rank"))
         {
-            Plugin.StyleRankHandler.ReturnToPreviousRank(false);
+            Plugin.StyleRankHandler!.ReturnToPreviousRank(false);
         }
 
-        var testing = Configuration.StyleRankUiConfiguration.TestRankDisplay;
+        var testing = configuration.StyleRankUiConfiguration.TestRankDisplay;
         if (ImGui.Checkbox("Test rank display", ref testing))
         {
-            Configuration.StyleRankUiConfiguration.TestRankDisplay = testing;
-            Configuration.Save();
+            configuration.StyleRankUiConfiguration.TestRankDisplay = testing;
+            configuration.Save();
         }
 
         if (testing)
         {
-            var debugProgressValue = (float)Configuration.StyleRankUiConfiguration.DebugProgressValue;
+            var debugProgressValue = (float)configuration.StyleRankUiConfiguration.DebugProgressValue;
             if (ImGui.SliderFloat("Progress value", ref debugProgressValue, 0,
                                 1))
             {
-                Configuration.StyleRankUiConfiguration.DebugProgressValue = debugProgressValue;
-                Configuration.Save();
+                configuration.StyleRankUiConfiguration.DebugProgressValue = debugProgressValue;
+                configuration.Save();
             }
 
             /*var progressBarTint =

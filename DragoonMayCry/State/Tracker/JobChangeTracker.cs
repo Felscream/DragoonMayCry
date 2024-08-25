@@ -13,11 +13,11 @@ namespace DragoonMayCry.State.Tracker
         public JobIds CurrentJob { get; private set; }
         public override void Update(PlayerState playerState)
         {
-            if (!playerState.IsLoggedIn)
+            if (playerState.Player == null || !playerState.IsLoggedIn)
             {
                 return;
             }
-            var job = JobHelper.IdToJob(Service.ClientState.LocalPlayer.ClassJob.Id);
+            var job = JobHelper.IdToJob(playerState.Player.ClassJob.Id);
             if (job != CurrentJob)
             {
                 CurrentJob = job;

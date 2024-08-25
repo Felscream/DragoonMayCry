@@ -78,24 +78,24 @@ namespace DragoonMayCry.Audio
 
         public void Init(DoubleLinkedList<StyleRank> styles)
         {
-            DoubleLinkedNode<StyleRank> current = styles.Head;
+            DoubleLinkedNode<StyleRank> current = styles.Head!;
 
             while (current != null)
             {
                 if (string.IsNullOrEmpty(current.Value.SfxPath))
                 {
-                    current = current.Next;
+                    current = current.Next!;
                     continue;
                 }
                 
                 StyleRank rank = current.Value;
                 Service.Log.Debug($"Registering sound for {rank.StyleType}, {rank.SfxPath}");
                 sounds.Add(rank.StyleType, new CachedSound(rank.SfxPath));
-                current = current.Next;
+                current = current.Next!;
             }
         }
 
-        public void PlaySFX(StyleType trigger)
+        public void PlaySfx(StyleType trigger)
         {
             if (!sounds.ContainsKey(trigger))
             {
@@ -103,7 +103,7 @@ namespace DragoonMayCry.Audio
                 return;
             }
 
-            sfxSampleProvider.Volume = (Plugin.Configuration.SfxVolume / 100f) * GetGameSfxVolume() ;
+            sfxSampleProvider.Volume = (Plugin.Configuration!.SfxVolume / 100f) * GetGameSfxVolume() ;
             Service.Log.Debug($"Playing audio for trigger {trigger}");
             AddSFXMixerInput(new CachedSoundSampleProvider(sounds[trigger]));
         }

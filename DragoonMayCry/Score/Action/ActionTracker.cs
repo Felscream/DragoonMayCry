@@ -1,30 +1,24 @@
-using Dalamud.Hooking;
-using System;
-using System.Runtime.InteropServices;
-using Dalamud.Game.ClientState.Objects.SubKinds;
-using DragoonMayCry.State;
-using Lumina.Excel;
-using LuminaAction = Lumina.Excel.GeneratedSheets.Action;
-using ImGuiNET;
-using System.Collections.Generic;
-using Dalamud.Utility;
-using System.Linq;
-using static Lumina.Data.Parsing.Layer.LayerCommon;
-using FFXIVClientStructs.FFXIV.Client.Game;
-using Dalamud.Plugin.Services;
-using DragoonMayCry.Score;
-using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
 using Dalamud.Game.Gui.FlyText;
+using Dalamud.Hooking;
+using Dalamud.Plugin.Services;
+using DragoonMayCry.State;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI;
-using System.Text;
+using ImGuiNET;
+using Lumina.Excel;
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
+using LuminaAction = Lumina.Excel.GeneratedSheets.Action;
 
 namespace DragoonMayCry.Score.Action
 {
-    
+
 
     public unsafe class ActionTracker : IDisposable
     {
-        private HashSet<FlyTextKind> _validTextKind = new HashSet<FlyTextKind>() {
+        private HashSet<FlyTextKind> validTextKind = new HashSet<FlyTextKind>() {
             FlyTextKind.Damage,
             FlyTextKind.DamageCrit,
             FlyTextKind.DamageDh,
@@ -42,72 +36,71 @@ namespace DragoonMayCry.Score.Action
             uint offsetStr,
             uint offsetStrMax,
             int unknown);
-        private readonly Hook<AddFlyTextDelegate> _addFlyTextHook;
+        private readonly Hook<AddFlyTextDelegate>? addFlyTextHook;
 
-        public EventHandler OnGcdDropped;
-        public EventHandler<float> OnFlyTextCreation;
-        public EventHandler<float> OnGcdClip;
+        public EventHandler? OnGcdDropped;
+        public EventHandler<float>? OnFlyTextCreation;
+        public EventHandler<float>? OnGcdClip;
 
         private delegate void OnActionUsedDelegate(
             uint sourceId, nint sourceCharacter, nint pos,
             nint effectHeader, nint effectArray, nint effectTrail);
 
-        private Hook<OnActionUsedDelegate>? _onActionUsedHook;
+        private Hook<OnActionUsedDelegate>? onActionUsedHook;
 
         private delegate void OnActorControlDelegate(
             uint entityId, uint id, uint unk1, uint type, uint unk2, uint unk3,
             uint unk4, uint unk5, ulong targetId, byte unk6);
 
-        private Hook<OnActorControlDelegate>? _onActorControlHook;
+        private Hook<OnActorControlDelegate>? onActorControlHook;
 
         private delegate void OnCastDelegate(
             uint sourceId, nint sourceCharacter);
 
-        private Hook<OnCastDelegate>? _onCastHook;
+        private Hook<OnCastDelegate>? onCastHook;
 
         private readonly PlayerState playerState;
         private ExcelSheet<LuminaAction>? sheet;
 
         private CombatStopwatch combatStopwatch;
-        private bool hadSwiftcast = false;
 
         private ushort lastDetectedClip = 0;
-        private float currentWastedGCD = 0;
+        private float currentWastedGcd = 0;
         private float encounterTotalClip = 0;
         private float encounterTotalWaste = 0;
 
         private bool isInactive;
-        private PlayerAction currentAction;
-        private PlayerAction previousAction;
+        private PlayerAction? currentAction;
+        private PlayerAction? previousAction;
         public ActionTracker()
         {
-            playerState = PlayerState.Instance();
-            combatStopwatch = CombatStopwatch.Instance();
+            playerState = PlayerState.GetInstance();
+            combatStopwatch = CombatStopwatch.GetInstance();
 
             sheet = Service.DataManager.GetExcelSheet<LuminaAction>();
             try
             {
-                _onActionUsedHook = Service.Hook.HookFromSignature<OnActionUsedDelegate>("40 ?? 56 57 41 ?? 41 ?? 41 ?? 48 ?? ?? ?? ?? ?? ?? ?? 48", OnActionUsed);
+                onActionUsedHook = Service.Hook.HookFromSignature<OnActionUsedDelegate>("40 ?? 56 57 41 ?? 41 ?? 41 ?? 48 ?? ?? ?? ?? ?? ?? ?? 48", OnActionUsed);
                 
 
-                _onActorControlHook = Service.Hook.HookFromSignature<OnActorControlDelegate>("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64", OnActorControl);
+                onActorControlHook = Service.Hook.HookFromSignature<OnActorControlDelegate>("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64", OnActorControl);
                 
 
-                _onCastHook = Service.Hook.HookFromSignature<OnCastDelegate>("40 56 41 56 48 81 EC ?? ?? ?? ?? 48 8B F2", OnCast);
+                onCastHook = Service.Hook.HookFromSignature<OnCastDelegate>("40 56 41 56 48 81 EC ?? ?? ?? ?? 48 8B F2", OnCast);
                 
 
                 var addFlyTextAddress = Service.Scanner.ScanText("E8 ?? ?? ?? ?? FF C7 41 D1 C7");
-                _addFlyTextHook = Service.Hook.HookFromAddress<AddFlyTextDelegate>(addFlyTextAddress, AddFlyTextDetour);
+                addFlyTextHook = Service.Hook.HookFromAddress<AddFlyTextDelegate>(addFlyTextAddress, AddFlyTextDetour);
             }
             catch (Exception e)
             {
                 Service.Log.Error("Error initiating hooks: " + e.Message);
             }
 
-            _onActionUsedHook?.Enable();
-            _onActorControlHook?.Enable();
-            _onCastHook?.Enable();
-            _addFlyTextHook?.Enable();
+            onActionUsedHook?.Enable();
+            onActorControlHook?.Enable();
+            onCastHook?.Enable();
+            addFlyTextHook?.Enable();
 
             Service.Framework.Update += Update;
             playerState.RegisterCombatStateChangeHandler(OnCombat);
@@ -116,17 +109,17 @@ namespace DragoonMayCry.Score.Action
         public void Dispose()
         {
             Service.Framework.Update -= Update;
-            _addFlyTextHook.Disable();
-            _addFlyTextHook?.Dispose();
+            addFlyTextHook?.Disable();
+            addFlyTextHook?.Dispose();
                 
-            _onActionUsedHook?.Disable();
-            _onActionUsedHook?.Dispose();
+            onActionUsedHook?.Disable();
+            onActionUsedHook?.Dispose();
 
-            _onActorControlHook?.Disable();
-            _onActorControlHook?.Dispose();
+            onActorControlHook?.Disable();
+            onActorControlHook?.Dispose();
 
-            _onCastHook?.Disable();
-            _onCastHook?.Dispose();
+            onCastHook?.Disable();
+            onCastHook?.Dispose();
         }
 
         private void OnActionUsed(
@@ -134,7 +127,7 @@ namespace DragoonMayCry.Score.Action
             nint effectHeader,
             nint effectArray, nint effectTrail)
         {
-            _onActionUsedHook?.Original(sourceId, sourceCharacter, pos,
+            onActionUsedHook?.Original(sourceId, sourceCharacter, pos,
                                         effectHeader, effectArray, effectTrail);
 
             var player = playerState.Player;
@@ -176,7 +169,7 @@ namespace DragoonMayCry.Score.Action
             uint entityId, uint type, uint buffID, uint direct, uint actionId,
             uint sourceId, uint arg4, uint arg5, ulong targetId, byte a10)
         {
-            _onActorControlHook?.Original(entityId, type, buffID, direct,
+            onActorControlHook?.Original(entityId, type, buffID, direct,
                                           actionId, sourceId, arg4, arg5,
                                           targetId, a10);
 
@@ -196,7 +189,7 @@ namespace DragoonMayCry.Score.Action
 
         private void OnCast(uint sourceId, nint ptr)
         {
-            _onCastHook?.Original(sourceId, ptr);
+            onCastHook?.Original(sourceId, ptr);
 
             var player = playerState.Player;
             if (player == null || sourceId != player.GameObjectId)
@@ -211,6 +204,10 @@ namespace DragoonMayCry.Score.Action
 
         private void RegisterNewAction(uint actionId)
         {
+            if (sheet == null)
+            {
+                return;
+            }
             var luminaAction = sheet.GetRow(actionId);
             if (luminaAction == null || !luminaAction.IsPlayerAction)
             {
@@ -228,7 +225,7 @@ namespace DragoonMayCry.Score.Action
                                : GetCastTime(actionId);
 
             var playerAction = new PlayerAction(
-                actionId, type, luminaAction.ActionCombo?.Value.RowId,
+                actionId, type, luminaAction.ActionCombo?.Value?.RowId,
                 luminaAction.PreservesCombo, combatStopwatch.TimeInCombat(), duration);
             Service.Log.Warning($"Registering new action");
             Service.Log.Warning($"{luminaAction.Name} type {type} has combo {luminaAction.ActionCombo?.Value != null && luminaAction.ActionCombo?.Value.RowId != 0}");
@@ -268,7 +265,7 @@ namespace DragoonMayCry.Score.Action
             {
                 encounterTotalClip = 0;
                 encounterTotalWaste = 0;
-                currentWastedGCD = 0;
+                currentWastedGcd = 0;
             }
         }
 
@@ -295,19 +292,19 @@ namespace DragoonMayCry.Score.Action
             if (!Plugin.ActionManager->isGCDRecastActive && !Plugin.ActionManager->isQueued)
             {
                 if (Plugin.ActionManager->animationLock > 0) return;
-                currentWastedGCD += ImGui.GetIO().DeltaTime;
-                if (!isInactive && currentWastedGCD > Plugin.Configuration.GcdDropThreshold)
+                currentWastedGcd += ImGui.GetIO().DeltaTime;
+                if (!isInactive && currentWastedGcd > Plugin.Configuration!.GcdDropThreshold)
                 {
                     isInactive = true;
                     Service.Log.Debug($"GCD dropped");
                     OnGcdDropped?.Invoke(this, EventArgs.Empty);
                 }
             }
-            else if (currentWastedGCD > 0)
+            else if (currentWastedGcd > 0)
             {
-                encounterTotalWaste += currentWastedGCD;
-                Service.Log.Debug($"Wasted GCD: {currentWastedGCD} ms");
-                currentWastedGCD = 0;
+                encounterTotalWaste += currentWastedGcd;
+                Service.Log.Debug($"Wasted GCD: {currentWastedGcd} ms");
+                currentWastedGcd = 0;
                 isInactive = false;
             }
         }
@@ -325,7 +322,7 @@ namespace DragoonMayCry.Score.Action
             int unknown)
         {
                 // don't lock this since locks may not be enough
-            _addFlyTextHook.Original(
+            addFlyTextHook?.Original(
                 addonFlyText,
                 actorIndex,
                 messageMax,
@@ -380,7 +377,7 @@ namespace DragoonMayCry.Score.Action
                         shownActionName = text1;
                     }
                     FlyTextKind flyKind = (FlyTextKind)kind;
-                    if (shownActionName == null || val1 <= 0 || !_validTextKind.Contains(flyKind))
+                    if (shownActionName == null || val1 <= 0 || !validTextKind.Contains(flyKind))
                     {
                         Service.Log.Debug($"Ignoring action of kind {flyKind}");
                         return;

@@ -29,8 +29,8 @@ namespace DragoonMayCry.UI
         private readonly Vector2 rankPosition = new (8, 8);
         private readonly Vector2 rankSize = new(130, 130);
         private readonly Vector2 rankTransitionStartPosition = new(83, 83);
-        private StyleRank currentStyleRank;
-        private StyleRank previousStyle;
+        private StyleRank? currentStyleRank;
+        private StyleRank? previousStyle;
         private bool showProgressGauge;
 
         private readonly Easing rankTransition;
@@ -38,7 +38,7 @@ namespace DragoonMayCry.UI
         private readonly float shakeDuration = 400f;
         private readonly float shakeIntensity = 6f;
 
-        private static readonly string defaultRankIconPath =
+        private static readonly string DefaultRankIconPath =
             "DragoonMayCry.Assets.S.png";
 
         public StyleRankUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager)
@@ -46,11 +46,11 @@ namespace DragoonMayCry.UI
             this.scoreProgressBar = scoreProgressBar;
             this.styleRankHandler = styleRankHandler;
             this.scoreManager = scoreManager;
-            this.scoreManager.OnScoring += OnScoring;
-            this.playerState = PlayerState.Instance();
-            this.playerState.RegisterCombatStateChangeHandler(OnCombatChange);
+            this.scoreManager.OnScoring += OnScoring!;
+            this.playerState = PlayerState.GetInstance();
+            this.playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             
-            this.styleRankHandler.OnStyleRankChange += OnRankChange;
+            this.styleRankHandler.StyleRankChange += OnRankChange!;
 
             long duration = 1500000;
             rankTransition = new OutCubic(new(duration));
@@ -65,7 +65,7 @@ namespace DragoonMayCry.UI
                 shakeStopwatch.Reset();
             }
 
-            var windowFlags = Plugin.Configuration.StyleRankUiConfiguration.LockScoreWindow ?
+            var windowFlags = Plugin.Configuration!.StyleRankUiConfiguration.LockScoreWindow ?
                                   ImGuiWindowFlags.NoTitleBar |
                                   ImGuiWindowFlags.NoResize |
                                   ImGuiWindowFlags.NoMove |
@@ -102,8 +102,12 @@ namespace DragoonMayCry.UI
             }
             
 
-            if ((currentStyleRank != null) && ImGui.Begin("DmC", windowFlags))
+            if (ImGui.Begin("DmC", windowFlags))
             {
+                if (currentStyleRank!.IconPath == null)
+                {
+                    return;
+                }
                 if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), currentStyleRank.IconPath).TryGetWrap(out var rankIcon, out var _))
                 {
                     DrawCurrentRank(rankIcon);
@@ -130,7 +134,7 @@ namespace DragoonMayCry.UI
         {
             if (ImGui.Begin("DmC", windowFlags))
             {
-                var iconPath = playerState.IsInCombat ? currentStyleRank.IconPath : defaultRankIconPath;
+                var iconPath = playerState.IsInCombat ? currentStyleRank!.IconPath! : DefaultRankIconPath;
                 var progress = scoreProgressBar.Progress;
                 if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), iconPath).TryGetWrap(out var rankIcon, out var _))
                 {

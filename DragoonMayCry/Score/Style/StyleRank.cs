@@ -19,7 +19,7 @@ namespace DragoonMayCry.Score.Style
     public class StyleRank
     {
         public StyleType StyleType { get; init; }
-        public string IconPath { get; init; }
+        public string? IconPath { get; init; }
         public string? SfxPath { get; init; }
         public float Threshold { get; init; }
         public float ReductionPerSecond { get; init; }

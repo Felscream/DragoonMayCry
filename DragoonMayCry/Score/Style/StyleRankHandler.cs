@@ -13,7 +13,7 @@ namespace DragoonMayCry.Score.Style
     {
         public struct RankChangeData
         {
-            public StyleRank PreviousRank;
+            public StyleRank? PreviousRank;
             public StyleRank NewRank;
             public bool IsBlunder;
 
@@ -36,7 +36,7 @@ namespace DragoonMayCry.Score.Style
             new StyleRank(StyleType.SS, "DragoonMayCry.Assets.SS.png", GetPathToAudio("sadistic"), 100000, 10000, new(233, 216, 95)),
             new StyleRank(StyleType.SSS, "DragoonMayCry.Assets.SSS.png", GetPathToAudio("sensational"), 80000, 12000, new(233, 216, 95)));
 
-        public EventHandler<RankChangeData> OnStyleRankChange;
+        public EventHandler<RankChangeData>? StyleRankChange;
         public DoubleLinkedNode<StyleRank>? CurrentRank { get; private set; }
         public DoubleLinkedNode<StyleRank>? PreviousRank { get; private set; }
         private DoubleLinkedList<StyleRank> styles;
@@ -44,32 +44,33 @@ namespace DragoonMayCry.Score.Style
 
         public StyleRankHandler(ActionTracker actionTracker)
         {
-            ChangeStylesTo(DEFAULT_STYLE_RANK);
+            styles = DEFAULT_STYLE_RANK;
+            Reset();
             audioEngine = new AudioEngine();
-            audioEngine.Init(styles);
+            audioEngine.Init(styles!);
 
-            var playerState = PlayerState.Instance();
-            playerState.RegisterJobChangeHandler(OnJobChange);
-            playerState.RegisterLoginStateChangeHandler(OnLogin);
-            playerState.RegisterCombatStateChangeHandler(OnCombatChange);
+            var playerState = PlayerState.GetInstance();
+            playerState.RegisterJobChangeHandler(OnJobChange!);
+            playerState.RegisterLoginStateChangeHandler(OnLogin!);
+            playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
 
             actionTracker.OnGcdDropped += OnGcdDropped;
         }
 
         public void GoToNextRank(bool playSfx, bool loop)
         {
-            if (CurrentRank.Next == null && styles.Head != null && loop)
+            if (CurrentRank?.Next == null && styles.Head != null && loop)
             {
                 Reset();
             }
-            else if (CurrentRank.Next != null)
+            else if (CurrentRank?.Next != null)
             {
                 CurrentRank = CurrentRank.Next;
                 Service.Log.Debug($"New rank reached {CurrentRank.Value.StyleType}");
-                OnStyleRankChange?.Invoke(this, new(CurrentRank.Previous.Value, CurrentRank.Value, false));
-                if (Plugin.Configuration.PlaySoundEffects)
+                StyleRankChange?.Invoke(this, new(CurrentRank!.Previous!.Value, CurrentRank.Value, false));
+                if (Plugin.Configuration!.PlaySoundEffects)
                 {
-                    audioEngine.PlaySFX(CurrentRank.Value.StyleType);
+                    audioEngine.PlaySfx(CurrentRank.Value.StyleType);
                 }
             }
         }
@@ -77,34 +78,24 @@ namespace DragoonMayCry.Score.Style
         public void ReturnToPreviousRank(bool droppedGcd)
         {
             
-            if (CurrentRank.Previous == null)
+            if (CurrentRank?.Previous == null)
             {
                 if (droppedGcd)
                 {
-                    OnStyleRankChange?.Invoke(this, new(CurrentRank.Value, CurrentRank.Value, droppedGcd));
+                    StyleRankChange?.Invoke(this, new(CurrentRank!.Value, CurrentRank.Value, droppedGcd));
                 }
                 return;
             }
 
             CurrentRank = CurrentRank.Previous;
             Service.Log.Debug($"Going back to rank {CurrentRank.Value.StyleType}");
-            OnStyleRankChange?.Invoke(this, new(CurrentRank.Next.Value, CurrentRank.Value, droppedGcd));
+            StyleRankChange?.Invoke(this, new(CurrentRank!.Next!.Value, CurrentRank.Value, droppedGcd));
         }
 
         public void Reset()
         {
             CurrentRank = styles.Head;
-            OnStyleRankChange?.Invoke(this, new(null, CurrentRank.Value, false));
-        }
-
-        public StyleRank GetPreviousStyleRank()
-        {
-            if (CurrentRank.Previous == null)
-            {
-                return CurrentRank.Value;
-            }
-
-            return CurrentRank.Previous.Value;
+            StyleRankChange?.Invoke(this, new(null, CurrentRank!.Value, false));
         }
 
         private static string GetPathToAudio(string name)

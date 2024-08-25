@@ -23,8 +23,6 @@ namespace DragoonMayCry.Util
         }
         public DoubleLinkedList(params T[] values)
         {
-            Head = null;
-            Tail = null;
             size = 0;
             for (int i = 0; i < values.Length; i++)
             {
