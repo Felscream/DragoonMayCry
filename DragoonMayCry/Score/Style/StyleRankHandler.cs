@@ -48,7 +48,7 @@ namespace DragoonMayCry.Score.Style
             Reset();
             audioEngine = new AudioEngine();
             audioEngine.Init(styles!);
-            audioEngine.AddSfx(StyleType.DEAD_WEIGHT, GetPathToAudio("dead_weight.wav"));
+            audioEngine.AddSfx(StyleType.DEAD_WEIGHT, GetPathToAudio("dead_weight"));
 
             var playerState = PlayerState.GetInstance();
             playerState.RegisterJobChangeHandler(OnJobChange!);
