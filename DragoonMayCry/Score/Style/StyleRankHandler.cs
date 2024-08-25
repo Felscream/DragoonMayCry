@@ -145,7 +145,7 @@ namespace DragoonMayCry.Score.Style
             ReturnToPreviousRank(true);
             if (Plugin.Configuration!.PlaySoundEffects)
             {
-                audioEngine.PlaySfx(CurrentRank.Value.StyleType);
+                audioEngine.PlaySfx(StyleType.DEAD_WEIGHT);
             }
         }
     }
