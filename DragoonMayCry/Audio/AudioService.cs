@@ -1,7 +1,10 @@
+using System;
 using DragoonMayCry.Score.Style;
 using ImGuiNET;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using Dalamud.Plugin.Ipc.Exceptions;
 
 namespace DragoonMayCry.Audio
 {
@@ -20,24 +23,45 @@ namespace DragoonMayCry.Audio
                 { StyleType.SSS, GetPathToAudio("sensational") }
             };
 
-        private static float LastPlayedSfxTime;
+        private static double LastPlayedSfxTime;
+        private static double LastPlayedDeadWeight;
+        private static float deadWeightCooldown = 16f;
 
-        public static void PlaySfx(StyleType key)
+        public static void PlaySfx(StyleType key, bool force = false)
         {
             if (!SfxPaths.ContainsKey(key))
             {
                 Service.Log.Debug($"No sfx for {key}");
             }
 
-            double time = ImGui.GetTime();
-            float sfxCooldown = Plugin.Configuration!.AnnouncerCooldown;
-            if (LastPlayedSfxTime > 0 && LastPlayedSfxTime + sfxCooldown > time)
+            
+            
+            if (!force && !CanPlaySfx(key))
             {
                 return;
             }
 
-            LastPlayedSfxTime = (float)time;
+            LastPlayedSfxTime = ImGui.GetTime();
+            if (key == StyleType.DEAD_WEIGHT)
+            {
+                LastPlayedDeadWeight = ImGui.GetTime();
+            }
             AudioEngine.PlaySfx(key, SfxPaths[key], GetSfxVolume());
+        }
+
+        private static bool CanPlaySfx(StyleType type)
+        {
+            float sfxCooldown = Plugin.Configuration!.AnnouncerCooldown;
+            double time = ImGui.GetTime();
+            if (type == StyleType.DEAD_WEIGHT)
+            {
+                var delay = Math.Max(deadWeightCooldown, sfxCooldown);
+                Service.Log.Debug($"Time {time}");
+                Service.Log.Debug($"next play {LastPlayedDeadWeight + delay}");
+                Service.Log.Debug($"{LastPlayedDeadWeight + delay < time}");
+                return LastPlayedDeadWeight + delay < time;
+            }
+            return LastPlayedSfxTime + sfxCooldown < time;
         }
 
         private static string GetPathToAudio(string name)
