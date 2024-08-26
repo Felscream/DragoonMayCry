@@ -52,6 +52,7 @@ namespace DragoonMayCry.Score
             this.actionTracker = actionTracker;
             this.actionTracker.OnLimitBreak += OnLimitBreakCast;
             this.actionTracker.OnLimitBreakEffect += OnLimitBreakEffect;
+            this.actionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
 
             rankFloorStopwatch = new Stopwatch();
         }
@@ -81,7 +82,7 @@ namespace DragoonMayCry.Score
             {
                 if (isCastingLb)
                 {
-                    if (currentScoreRank.Rank.StyleType != StyleType.SS)
+                    if (currentScoreRank.Rank.StyleType != StyleType.SS && currentScoreRank.Rank.StyleType != StyleType.SSS)
                     {
                         styleRankHandler.GoToNextRank(false, false);
                         return;
@@ -130,6 +131,11 @@ namespace DragoonMayCry.Score
         private void OnLimitBreakCast(object? sender, bool isCastingLb)
         {
             this.isCastingLb = isCastingLb;
+        }
+
+        private void OnLimitBreakCanceled(object? sender, EventArgs e)
+        {
+            isCastingLb = false;
         }
 
         private void OnLimitBreakEffect(object? sender, EventArgs e)

@@ -52,6 +52,7 @@ namespace DragoonMayCry.Score.Style
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
 
             actionTracker.OnGcdDropped += OnGcdDropped;
+            actionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
         }
 
         public void GoToNextRank(bool playSfx, bool loop, bool forceSfx = false)
@@ -103,6 +104,34 @@ namespace DragoonMayCry.Score.Style
             StyleRankChange?.Invoke(this, new(null, CurrentRank!.Value, false));
         }
 
+        public void ForceRankTo(StyleType type, bool isBlunder)
+        {
+            
+            if (CurrentRank.Value.StyleType == type)
+            {
+                return;
+            }
+            var tempRank = CurrentRank;
+            do
+            {
+                if (CurrentRank.Next != null)
+                {
+                    CurrentRank = CurrentRank.Next;
+                }
+                else
+                {
+                    CurrentRank = styles.Head;
+                }
+            } while(CurrentRank.Value.StyleType != type && CurrentRank.Value.StyleType != tempRank.Value.StyleType);
+
+            if (isBlunder)
+            {
+                AudioService.PlaySfx(StyleType.DEAD_WEIGHT, true);
+            }
+
+            StyleRankChange?.Invoke(this, new(tempRank.Value, CurrentRank.Value, isBlunder));
+        }
+
         private void ChangeStylesTo(DoubleLinkedList<StyleRank> newStyles)
         {
             styles = newStyles;
@@ -145,6 +174,11 @@ namespace DragoonMayCry.Score.Style
             }
             ReturnToPreviousRank(true);
             
+        }
+
+        private void OnLimitBreakCanceled(object? sender, EventArgs args)
+        {
+            ForceRankTo(StyleType.D, true);
         }
     }
 }

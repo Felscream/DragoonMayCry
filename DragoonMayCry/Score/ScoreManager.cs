@@ -31,11 +31,16 @@ namespace DragoonMayCry.Score
         private readonly PlayerState playerState;
         private readonly StyleRankHandler rankHandler;
         private readonly CombatStopwatch combatStopwatch;
+        
         private bool isCastingLb;
+
+        private readonly Stopwatch gcdClippingStopwatch;
+        private int damageInstancesToCancel;
 
         public ScoreManager(StyleRankHandler styleRankHandler, ActionTracker actionTracker)
         {
             combatStopwatch = CombatStopwatch.GetInstance();
+            gcdClippingStopwatch = new Stopwatch();
             CurrentScoreRank = new(0, styleRankHandler.CurrentRank!.Value);
             ResetScore();
 
@@ -50,6 +55,7 @@ namespace DragoonMayCry.Score
             actionTracker.OnFlyTextCreation += AddScore;
             actionTracker.OnGcdClip += OnGcdClip;
             actionTracker.OnLimitBreak += OnLimitBreakCast;
+            actionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
 
             Service.Framework.Update += UpdateScore;
             Service.ClientState.Logout += ResetScore;
@@ -71,8 +77,17 @@ namespace DragoonMayCry.Score
 
         private void AddScore(object? sender, float val)
         {
+            if (damageInstancesToCancel > 0)
+            {
+                damageInstancesToCancel--;
+                Service.Log.Info($"{damageInstancesToCancel} remaining");
+                if (CanDisableGcdClippingRestrictions())
+                {
+                    DisableGcdClippingRestrictions();
+                }
+                return;
+            }
             var points = val;
-            Service.Log.Debug($"Time in combat {combatStopwatch.TimeInCombat()}");
 
             CurrentScoreRank.Score += points;
             if (CurrentScoreRank.Rank.StyleType == StyleType.SSS)
@@ -90,7 +105,11 @@ namespace DragoonMayCry.Score
                 return;
             }
 
-            
+            if (CanDisableGcdClippingRestrictions())
+            {
+                DisableGcdClippingRestrictions();
+            }
+
             if (isCastingLb)
             {
                 CurrentScoreRank.Score +=
@@ -100,11 +119,25 @@ namespace DragoonMayCry.Score
             }
             else
             {
-                CurrentScoreRank.Score -=
-                    (float)(framework.UpdateDelta.TotalSeconds * CurrentScoreRank.Rank.ReductionPerSecond);
+                var scoreReduction =
+                    (float)(framework.UpdateDelta.TotalSeconds *
+                            CurrentScoreRank.Rank.ReductionPerSecond);
+                if (AreGcdClippingRestrictionsActive())
+                {
+                    scoreReduction *= 10;
+                }
+                CurrentScoreRank.Score -= scoreReduction;
                 CurrentScoreRank.Score = Math.Max(CurrentScoreRank.Score, 0);
             }
             
+        }
+
+        private bool CanDisableGcdClippingRestrictions()
+        {
+            return gcdClippingStopwatch.IsRunning &&
+                   (gcdClippingStopwatch.ElapsedMilliseconds > Plugin.Configuration
+                        .GcdClippingRestrictionDuration ||
+                    damageInstancesToCancel <= 0);
         }
 
         private void OnInstanceChange(object send, bool value)
@@ -131,6 +164,12 @@ namespace DragoonMayCry.Score
             {
                 CurrentScoreRank.Score = CurrentScoreRank.Rank.Threshold;
             }
+        }
+
+        private void OnLimitBreakCanceled(object? sender, EventArgs e)
+        {
+            isCastingLb = false;
+            ResetScore();
         }
 
         private void OnRankChange(object sender, RankChangeData data)
@@ -163,14 +202,29 @@ namespace DragoonMayCry.Score
 
         private void OnGcdClip(object? send, float clippingTime)
         {
-            Service.Log.Warning("Clip");
             var newScore = CurrentScoreRank.Score - CurrentScoreRank.Rank.Threshold * 0.3f;
             CurrentScoreRank.Score = Math.Max(newScore, 0);
+            gcdClippingStopwatch.Restart();
+            damageInstancesToCancel = Plugin.Configuration.DamageInstancesToCancelOnGcdClip;
+            Service.Log.Debug($"Clipping detected {damageInstancesToCancel} instances of damage will be blocked");
+        }
+
+        private void DisableGcdClippingRestrictions()
+        {
+            gcdClippingStopwatch.Reset();
+            damageInstancesToCancel = 0;
+            Service.Log.Debug($"Clipping restrictions removed");
         }
 
         private void ResetScore()
         {
             CurrentScoreRank.Score = 0;
+        }
+
+        private bool AreGcdClippingRestrictionsActive()
+        {
+            return gcdClippingStopwatch.IsRunning &&
+                   damageInstancesToCancel > 0;
         }
     }
 }

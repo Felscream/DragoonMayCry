@@ -52,10 +52,13 @@ namespace DragoonMayCry.Score.Action
         private readonly Hook<AddFlyTextDelegate>? addFlyTextHook;
 
         public EventHandler? OnGcdDropped;
+        public EventHandler? OnCastCanceled;
         public EventHandler<float>? OnFlyTextCreation;
         public EventHandler<float>? OnGcdClip;
         public EventHandler<bool>? OnLimitBreak;
         public EventHandler? OnLimitBreakEffect;
+        public EventHandler? OnLimitBreakCanceled;
+
 
         private delegate void OnActionUsedDelegate(
             uint sourceId, nint sourceCharacter, nint pos,
@@ -179,10 +182,9 @@ namespace DragoonMayCry.Score.Action
             {
                 return;
             }
-            Service.Log.Debug($"{type} {actionId}");
+            
             if (type == PlayerActionType.LimitBreak)
             {
-                Service.Log.Debug($"Used Limitbreak gcd time : {GetGCDTime((uint)actionId)}");
                 StartLimitBreakUse((uint)actionId);
             }
             
@@ -196,8 +198,6 @@ namespace DragoonMayCry.Score.Action
             {
                 return PlayerActionType.Other;
             }
-
-            Service.Log.Debug($"{action.Name} {action.RowId}");
 
             return action.ActionCategory.Row switch
             {
@@ -235,7 +235,7 @@ namespace DragoonMayCry.Score.Action
             Service.Log.Warning("cast cancel");
             if (limitBreakCast != null)
             {
-                ResetLimitBreakUse();
+                CancelLimitBreak();
             }
             // send a cast cancel event
         }
@@ -292,7 +292,6 @@ namespace DragoonMayCry.Score.Action
                 luminaAction.PreservesCombo, combatStopwatch.TimeInCombat(), duration);
             Service.Log.Warning($"Registering new action");
             Service.Log.Warning($"{luminaAction.Name} type {type} has combo {luminaAction.ActionCombo?.Value != null && luminaAction.ActionCombo?.Value.RowId != 0}");
-            Service.Log.Warning($"start {combatStopwatch.TimeInCombat()} duration { duration}");
             
             
         }
@@ -359,6 +358,17 @@ namespace DragoonMayCry.Score.Action
             if (playerState.IsInCombat)
             {
                 OnLimitBreak?.Invoke(this, false);
+            }
+        }
+
+        private void CancelLimitBreak()
+        {
+            limitBreakStopwatch.Reset();
+            limitBreakCast = null;
+            Service.Log.Debug("Canceled LB use");
+            if (playerState.IsInCombat)
+            {
+                OnLimitBreakCanceled?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -436,7 +446,10 @@ namespace DragoonMayCry.Score.Action
         {
             if (limitBreakCast != null)
             {
-                ResetLimitBreakUse();
+                limitBreakStopwatch.Reset();
+                limitBreakCast = null;
+                Service.Log.Debug("Stop LB use");
+                OnLimitBreakCanceled?.Invoke(this, EventArgs.Empty);
             }
         }
 

@@ -18,6 +18,8 @@ public class DmcConfiguration : IPluginConfiguration
     public bool ActiveOutsideInstance { get; set; } = false;
     public int TimeBeforeDemotion { get; set; } = 3000; //milliseconds
     public float GcdDropThreshold { get; set; } = 0.1f;
+    public int DamageInstancesToCancelOnGcdClip { get; set; } = 3;
+    public int GcdClippingRestrictionDuration { get; set; } = 6000; //milliseconds
 
     public int TimeToResetScoreAfterCombat { get; set; } = 10000;
     public StyleRankUiConfiguration StyleRankUiConfiguration = new();
