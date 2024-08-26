@@ -128,9 +128,9 @@ namespace DragoonMayCry.Score
             lastRankChange = ImGui.GetTime();
         }
 
-        private void OnLimitBreakCast(object? sender, bool isCastingLb)
+        private void OnLimitBreakCast(object? sender, ActionTracker.LimitBreakEvent e)
         {
-            this.isCastingLb = isCastingLb;
+            this.isCastingLb = e.IsCasting;
         }
 
         private void OnLimitBreakCanceled(object? sender, EventArgs e)

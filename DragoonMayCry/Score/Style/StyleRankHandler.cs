@@ -53,6 +53,7 @@ namespace DragoonMayCry.Score.Style
 
             actionTracker.OnGcdDropped += OnGcdDropped;
             actionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
+            actionTracker.OnLimitBreak += OnLimitBreak;
         }
 
         public void GoToNextRank(bool playSfx, bool loop, bool forceSfx = false)
@@ -104,17 +105,17 @@ namespace DragoonMayCry.Score.Style
             StyleRankChange?.Invoke(this, new(null, CurrentRank!.Value, false));
         }
 
-        public void ForceRankTo(StyleType type, bool isBlunder)
+        private void ForceRankTo(StyleType type, bool isBlunder)
         {
             
-            if (CurrentRank.Value.StyleType == type)
+            if (CurrentRank?.Value.StyleType == type)
             {
                 return;
             }
             var tempRank = CurrentRank;
             do
             {
-                if (CurrentRank.Next != null)
+                if (CurrentRank?.Next != null)
                 {
                     CurrentRank = CurrentRank.Next;
                 }
@@ -122,14 +123,14 @@ namespace DragoonMayCry.Score.Style
                 {
                     CurrentRank = styles.Head;
                 }
-            } while(CurrentRank.Value.StyleType != type && CurrentRank.Value.StyleType != tempRank.Value.StyleType);
+            } while(CurrentRank?.Value.StyleType != type && CurrentRank?.Value.StyleType != tempRank?.Value.StyleType);
 
             if (isBlunder)
             {
                 AudioService.PlaySfx(StyleType.DEAD_WEIGHT, true);
             }
 
-            StyleRankChange?.Invoke(this, new(tempRank.Value, CurrentRank.Value, isBlunder));
+            StyleRankChange?.Invoke(this, new(tempRank?.Value!, CurrentRank?.Value!, isBlunder));
         }
 
         private void ChangeStylesTo(DoubleLinkedList<StyleRank> newStyles)
@@ -179,6 +180,15 @@ namespace DragoonMayCry.Score.Style
         private void OnLimitBreakCanceled(object? sender, EventArgs args)
         {
             ForceRankTo(StyleType.D, true);
+        }
+
+        private void OnLimitBreak(
+            object? sender, ActionTracker.LimitBreakEvent e)
+        {
+            if (e.IsTankLb && CurrentRank?.Value.StyleType < StyleType.S)
+            {
+                ForceRankTo(StyleType.A, false);
+            }
         }
     }
 }

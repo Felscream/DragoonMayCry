@@ -33,8 +33,6 @@ namespace DragoonMayCry.Audio
             {
                 Service.Log.Debug($"No sfx for {key}");
             }
-
-            
             
             if (!force && !CanPlaySfx(key))
             {
@@ -56,9 +54,6 @@ namespace DragoonMayCry.Audio
             if (type == StyleType.DEAD_WEIGHT)
             {
                 var delay = Math.Max(DeadWeightCooldown, sfxCooldown);
-                Service.Log.Debug($"Time {time}");
-                Service.Log.Debug($"next play {LastPlayedDeadWeight + delay}");
-                Service.Log.Debug($"{LastPlayedDeadWeight + delay < time}");
                 return LastPlayedDeadWeight + delay < time;
             }
             return LastPlayedSfxTime + sfxCooldown < time;
