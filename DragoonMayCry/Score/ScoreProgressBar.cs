@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Plugin.Services;
+using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Style;
 using ImGuiNET;
 
@@ -35,17 +36,24 @@ namespace DragoonMayCry.Score
         private static readonly double InterpolationWeight = 0.09d;
         private readonly ScoreManager scoreManager;
         private readonly StyleRankHandler styleRankHandler;
-        private Stopwatch rankFloorStopwatch;
+        private readonly ActionTracker actionTracker;
+        private readonly Stopwatch rankFloorStopwatch;
         private double interpolatedScore = 0;
         private double lastRankChange = 0;
         private float progress;
+        private bool isCastingLb;
+        private bool lbEffectApplied;
 
-        public ScoreProgressBar(ScoreManager scoreManager, StyleRankHandler styleRankHandler)
+        public ScoreProgressBar(ScoreManager scoreManager, StyleRankHandler styleRankHandler, ActionTracker actionTracker)
         {
             this.scoreManager = scoreManager;
             Service.Framework.Update += UpdateScoreInterpolation;
             this.styleRankHandler = styleRankHandler;
             this.styleRankHandler.StyleRankChange += OnRankChange;
+            this.actionTracker = actionTracker;
+            this.actionTracker.OnLimitBreak += OnLimitBreakCast;
+            this.actionTracker.OnLimitBreakEffect += OnLimitBreakEffect;
+
             rankFloorStopwatch = new Stopwatch();
         }
 
@@ -70,9 +78,21 @@ namespace DragoonMayCry.Score
             double time = ImGui.GetTime();
             double timeSinceLastRankChange = time - lastRankChange;
 
-            if (Progress >= 0.995f && timeSinceLastRankChange > 1.5)
+            if (Progress > 0.995f)
             {
-                styleRankHandler.GoToNextRank(true, false);
+                if (isCastingLb)
+                {
+                    if (currentScoreRank.Rank.StyleType != StyleType.SS)
+                    {
+                        styleRankHandler.GoToNextRank(false, false);
+                        return;
+                    }
+                }
+                else if(timeSinceLastRankChange > 1.5)
+                {
+                    styleRankHandler.GoToNextRank(true, false);
+                }
+                
             }
 
             ApplyDemotion(currentScoreRank, timeSinceLastRankChange);
@@ -106,6 +126,18 @@ namespace DragoonMayCry.Score
         {
             interpolatedScore = 0;
             lastRankChange = ImGui.GetTime();
+        }
+
+        private void OnLimitBreakCast(object? sender, bool isCastingLb)
+        {
+            this.isCastingLb = isCastingLb;
+            lbEffectApplied = false;
+        }
+
+        private void OnLimitBreakEffect(object? sender, EventArgs e)
+        {
+            styleRankHandler.GoToNextRank(true, false, true);
+            lbEffectApplied = true;
         }
     }
 }

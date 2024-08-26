@@ -12,7 +12,6 @@ namespace DragoonMayCry.Score
     public class ScoreManager : IDisposable
 
     {
-
         public class ScoreRank
         {
             public float Score { get; set; }
@@ -32,6 +31,7 @@ namespace DragoonMayCry.Score
         private readonly PlayerState playerState;
         private readonly StyleRankHandler rankHandler;
         private readonly CombatStopwatch combatStopwatch;
+        private bool isCastingLb;
 
         public ScoreManager(StyleRankHandler styleRankHandler, ActionTracker actionTracker)
         {
@@ -49,6 +49,8 @@ namespace DragoonMayCry.Score
 
             actionTracker.OnFlyTextCreation += AddScore;
             actionTracker.OnGcdClip += OnGcdClip;
+            actionTracker.OnLimitBreak += OnLimitBreakCast;
+
             Service.Framework.Update += UpdateScore;
             Service.ClientState.Logout += ResetScore;
         }
@@ -88,9 +90,21 @@ namespace DragoonMayCry.Score
                 return;
             }
 
-            CurrentScoreRank.Score -=
-                (float)(framework.UpdateDelta.TotalSeconds * CurrentScoreRank.Rank.ReductionPerSecond);
-            CurrentScoreRank.Score = Math.Max(CurrentScoreRank.Score, 0);
+            
+            if (isCastingLb)
+            {
+                CurrentScoreRank.Score +=
+                    (float)(framework.UpdateDelta.TotalSeconds * CurrentScoreRank.Rank.ReductionPerSecond * 100);
+                CurrentScoreRank.Score = Math.Clamp(
+                    CurrentScoreRank.Score, 0, CurrentScoreRank.Rank.Threshold * 1.2f);
+            }
+            else
+            {
+                CurrentScoreRank.Score -=
+                    (float)(framework.UpdateDelta.TotalSeconds * CurrentScoreRank.Rank.ReductionPerSecond);
+                CurrentScoreRank.Score = Math.Max(CurrentScoreRank.Score, 0);
+            }
+            
         }
 
         private void OnInstanceChange(object send, bool value)
@@ -107,6 +121,15 @@ namespace DragoonMayCry.Score
             else
             {
                 ResetScore();
+            }
+        }
+
+        private void OnLimitBreakCast(object? sender, bool isCastingLb)
+        {
+            this.isCastingLb = isCastingLb;
+            if (!isCastingLb)
+            {
+                CurrentScoreRank.Score = CurrentScoreRank.Rank.Threshold;
             }
         }
 

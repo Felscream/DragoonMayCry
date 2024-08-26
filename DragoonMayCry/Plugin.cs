@@ -44,9 +44,9 @@ public unsafe class Plugin : IDalamudPlugin
 
         StyleRankHandler = new(actionTracker);
         ScoreManager = new(StyleRankHandler, actionTracker);
-        scoreProgressBar = new(ScoreManager, StyleRankHandler);
+        scoreProgressBar = new(ScoreManager, StyleRankHandler, actionTracker);
         PluginUi = new(scoreProgressBar, StyleRankHandler, ScoreManager);
-        var audioService = new AudioService();
+
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
             HelpMessage = "A useful message to display in /xlhelp"

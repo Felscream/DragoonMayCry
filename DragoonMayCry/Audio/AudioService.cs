@@ -2,14 +2,12 @@ using DragoonMayCry.Score.Style;
 using ImGuiNET;
 using System.Collections.Generic;
 using System.IO;
-using System.Windows.Forms;
 
 namespace DragoonMayCry.Audio
 {
-    public class AudioService
+    public static class AudioService
     {
-        
-        private Dictionary<StyleType, string> SfxPaths =
+        private static Dictionary<StyleType, string> SfxPaths =
             new Dictionary<StyleType, string>
             {
                 { StyleType.DEAD_WEIGHT, GetPathToAudio("dead_weight") },
@@ -22,26 +20,9 @@ namespace DragoonMayCry.Audio
                 { StyleType.SSS, GetPathToAudio("sensational") }
             };
 
-        private float LastPlayedSfxTime;
-        private readonly AudioEngine audioEngine;
-        private static AudioService? _instance;
-        public AudioService()
-        {
-            audioEngine = new AudioEngine(SfxPaths);
+        private static float LastPlayedSfxTime;
 
-        }
-
-        public static AudioService Instance()
-        {
-            if (_instance == null)
-            {
-                _instance = new AudioService();
-            }
-
-            return _instance;
-        }
-
-        public void PlaySfx(StyleType key)
+        public static void PlaySfx(StyleType key)
         {
             if (!SfxPaths.ContainsKey(key))
             {
@@ -49,7 +30,6 @@ namespace DragoonMayCry.Audio
             }
 
             double time = ImGui.GetTime();
-            Service.Log.Debug($"{time}");
             float sfxCooldown = Plugin.Configuration!.AnnouncerCooldown;
             if (LastPlayedSfxTime > 0 && LastPlayedSfxTime + sfxCooldown > time)
             {
@@ -57,7 +37,7 @@ namespace DragoonMayCry.Audio
             }
 
             LastPlayedSfxTime = (float)time;
-            audioEngine.PlaySfx(key, GetGameSfxVolume());
+            AudioEngine.PlaySfx(key, SfxPaths[key], GetSfxVolume());
         }
 
         private static string GetPathToAudio(string name)
@@ -67,14 +47,21 @@ namespace DragoonMayCry.Audio
                 $"Assets\\Audio\\{name}.wav");
         }
 
-        public static float GetGameSfxVolume()
+        private static float GetSfxVolume()
         {
-            if (Service.GameConfig.System.GetBool("IsSndSe") ||
-                Service.GameConfig.System.GetBool("IsSndMaster"))
+            if (Plugin.Configuration!.ApplyGameVolume && (Service.GameConfig.System.GetBool("IsSndSe") ||
+                            Service.GameConfig.System.GetBool("IsSndMaster")))
             {
                 return 0;
             }
-            return Service.GameConfig.System.GetUInt("SoundSe") / 100f * (Service.GameConfig.System.GetUInt("SoundMaster") / 100f);
+
+            var gameVolume = Plugin.Configuration!.ApplyGameVolume
+                                 ? Service.GameConfig.System
+                                          .GetUInt("SoundSe") / 100f *
+                                   (Service.GameConfig.System.GetUInt(
+                                        "SoundMaster") / 100f)
+                                 : 1;
+            return gameVolume * (Plugin.Configuration!.SfxVolume / 100f);
         }
     }
 }

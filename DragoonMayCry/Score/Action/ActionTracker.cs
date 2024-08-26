@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Lumina.Excel.GeneratedSheets;
 using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
 using LuminaAction = Lumina.Excel.GeneratedSheets.Action;
 
@@ -19,6 +20,17 @@ namespace DragoonMayCry.Score.Action
 
     public unsafe class ActionTracker : IDisposable
     {
+        private class LimitBreak
+        {
+            public float GracePeriod { get; set; }
+            public bool IsTankLb { get; set; }
+
+            public LimitBreak(float gracePeriod, bool isTankLb)
+            {
+                GracePeriod = gracePeriod;
+                IsTankLb = isTankLb;
+            }
+        }
         private HashSet<FlyTextKind> validTextKind = new HashSet<FlyTextKind>() {
             FlyTextKind.Damage,
             FlyTextKind.DamageCrit,
@@ -42,6 +54,8 @@ namespace DragoonMayCry.Score.Action
         public EventHandler? OnGcdDropped;
         public EventHandler<float>? OnFlyTextCreation;
         public EventHandler<float>? OnGcdClip;
+        public EventHandler<bool> OnLimitBreak;
+        public EventHandler OnLimitBreakEffect;
 
         private delegate void OnActionUsedDelegate(
             uint sourceId, nint sourceCharacter, nint pos,
@@ -67,16 +81,26 @@ namespace DragoonMayCry.Score.Action
 
         private ushort lastDetectedClip = 0;
         private float currentWastedGcd = 0;
-        private float encounterTotalClip = 0;
-        private float encounterTotalWaste = 0;
 
-        private bool isInactive;
+        private bool isGcdDropped;
         private PlayerAction? currentAction;
         private PlayerAction? previousAction;
 
-        private bool castingLimitBreak;
+
         private Stopwatch limitBreakStopwatch;
-        private float gracePeriod = 0f;
+        private LimitBreak? limitBreakCast;
+
+        // added 0.1f to all duration
+        private Dictionary<uint, float> tankLimitBreakDelays =
+            new Dictionary<uint, float>
+            {
+                { 197, 2.1f },   // LB1
+                { 198, 4.1f },   // LB2
+                { 199, 4.1f },   // PLD Last Bastion
+                { 4240, 4.1f },  // WAR Land Waker
+                { 4241, 4.1f },  // DRK Dark Force
+                { 17105, 4.1f }, // GNB Gunmetal Soul
+            };
         public ActionTracker()
         {
             playerState = PlayerState.GetInstance();
@@ -110,6 +134,7 @@ namespace DragoonMayCry.Score.Action
 
             Service.Framework.Update += Update;
             playerState.RegisterCombatStateChangeHandler(OnCombat);
+            playerState.RegisterDeathStateChangeHandler(OnDeath);
         }
 
         public void Dispose()
@@ -136,6 +161,11 @@ namespace DragoonMayCry.Score.Action
             onActionUsedHook?.Original(sourceId, sourceCharacter, pos,
                                         effectHeader, effectArray, effectTrail);
 
+            if (!playerState.IsInCombat)
+            {
+                return;
+            }
+
             var player = playerState.Player;
             if (player == null || sourceId != player.GameObjectId)
             {
@@ -144,21 +174,22 @@ namespace DragoonMayCry.Score.Action
 
             var actionId = Marshal.ReadInt32(effectHeader, 0x8);
             
-            var type = TypeForActionID((uint)actionId);
+            var type = TypeForActionId((uint)actionId);
             if (type == PlayerActionType.Other)
             {
                 return;
             }
-            Service.Log.Debug($"{type}");
+            Service.Log.Debug($"{type} {actionId}");
             if (type == PlayerActionType.LimitBreak)
             {
                 Service.Log.Debug($"Used Limitbreak gcd time : {GetGCDTime((uint)actionId)}");
+                StartLimitBreakUse((uint)actionId);
             }
             
             RegisterNewAction((uint)actionId);
         }
 
-        private PlayerActionType TypeForActionID(uint actionId)
+        private PlayerActionType TypeForActionId(uint actionId)
         {
             var action = sheet?.GetRow(actionId);
             if (action == null)
@@ -187,7 +218,10 @@ namespace DragoonMayCry.Score.Action
             onActorControlHook?.Original(entityId, type, buffID, direct,
                                           actionId, sourceId, arg4, arg5,
                                           targetId, a10);
-
+            if (!playerState.IsInCombat)
+            {
+                return;
+            }
             if (type != 15)
             {
                 return;
@@ -199,13 +233,21 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
             Service.Log.Warning("cast cancel");
-            ResetLimitBreakUse();
+            if (limitBreakCast != null)
+            {
+                ResetLimitBreakUse();
+            }
             // send a cast cancel event
         }
 
         private void OnCast(uint sourceId, nint ptr)
         {
             onCastHook?.Original(sourceId, ptr);
+
+            if (!playerState.IsInCombat)
+            {
+                return;
+            }
 
             var player = playerState.Player;
             if (player == null || sourceId != player.GameObjectId)
@@ -215,13 +257,11 @@ namespace DragoonMayCry.Score.Action
 
             int value = Marshal.ReadInt16(ptr);
             var actionId = value < 0 ? (uint)(value + 65536) : (uint)value;
-            var type = TypeForActionID((uint)actionId);
+            var type = TypeForActionId((uint)actionId);
 
-            
-            castingLimitBreak = type == PlayerActionType.LimitBreak;
-            if (castingLimitBreak)
+            if (type == PlayerActionType.LimitBreak)
             {
-                StartLimitBreakUse(GetCastTime(actionId));
+                StartLimitBreakUse(actionId);
             }
         }
 
@@ -237,7 +277,7 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-            PlayerActionType type = TypeForActionID(actionId);
+            PlayerActionType type = TypeForActionId(actionId);
             if (type != PlayerActionType.Weaponskill && type != PlayerActionType.Spell && type != PlayerActionType.LimitBreak)
             {
                 return;
@@ -285,15 +325,14 @@ namespace DragoonMayCry.Score.Action
 
         private void HandleLimitBreakUse()
         {
-            if (!limitBreakStopwatch.IsRunning)
+            if (!limitBreakStopwatch.IsRunning || limitBreakCast == null)
             {
                 return;
             }
 
-            if (limitBreakStopwatch.ElapsedMilliseconds / 1000f > gracePeriod)
+            if (limitBreakStopwatch.ElapsedMilliseconds / 1000f > limitBreakCast.GracePeriod)
             {
                 ResetLimitBreakUse();
-
             }
         }
 
@@ -301,13 +340,11 @@ namespace DragoonMayCry.Score.Action
         {
             if (enteredCombat)
             {
-                encounterTotalClip = 0;
-                encounterTotalWaste = 0;
                 currentWastedGcd = 0;
             }
             else
             {
-                if (castingLimitBreak)
+                if (limitBreakCast != null)
                 {
                     ResetLimitBreakUse();
                 }
@@ -317,17 +354,31 @@ namespace DragoonMayCry.Score.Action
         private void ResetLimitBreakUse()
         {
             limitBreakStopwatch.Reset();
-            castingLimitBreak = false;
-            gracePeriod = 0;
+            limitBreakCast = null;
             Service.Log.Debug("Stop LB use");
+            if (playerState.IsInCombat)
+            {
+                OnLimitBreak?.Invoke(this, false);
+            }
         }
 
-        private void StartLimitBreakUse(float gracePeriod)
+        private void StartLimitBreakUse(uint actionId)
         {
-            limitBreakStopwatch.Reset();
-            castingLimitBreak = false;
-            this.gracePeriod = gracePeriod;
+            if (!playerState.IsInCombat || limitBreakCast != null)
+            {
+                return;
+            }
+            var isTankLb = tankLimitBreakDelays.ContainsKey(actionId);
+            var castTime = GetCastTime(actionId);
+
+            // the +3 is just to give enough time to register the gcd clipping just after
+            var gracePeriod = isTankLb ? tankLimitBreakDelays[actionId] : castTime + 3f; 
+
+            limitBreakCast = new LimitBreak(gracePeriod, isTankLb);
+            limitBreakStopwatch.Restart();
+            
             Service.Log.Debug("Start LB use");
+            OnLimitBreak?.Invoke(this, true);
         }
 
         private unsafe void DetectClipping()
@@ -340,16 +391,15 @@ namespace DragoonMayCry.Score.Action
 
             if (animationLock != 0.1f)
             {
-                encounterTotalClip += animationLock;
                 Service.Log.Debug($"GCD Clip: {animationLock} s");
-                if (!castingLimitBreak)
+                if (limitBreakCast == null)
                 {
                     Service.Log.Debug($"Sending clipping event");
                     OnGcdClip?.Invoke(this, animationLock);
                 }
-                else
+                else if(!limitBreakCast.IsTankLb)
                 {
-                    gracePeriod += animationLock;
+                    limitBreakCast.GracePeriod += animationLock - 2.9f;
                 }
             }
 
@@ -358,23 +408,35 @@ namespace DragoonMayCry.Score.Action
 
         private unsafe void DetectWastedGCD()
         {
+            if (limitBreakCast != null)
+            {
+                // do not track dropped GCDs if the LB is being cast
+                return;
+            }
             if (!Plugin.ActionManager->isGCDRecastActive && !Plugin.ActionManager->isQueued)
             {
                 if (Plugin.ActionManager->animationLock > 0) return;
                 currentWastedGcd += ImGui.GetIO().DeltaTime;
-                if (!isInactive && currentWastedGcd > Plugin.Configuration!.GcdDropThreshold)
+                if (!isGcdDropped && currentWastedGcd > Plugin.Configuration!.GcdDropThreshold)
                 {
-                    isInactive = true;
+                    isGcdDropped = true;
                     Service.Log.Debug($"GCD dropped");
                     OnGcdDropped?.Invoke(this, EventArgs.Empty);
                 }
             }
             else if (currentWastedGcd > 0)
             {
-                encounterTotalWaste += currentWastedGcd;
                 Service.Log.Debug($"Wasted GCD: {currentWastedGcd} ms");
                 currentWastedGcd = 0;
-                isInactive = false;
+                isGcdDropped = false;
+            }
+        }
+
+        private void OnDeath(object sender, bool isDead)
+        {
+            if (limitBreakCast != null)
+            {
+                ResetLimitBreakUse();
             }
         }
 
@@ -448,10 +510,18 @@ namespace DragoonMayCry.Score.Action
                     FlyTextKind flyKind = (FlyTextKind)kind;
                     if (shownActionName == null || val1 <= 0 || !validTextKind.Contains(flyKind))
                     {
-                        Service.Log.Debug($"Ignoring action of kind {flyKind}");
+                        //Service.Log.Debug($"Ignoring action of kind {flyKind}");
                         return;
                     }
-                    OnFlyTextCreation?.Invoke(this, val1);
+
+                    if (limitBreakCast != null)
+                    {
+                        OnLimitBreakEffect?.Invoke(this, EventArgs.Empty);
+                    }
+                    else
+                    {
+                        OnFlyTextCreation?.Invoke(this, val1);
+                    }
                 }
                 catch (Exception e)
                 {

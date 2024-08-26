@@ -54,20 +54,28 @@ namespace DragoonMayCry.Score.Style
             actionTracker.OnGcdDropped += OnGcdDropped;
         }
 
-        public void GoToNextRank(bool playSfx, bool loop)
+        public void GoToNextRank(bool playSfx, bool loop, bool forceSfx = false)
         {
-            if (CurrentRank?.Next == null && styles.Head != null && loop)
+            if (CurrentRank?.Next == null)
             {
-                Reset();
+                if (Plugin.Configuration!.PlaySoundEffects && playSfx && forceSfx && CurrentRank != null)
+                {
+                    AudioService.PlaySfx(CurrentRank.Value.StyleType);
+                }
+                if (styles.Head != null && loop)
+                {
+                    Reset();
+                }
+                
             }
             else if (CurrentRank?.Next != null)
             {
                 CurrentRank = CurrentRank.Next;
                 Service.Log.Debug($"New rank reached {CurrentRank.Value.StyleType}");
                 StyleRankChange?.Invoke(this, new(CurrentRank!.Previous!.Value, CurrentRank.Value, false));
-                if (Plugin.Configuration!.PlaySoundEffects)
+                if (Plugin.Configuration!.PlaySoundEffects && playSfx)
                 {
-                    AudioService.Instance().PlaySfx(CurrentRank.Value.StyleType);
+                    AudioService.PlaySfx(CurrentRank.Value.StyleType);
                 }
             }
         }
@@ -93,13 +101,6 @@ namespace DragoonMayCry.Score.Style
         {
             CurrentRank = styles.Head;
             StyleRankChange?.Invoke(this, new(null, CurrentRank!.Value, false));
-        }
-
-        private static string GetPathToAudio(string name)
-        {
-            return Path.Combine(
-                Plugin.PluginInterface.AssemblyLocation.Directory?.FullName!,
-                $"Assets\\Audio\\{name}.wav");
         }
 
         private void ChangeStylesTo(DoubleLinkedList<StyleRank> newStyles)
@@ -140,8 +141,7 @@ namespace DragoonMayCry.Score.Style
         {
             if (CurrentRank.Value.StyleType != StyleType.NO_STYLE && Plugin.Configuration!.PlaySoundEffects)
             {
-                AudioService.Instance()
-                            .PlaySfx(StyleType.DEAD_WEIGHT);
+                AudioService.PlaySfx(StyleType.DEAD_WEIGHT);
             }
             ReturnToPreviousRank(true);
             
