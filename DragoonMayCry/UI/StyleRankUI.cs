@@ -1,21 +1,17 @@
+using Dalamud.Interface.Animation;
+using Dalamud.Interface.Animation.EasingFunctions;
+using Dalamud.Interface.Textures.TextureWraps;
+using DragoonMayCry.Score;
+using DragoonMayCry.Score.Style;
+using DragoonMayCry.State;
+using DragoonMayCry.Util;
+using ImGuiNET;
 using System;
 using System.Diagnostics;
 using System.Numerics;
-using Dalamud.Interface;
-using Dalamud.Interface.Textures.TextureWraps;
-using ImGuiNET;
 using System.Reflection;
-using Dalamud.Interface.Animation;
-using Dalamud.Interface.Animation.EasingFunctions;
-using DragoonMayCry.Score;
-using DragoonMayCry.State;
-using DragoonMayCry.Util;
-using static DragoonMayCry.Score.ScoreManager;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = FFXIVClientStructs.FFXIV.Common.Math.Vector4;
-using System.Drawing;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using DragoonMayCry.Score.Style;
 
 namespace DragoonMayCry.UI
 {

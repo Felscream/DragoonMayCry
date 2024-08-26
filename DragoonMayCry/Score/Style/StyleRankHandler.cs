@@ -40,15 +40,11 @@ namespace DragoonMayCry.Score.Style
         public DoubleLinkedNode<StyleRank>? CurrentRank { get; private set; }
         public DoubleLinkedNode<StyleRank>? PreviousRank { get; private set; }
         private DoubleLinkedList<StyleRank> styles;
-        private readonly AudioEngine audioEngine;
 
         public StyleRankHandler(ActionTracker actionTracker)
         {
             styles = DEFAULT_STYLE_RANK;
             Reset();
-            audioEngine = new AudioEngine();
-            audioEngine.Init(styles!);
-            audioEngine.AddSfx(StyleType.DEAD_WEIGHT, GetPathToAudio("dead_weight"));
 
             var playerState = PlayerState.GetInstance();
             playerState.RegisterJobChangeHandler(OnJobChange!);
@@ -71,7 +67,7 @@ namespace DragoonMayCry.Score.Style
                 StyleRankChange?.Invoke(this, new(CurrentRank!.Previous!.Value, CurrentRank.Value, false));
                 if (Plugin.Configuration!.PlaySoundEffects)
                 {
-                    audioEngine.PlaySfx(CurrentRank.Value.StyleType);
+                    AudioEngine.PlaySfx(CurrentRank.Value.StyleType, CurrentRank.Value.SfxPath);
                 }
             }
         }
@@ -145,7 +141,7 @@ namespace DragoonMayCry.Score.Style
             ReturnToPreviousRank(true);
             if (Plugin.Configuration!.PlaySoundEffects)
             {
-                audioEngine.PlaySfx(StyleType.DEAD_WEIGHT);
+                AudioEngine.PlaySfx(StyleType.DEAD_WEIGHT, GetPathToAudio("dead_weight"));
             }
         }
     }

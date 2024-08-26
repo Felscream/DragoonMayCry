@@ -1,25 +1,13 @@
 using Dalamud.Game.Command;
-using Dalamud.Game.Gui.FlyText;
-using Dalamud.Hooking;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Score;
-using DragoonMayCry.State;
-using DragoonMayCry.UI;
-using FFXIVClientStructs.FFXIV.Client.UI;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Windows.Forms;
-using DragoonMayCry.Util;
-using Action = Lumina.Excel.GeneratedSheets.Action;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Style;
+using DragoonMayCry.State;
+using DragoonMayCry.UI;
 
 namespace DragoonMayCry;
 

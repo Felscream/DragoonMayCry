@@ -13,6 +13,7 @@ public class DmcConfiguration : IPluginConfiguration
     public bool Enabled = true;
     public int SfxVolume { get; set; } = 80;
     public bool PlaySoundEffects { get; set; } = true;
+    public bool ApplyGameVolume { get; set; } = true;
     public bool ActiveOutsideInstance { get; set; } = false;
     public int TimeBeforeDemotion { get; set; } = 3000; //milliseconds
     public float GcdDropThreshold { get; set; } = 0.1f;

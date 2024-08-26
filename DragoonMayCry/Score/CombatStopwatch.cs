@@ -1,13 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.State;
-using FFXIVClientStructs;
-using ImGuiNET;
+using System.Diagnostics;
 
 namespace DragoonMayCry.Score
 {

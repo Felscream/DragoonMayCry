@@ -1,150 +1,90 @@
 using DragoonMayCry.Score.Style;
-using DragoonMayCry.Util;
 using NAudio.Wave;
-using NAudio.Wave.SampleProviders;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
+using System.Threading;
 
 namespace DragoonMayCry.Audio
 {
-
-    // Stolen from: https://markheath.net/post/fire-and-forget-audio-playback-with
-    class CachedSound
-    {
-        internal float[] AudioData { get; private set; }
-        internal WaveFormat WaveFormat { get; private set; }
-        internal CachedSound(string audioFileName)
-        {
-            using (var audioFileReader = new AudioFileReader(audioFileName))
-            {
-                WaveFormat = audioFileReader.WaveFormat;
-                var wholeFile = new List<float>((int)(audioFileReader.Length / 4));
-                var readBuffer = new float[audioFileReader.WaveFormat.SampleRate * audioFileReader.WaveFormat.Channels];
-                int samplesRead;
-                while ((samplesRead = audioFileReader.Read(readBuffer, 0, readBuffer.Length)) > 0)
-                {
-                    wholeFile.AddRange(readBuffer.Take(samplesRead));
-                }
-                AudioData = wholeFile.ToArray();
-            }
-        }
-    }
-
-    class CachedSoundSampleProvider : ISampleProvider
-    {
-        private readonly CachedSound cachedSound;
-        private long position;
-
-        public CachedSoundSampleProvider(CachedSound cachedSound)
-        {
-            this.cachedSound = cachedSound;
-        }
-
-        public int Read(float[] buffer, int offset, int count)
-        {
-            var availableSamples = cachedSound.AudioData.Length - position;
-            var samplesToCopy = Math.Min(availableSamples, count);
-            Array.Copy(cachedSound.AudioData, position, buffer, offset, samplesToCopy);
-            position += samplesToCopy;
-            return (int)samplesToCopy;
-        }
-
-        public WaveFormat WaveFormat { get { return cachedSound.WaveFormat; } }
-    }
-
     public class AudioEngine
     {
-        private readonly IWavePlayer sfxOutputDevice;
-        private readonly VolumeSampleProvider sfxSampleProvider;
-        private readonly MixingSampleProvider sfxMixer;
-        private Dictionary<StyleType, CachedSound> sounds;
+        private static readonly IDictionary<StyleType, byte> SoundState = new ConcurrentDictionary<StyleType, byte>();
 
-        public AudioEngine()
+        // Copied from PeepingTom plugin, by ascclemens:
+        // https://git.anna.lgbt/anna/PeepingTom/src/commit/b1de54bcae64edf97c9f90614a588e64b5d0ae34/Peeping%20Tom/TargetWatcher.cs#L161
+        public static void PlaySfx(StyleType trigger, string path)
         {
-            sfxOutputDevice = new WaveOutEvent();
-
-            sounds = new();
-
-            sfxMixer = new(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2)) {
-                ReadFully = true
-            };
-
-            sfxSampleProvider = new(sfxMixer);
-
-            sfxOutputDevice.Init(sfxSampleProvider);
-            sfxOutputDevice.Play();
-        }
-
-        public void Init(DoubleLinkedList<StyleRank> styles)
-        {
-            DoubleLinkedNode<StyleRank> current = styles.Head!;
-
-            while (current != null)
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
             {
-                if (string.IsNullOrEmpty(current.Value.SfxPath))
+                Service.Log.Error($"Could not find audio file: [{path}]");
+                return;
+            }
+
+            var soundDevice = DirectSoundOut.DSDEVID_DefaultPlayback;
+            new Thread(() =>
+            {
+                WaveStream reader;
+                try
                 {
-                    current = current.Next!;
-                    continue;
+                    reader = new MediaFoundationReader(path);
                 }
-                
-                StyleRank rank = current.Value;
-                Service.Log.Debug($"Registering sound for {rank.StyleType}, {rank.SfxPath}");
-                sounds.Add(rank.StyleType, new CachedSound(rank.SfxPath));
-                current = current.Next!;
-            }
-        }
-        // TODO remove later
-        public void AddSfx(StyleType type, string path)
-        {
-            if (sounds.ContainsKey(type))
-            {
-                return;
-            }
-            Service.Log.Debug($"Registering sound for {type}, {path}");
-            sounds.Add(type, new CachedSound(path));
-        }
+                catch (Exception e)
+                {
+                    Service.Log.Error(e.Message);
+                    return;
+                }
+                using var channel = new WaveChannel32(reader)
+                {
+                    Volume = GetSfxVolume(),
+                    PadWithZeroes = false,
+                };
 
-        public void PlaySfx(StyleType trigger)
-        {
-            if (!sounds.ContainsKey(trigger))
-            {
-                Service.Log.Warning($"Audio trigger {trigger} has no audio associated");
-                return;
-            }
+                using (reader)
+                {
+                    using var output = new DirectSoundOut(soundDevice);
 
-            sfxSampleProvider.Volume = (Plugin.Configuration!.SfxVolume / 100f) * GetGameSfxVolume() ;
-            Service.Log.Debug($"Playing audio for trigger {trigger}");
-            AddSFXMixerInput(new CachedSoundSampleProvider(sounds[trigger]));
-        }
+                    try
+                    {
+                        output.Init(channel);
+                        output.Play();
+                        SoundState[trigger] = 1;
 
-        private ISampleProvider ConvertToRightChannelCount(ISampleProvider input)
-        {
-            if (input.WaveFormat.Channels == sfxMixer.WaveFormat.Channels)
-            {
-                return input;
-            }
-            if (input.WaveFormat.Channels == 1 && sfxMixer.WaveFormat.Channels == 2)
-            {
-                return new MonoToStereoSampleProvider(input);
-            }
-            throw new NotImplementedException("Not yet implemented this channel count conversion");
+                        while (output.PlaybackState == PlaybackState.Playing)
+                        {
+                            if (!SoundState.ContainsKey(trigger))
+                            {
+                                output.Stop();
+                            }
+
+                            Thread.Sleep(500);
+                        }
+                        SoundState.Remove(trigger);
+                    }
+                    catch (Exception ex)
+                    {
+                        Service.Log.Error(ex, "Exception playing sound");
+                    }
+                }
+            }).Start();
         }
 
-        private void AddSFXMixerInput(ISampleProvider input)
+        private static float GetSfxVolume()
         {
-            ISampleProvider mixerInput = ConvertToRightChannelCount(input);
-            sfxMixer.AddMixerInput(mixerInput);
-        }
-
-        private float GetGameSfxVolume()
-        {
-            if (Service.GameConfig.System.GetBool("IsSndSe") ||
-                Service.GameConfig.System.GetBool("IsSndMaster"))
+            if (Plugin.Configuration!.ApplyGameVolume && (Service.GameConfig.System.GetBool("IsSndSe") ||
+                Service.GameConfig.System.GetBool("IsSndMaster")))
             {
                 return 0;
             }
-            return Service.GameConfig.System.GetUInt("SoundSe") / 100f * (Service.GameConfig.System.GetUInt("SoundMaster") / 100f);
+
+            var gameVolume = Plugin.Configuration!.ApplyGameVolume
+                                 ? Service.GameConfig.System
+                                          .GetUInt("SoundSe") / 100f *
+                                   (Service.GameConfig.System.GetUInt(
+                                        "SoundMaster") / 100f)
+                                 : 1;
+            return gameVolume * (Plugin.Configuration!.SfxVolume / 100f);
         }
     }
 }

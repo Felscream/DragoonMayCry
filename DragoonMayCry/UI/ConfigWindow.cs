@@ -50,6 +50,13 @@ public class ConfigWindow : Window, IDisposable
             configuration.Save();
         }
 
+        var applyGameVolume = configuration.ApplyGameVolume;
+        if (ImGui.Checkbox("Apply game volume", ref applyGameVolume))
+        {
+            configuration.ApplyGameVolume = applyGameVolume;
+            configuration.Save();
+        }
+
         var soundEffectVolume = configuration.SfxVolume;
         if (ImGui.SliderInt("Sound effect volume", ref soundEffectVolume, 0,
                             100))
