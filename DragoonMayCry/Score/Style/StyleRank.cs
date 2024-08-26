@@ -20,20 +20,14 @@ namespace DragoonMayCry.Score.Style
     public class StyleRank
     {
         public StyleType StyleType { get; init; }
-        public string? IconPath { get; init; }
-        public string? SfxPath { get; init; }
         public float Threshold { get; init; }
         public float ReductionPerSecond { get; init; }
-        public Vector3 ProgressBarColor { get; init; }
 
-        public StyleRank(StyleType styleType, string iconPath, string sfxPath, float threshold, float reductionPerSecond, Vector3 barColor)
+        public StyleRank(StyleType styleType, float threshold, float reductionPerSecond)
         {
             StyleType = styleType;
-            IconPath = iconPath;
-            SfxPath = sfxPath;
             Threshold = threshold;
             ReductionPerSecond = reductionPerSecond;
-            ProgressBarColor = barColor;
         }
     }
 }

@@ -73,6 +73,11 @@ namespace DragoonMayCry.Score
             Service.Log.Debug($"Time in combat {combatStopwatch.TimeInCombat()}");
 
             CurrentScoreRank.Score += points;
+            if (CurrentScoreRank.Rank.StyleType == StyleType.SSS)
+            {
+                CurrentScoreRank.Score = Math.Min(
+                    CurrentScoreRank.Score, CurrentScoreRank.Rank.Threshold);
+            }
             OnScoring?.Invoke(this, points);
         }
 

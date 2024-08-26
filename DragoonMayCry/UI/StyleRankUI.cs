@@ -7,9 +7,11 @@ using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using ImGuiNET;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using System.Reflection;
+using DragoonMayCry.UI.Model;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = FFXIVClientStructs.FFXIV.Common.Math.Vector4;
 
@@ -17,6 +19,17 @@ namespace DragoonMayCry.UI
 {
     public sealed class StyleRankUI
     {
+        private readonly Dictionary<StyleType, StyleUi> styleUis =
+            new Dictionary<StyleType, StyleUi>
+            {
+                { StyleType.D, new("DragoonMayCry.Assets.D.png", new(223, 152, 30)) },
+                { StyleType.C , new ("DragoonMayCry.Assets.C.png", new Vector3(95, 160, 213)) },
+                { StyleType.B , new ("DragoonMayCry.Assets.B.png", new Vector3(95, 160, 213)) },
+                { StyleType.A , new ("DragoonMayCry.Assets.A.png", new Vector3(95, 160, 213)) },
+                { StyleType.S , new ("DragoonMayCry.Assets.S.png", new Vector3(233, 216, 95)) },
+                { StyleType.SS , new ("DragoonMayCry.Assets.SS.png", new Vector3(233, 216, 95)) },
+                { StyleType.SSS , new ("DragoonMayCry.Assets.SSS.png", new Vector3(233, 216, 95)) },
+            };
         private readonly ScoreProgressBar scoreProgressBar;
         private readonly ScoreManager scoreManager;
         private readonly Random random;
@@ -25,17 +38,14 @@ namespace DragoonMayCry.UI
         private readonly Vector2 rankPosition = new (8, 8);
         private readonly Vector2 rankSize = new(130, 130);
         private readonly Vector2 rankTransitionStartPosition = new(83, 83);
-        private StyleRank? currentStyleRank;
-        private StyleRank? previousStyle;
+        private StyleType currentStyle = StyleType.NO_STYLE;
+        private StyleType previousStyle = StyleType.NO_STYLE;
         private bool showProgressGauge;
 
         private readonly Easing rankTransition;
         private readonly Stopwatch shakeStopwatch;
         private readonly float shakeDuration = 400f;
         private readonly float shakeIntensity = 6f;
-
-        private static readonly string DefaultRankIconPath =
-            "DragoonMayCry.Assets.S.png";
 
         public StyleRankUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager)
         {
@@ -100,11 +110,13 @@ namespace DragoonMayCry.UI
 
             if (ImGui.Begin("DmC", windowFlags))
             {
-                if (currentStyleRank == null || currentStyleRank.IconPath == null)
+                if (!CanRetrieveStyleDisplay(currentStyle))
                 {
                     return;
                 }
-                if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), currentStyleRank.IconPath).TryGetWrap(out var rankIcon, out var _))
+
+                var style = styleUis[currentStyle];
+                if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), style.IconPath).TryGetWrap(out var rankIcon, out var _))
                 {
                     DrawCurrentRank(rankIcon);
                 }
@@ -115,7 +127,7 @@ namespace DragoonMayCry.UI
                                                 "DragoonMayCry.Assets.GaugeDefault.png")
                                             .TryGetWrap(out var gauge, out var _))
                 {
-                    DrawProgressGauge(gauge, scoreProgressBar.Progress, currentStyleRank.ProgressBarColor);
+                    DrawProgressGauge(gauge, scoreProgressBar.Progress, style.GaugeColor);
                 }
 
                 if (Plugin.Configuration.StyleRankUiConfiguration
@@ -130,7 +142,7 @@ namespace DragoonMayCry.UI
         {
             if (ImGui.Begin("DmC", windowFlags))
             {
-                var iconPath = playerState.IsInCombat ? currentStyleRank!.IconPath! : DefaultRankIconPath;
+                var iconPath = playerState.IsInCombat ? styleUis[currentStyle].IconPath! : styleUis[StyleType.S].IconPath;
                 var progress = scoreProgressBar.Progress;
                 if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), iconPath).TryGetWrap(out var rankIcon, out var _))
                 {
@@ -256,10 +268,17 @@ namespace DragoonMayCry.UI
         {
             var normalizedColor = rankColor / 255;
             var color = normalizedColor;
+            if (!CanRetrieveStyleDisplay(previousStyle))
+            { 
+                return new(color, 1);
+            }
+
+            StyleUi style = styleUis[previousStyle];
+
             if (rankTransition.IsRunning && previousStyle != null)
             {
                 var normalizedStartingColor =
-                    previousStyle.ProgressBarColor / 255;
+                    style.GaugeColor / 255;
                 color = Vector3.Lerp(normalizedStartingColor, normalizedColor,
                                      (float)rankTransition.Value);
             }
@@ -268,12 +287,7 @@ namespace DragoonMayCry.UI
 
         private void OnRankChange(object send, StyleRankHandler.RankChangeData data)
         {
-            if (currentStyleRank == null)
-            {
-                currentStyleRank = data.NewRank;
-            }
-
-            if (currentStyleRank.StyleType < data.NewRank.StyleType)
+            if (currentStyle < data.NewRank.StyleType)
             {
                 rankTransition.Restart();
             }
@@ -281,9 +295,8 @@ namespace DragoonMayCry.UI
             {
                 rankTransition.Reset();
             }
-
-            previousStyle = currentStyleRank;
-            currentStyleRank = data.NewRank;
+            previousStyle = currentStyle;
+            currentStyle = data.NewRank.StyleType;
         }
 
         private void OnCombatChange(object send, bool enteringCombat)
@@ -299,6 +312,11 @@ namespace DragoonMayCry.UI
         private float AlphaModificationFunction(float t)
         {
             return (float)((Math.Sin(3*Math.PI * t + Math.PI / 2) + 1) / 4) + 0.5f;
+        }
+
+        private bool CanRetrieveStyleDisplay(StyleType type)
+        {
+            return styleUis.ContainsKey(type);
         }
     }
 }

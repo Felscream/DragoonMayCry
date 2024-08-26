@@ -12,12 +12,12 @@ namespace DragoonMayCry.State
     {
         public bool IsInCombat => CheckCondition([ConditionFlag.InCombat]);
         public bool IsInsideInstance => CheckCondition([ConditionFlag.BoundByDuty]);
-        public bool IsDead { get; set; }
-        public bool IsLoggedIn => Service.ClientState != null && Player != null;
+        public bool IsDead => Player != null && Player.IsDead;
+        public bool IsLoggedIn => Player != null;
         public IPlayerCharacter? Player => Service.ClientState?.LocalPlayer;
         private ICondition Condition => Service.Condition;
         
-        private bool CheckCondition(ConditionFlag[] conditionFlags) => (Condition != null) && conditionFlags.Any(x => Condition[x]);
+        private bool CheckCondition(ConditionFlag[] conditionFlags) => conditionFlags.Any(x => Condition[x]);
 
         private readonly InCombatStateTracker inCombatStateTracker;
         private readonly OnDeathStateTracker onDeathStateTracker;
@@ -47,14 +47,11 @@ namespace DragoonMayCry.State
 
         public void Update(IFramework framework)
         {
-            IsDead = Player != null && Player.IsDead;
-
             inCombatStateTracker.Update(this);
             onDeathStateTracker.Update(this);
             onEnteringInstanceStateTracker.Update(this);
             loginStateTracker.Update(this);
             jobChangeTracker.Update(this);
-
         }
 
         public void RegisterCombatStateChangeHandler(EventHandler<bool> inCombatHandler)

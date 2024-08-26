@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace DragoonMayCry.Audio
 {
-    public class AudioEngine
+    internal class AudioEngine
     {
         private static readonly IDictionary<StyleType, byte> SoundState = new ConcurrentDictionary<StyleType, byte>();
 

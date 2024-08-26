@@ -65,6 +65,13 @@ public class ConfigWindow : Window, IDisposable
             configuration.Save();
         }
 
+        var announcerCooldown = configuration.AnnouncerCooldown;
+        if (ImGui.InputInt("Announcer cooldown (seconds)", ref announcerCooldown))
+        {
+            configuration.AnnouncerCooldown = announcerCooldown;
+            configuration.Save();
+        }
+
 #if DEBUG
         if (ImGui.Button("Next rank"))
         {

@@ -27,14 +27,14 @@ namespace DragoonMayCry.Score.Style
 
         }
         private static readonly DoubleLinkedList<StyleRank> DEFAULT_STYLE_RANK = new DoubleLinkedList<StyleRank>(
-            new StyleRank(StyleType.NO_STYLE, null, null, 60000, 500, new(135, 135, 135)),
-            new StyleRank(StyleType.D, "DragoonMayCry.Assets.D.png", GetPathToAudio("dirty"), 80000, 1000, new(223, 152, 30)),
-            new StyleRank(StyleType.C, "DragoonMayCry.Assets.C.png", GetPathToAudio("cruel"), 90000, 1500, new(95, 160, 213)),
-            new StyleRank(StyleType.B, "DragoonMayCry.Assets.B.png", GetPathToAudio("brutal"), 90000, 2000, new(95, 160, 213)),
-            new StyleRank(StyleType.A, "DragoonMayCry.Assets.A.png", GetPathToAudio("anarchic"), 100000, 4000, new(95, 160, 213)),
-            new StyleRank(StyleType.S, "DragoonMayCry.Assets.S.png", GetPathToAudio("savage"), 100000, 8000, new(233, 216, 95)),
-            new StyleRank(StyleType.SS, "DragoonMayCry.Assets.SS.png", GetPathToAudio("sadistic"), 100000, 10000, new(233, 216, 95)),
-            new StyleRank(StyleType.SSS, "DragoonMayCry.Assets.SSS.png", GetPathToAudio("sensational"), 80000, 12000, new(233, 216, 95)));
+            new StyleRank(StyleType.NO_STYLE, 60000, 500),
+            new StyleRank(StyleType.D, 80000, 1000),
+            new StyleRank(StyleType.C, 90000, 1500),
+            new StyleRank(StyleType.B, 90000, 2000),
+            new StyleRank(StyleType.A, 100000, 4000),
+            new StyleRank(StyleType.S, 100000, 8000),
+            new StyleRank(StyleType.SS, 100000, 10000),
+            new StyleRank(StyleType.SSS, 60000, 12000));
 
         public EventHandler<RankChangeData>? StyleRankChange;
         public DoubleLinkedNode<StyleRank>? CurrentRank { get; private set; }
@@ -67,7 +67,7 @@ namespace DragoonMayCry.Score.Style
                 StyleRankChange?.Invoke(this, new(CurrentRank!.Previous!.Value, CurrentRank.Value, false));
                 if (Plugin.Configuration!.PlaySoundEffects)
                 {
-                    AudioEngine.PlaySfx(CurrentRank.Value.StyleType, CurrentRank.Value.SfxPath);
+                    AudioService.PlaySfx(CurrentRank.Value.StyleType);
                 }
             }
         }
@@ -138,11 +138,12 @@ namespace DragoonMayCry.Score.Style
 
         private void OnGcdDropped(object? sender, EventArgs args)
         {
-            ReturnToPreviousRank(true);
-            if (Plugin.Configuration!.PlaySoundEffects)
+            if (CurrentRank.Value.StyleType != StyleType.NO_STYLE && Plugin.Configuration!.PlaySoundEffects)
             {
-                AudioEngine.PlaySfx(StyleType.DEAD_WEIGHT, GetPathToAudio("dead_weight"));
+                AudioService.PlaySfx(StyleType.DEAD_WEIGHT);
             }
+            ReturnToPreviousRank(true);
+            
         }
     }
 }

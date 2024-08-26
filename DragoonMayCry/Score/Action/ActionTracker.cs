@@ -8,6 +8,7 @@ using ImGuiNET;
 using Lumina.Excel;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
 using LuminaAction = Lumina.Excel.GeneratedSheets.Action;
@@ -63,6 +64,7 @@ namespace DragoonMayCry.Score.Action
         private ExcelSheet<LuminaAction>? sheet;
 
         private CombatStopwatch combatStopwatch;
+        private Stopwatch gracePeriodStopwatch;
 
         private ushort lastDetectedClip = 0;
         private float currentWastedGcd = 0;
@@ -143,6 +145,12 @@ namespace DragoonMayCry.Score.Action
             {
                 return;
             }
+            Service.Log.Debug($"{type}");
+            if (type == PlayerActionType.LimitBreak)
+            {
+                Service.Log.Debug("Used Limitbreak;");
+            }
+            
             RegisterNewAction((uint)actionId);
         }
 
@@ -154,12 +162,15 @@ namespace DragoonMayCry.Score.Action
                 return PlayerActionType.Other;
             }
 
+            Service.Log.Debug($"{action.Name} {action.RowId}");
+
             return action.ActionCategory.Row switch
             {
                 2 => PlayerActionType.Spell,
                 4 => PlayerActionType.OffGCD,
                 6 => PlayerActionType.Other,
                 7 => PlayerActionType.Other,
+                9 => PlayerActionType.LimitBreak,
                 15 => PlayerActionType.LimitBreak,
                 _ => PlayerActionType.Weaponskill,
             };
@@ -199,6 +210,11 @@ namespace DragoonMayCry.Score.Action
 
             int value = Marshal.ReadInt16(ptr);
             var actionId = value < 0 ? (uint)(value + 65536) : (uint)value;
+            var type = TypeForActionID((uint)actionId);
+            if (type == PlayerActionType.LimitBreak)
+            {
+                Service.Log.Debug("Cast Limitbreak;");
+            }
             //RegisterNewAction(actionId);
         }
 
