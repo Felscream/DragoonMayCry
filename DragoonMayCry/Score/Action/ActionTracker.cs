@@ -64,7 +64,6 @@ namespace DragoonMayCry.Score.Action
         private ExcelSheet<LuminaAction>? sheet;
 
         private CombatStopwatch combatStopwatch;
-        private Stopwatch gracePeriodStopwatch;
 
         private ushort lastDetectedClip = 0;
         private float currentWastedGcd = 0;
@@ -74,10 +73,15 @@ namespace DragoonMayCry.Score.Action
         private bool isInactive;
         private PlayerAction? currentAction;
         private PlayerAction? previousAction;
+
+        private bool castingLimitBreak;
+        private Stopwatch limitBreakStopwatch;
+        private float gracePeriod = 0f;
         public ActionTracker()
         {
             playerState = PlayerState.GetInstance();
             combatStopwatch = CombatStopwatch.GetInstance();
+            limitBreakStopwatch = new Stopwatch();
 
             sheet = Service.DataManager.GetExcelSheet<LuminaAction>();
             try
@@ -148,7 +152,7 @@ namespace DragoonMayCry.Score.Action
             Service.Log.Debug($"{type}");
             if (type == PlayerActionType.LimitBreak)
             {
-                Service.Log.Debug("Used Limitbreak;");
+                Service.Log.Debug($"Used Limitbreak gcd time : {GetGCDTime((uint)actionId)}");
             }
             
             RegisterNewAction((uint)actionId);
@@ -195,6 +199,7 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
             Service.Log.Warning("cast cancel");
+            ResetLimitBreakUse();
             // send a cast cancel event
         }
 
@@ -211,11 +216,13 @@ namespace DragoonMayCry.Score.Action
             int value = Marshal.ReadInt16(ptr);
             var actionId = value < 0 ? (uint)(value + 65536) : (uint)value;
             var type = TypeForActionID((uint)actionId);
-            if (type == PlayerActionType.LimitBreak)
+
+            
+            castingLimitBreak = type == PlayerActionType.LimitBreak;
+            if (castingLimitBreak)
             {
-                Service.Log.Debug("Cast Limitbreak;");
+                StartLimitBreakUse(GetCastTime(actionId));
             }
-            //RegisterNewAction(actionId);
         }
 
         private void RegisterNewAction(uint actionId)
@@ -271,18 +278,56 @@ namespace DragoonMayCry.Score.Action
             }
 
             DetectClipping();
+            HandleLimitBreakUse();
             DetectWastedGCD();
 
         }
 
-        private void OnCombat(object? sender, bool InCombat)
+        private void HandleLimitBreakUse()
         {
-            if (InCombat)
+            if (!limitBreakStopwatch.IsRunning)
+            {
+                return;
+            }
+
+            if (limitBreakStopwatch.ElapsedMilliseconds / 1000f > gracePeriod)
+            {
+                ResetLimitBreakUse();
+
+            }
+        }
+
+        private void OnCombat(object? sender, bool enteredCombat)
+        {
+            if (enteredCombat)
             {
                 encounterTotalClip = 0;
                 encounterTotalWaste = 0;
                 currentWastedGcd = 0;
             }
+            else
+            {
+                if (castingLimitBreak)
+                {
+                    ResetLimitBreakUse();
+                }
+            }
+        }
+
+        private void ResetLimitBreakUse()
+        {
+            limitBreakStopwatch.Reset();
+            castingLimitBreak = false;
+            gracePeriod = 0;
+            Service.Log.Debug("Stop LB use");
+        }
+
+        private void StartLimitBreakUse(float gracePeriod)
+        {
+            limitBreakStopwatch.Reset();
+            castingLimitBreak = false;
+            this.gracePeriod = gracePeriod;
+            Service.Log.Debug("Start LB use");
         }
 
         private unsafe void DetectClipping()
@@ -296,8 +341,16 @@ namespace DragoonMayCry.Score.Action
             if (animationLock != 0.1f)
             {
                 encounterTotalClip += animationLock;
-                Service.Log.Debug($"GCD Clip: {animationLock} ms");
-                OnGcdClip?.Invoke(this, animationLock);
+                Service.Log.Debug($"GCD Clip: {animationLock} s");
+                if (!castingLimitBreak)
+                {
+                    Service.Log.Debug($"Sending clipping event");
+                    OnGcdClip?.Invoke(this, animationLock);
+                }
+                else
+                {
+                    gracePeriod += animationLock;
+                }
             }
 
             lastDetectedClip = Plugin.ActionManager->currentSequence;

@@ -2,6 +2,7 @@ using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using DragoonMayCry.Audio;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Score;
 using DragoonMayCry.Score.Action;
@@ -45,7 +46,7 @@ public unsafe class Plugin : IDalamudPlugin
         ScoreManager = new(StyleRankHandler, actionTracker);
         scoreProgressBar = new(ScoreManager, StyleRankHandler);
         PluginUi = new(scoreProgressBar, StyleRankHandler, ScoreManager);
-
+        var audioService = new AudioService();
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
             HelpMessage = "A useful message to display in /xlhelp"

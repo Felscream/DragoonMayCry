@@ -67,7 +67,7 @@ namespace DragoonMayCry.Score.Style
                 StyleRankChange?.Invoke(this, new(CurrentRank!.Previous!.Value, CurrentRank.Value, false));
                 if (Plugin.Configuration!.PlaySoundEffects)
                 {
-                    AudioService.PlaySfx(CurrentRank.Value.StyleType);
+                    AudioService.Instance().PlaySfx(CurrentRank.Value.StyleType);
                 }
             }
         }
@@ -140,7 +140,8 @@ namespace DragoonMayCry.Score.Style
         {
             if (CurrentRank.Value.StyleType != StyleType.NO_STYLE && Plugin.Configuration!.PlaySoundEffects)
             {
-                AudioService.PlaySfx(StyleType.DEAD_WEIGHT);
+                AudioService.Instance()
+                            .PlaySfx(StyleType.DEAD_WEIGHT);
             }
             ReturnToPreviousRank(true);
             

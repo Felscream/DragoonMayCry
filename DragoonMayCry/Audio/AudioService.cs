@@ -2,12 +2,14 @@ using DragoonMayCry.Score.Style;
 using ImGuiNET;
 using System.Collections.Generic;
 using System.IO;
+using System.Windows.Forms;
 
 namespace DragoonMayCry.Audio
 {
-    public static class AudioService
+    public class AudioService
     {
-        private static Dictionary<StyleType, string> SfxPaths =
+        
+        private Dictionary<StyleType, string> SfxPaths =
             new Dictionary<StyleType, string>
             {
                 { StyleType.DEAD_WEIGHT, GetPathToAudio("dead_weight") },
@@ -20,9 +22,26 @@ namespace DragoonMayCry.Audio
                 { StyleType.SSS, GetPathToAudio("sensational") }
             };
 
-        private static float LastPlayedSfxTime;
+        private float LastPlayedSfxTime;
+        private readonly AudioEngine audioEngine;
+        private static AudioService? _instance;
+        public AudioService()
+        {
+            audioEngine = new AudioEngine(SfxPaths);
 
-        public static void PlaySfx(StyleType key)
+        }
+
+        public static AudioService Instance()
+        {
+            if (_instance == null)
+            {
+                _instance = new AudioService();
+            }
+
+            return _instance;
+        }
+
+        public void PlaySfx(StyleType key)
         {
             if (!SfxPaths.ContainsKey(key))
             {
@@ -38,7 +57,7 @@ namespace DragoonMayCry.Audio
             }
 
             LastPlayedSfxTime = (float)time;
-            AudioEngine.PlaySfx(key, SfxPaths[key]);
+            audioEngine.PlaySfx(key, GetGameSfxVolume());
         }
 
         private static string GetPathToAudio(string name)
@@ -46,6 +65,16 @@ namespace DragoonMayCry.Audio
             return Path.Combine(
                 Plugin.PluginInterface.AssemblyLocation.Directory?.FullName!,
                 $"Assets\\Audio\\{name}.wav");
+        }
+
+        public static float GetGameSfxVolume()
+        {
+            if (Service.GameConfig.System.GetBool("IsSndSe") ||
+                Service.GameConfig.System.GetBool("IsSndMaster"))
+            {
+                return 0;
+            }
+            return Service.GameConfig.System.GetUInt("SoundSe") / 100f * (Service.GameConfig.System.GetUInt("SoundMaster") / 100f);
         }
     }
 }
