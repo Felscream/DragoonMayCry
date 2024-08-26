@@ -247,7 +247,7 @@ namespace DragoonMayCry.Score.Action
             {
                 return;
             }
-            Service.Log.Warning("cast cancel");
+
             if (limitBreakCast != null)
             {
                 CancelLimitBreak();
@@ -369,7 +369,6 @@ namespace DragoonMayCry.Score.Action
         {
             limitBreakStopwatch.Reset();
             limitBreakCast = null;
-            Service.Log.Debug("Stop LB use");
             if (playerState.IsInCombat)
             {
                 OnLimitBreak?.Invoke(this, new LimitBreakEvent(false, false));
@@ -380,7 +379,6 @@ namespace DragoonMayCry.Score.Action
         {
             limitBreakStopwatch.Reset();
             limitBreakCast = null;
-            Service.Log.Debug("Canceled LB use");
             if (playerState.IsInCombat)
             {
                 OnLimitBreakCanceled?.Invoke(this, EventArgs.Empty);
@@ -404,7 +402,6 @@ namespace DragoonMayCry.Score.Action
             limitBreakCast = new LimitBreak(gracePeriod, isTankLb, luminaAction?.Name!);
             limitBreakStopwatch.Restart();
             
-            Service.Log.Debug("Start LB use");
             OnLimitBreak?.Invoke(this, new LimitBreakEvent(isTankLb, true));
         }
 
@@ -465,7 +462,6 @@ namespace DragoonMayCry.Score.Action
             {
                 limitBreakStopwatch.Reset();
                 limitBreakCast = null;
-                Service.Log.Debug("Stop LB use");
                 OnLimitBreakCanceled?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -537,12 +533,6 @@ namespace DragoonMayCry.Score.Action
                     {
                         actionName = actionName.Substring(2);
                     }
-                    if (limitBreakCast != null)
-                    {
-                        Service.Log.Debug(
-                            $"LB {limitBreakCast.Name} vs buff {actionName} and {text2}");
-                    }
-
                     
                     if (!validTextKind.Contains(flyKind) && 
                         (limitBreakCast == null || limitBreakCast.Name != actionName))
