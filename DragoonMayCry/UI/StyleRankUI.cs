@@ -275,7 +275,7 @@ namespace DragoonMayCry.UI
 
             StyleUi style = styleUis[previousStyle];
 
-            if (rankTransition.IsRunning && previousStyle != null)
+            if (rankTransition.IsRunning)
             {
                 var normalizedStartingColor =
                     style.GaugeColor / 255;

@@ -42,7 +42,6 @@ namespace DragoonMayCry.Score
         private double lastRankChange = 0;
         private float progress;
         private bool isCastingLb;
-        private bool lbEffectApplied;
 
         public ScoreProgressBar(ScoreManager scoreManager, StyleRankHandler styleRankHandler, ActionTracker actionTracker)
         {
@@ -131,13 +130,11 @@ namespace DragoonMayCry.Score
         private void OnLimitBreakCast(object? sender, bool isCastingLb)
         {
             this.isCastingLb = isCastingLb;
-            lbEffectApplied = false;
         }
 
         private void OnLimitBreakEffect(object? sender, EventArgs e)
         {
             styleRankHandler.GoToNextRank(true, false, true);
-            lbEffectApplied = true;
         }
     }
 }

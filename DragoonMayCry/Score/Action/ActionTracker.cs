@@ -54,8 +54,8 @@ namespace DragoonMayCry.Score.Action
         public EventHandler? OnGcdDropped;
         public EventHandler<float>? OnFlyTextCreation;
         public EventHandler<float>? OnGcdClip;
-        public EventHandler<bool> OnLimitBreak;
-        public EventHandler OnLimitBreakEffect;
+        public EventHandler<bool>? OnLimitBreak;
+        public EventHandler? OnLimitBreakEffect;
 
         private delegate void OnActionUsedDelegate(
             uint sourceId, nint sourceCharacter, nint pos,
@@ -134,7 +134,7 @@ namespace DragoonMayCry.Score.Action
 
             Service.Framework.Update += Update;
             playerState.RegisterCombatStateChangeHandler(OnCombat);
-            playerState.RegisterDeathStateChangeHandler(OnDeath);
+            playerState.RegisterDeathStateChangeHandler(OnDeath!);
         }
 
         public void Dispose()

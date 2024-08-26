@@ -139,7 +139,7 @@ namespace DragoonMayCry.Score.Style
 
         private void OnGcdDropped(object? sender, EventArgs args)
         {
-            if (CurrentRank.Value.StyleType != StyleType.NO_STYLE && Plugin.Configuration!.PlaySoundEffects)
+            if (CurrentRank?.Value.StyleType != StyleType.NO_STYLE && Plugin.Configuration!.PlaySoundEffects)
             {
                 AudioService.PlaySfx(StyleType.DEAD_WEIGHT);
             }

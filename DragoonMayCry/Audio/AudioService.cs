@@ -25,7 +25,7 @@ namespace DragoonMayCry.Audio
 
         private static double LastPlayedSfxTime;
         private static double LastPlayedDeadWeight;
-        private static float deadWeightCooldown = 16f;
+        private static float DeadWeightCooldown = 16f;
 
         public static void PlaySfx(StyleType key, bool force = false)
         {
@@ -55,7 +55,7 @@ namespace DragoonMayCry.Audio
             double time = ImGui.GetTime();
             if (type == StyleType.DEAD_WEIGHT)
             {
-                var delay = Math.Max(deadWeightCooldown, sfxCooldown);
+                var delay = Math.Max(DeadWeightCooldown, sfxCooldown);
                 Service.Log.Debug($"Time {time}");
                 Service.Log.Debug($"next play {LastPlayedDeadWeight + delay}");
                 Service.Log.Debug($"{LastPlayedDeadWeight + delay < time}");
