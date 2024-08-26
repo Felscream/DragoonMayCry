@@ -2,12 +2,12 @@
     "Author": "Felscream",
     "Name": "DragoonMayCry",
     "Punchline": "A plugin that ranks your performance based on your fundamentals in combat",
-    "Description": "A plugin that tries to add more flavour to combat. You score by dealing damage, and lose points if you are not greeding",
+    "Description": "A plugin that tries to add more flavour to combat. You score by dealing damage, and lose points if you are not greeding correctly",
     "ApplicableVersion": "any",
     "LoadPriority": 0,
     "InternalName": "DragoonMayCry",
-    "AssemblyVersion": "0.0.3",
+    "AssemblyVersion": "0.0.5",
     "RepoUrl": "https://github.com/Felscream/DragoonMayCry",
-    "Tags": [ "dmc", "style", "dragoon", "combo", "cry" ],
+    "Tags": [ "dmc", "style", "dragoon", "combo", "cry", "greed" ],
     "DalamudApiLevel": 10
 }
