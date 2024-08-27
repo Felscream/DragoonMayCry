@@ -54,7 +54,22 @@ namespace DragoonMayCry.Score.Style
             CurrentStyle = Styles.Head!;
         }
 
-        public void GoToNextRank(bool playSfx, bool loop = false, bool forceSfx = false)
+        public void OnDemotion(object? sender, bool playSfx)
+        {
+            ReturnToPreviousRank(playSfx);
+        }
+
+        public void OnPromotion(object? sender, bool playSfx)
+        {
+            GoToNextRank(playSfx);
+        }
+
+        private void OnLimitBreakEffect(object? sender, EventArgs e)
+        {
+            GoToNextRank(true, false, true);
+        }
+
+        private void GoToNextRank(bool playSfx, bool loop = false, bool forceSfx = false)
         {
             if (CurrentStyle.Next == null)
             {
@@ -66,7 +81,7 @@ namespace DragoonMayCry.Score.Style
                 {
                     Reset();
                 }
-                
+
             }
             else if (CurrentStyle.Next != null)
             {
@@ -80,7 +95,7 @@ namespace DragoonMayCry.Score.Style
             }
         }
 
-        public void ReturnToPreviousRank(bool droppedGcd)
+        private void ReturnToPreviousRank(bool droppedGcd)
         {
             if (CurrentStyle?.Previous == null)
             {
@@ -96,25 +111,10 @@ namespace DragoonMayCry.Score.Style
             StyleRankChange?.Invoke(this, new(CurrentStyle!.Next!.Value, CurrentStyle.Value, droppedGcd));
         }
 
-        public void Reset()
+        private void Reset()
         {
             CurrentStyle = Styles.Head!;
             StyleRankChange?.Invoke(this, new(StyleType.NoStyle, CurrentStyle!.Value, false));
-        }
-
-        public void OnDemotion(object? sender, bool playSfx)
-        {
-            ReturnToPreviousRank(playSfx);
-        }
-
-        public void OnPromotion(object? sender, bool playSfx)
-        {
-            GoToNextRank(playSfx);
-        }
-
-        private void OnLimitBreakEffect(object? sender, EventArgs e)
-        {
-            GoToNextRank(true, false, true);
         }
 
         private void ForceRankTo(StyleType type, bool isBlunder)

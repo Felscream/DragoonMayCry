@@ -1,20 +1,19 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Numerics;
+using System.Reflection;
 using Dalamud.Interface.Animation;
 using Dalamud.Interface.Animation.EasingFunctions;
 using Dalamud.Interface.Textures.TextureWraps;
 using DragoonMayCry.Score;
 using DragoonMayCry.Score.Style;
 using DragoonMayCry.State;
+using DragoonMayCry.UI.Model;
 using DragoonMayCry.Util;
 using ImGuiNET;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Numerics;
-using System.Reflection;
-using DragoonMayCry.UI.Model;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = FFXIVClientStructs.FFXIV.Common.Math.Vector4;
-using static FFXIVClientStructs.FFXIV.Client.UI.Misc.GroupPoseModule;
 
 namespace DragoonMayCry.UI
 {
@@ -41,7 +40,7 @@ namespace DragoonMayCry.UI
         private readonly Vector2 rankTransitionStartPosition = new(83, 83);
         private StyleType currentStyle = StyleType.NoStyle;
         private StyleType previousStyle = StyleType.NoStyle;
-        private bool showProgressGauge;
+        private bool isInCombat;
         private bool demotionInProgress;
 
         private readonly Easing rankTransition;
@@ -128,7 +127,7 @@ namespace DragoonMayCry.UI
                 }
 
                 // Stolen from https://github.com/marconsou/mp-tick-bar
-                if ((showProgressGauge || Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay) && Service.TextureProvider
+                if ((isInCombat || Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay) && Service.TextureProvider
                                             .GetFromManifestResource(Assembly.GetExecutingAssembly(),
                                                 gaugeDefault)
                                             .TryGetWrap(out var gauge, out var _))
@@ -329,7 +328,7 @@ namespace DragoonMayCry.UI
 
         private void OnCombatChange(object send, bool enteringCombat)
         {
-            showProgressGauge = enteringCombat;
+            isInCombat = enteringCombat;
         }
 
         private void OnScoring(object sender, double points)
@@ -337,7 +336,7 @@ namespace DragoonMayCry.UI
             Shake();
         }
 
-        private float AlphaModificationFunction(float t)
+        private static float AlphaModificationFunction(float t)
         {
             return (float)((Math.Sin(3*Math.PI * t + Math.PI / 2) + 1) / 4) + 0.5f;
         }

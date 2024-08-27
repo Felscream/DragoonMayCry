@@ -38,6 +38,7 @@ namespace DragoonMayCry.Score
             {
                 Threshold = threshold;
                 ReductionPerSecond = reductionPerSecond;
+                DemotionThreshold = demotionThreshold;
             }
         }
 
