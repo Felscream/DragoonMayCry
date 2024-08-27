@@ -31,7 +31,7 @@ namespace DragoonMayCry.Score.Style
         public DoubleLinkedNode<StyleType> CurrentStyle { get; private set; }
         
         private static readonly DoubleLinkedList<StyleType> Styles = new DoubleLinkedList<StyleType>(
-            StyleType.NO_STYLE, 
+            StyleType.NoStyle, 
             StyleType.D, 
             StyleType.C, 
             StyleType.B, 
@@ -99,7 +99,7 @@ namespace DragoonMayCry.Score.Style
         public void Reset()
         {
             CurrentStyle = Styles.Head!;
-            StyleRankChange?.Invoke(this, new(StyleType.NO_STYLE, CurrentStyle!.Value, false));
+            StyleRankChange?.Invoke(this, new(StyleType.NoStyle, CurrentStyle!.Value, false));
         }
 
         private void ForceRankTo(StyleType type, bool isBlunder)
@@ -129,7 +129,7 @@ namespace DragoonMayCry.Score.Style
 
             if (isBlunder)
             {
-                AudioService.PlaySfx(StyleType.DEAD_WEIGHT, true);
+                AudioService.PlaySfx(SoundId.DeadWeight, true);
             }
 
             StyleRankChange?.Invoke(this, new(tempRank.Value, CurrentStyle.Value!, isBlunder));
@@ -145,9 +145,9 @@ namespace DragoonMayCry.Score.Style
 
         private void OnGcdDropped(object? sender, EventArgs args)
         {
-            if (CurrentStyle?.Value != StyleType.NO_STYLE && Plugin.Configuration!.PlaySoundEffects)
+            if (CurrentStyle?.Value != StyleType.NoStyle && Plugin.Configuration!.PlaySoundEffects)
             {
-                AudioService.PlaySfx(StyleType.DEAD_WEIGHT);
+                AudioService.PlaySfx(SoundId.DeadWeight);
             }
             ReturnToPreviousRank(true);
             

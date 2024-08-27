@@ -32,25 +32,26 @@ namespace DragoonMayCry.Score
         {
             public int Threshold;
             public int ReductionPerSecond;
+            public int DemotionThreshold;
 
-            public StyleScoring(int threshold, int rediReductionPerSecond)
+            public StyleScoring(int threshold, int reductionPerSecond, int demotionThreshold)
             {
                 Threshold = threshold;
-                ReductionPerSecond = rediReductionPerSecond;
+                ReductionPerSecond = reductionPerSecond;
             }
         }
 
         private static readonly Dictionary<StyleType, StyleScoring>
             DefaultScoreTable = new Dictionary<StyleType, StyleScoring>
             {
-                { StyleType.NO_STYLE, new StyleScoring(60000, 500) },
-                { StyleType.D, new StyleScoring(80000, 1000) },
-                { StyleType.C, new StyleScoring(90000, 5000) },
-                { StyleType.B, new StyleScoring(90000, 6000) },
-                { StyleType.A, new StyleScoring(100000, 8000) },
-                { StyleType.S, new StyleScoring(100000, 10000) },
-                { StyleType.SS, new StyleScoring(70000, 12000) },
-                { StyleType.SSS, new StyleScoring(48000, 16000) },
+                { StyleType.NoStyle, new StyleScoring(60000, 500, 0) },
+                { StyleType.D, new StyleScoring(80000, 1000, 4000) },
+                { StyleType.C, new StyleScoring(90000, 5000, 9000) },
+                { StyleType.B, new StyleScoring(90000, 6000, 9000) },
+                { StyleType.A, new StyleScoring(100000, 8000, 10000) },
+                { StyleType.S, new StyleScoring(100000, 10000, 10000) },
+                { StyleType.SS, new StyleScoring(70000, 12000, 7000) },
+                { StyleType.SSS, new StyleScoring(48000, 16000, 4800) },
             };
 
         public EventHandler<double>? OnScoring;

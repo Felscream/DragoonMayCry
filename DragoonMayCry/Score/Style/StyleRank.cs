@@ -3,20 +3,6 @@ using FFXIVClientStructs.FFXIV.Common.Math;
 
 namespace DragoonMayCry.Score.Style
 {
-
-    public enum StyleType
-    {
-        NO_STYLE = 0,
-        D = 1,
-        C = 2,
-        B = 3,
-        A = 4,
-        S = 5,
-        SS = 6,
-        SSS = 7,
-        DEAD_WEIGHT
-    }
-
     public class StyleRank
     {
         public StyleType StyleType { get; init; }

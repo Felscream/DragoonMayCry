@@ -39,8 +39,8 @@ namespace DragoonMayCry.UI
         private readonly Vector2 rankPosition = new (8, 8);
         private readonly Vector2 rankSize = new(130, 130);
         private readonly Vector2 rankTransitionStartPosition = new(83, 83);
-        private StyleType currentStyle = StyleType.NO_STYLE;
-        private StyleType previousStyle = StyleType.NO_STYLE;
+        private StyleType currentStyle = StyleType.NoStyle;
+        private StyleType previousStyle = StyleType.NoStyle;
         private bool showProgressGauge;
         private bool demotionInProgress;
 
