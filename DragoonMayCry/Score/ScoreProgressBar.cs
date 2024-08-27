@@ -37,29 +37,29 @@ namespace DragoonMayCry.Score
         public EventHandler? OnDemotionCanceled;
         public EventHandler<bool>? OnPromotion;
 
-        private static readonly double InterpolationWeight = 0.09d;
+        private const float InterpolationWeight = 0.09f;
         private readonly ScoreManager scoreManager;
         private readonly StyleRankHandler styleRankHandler;
-        private readonly ActionTracker actionTracker;
-        private readonly Stopwatch demotionStopwatch;
-        private double interpolatedScore = 0;
-        private float lastPromotionTime = 0;
-        private float lastDemotionTime = 0;
+        private readonly PlayerActionTracker playerActionTracker;
+        private readonly Stopwatch demotionApplicationStopwatch;
+        private float interpolatedScore = 0;
+        private double lastPromotionTime = 0;
+        private double lastDemotionTime = 0;
         private float progress;
         private bool isCastingLb;
 
-        public ScoreProgressBar(ScoreManager scoreManager, StyleRankHandler styleRankHandler, ActionTracker actionTracker)
+        public ScoreProgressBar(ScoreManager scoreManager, StyleRankHandler styleRankHandler, PlayerActionTracker playerActionTracker)
         {
             this.scoreManager = scoreManager;
             Service.Framework.Update += UpdateScoreInterpolation;
             this.styleRankHandler = styleRankHandler;
             this.styleRankHandler.StyleRankChange += OnRankChange;
-            this.actionTracker = actionTracker;
-            this.actionTracker.OnLimitBreak += OnLimitBreakCast;
-            this.actionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
+            this.playerActionTracker = playerActionTracker;
+            this.playerActionTracker.OnLimitBreak += OnLimitBreakCast;
+            this.playerActionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
 
             PlayerState.GetInstance().RegisterCombatStateChangeHandler(OnCombat);
-            demotionStopwatch = new Stopwatch();
+            demotionApplicationStopwatch = new Stopwatch();
         }
 
         public void Dispose()
@@ -76,11 +76,10 @@ namespace DragoonMayCry.Score
 
             var currentScoreRank = scoreManager.CurrentScoreRank;
             var threshold = currentScoreRank.StyleScoring.Threshold;
-            interpolatedScore = double.Lerp(
+            interpolatedScore = float.Lerp(
                 interpolatedScore, currentScoreRank.Score,
                 InterpolationWeight);
-            Progress = (float)Math.Min(interpolatedScore / threshold , 1);
-            double time = ImGui.GetTime();
+            Progress = Math.Clamp(interpolatedScore / threshold, 0,1);
 
             if (Progress > 0.995f)
             {
@@ -99,44 +98,63 @@ namespace DragoonMayCry.Score
             }
             else
             {
-                ApplyDemotion(currentScoreRank);
+                HandleDemotion();
             }
         }
 
-        private void ApplyDemotion(ScoreManager.ScoreRank currentScoreRank)
+        private void HandleDemotion()
         {
             var demotionThreshold = GetDemotionThresholdRatio();
-            if (CanStartDemotionTimer(demotionThreshold))
-            {
-                demotionStopwatch.Restart();
-                OnDemotionStart?.Invoke(this, EventArgs.Empty);
-                return;
-            }
             if (CanCancelDemotion(demotionThreshold))
             {
-                demotionStopwatch.Reset();
-                OnDemotionCanceled?.Invoke(this, EventArgs.Empty);
+                CancelDemotion();
+                return;
+            }
+
+            if (CanStartDemotionTimer(demotionThreshold))
+            {
+                StartDemotionAlert();
                 return;
             }
 
             if (CanApplyDemotion(demotionThreshold))
             {
-                demotionStopwatch.Reset();
-                OnDemotionApplied?.Invoke(this, false);
+                ApplyDemotion();
             }
+        }
+
+        private void StartDemotionAlert()
+        {
+            Service.Log.Debug("Starting demotion");
+            demotionApplicationStopwatch.Restart();
+            OnDemotionStart?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void ApplyDemotion()
+        {
+            Service.Log.Debug("Applying demotion");
+            demotionApplicationStopwatch.Reset();
+            OnDemotionApplied?.Invoke(this, false);
+        }
+
+        private void CancelDemotion()
+        {
+            Service.Log.Debug("Cancelling demotion");
+            demotionApplicationStopwatch.Reset();
+            OnDemotionCanceled?.Invoke(this, EventArgs.Empty);
         }
 
         private bool CanCancelDemotion(float demotionThreshold)
         {
-            return demotionStopwatch.IsRunning 
-                   && Progress >= demotionThreshold;
+            return demotionApplicationStopwatch.IsRunning 
+                   && (Progress >= demotionThreshold || GetTimeSinceLastPromotion() < Plugin.Configuration!.TimeBetweenRankChanges);
         }
 
         private bool CanStartDemotionTimer(float demotionThreshold)
         {
             return Progress < demotionThreshold
                    && scoreManager.CurrentScoreRank.Rank != StyleType.NoStyle
-                   && !demotionStopwatch.IsRunning 
+                   && !demotionApplicationStopwatch.IsRunning 
                    && GetTimeSinceLastPromotion() > Plugin.Configuration!.TimeBetweenRankChanges
                    && GetTimeSinceLastDemotion() > Plugin.Configuration!.TimeBetweenDemotions;
         }
@@ -145,31 +163,35 @@ namespace DragoonMayCry.Score
         {
             return Progress < demotionThreshold
                    && GetTimeSinceLastDemotion() > Plugin.Configuration!.TimeBetweenDemotions
-                   && demotionStopwatch.ElapsedMilliseconds > Plugin.Configuration!.DemotionTimerDuration
+                   && demotionApplicationStopwatch.ElapsedMilliseconds > Plugin.Configuration!.DemotionTimerDuration
                    && !Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay;
         }
 
         private void OnRankChange(object? sender, StyleRankHandler.RankChangeData data)
         {
             interpolatedScore = 0;
-            demotionStopwatch.Reset();
-            var currentStyle = scoreManager.CurrentScoreRank.Rank;
-            if (currentStyle < data.NewRank)
+            if (data.PreviousRank < data.NewRank)
             {
-                lastPromotionTime = (float)ImGui.GetTime();
-            } else if (currentStyle > data.NewRank)
+                lastPromotionTime = ImGui.GetTime();
+            } else if (data.PreviousRank > data.NewRank)
             {
-                lastDemotionTime = (float)ImGui.GetTime();
+                lastDemotionTime = ImGui.GetTime();
             }
+
+            if (demotionApplicationStopwatch.IsRunning)
+            {
+                CancelDemotion();
+            }
+            
         }
 
-        private void OnLimitBreakCast(object? sender, ActionTracker.LimitBreakEvent e)
+        private void OnLimitBreakCast(object? sender, PlayerActionTracker.LimitBreakEvent e)
         {
             this.isCastingLb = e.IsCasting;
-            if (demotionStopwatch.IsRunning)
+            if (demotionApplicationStopwatch.IsRunning)
             {
                 OnDemotionCanceled?.Invoke(this, EventArgs.Empty);
-                demotionStopwatch.Reset();
+                demotionApplicationStopwatch.Reset();
             }
         }
 
@@ -182,26 +204,37 @@ namespace DragoonMayCry.Score
         {
             isCastingLb = false;
             interpolatedScore = 0;
-            if (demotionStopwatch.IsRunning)
+            lastDemotionTime = 0;
+            lastPromotionTime = 0;
+            if (demotionApplicationStopwatch.IsRunning)
             {
                 OnDemotionCanceled?.Invoke(this, EventArgs.Empty);
+                demotionApplicationStopwatch.Reset();
             }
-            demotionStopwatch.Reset();
+            
         }
 
-        private float GetTimeSinceLastPromotion()
+        private double GetTimeSinceLastPromotion()
         {
-            return (float)ImGui.GetTime() - lastPromotionTime;
+            if (lastPromotionTime == 0)
+            {
+                return float.MaxValue;
+            }
+            return ImGui.GetTime() - lastPromotionTime;
         }
 
-        private float GetTimeSinceLastDemotion()
+        private double GetTimeSinceLastDemotion()
         {
-            return (float)ImGui.GetTime() - lastDemotionTime;
+            if (lastDemotionTime == 0)
+            {
+                return float.MaxValue;
+            }
+            return ImGui.GetTime() - lastDemotionTime;
         }
 
         private float GetDemotionThresholdRatio()
         {
-            return scoreManager.CurrentScoreRank.Score /
+            return scoreManager.CurrentScoreRank.StyleScoring.DemotionThreshold /
                    scoreManager.CurrentScoreRank.StyleScoring.Threshold;
         }
     }

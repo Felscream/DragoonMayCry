@@ -28,7 +28,7 @@ public unsafe class Plugin : IDalamudPlugin
     private readonly PluginUI pluginUi;
     private readonly PlayerState playerState;
     private readonly ScoreProgressBar scoreProgressBar;
-    private readonly ActionTracker actionTracker;
+    private readonly PlayerActionTracker playerActionTracker;
     private StyleRankHandler styleRankHandler;
 
     public Plugin(IDalamudPluginInterface pluginInterface)
@@ -39,11 +39,11 @@ public unsafe class Plugin : IDalamudPlugin
         
         playerState = PlayerState.GetInstance();
         Configuration = PluginInterface.GetPluginConfig() as DmcConfiguration ?? new DmcConfiguration();
-        actionTracker = new();
+        playerActionTracker = new();
 
-        styleRankHandler = new(actionTracker);
-        scoreManager = new(styleRankHandler, actionTracker);
-        scoreProgressBar = new(scoreManager, styleRankHandler, actionTracker);
+        styleRankHandler = new(playerActionTracker);
+        scoreManager = new(styleRankHandler, playerActionTracker);
+        scoreProgressBar = new(scoreManager, styleRankHandler, playerActionTracker);
         pluginUi = new(scoreProgressBar, styleRankHandler, scoreManager);
 
         scoreProgressBar.OnDemotionApplied += styleRankHandler.OnDemotion;
@@ -70,7 +70,7 @@ public unsafe class Plugin : IDalamudPlugin
         pluginUi?.Dispose();
         playerState.Dispose();
         scoreProgressBar.Dispose();
-        actionTracker.Dispose();
+        playerActionTracker.Dispose();
         scoreManager?.Dispose();
 
         Service.CommandManager.RemoveHandler(CommandName);

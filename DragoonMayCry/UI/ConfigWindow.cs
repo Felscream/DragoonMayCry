@@ -74,44 +74,5 @@ public class ConfigWindow : Window, IDisposable
             configuration.AnnouncerCooldown = announcerCooldown;
             configuration.Save();
         }
-
-#if DEBUG
-        if (ImGui.Button("Next rank"))
-        {
-            styleRankHandler.GoToNextRank(true, true);
-        }
-        if (ImGui.Button("Previous rank"))
-        {
-            styleRankHandler.ReturnToPreviousRank(false);
-        }
-
-        var testing = configuration.StyleRankUiConfiguration.TestRankDisplay;
-        if (ImGui.Checkbox("Test rank display", ref testing))
-        {
-            configuration.StyleRankUiConfiguration.TestRankDisplay = testing;
-            configuration.Save();
-        }
-
-        if (testing)
-        {
-            var debugProgressValue = (float)configuration.StyleRankUiConfiguration.DebugProgressValue;
-            if (ImGui.SliderFloat("Progress value", ref debugProgressValue, 0,
-                                1))
-            {
-                configuration.StyleRankUiConfiguration.DebugProgressValue = debugProgressValue;
-                configuration.Save();
-            }
-
-            /*var progressBarTint =
-                Configuration.StyleRankUiConfiguration.ProgressBarTint;
-
-            if (ImGui.ColorPicker4("Progress bar tint", ref progressBarTint))
-            {
-                Configuration.StyleRankUiConfiguration.ProgressBarTint =
-                    progressBarTint;
-            }*/
-
-        }
-#endif
     }
 }

@@ -187,14 +187,6 @@ namespace DragoonMayCry.UI
             RenderBarUIElement(gauge, offsetX, offsetY, gaugeWidth,
                                gaugeHeight, textureToElementScale, progress, color);
             RenderBackgroundUIElement(gauge, offsetX, offsetY, gaugeWidth, gaugeHeight, textureToElementScale, false);
-            if (Service.TextureProvider
-                       .GetFromManifestResource(Assembly.GetExecutingAssembly(),
-                                                gaugeDefault)
-                       .TryGetWrap(out var marker, out var _))
-            {
-                RenderDemotionMarker(marker, offsetX, offsetY, gaugeWidth);
-            }
-            
         }
 
         private void DrawCurrentRank(IDalamudTextureWrap rankIcon)
@@ -242,21 +234,6 @@ namespace DragoonMayCry.UI
             }
 
             return pos;
-        }
-
-        private void RenderDemotionMarker(IDalamudTextureWrap texture, float initialOffsetX, float initialOffsetY, float gaugeWidth)
-        {
-            var x = initialOffsetX + gaugeWidth * 0.1f;
-            var y = initialOffsetY;
-            var width = gaugeWidth;
-            var height = texture.Height;
-            var textureX = 0f;
-            var textureY = 0f;
-            var textureW = 1.0f;
-            var textureH = 1f;
-            ImGui.SetCursorPos(new(x, y));
-            ImGui.Image(texture.ImGuiHandle, new(width, height), new(textureX, textureY), new(textureW, textureH), Vector4.One);
-
         }
 
         private void RenderBackgroundUIElement(IDalamudTextureWrap texture, float offsetX, float offsetY, float gaugeWidth, float gaugeHeight, float textureToElementScale, bool isBackground)

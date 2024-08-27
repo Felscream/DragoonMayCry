@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.JobGauge.Types;
+using FFXIVClientStructs.Havok.Animation.Rig;
 using static FFXIVClientStructs.FFXIV.Client.Game.Character.VfxContainer;
 
 namespace DragoonMayCry.Util
@@ -24,11 +25,20 @@ namespace DragoonMayCry.Util
             JobIds.AST, JobIds.WHM, JobIds.SCH, JobIds.SGE
         };
 
+        private static readonly ISet<JobIds> PhysRanges = new HashSet<JobIds>
+        {
+            JobIds.BRD, JobIds.DNC, JobIds.MCH
+        };
+
+        private static readonly ISet<JobIds> Casters = new HashSet<JobIds>
+        {
+            JobIds.RDM, JobIds.SMN
+        };
+
         public static JobIds GetCurrentJob()
         {
             if (Service.ClientState.LocalPlayer == null)
             {
-                Service.Log.Debug("Cannot find current player job, character not found");
                 return JobIds.OTHER;
             }
 
@@ -53,6 +63,25 @@ namespace DragoonMayCry.Util
         public static bool IsDps(JobIds job)
         {
             return job != JobIds.OTHER && !IsTank(job) && !IsHealer(job);
+        }
+
+        public static bool IsPhysRange(JobIds job)
+        {
+            return PhysRanges.Contains(job);
+        }
+
+        public static bool IsCaster(JobIds job)
+        {
+            return Casters.Contains(job);
+        }
+
+        public static bool IsMelee(JobIds job)
+        {
+            return job != JobIds.OTHER
+                   && !IsTank(job) 
+                   && !IsHealer(job) 
+                   && !IsCaster(job) 
+                   && !IsPhysRange(job);
         }
 
         public static bool IsCombatJob(JobIds job)

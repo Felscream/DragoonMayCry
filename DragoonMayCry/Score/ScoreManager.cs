@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using DragoonMayCry.Data;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Util;
 using DragoonMayCry.Score.Style;
@@ -30,9 +31,9 @@ namespace DragoonMayCry.Score
 
         public struct StyleScoring
         {
-            public int Threshold;
+            public float Threshold;
             public int ReductionPerSecond;
-            public int DemotionThreshold;
+            public float DemotionThreshold;
 
             public StyleScoring(int threshold, int reductionPerSecond, int demotionThreshold)
             {
@@ -42,56 +43,45 @@ namespace DragoonMayCry.Score
             }
         }
 
-        private static readonly Dictionary<StyleType, StyleScoring>
-            DefaultScoreTable = new Dictionary<StyleType, StyleScoring>
-            {
-                { StyleType.NoStyle, new StyleScoring(60000, 500, 0) },
-                { StyleType.D, new StyleScoring(80000, 1000, 4000) },
-                { StyleType.C, new StyleScoring(90000, 5000, 9000) },
-                { StyleType.B, new StyleScoring(90000, 6000, 9000) },
-                { StyleType.A, new StyleScoring(100000, 8000, 10000) },
-                { StyleType.S, new StyleScoring(100000, 10000, 10000) },
-                { StyleType.SS, new StyleScoring(70000, 12000, 7000) },
-                { StyleType.SSS, new StyleScoring(48000, 16000, 4800) },
-            };
-
         public EventHandler<double>? OnScoring;
         public ScoreRank CurrentScoreRank { get; private set; }
-        public ScoreRank? PreviousScoreRank { get; private set; }
         private readonly PlayerState playerState;
         private readonly StyleRankHandler rankHandler;
-        private Dictionary<StyleType, StyleScoring> jobScoringTable;
+        
         
         private bool isCastingLb;
-
+        private Dictionary<StyleType, StyleScoring> jobScoringTable;
         private readonly Stopwatch gcdClippingStopwatch;
         private int damageInstancesToCancel;
 
-        public ScoreManager(StyleRankHandler styleRankHandler, ActionTracker actionTracker)
+        public ScoreManager(StyleRankHandler styleRankHandler, PlayerActionTracker playerActionTracker)
         {
-            jobScoringTable = DefaultScoreTable;
             gcdClippingStopwatch = new Stopwatch();
 
             var styleRank = styleRankHandler.CurrentStyle!.Value;
+
+            
+
+            playerState = PlayerState.GetInstance();
+            playerState.RegisterJobChangeHandler(((sender, ids) => ResetScore()));
+            playerState.RegisterInstanceChangeHandler(OnInstanceChange!);
+            playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
+            playerState.RegisterJobChangeHandler(OnJobChange);
+
+            jobScoringTable = GetJobScoringTable();
             CurrentScoreRank = new(0, styleRank, jobScoringTable[styleRank]);
-
-            ResetScore();
-
-            this.playerState = PlayerState.GetInstance();
-            this.playerState.RegisterJobChangeHandler(((sender, ids) => ResetScore()));
-            this.playerState.RegisterInstanceChangeHandler(OnInstanceChange!);
-            this.playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
 
             this.rankHandler = styleRankHandler;
             this.rankHandler.StyleRankChange += OnRankChange!;
 
-            actionTracker.OnFlyTextCreation += AddScore;
-            actionTracker.OnGcdClip += OnGcdClip;
-            actionTracker.OnLimitBreak += OnLimitBreakCast;
-            actionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
+            playerActionTracker.OnFlyTextCreation += AddScore;
+            playerActionTracker.OnGcdClip += OnGcdClip;
+            playerActionTracker.OnLimitBreak += OnLimitBreakCast;
+            playerActionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
 
             Service.Framework.Update += UpdateScore;
             Service.ClientState.Logout += ResetScore;
+            ResetScore();
         }
 
         public void Dispose()
@@ -100,6 +90,39 @@ namespace DragoonMayCry.Score
             Service.ClientState.Logout -= ResetScore;
         }
 
+        public void UpdateScore(IFramework framework)
+        {
+            if (!Plugin.CanRunDmc())
+            {
+                return;
+            }
+
+            if (CanDisableGcdClippingRestrictions())
+            {
+                DisableGcdClippingRestrictions();
+            }
+
+            if (isCastingLb)
+            {
+                CurrentScoreRank.Score +=
+                    (float)(framework.UpdateDelta.TotalSeconds * CurrentScoreRank.StyleScoring.ReductionPerSecond * 100);
+                
+            }
+            else
+            {
+                var scoreReduction =
+                    (float)(framework.UpdateDelta.TotalSeconds *
+                            CurrentScoreRank.StyleScoring.ReductionPerSecond);
+                if (AreGcdClippingRestrictionsActive())
+                {
+                    scoreReduction *= 1.5f;
+                }
+                CurrentScoreRank.Score -= scoreReduction;
+                
+            }
+            CurrentScoreRank.Score = Math.Clamp(
+                CurrentScoreRank.Score, 0, CurrentScoreRank.StyleScoring.Threshold * 1.2f);
+        }
         private void AddScore(object? sender, float val)
         {
             if (damageInstancesToCancel > 0)
@@ -123,40 +146,6 @@ namespace DragoonMayCry.Score
             OnScoring?.Invoke(this, points);
         }
 
-        public void UpdateScore(IFramework framework)
-        {
-            if (!Plugin.CanRunDmc())
-            {
-                return;
-            }
-
-            if (CanDisableGcdClippingRestrictions())
-            {
-                DisableGcdClippingRestrictions();
-            }
-
-            if (isCastingLb)
-            {
-                CurrentScoreRank.Score +=
-                    (float)(framework.UpdateDelta.TotalSeconds * CurrentScoreRank.StyleScoring.ReductionPerSecond * 100);
-                CurrentScoreRank.Score = Math.Clamp(
-                    CurrentScoreRank.Score, 0, CurrentScoreRank.StyleScoring.Threshold * 1.2f);
-            }
-            else
-            {
-                var scoreReduction =
-                    (float)(framework.UpdateDelta.TotalSeconds *
-                            CurrentScoreRank.StyleScoring.ReductionPerSecond);
-                if (AreGcdClippingRestrictionsActive())
-                {
-                    scoreReduction *= 10;
-                }
-                CurrentScoreRank.Score -= scoreReduction;
-                CurrentScoreRank.Score = Math.Max(CurrentScoreRank.Score, 0);
-            }
-            
-        }
-
         private bool CanDisableGcdClippingRestrictions()
         {
             return gcdClippingStopwatch.IsRunning &&
@@ -172,19 +161,16 @@ namespace DragoonMayCry.Score
 
         private void OnCombatChange(object send, bool enteringCombat)
         {
-            if (!enteringCombat)
-            {
-                PreviousScoreRank = CurrentScoreRank;
-            }
-            else
+            if(enteringCombat)
             {
                 ResetScore();
             }
-            damageInstancesToCancel = 0;
-            gcdClippingStopwatch.Reset();
+
+            DisableGcdClippingRestrictions();
+            isCastingLb = false;
         }
 
-        private void OnLimitBreakCast(object? sender, ActionTracker.LimitBreakEvent e)
+        private void OnLimitBreakCast(object? sender, PlayerActionTracker.LimitBreakEvent e)
         {
             this.isCastingLb = e.IsCasting;
             if (!isCastingLb)
@@ -206,12 +192,12 @@ namespace DragoonMayCry.Score
                 return;
             }
 
-            var styleScoring = jobScoringTable[data.NewRank];
+            var nextStyleScoring = jobScoringTable[data.NewRank];
             if ((int)CurrentScoreRank.Rank < (int)data.NewRank)
             {
                 
                 CurrentScoreRank.Score = (float)Math.Clamp(CurrentScoreRank.Score %
-                                                           styleScoring.Threshold, 0, styleScoring.Threshold * 0.5); ;
+                                                           nextStyleScoring.Threshold, 0, nextStyleScoring.Threshold * 0.5); ;
             }
             else if (data.IsBlunder)
             {
@@ -226,11 +212,11 @@ namespace DragoonMayCry.Score
             }
             else
             {
-                CurrentScoreRank.Score = styleScoring.Threshold * 0.8f;
+                CurrentScoreRank.Score = nextStyleScoring.Threshold * 0.5f;
             }
 
-            PreviousScoreRank = CurrentScoreRank;
             CurrentScoreRank.Rank = data.NewRank;
+            CurrentScoreRank.StyleScoring = jobScoringTable[data.NewRank];
         }
 
         private void OnGcdClip(object? send, float clippingTime)
@@ -252,6 +238,7 @@ namespace DragoonMayCry.Score
         private void ResetScore()
         {
             CurrentScoreRank.Score = 0;
+            CurrentScoreRank.StyleScoring = jobScoringTable[StyleType.NoStyle];
             isCastingLb = false;
         }
 
@@ -259,6 +246,36 @@ namespace DragoonMayCry.Score
         {
             return gcdClippingStopwatch.IsRunning &&
                    damageInstancesToCancel > 0;
+        }
+
+        private void OnJobChange(object? sender, JobIds jobId)
+        {
+            jobScoringTable = GetJobScoringTable(jobId);
+            ResetScore();
+            DisableGcdClippingRestrictions();
+        }
+
+        private Dictionary<StyleType, StyleScoring> GetJobScoringTable()
+        {
+            var currentJob = JobHelper.GetCurrentJob();
+            return GetJobScoringTable(currentJob);
+        }
+
+        private Dictionary<StyleType, StyleScoring> GetJobScoringTable(JobIds job)
+        {
+            if (JobHelper.IsTank(job))
+            {
+                Service.Log.Debug($"Setting tank scoring table");
+                return ScoringTable.TankScoringTable;
+            }
+
+            if (JobHelper.IsHealer(job))
+            {
+                Service.Log.Debug($"Setting healer scoring table");
+                return ScoringTable.HealerScoringTable;
+            }
+            Service.Log.Debug($"Setting Melee scoring table");
+            return ScoringTable.MeleeScoringTable;
         }
     }
 }

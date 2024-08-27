@@ -40,17 +40,17 @@ namespace DragoonMayCry.Score.Style
             StyleType.SS, 
             StyleType.SSS);
 
-        public StyleRankHandler(ActionTracker actionTracker)
+        public StyleRankHandler(PlayerActionTracker playerActionTracker)
         {
             Reset();
 
             var playerState = PlayerState.GetInstance();
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
 
-            actionTracker.OnGcdDropped += OnGcdDropped;
-            actionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
-            actionTracker.OnLimitBreak += OnLimitBreak;
-            actionTracker.OnLimitBreakEffect += OnLimitBreakEffect;
+            playerActionTracker.OnGcdDropped += OnGcdDropped;
+            playerActionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
+            playerActionTracker.OnLimitBreak += OnLimitBreak;
+            playerActionTracker.OnLimitBreakEffect += OnLimitBreakEffect;
             CurrentStyle = Styles.Head!;
         }
 
@@ -85,13 +85,15 @@ namespace DragoonMayCry.Score.Style
             }
             else if (CurrentStyle.Next != null)
             {
-                CurrentStyle = CurrentStyle.Next;
+                
                 Service.Log.Debug($"New rank reached {CurrentStyle.Value}");
-                StyleRankChange?.Invoke(this, new(CurrentStyle.Previous!.Value, CurrentStyle.Value, false));
+                StyleRankChange?.Invoke(this, new(CurrentStyle.Value, CurrentStyle.Next.Value, false));
+                CurrentStyle = CurrentStyle.Next;
                 if (Plugin.Configuration!.PlaySoundEffects && playSfx)
                 {
                     AudioService.PlaySfx(CurrentStyle.Value);
                 }
+
             }
         }
 
@@ -174,7 +176,7 @@ namespace DragoonMayCry.Score.Style
         }
 
         private void OnLimitBreak(
-            object? sender, ActionTracker.LimitBreakEvent e)
+            object? sender, PlayerActionTracker.LimitBreakEvent e)
         {
             if (e.IsTankLb && CurrentStyle.Value < StyleType.S)
             {

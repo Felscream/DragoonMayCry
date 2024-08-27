@@ -18,7 +18,7 @@ namespace DragoonMayCry.Score.Action
 {
 
 
-    public unsafe class ActionTracker : IDisposable
+    public unsafe class PlayerActionTracker : IDisposable
     {
         public struct LimitBreakEvent
         {
@@ -119,7 +119,7 @@ namespace DragoonMayCry.Score.Action
                 { 4241, 4.1f },  // DRK Dark Force
                 { 17105, 4.1f }, // GNB Gunmetal Soul
             };
-        public ActionTracker()
+        public PlayerActionTracker()
         {
             playerState = PlayerState.GetInstance();
             combatStopwatch = CombatStopwatch.GetInstance();
