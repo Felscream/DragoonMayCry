@@ -3,17 +3,19 @@ using DragoonMayCry.Configuration;
 using ImGuiNET;
 using System;
 using System.Numerics;
+using DragoonMayCry.Score.Style;
 
 namespace DragoonMayCry.UI;
 
 public class ConfigWindow : Window, IDisposable
 {
-    private DmcConfiguration configuration;
+    private readonly DmcConfiguration configuration;
+    private readonly StyleRankHandler styleRankHandler;
 
     // We give this window a constant ID using ###
     // This allows for labels being dynamic, like "{FPS Counter}fps###XYZ counter window",
     // and the window ID will always be "###XYZ counter window" for ImGui
-    public ConfigWindow(DmcConfiguration configuration) : base("A Wonderful Configuration Window###With a constant ID")
+    public ConfigWindow(DmcConfiguration configuration, StyleRankHandler styleRankHandler) : base("A Wonderful Configuration Window###With a constant ID")
     {
         Flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
                 ImGuiWindowFlags.NoScrollWithMouse;
@@ -22,6 +24,7 @@ public class ConfigWindow : Window, IDisposable
         SizeCondition = ImGuiCond.Always;
 
         this.configuration = configuration;
+        this.styleRankHandler = styleRankHandler;
     }
 
     public void Dispose() { }
@@ -75,11 +78,11 @@ public class ConfigWindow : Window, IDisposable
 #if DEBUG
         if (ImGui.Button("Next rank"))
         {
-            Plugin.StyleRankHandler!.GoToNextRank(true, true);
+            styleRankHandler.GoToNextRank(true, true);
         }
         if (ImGui.Button("Previous rank"))
         {
-            Plugin.StyleRankHandler!.ReturnToPreviousRank(false);
+            styleRankHandler.ReturnToPreviousRank(false);
         }
 
         var testing = configuration.StyleRankUiConfiguration.TestRankDisplay;

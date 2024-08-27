@@ -50,14 +50,15 @@ namespace DragoonMayCry.Score.Style
             actionTracker.OnGcdDropped += OnGcdDropped;
             actionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
             actionTracker.OnLimitBreak += OnLimitBreak;
+            actionTracker.OnLimitBreakEffect += OnLimitBreakEffect;
             CurrentStyle = Styles.Head!;
         }
 
         public void GoToNextRank(bool playSfx, bool loop = false, bool forceSfx = false)
         {
-            if (CurrentStyle?.Next == null)
+            if (CurrentStyle.Next == null)
             {
-                if (Plugin.Configuration!.PlaySoundEffects && playSfx && forceSfx && CurrentStyle != null)
+                if (Plugin.Configuration!.PlaySoundEffects && playSfx && forceSfx)
                 {
                     AudioService.PlaySfx(CurrentStyle.Value);
                 }
@@ -67,11 +68,11 @@ namespace DragoonMayCry.Score.Style
                 }
                 
             }
-            else if (CurrentStyle?.Next != null)
+            else if (CurrentStyle.Next != null)
             {
                 CurrentStyle = CurrentStyle.Next;
                 Service.Log.Debug($"New rank reached {CurrentStyle.Value}");
-                StyleRankChange?.Invoke(this, new(CurrentStyle!.Previous!.Value, CurrentStyle.Value, false));
+                StyleRankChange?.Invoke(this, new(CurrentStyle.Previous!.Value, CurrentStyle.Value, false));
                 if (Plugin.Configuration!.PlaySoundEffects && playSfx)
                 {
                     AudioService.PlaySfx(CurrentStyle.Value);
@@ -81,7 +82,6 @@ namespace DragoonMayCry.Score.Style
 
         public void ReturnToPreviousRank(bool droppedGcd)
         {
-            
             if (CurrentStyle?.Previous == null)
             {
                 if (droppedGcd)
@@ -100,6 +100,21 @@ namespace DragoonMayCry.Score.Style
         {
             CurrentStyle = Styles.Head!;
             StyleRankChange?.Invoke(this, new(StyleType.NoStyle, CurrentStyle!.Value, false));
+        }
+
+        public void OnDemotion(object? sender, bool playSfx)
+        {
+            ReturnToPreviousRank(playSfx);
+        }
+
+        public void OnPromotion(object? sender, bool playSfx)
+        {
+            GoToNextRank(playSfx);
+        }
+
+        private void OnLimitBreakEffect(object? sender, EventArgs e)
+        {
+            GoToNextRank(true, false, true);
         }
 
         private void ForceRankTo(StyleType type, bool isBlunder)
@@ -132,7 +147,7 @@ namespace DragoonMayCry.Score.Style
                 AudioService.PlaySfx(SoundId.DeadWeight, true);
             }
 
-            StyleRankChange?.Invoke(this, new(tempRank.Value, CurrentStyle.Value!, isBlunder));
+            StyleRankChange?.Invoke(this, new(tempRank.Value, CurrentStyle.Value, isBlunder));
         }
 
         private void OnCombatChange(object send, bool enteringCombat)
@@ -161,7 +176,7 @@ namespace DragoonMayCry.Score.Style
         private void OnLimitBreak(
             object? sender, ActionTracker.LimitBreakEvent e)
         {
-            if (e.IsTankLb && CurrentStyle?.Value < StyleType.S)
+            if (e.IsTankLb && CurrentStyle.Value < StyleType.S)
             {
                 ForceRankTo(StyleType.A, false);
             }

@@ -33,8 +33,9 @@ namespace DragoonMayCry.Score
         }
 
         public EventHandler? OnDemotionStart;
-        public EventHandler? OnDemotionEnd;
+        public EventHandler<bool>? OnDemotionApplied;
         public EventHandler? OnDemotionCanceled;
+        public EventHandler<bool>? OnPromotion;
 
         private static readonly double InterpolationWeight = 0.09d;
         private readonly ScoreManager scoreManager;
@@ -55,7 +56,6 @@ namespace DragoonMayCry.Score
             this.styleRankHandler.StyleRankChange += OnRankChange;
             this.actionTracker = actionTracker;
             this.actionTracker.OnLimitBreak += OnLimitBreakCast;
-            this.actionTracker.OnLimitBreakEffect += OnLimitBreakEffect;
             this.actionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
 
             PlayerState.GetInstance().RegisterCombatStateChangeHandler(OnCombat);
@@ -88,13 +88,13 @@ namespace DragoonMayCry.Score
                 {
                     if (currentScoreRank.Rank != StyleType.SS && currentScoreRank.Rank != StyleType.SSS)
                     {
-                        styleRankHandler.GoToNextRank(false);
+                        OnPromotion?.Invoke(this, false);
                     }
                     return;
                 }
                 if(GetTimeSinceLastPromotion() > Plugin.Configuration!.TimeBetweenRankChanges)
                 {
-                    styleRankHandler.GoToNextRank(true);
+                    OnPromotion?.Invoke(this, true);
                 }
             }
             else
@@ -121,9 +121,8 @@ namespace DragoonMayCry.Score
 
             if (CanApplyDemotion(demotionThreshold))
             {
-                styleRankHandler.ReturnToPreviousRank(false);
                 demotionStopwatch.Reset();
-                OnDemotionEnd?.Invoke(this, EventArgs.Empty);
+                OnDemotionApplied?.Invoke(this, false);
             }
         }
 
@@ -177,11 +176,6 @@ namespace DragoonMayCry.Score
         private void OnLimitBreakCanceled(object? sender, EventArgs e)
         {
             isCastingLb = false;
-        }
-
-        private void OnLimitBreakEffect(object? sender, EventArgs e)
-        {
-            styleRankHandler.GoToNextRank(true, false, true);
         }
 
         private void OnCombat(object? sender, bool enteredCombat)

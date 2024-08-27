@@ -1,17 +1,16 @@
-using Dalamud.Game.Gui.FlyText;
-using Dalamud.Hooking;
-using Dalamud.Plugin.Services;
-using DragoonMayCry.State;
-using FFXIVClientStructs.FFXIV.Client.Game;
-using FFXIVClientStructs.FFXIV.Client.UI;
-using ImGuiNET;
-using Lumina.Excel;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Dalamud.Game.Gui.FlyText;
+using Dalamud.Hooking;
+using Dalamud.Plugin.Services;
+using DragoonMayCry.State;
 using DragoonMayCry.Util;
-using Lumina.Excel.GeneratedSheets;
+using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.UI;
+using ImGuiNET;
+using Lumina.Excel;
 using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
 using LuminaAction = Lumina.Excel.GeneratedSheets.Action;
 

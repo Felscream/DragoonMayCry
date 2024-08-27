@@ -1,4 +1,5 @@
 using Dalamud.Game.Command;
+using Dalamud.Interface.Utility.Raii;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
@@ -23,14 +24,12 @@ public unsafe class Plugin : IDalamudPlugin
 
 
 
-    public static ScoreManager? ScoreManager { get; private set; }
-    public static StyleRankHandler? StyleRankHandler { get; private set; }
-    public static PluginUI? PluginUi { get; private set; }
-
-    private readonly IPluginLog logger;
+    private readonly ScoreManager scoreManager;
+    private readonly PluginUI pluginUi;
     private readonly PlayerState playerState;
     private readonly ScoreProgressBar scoreProgressBar;
     private readonly ActionTracker actionTracker;
+    private StyleRankHandler styleRankHandler;
 
     public Plugin(IDalamudPluginInterface pluginInterface)
     {
@@ -38,15 +37,17 @@ public unsafe class Plugin : IDalamudPlugin
         ActionManager =
             (ActionManager*)FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
         
-        logger = Service.Log;
         playerState = PlayerState.GetInstance();
         Configuration = PluginInterface.GetPluginConfig() as DmcConfiguration ?? new DmcConfiguration();
         actionTracker = new();
 
-        StyleRankHandler = new(actionTracker);
-        ScoreManager = new(StyleRankHandler, actionTracker);
-        scoreProgressBar = new(ScoreManager, StyleRankHandler, actionTracker);
-        PluginUi = new(scoreProgressBar, StyleRankHandler, ScoreManager);
+        styleRankHandler = new(actionTracker);
+        scoreManager = new(styleRankHandler, actionTracker);
+        scoreProgressBar = new(scoreManager, styleRankHandler, actionTracker);
+        pluginUi = new(scoreProgressBar, styleRankHandler, scoreManager);
+
+        scoreProgressBar.OnDemotionApplied += styleRankHandler.OnDemotion;
+        scoreProgressBar.OnPromotion += styleRankHandler.OnPromotion;
 
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
@@ -66,11 +67,11 @@ public unsafe class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
-        PluginUi?.Dispose();
+        pluginUi?.Dispose();
         playerState.Dispose();
         scoreProgressBar.Dispose();
         actionTracker.Dispose();
-        ScoreManager?.Dispose();
+        scoreManager?.Dispose();
 
         Service.CommandManager.RemoveHandler(CommandName);
     }
@@ -78,7 +79,7 @@ public unsafe class Plugin : IDalamudPlugin
     private void OnCommand(string command, string args)
     {
         // in response to the slash command, just toggle the display status of our main ui
-        PluginUi?.ToggleConfigUI();
+        pluginUi?.ToggleConfigUI();
     }
 
     

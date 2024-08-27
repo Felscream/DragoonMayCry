@@ -66,7 +66,7 @@ namespace DragoonMayCry.UI
 
             this.scoreProgressBar.OnDemotionCanceled += OnDemotionCanceled;
             this.scoreProgressBar.OnDemotionStart += OnDemotionStarted;
-            this.scoreProgressBar.OnDemotionEnd += OnDemotionStopped;
+            this.scoreProgressBar.OnDemotionApplied += OnDemotionApplied;
 
             random = new();
         }
@@ -348,7 +348,7 @@ namespace DragoonMayCry.UI
         }
 
         private void OnDemotionStarted(object? sender, EventArgs e) => demotionInProgress = true;
-        private void OnDemotionStopped(object? sender, EventArgs e) => demotionInProgress = false;
+        private void OnDemotionApplied(object? sender, bool playSfx) => demotionInProgress = false;
         private void OnDemotionCanceled(object? sender, EventArgs e) => demotionInProgress = false;
     }
 }

@@ -19,7 +19,7 @@ namespace DragoonMayCry.UI
         private Stopwatch hideRankUiStopwatch;
         public PluginUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager)
         {
-            ConfigWindow = new ConfigWindow(Plugin.Configuration!);
+            ConfigWindow = new ConfigWindow(Plugin.Configuration!, styleRankHandler);
             styleRankUi = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager);
 
             windowSystem.AddWindow(ConfigWindow);
