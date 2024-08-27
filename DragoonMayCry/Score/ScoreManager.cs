@@ -34,12 +34,14 @@ namespace DragoonMayCry.Score
             public float Threshold;
             public int ReductionPerSecond;
             public float DemotionThreshold;
+            public float PointCoefficient;
 
-            public StyleScoring(int threshold, int reductionPerSecond, int demotionThreshold)
+            public StyleScoring(int threshold, int reductionPerSecond, int demotionThreshold, float pointCoefficient)
             {
                 Threshold = threshold;
                 ReductionPerSecond = reductionPerSecond;
                 DemotionThreshold = demotionThreshold;
+                PointCoefficient = pointCoefficient;
             }
         }
 
@@ -47,8 +49,9 @@ namespace DragoonMayCry.Score
         public ScoreRank CurrentScoreRank { get; private set; }
         private readonly PlayerState playerState;
         private readonly StyleRankHandler rankHandler;
-        
-        
+
+        private const int GcdClippingRestrictionDuration = 6000; //milliseconds
+        private const int DamageInstancesToCancelOnGcdClip = 3;
         private bool isCastingLb;
         private Dictionary<StyleType, StyleScoring> jobScoringTable;
         private readonly Stopwatch gcdClippingStopwatch;
@@ -135,7 +138,7 @@ namespace DragoonMayCry.Score
                 }
                 return;
             }
-            var points = val;
+            var points = val * CurrentScoreRank.StyleScoring.PointCoefficient;
 
             CurrentScoreRank.Score += points;
             if (CurrentScoreRank.Rank == StyleType.SSS)
@@ -149,9 +152,8 @@ namespace DragoonMayCry.Score
         private bool CanDisableGcdClippingRestrictions()
         {
             return gcdClippingStopwatch.IsRunning &&
-                   (gcdClippingStopwatch.ElapsedMilliseconds > Plugin.Configuration!
-                        .GcdClippingRestrictionDuration ||
-                    damageInstancesToCancel <= 0);
+                   (gcdClippingStopwatch.ElapsedMilliseconds > GcdClippingRestrictionDuration 
+                    || damageInstancesToCancel <= 0);
         }
 
         private void OnInstanceChange(object send, bool value)
@@ -216,7 +218,7 @@ namespace DragoonMayCry.Score
             }
 
             CurrentScoreRank.Rank = data.NewRank;
-            CurrentScoreRank.StyleScoring = jobScoringTable[data.NewRank];
+            CurrentScoreRank.StyleScoring = nextStyleScoring;
         }
 
         private void OnGcdClip(object? send, float clippingTime)
@@ -224,7 +226,7 @@ namespace DragoonMayCry.Score
             var newScore = CurrentScoreRank.Score - CurrentScoreRank.StyleScoring.Threshold * 0.3f;
             CurrentScoreRank.Score = Math.Max(newScore, 0);
             gcdClippingStopwatch.Restart();
-            damageInstancesToCancel = Plugin.Configuration!.DamageInstancesToCancelOnGcdClip;
+            damageInstancesToCancel = DamageInstancesToCancelOnGcdClip;
             Service.Log.Debug($"Clipping detected {damageInstancesToCancel} instances of damage will be blocked");
         }
 

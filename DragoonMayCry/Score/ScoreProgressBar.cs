@@ -37,6 +37,10 @@ namespace DragoonMayCry.Score
         public EventHandler? OnDemotionCanceled;
         public EventHandler<bool>? OnPromotion;
 
+        private const float TimeBetweenRankChanges = 1f;
+        private const float PromotionSafeguardDuration = 3f;
+        private const float TimeBetweenDemotions = 4f;
+        private const float DemotionTimerDuration = 3000f;
         private const float InterpolationWeight = 0.09f;
         private readonly ScoreManager scoreManager;
         private readonly StyleRankHandler styleRankHandler;
@@ -91,7 +95,7 @@ namespace DragoonMayCry.Score
                     }
                     return;
                 }
-                if(GetTimeSinceLastPromotion() > Plugin.Configuration!.TimeBetweenRankChanges)
+                if(GetTimeSinceLastPromotion() > TimeBetweenRankChanges)
                 {
                     OnPromotion?.Invoke(this, true);
                 }
@@ -147,7 +151,8 @@ namespace DragoonMayCry.Score
         private bool CanCancelDemotion(float demotionThreshold)
         {
             return demotionApplicationStopwatch.IsRunning 
-                   && (Progress >= demotionThreshold || GetTimeSinceLastPromotion() < Plugin.Configuration!.TimeBetweenRankChanges);
+                   && (Progress >= demotionThreshold 
+                       || GetTimeSinceLastPromotion() < PromotionSafeguardDuration);
         }
 
         private bool CanStartDemotionTimer(float demotionThreshold)
@@ -155,15 +160,15 @@ namespace DragoonMayCry.Score
             return Progress < demotionThreshold
                    && scoreManager.CurrentScoreRank.Rank != StyleType.NoStyle
                    && !demotionApplicationStopwatch.IsRunning 
-                   && GetTimeSinceLastPromotion() > Plugin.Configuration!.TimeBetweenRankChanges
-                   && GetTimeSinceLastDemotion() > Plugin.Configuration!.TimeBetweenDemotions;
+                   && GetTimeSinceLastPromotion() > TimeBetweenRankChanges
+                   && GetTimeSinceLastDemotion() > TimeBetweenDemotions;
         }
 
         private bool CanApplyDemotion(float demotionThreshold)
         {
             return Progress < demotionThreshold
-                   && GetTimeSinceLastDemotion() > Plugin.Configuration!.TimeBetweenDemotions
-                   && demotionApplicationStopwatch.ElapsedMilliseconds > Plugin.Configuration!.DemotionTimerDuration
+                   && GetTimeSinceLastDemotion() > TimeBetweenDemotions
+                   && demotionApplicationStopwatch.ElapsedMilliseconds > DemotionTimerDuration
                    && !Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay;
         }
 

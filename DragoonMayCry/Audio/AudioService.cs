@@ -25,8 +25,11 @@ namespace DragoonMayCry.Audio
                 { SoundId.Sensational, GetPathToAudio("sensational") }
             };
 
-        private static double LastPlayedSfxTime;
-        private static double LastPlayedDeadWeight;
+        private static Dictionary<SoundId, DateTime> soundIdsNextAvailability =
+            new Dictionary<SoundId, DateTime>();
+
+        private static DateTime LastPlayedSfxTime;
+        private static DateTime LastPlayedDeadWeight;
         private static float DeadWeightCooldown = 16f;
 
         public static void PlaySfx(SoundId key, bool force = false)
@@ -41,10 +44,10 @@ namespace DragoonMayCry.Audio
                 return;
             }
 
-            LastPlayedSfxTime = ImGui.GetTime();
+            LastPlayedSfxTime = DateTime.Now;
             if (key == SoundId.DeadWeight)
             {
-                LastPlayedDeadWeight = ImGui.GetTime();
+                LastPlayedDeadWeight = DateTime.Now;
             }
             AudioEngine.PlaySfx(key, SfxPaths[key], GetSfxVolume());
         }
@@ -57,13 +60,13 @@ namespace DragoonMayCry.Audio
         private static bool CanPlaySfx(SoundId type)
         {
             float sfxCooldown = Plugin.Configuration!.AnnouncerCooldown;
-            double time = ImGui.GetTime();
+            DateTime time = DateTime.Now;
             if (type == SoundId.DeadWeight)
             {
                 var delay = Math.Max(DeadWeightCooldown, sfxCooldown);
-                return LastPlayedDeadWeight + delay < time;
+                return LastPlayedDeadWeight.AddSeconds(delay) < time;
             }
-            return LastPlayedSfxTime + sfxCooldown < time;
+            return LastPlayedSfxTime.AddSeconds(sfxCooldown) < time;
         }
 
         private static string GetPathToAudio(string name)

@@ -97,6 +97,7 @@ namespace DragoonMayCry.Score.Action
 
         private CombatStopwatch combatStopwatch;
 
+        private const float GcdDropThreshold = 0.1f;
         private ushort lastDetectedClip = 0;
         private float currentWastedGcd = 0;
 
@@ -441,7 +442,7 @@ namespace DragoonMayCry.Score.Action
             {
                 if (Plugin.ActionManager->animationLock > 0) return;
                 currentWastedGcd += ImGui.GetIO().DeltaTime;
-                if (!isGcdDropped && currentWastedGcd > Plugin.Configuration!.GcdDropThreshold)
+                if (!isGcdDropped && currentWastedGcd > GcdDropThreshold)
                 {
                     isGcdDropped = true;
                     Service.Log.Debug($"GCD dropped");
