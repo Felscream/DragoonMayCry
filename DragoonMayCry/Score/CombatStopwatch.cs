@@ -9,7 +9,6 @@ namespace DragoonMayCry.Score
         public float TimeInCombat() => (float)stopwatch.ElapsedMilliseconds / 1000;
         
         private readonly Stopwatch stopwatch;
-        private readonly IFramework framework = Service.Framework;
         private static CombatStopwatch? Instance;
 
         private CombatStopwatch()
@@ -37,9 +36,9 @@ namespace DragoonMayCry.Score
         {
             stopwatch.Stop();
         }
-        private void OnCombat(object? sender, bool inCombat)
+        private void OnCombat(object? sender, bool enteredCombat)
         {
-            if (inCombat)
+            if (enteredCombat)
             {
                 Start();
             }

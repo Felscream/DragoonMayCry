@@ -36,7 +36,6 @@ namespace DragoonMayCry.UI
 
 
         }
-
         public void Dispose()
         {
             pluginInterface.UiBuilder.Draw -= DrawUI;
@@ -46,7 +45,6 @@ namespace DragoonMayCry.UI
             windowSystem.RemoveAllWindows();
 
             ConfigWindow.Dispose();
-
         }
 
         private void DrawUI()
@@ -71,13 +69,8 @@ namespace DragoonMayCry.UI
             {
                 return true;
             }
-            if (!playerState.IsInsideInstance &&
-                !Plugin.Configuration.ActiveOutsideInstance)
-            {
-                return false;
-            }
 
-            return playerState.IsInCombat || hideRankUiStopwatch.IsRunning;
+            return Plugin.CanRunDmc() || hideRankUiStopwatch.IsRunning;
         }
 
         private void OnCombatChange(object send, bool enteringCombat)

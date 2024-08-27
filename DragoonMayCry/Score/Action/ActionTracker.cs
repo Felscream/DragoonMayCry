@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using DragoonMayCry.Util;
 using Lumina.Excel.GeneratedSheets;
 using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
 using LuminaAction = Lumina.Excel.GeneratedSheets.Action;
@@ -179,13 +180,13 @@ namespace DragoonMayCry.Score.Action
             onActionUsedHook?.Original(sourceId, sourceCharacter, pos,
                                         effectHeader, effectArray, effectTrail);
 
-            if (!playerState.IsInCombat)
+            if (!Plugin.CanRunDmc())
             {
                 return;
             }
 
             var player = playerState.Player;
-            if (player == null || sourceId != player.GameObjectId)
+            if (sourceId != player!.GameObjectId)
             {
                 return;
             }
@@ -233,7 +234,7 @@ namespace DragoonMayCry.Score.Action
             onActorControlHook?.Original(entityId, type, buffID, direct,
                                           actionId, sourceId, arg4, arg5,
                                           targetId, a10);
-            if (!playerState.IsInCombat)
+            if (!Plugin.CanRunDmc())
             {
                 return;
             }
@@ -259,7 +260,7 @@ namespace DragoonMayCry.Score.Action
         {
             onCastHook?.Original(sourceId, ptr);
 
-            if (!playerState.IsInCombat)
+            if (!Plugin.CanRunDmc())
             {
                 return;
             }
@@ -299,7 +300,7 @@ namespace DragoonMayCry.Score.Action
             }
 
             var duration = type == PlayerActionType.Weaponskill
-                               ? GetGCDTime(actionId)
+                               ? GetGcdTime(actionId)
                                : GetCastTime(actionId);
 
             var playerAction = new PlayerAction(
@@ -311,7 +312,7 @@ namespace DragoonMayCry.Score.Action
             
         }
 
-        private unsafe float GetGCDTime(uint actionId)
+        private unsafe float GetGcdTime(uint actionId)
         {
             var actionManager = ActionManager.Instance();
             var adjustedId = actionManager->GetAdjustedActionId(actionId);
@@ -326,7 +327,7 @@ namespace DragoonMayCry.Score.Action
 
         private unsafe void Update(IFramework framework)
         {
-            if (!playerState.IsInCombat)
+            if (!Plugin.CanRunDmc())
             {
                 return;
             }
@@ -392,7 +393,7 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-            var isTankLb = tankLimitBreakDelays.ContainsKey(actionId);
+            var isTankLb = JobHelper.IsTank();
             var castTime = GetCastTime(actionId);
 
             // the +3 is just to give enough time to register the gcd clipping just after
@@ -489,7 +490,7 @@ namespace DragoonMayCry.Score.Action
                 offsetStr,
                 offsetStrMax,
                 unknown);
-            if (!playerState.IsInCombat)
+            if (!Plugin.CanRunDmc())
             {
                 return;
             }

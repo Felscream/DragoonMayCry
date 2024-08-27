@@ -13,12 +13,12 @@ namespace DragoonMayCry.Score.Style
     {
         public struct RankChangeData
         {
-            public StyleRank? PreviousRank;
-            public StyleRank NewRank;
+            public StyleType PreviousRank;
+            public StyleType NewRank;
             public bool IsBlunder;
 
             public RankChangeData(
-                StyleRank previousRank, StyleRank newRank, bool isBlunder)
+                StyleType previousRank, StyleType newRank, bool isBlunder)
             {
                 PreviousRank = previousRank;
                 NewRank = newRank;
@@ -26,58 +26,55 @@ namespace DragoonMayCry.Score.Style
             }
 
         }
-        private static readonly DoubleLinkedList<StyleRank> DEFAULT_STYLE_RANK = new DoubleLinkedList<StyleRank>(
-            new StyleRank(StyleType.NO_STYLE, 60000, 500),
-            new StyleRank(StyleType.D, 80000, 1000),
-            new StyleRank(StyleType.C, 90000, 1500),
-            new StyleRank(StyleType.B, 90000, 2000),
-            new StyleRank(StyleType.A, 100000, 4000),
-            new StyleRank(StyleType.S, 100000, 8000),
-            new StyleRank(StyleType.SS, 100000, 10000),
-            new StyleRank(StyleType.SSS, 60000, 12000));
 
         public EventHandler<RankChangeData>? StyleRankChange;
-        public DoubleLinkedNode<StyleRank>? CurrentRank { get; private set; }
-        public DoubleLinkedNode<StyleRank>? PreviousRank { get; private set; }
-        private DoubleLinkedList<StyleRank> styles;
+        public DoubleLinkedNode<StyleType> CurrentStyle { get; private set; }
+        
+        private static readonly DoubleLinkedList<StyleType> Styles = new DoubleLinkedList<StyleType>(
+            StyleType.NO_STYLE, 
+            StyleType.D, 
+            StyleType.C, 
+            StyleType.B, 
+            StyleType.A, 
+            StyleType.S, 
+            StyleType.SS, 
+            StyleType.SSS);
 
         public StyleRankHandler(ActionTracker actionTracker)
         {
-            styles = DEFAULT_STYLE_RANK;
             Reset();
 
             var playerState = PlayerState.GetInstance();
-            playerState.RegisterJobChangeHandler(OnJobChange!);
-            playerState.RegisterLoginStateChangeHandler(OnLogin!);
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
 
             actionTracker.OnGcdDropped += OnGcdDropped;
             actionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
             actionTracker.OnLimitBreak += OnLimitBreak;
+            CurrentStyle = Styles.Head!;
         }
 
-        public void GoToNextRank(bool playSfx, bool loop, bool forceSfx = false)
+        public void GoToNextRank(bool playSfx, bool loop = false, bool forceSfx = false)
         {
-            if (CurrentRank?.Next == null)
+            if (CurrentStyle?.Next == null)
             {
-                if (Plugin.Configuration!.PlaySoundEffects && playSfx && forceSfx && CurrentRank != null)
+                if (Plugin.Configuration!.PlaySoundEffects && playSfx && forceSfx && CurrentStyle != null)
                 {
-                    AudioService.PlaySfx(CurrentRank.Value.StyleType);
+                    AudioService.PlaySfx(CurrentStyle.Value);
                 }
-                if (styles.Head != null && loop)
+                if (Styles.Head != null && loop)
                 {
                     Reset();
                 }
                 
             }
-            else if (CurrentRank?.Next != null)
+            else if (CurrentStyle?.Next != null)
             {
-                CurrentRank = CurrentRank.Next;
-                Service.Log.Debug($"New rank reached {CurrentRank.Value.StyleType}");
-                StyleRankChange?.Invoke(this, new(CurrentRank!.Previous!.Value, CurrentRank.Value, false));
+                CurrentStyle = CurrentStyle.Next;
+                Service.Log.Debug($"New rank reached {CurrentStyle.Value}");
+                StyleRankChange?.Invoke(this, new(CurrentStyle!.Previous!.Value, CurrentStyle.Value, false));
                 if (Plugin.Configuration!.PlaySoundEffects && playSfx)
                 {
-                    AudioService.PlaySfx(CurrentRank.Value.StyleType);
+                    AudioService.PlaySfx(CurrentStyle.Value);
                 }
             }
         }
@@ -85,58 +82,57 @@ namespace DragoonMayCry.Score.Style
         public void ReturnToPreviousRank(bool droppedGcd)
         {
             
-            if (CurrentRank?.Previous == null)
+            if (CurrentStyle?.Previous == null)
             {
                 if (droppedGcd)
                 {
-                    StyleRankChange?.Invoke(this, new(CurrentRank!.Value, CurrentRank.Value, droppedGcd));
+                    StyleRankChange?.Invoke(this, new(CurrentStyle!.Value, CurrentStyle.Value, droppedGcd));
                 }
                 return;
             }
 
-            CurrentRank = CurrentRank.Previous;
-            Service.Log.Debug($"Going back to rank {CurrentRank.Value.StyleType}");
-            StyleRankChange?.Invoke(this, new(CurrentRank!.Next!.Value, CurrentRank.Value, droppedGcd));
+            CurrentStyle = CurrentStyle.Previous;
+            Service.Log.Debug($"Going back to rank {CurrentStyle.Value}");
+            StyleRankChange?.Invoke(this, new(CurrentStyle!.Next!.Value, CurrentStyle.Value, droppedGcd));
         }
 
         public void Reset()
         {
-            CurrentRank = styles.Head;
-            StyleRankChange?.Invoke(this, new(null, CurrentRank!.Value, false));
+            CurrentStyle = Styles.Head!;
+            StyleRankChange?.Invoke(this, new(StyleType.NO_STYLE, CurrentStyle!.Value, false));
         }
 
         private void ForceRankTo(StyleType type, bool isBlunder)
         {
             
-            if (CurrentRank?.Value.StyleType == type)
+            if (CurrentStyle?.Value == type)
             {
                 return;
             }
-            var tempRank = CurrentRank;
+
+            if (CurrentStyle == null)
+            {
+                CurrentStyle = Styles.Head!;
+            }
+            var tempRank = CurrentStyle;
             do
             {
-                if (CurrentRank?.Next != null)
+                if (CurrentStyle?.Next != null)
                 {
-                    CurrentRank = CurrentRank.Next;
+                    CurrentStyle = CurrentStyle.Next;
                 }
                 else
                 {
-                    CurrentRank = styles.Head;
+                    CurrentStyle = Styles.Head!;
                 }
-            } while(CurrentRank?.Value.StyleType != type && CurrentRank?.Value.StyleType != tempRank?.Value.StyleType);
+            } while(CurrentStyle.Value != type && CurrentStyle.Value != tempRank.Value);
 
             if (isBlunder)
             {
                 AudioService.PlaySfx(StyleType.DEAD_WEIGHT, true);
             }
 
-            StyleRankChange?.Invoke(this, new(tempRank?.Value!, CurrentRank?.Value!, isBlunder));
-        }
-
-        private void ChangeStylesTo(DoubleLinkedList<StyleRank> newStyles)
-        {
-            styles = newStyles;
-            Reset();
+            StyleRankChange?.Invoke(this, new(tempRank.Value, CurrentStyle.Value!, isBlunder));
         }
 
         private void OnCombatChange(object send, bool enteringCombat)
@@ -146,30 +142,10 @@ namespace DragoonMayCry.Score.Style
                 Reset();
             }
         }
-        private void OnJobChange(object sender, JobIds newJob)
-        {
-            ChangeStylesTo(DEFAULT_STYLE_RANK);
-        }
-
-        private void OnLogin(object send, bool loggedIn)
-        {
-            if (!loggedIn)
-            {
-                return;
-            }
-            var currentJob = JobHelper.GetCurrentJob();
-            if (currentJob == JobIds.OTHER)
-            {
-                ChangeStylesTo(DEFAULT_STYLE_RANK);
-                return;
-            }
-            ChangeStylesTo(DEFAULT_STYLE_RANK);
-
-        }
 
         private void OnGcdDropped(object? sender, EventArgs args)
         {
-            if (CurrentRank?.Value.StyleType != StyleType.NO_STYLE && Plugin.Configuration!.PlaySoundEffects)
+            if (CurrentStyle?.Value != StyleType.NO_STYLE && Plugin.Configuration!.PlaySoundEffects)
             {
                 AudioService.PlaySfx(StyleType.DEAD_WEIGHT);
             }
@@ -185,7 +161,7 @@ namespace DragoonMayCry.Score.Style
         private void OnLimitBreak(
             object? sender, ActionTracker.LimitBreakEvent e)
         {
-            if (e.IsTankLb && CurrentRank?.Value.StyleType < StyleType.S)
+            if (e.IsTankLb && CurrentStyle?.Value < StyleType.S)
             {
                 ForceRankTo(StyleType.A, false);
             }

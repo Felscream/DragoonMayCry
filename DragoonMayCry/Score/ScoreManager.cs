@@ -1,6 +1,8 @@
 using Dalamud.Plugin.Services;
 using DragoonMayCry.State;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Util;
@@ -15,22 +17,48 @@ namespace DragoonMayCry.Score
         public class ScoreRank
         {
             public float Score { get; set; }
-            public StyleRank Rank { get; set; }
+            public StyleType Rank { get; set; }
+            public StyleScoring StyleScoring { get; set; }
 
-            public ScoreRank(float score, StyleRank styleRank)
+            public ScoreRank(float score, StyleType styleRank, StyleScoring styleScoring)
             {
                 Score = score;
                 Rank = styleRank;
-
+                StyleScoring = styleScoring;
             }
         }
+
+        public struct StyleScoring
+        {
+            public int Threshold;
+            public int ReductionPerSecond;
+
+            public StyleScoring(int threshold, int rediReductionPerSecond)
+            {
+                Threshold = threshold;
+                ReductionPerSecond = rediReductionPerSecond;
+            }
+        }
+
+        private static readonly Dictionary<StyleType, StyleScoring>
+            DefaultScoreTable = new Dictionary<StyleType, StyleScoring>
+            {
+                { StyleType.NO_STYLE, new StyleScoring(60000, 500) },
+                { StyleType.D, new StyleScoring(80000, 1000) },
+                { StyleType.C, new StyleScoring(90000, 5000) },
+                { StyleType.B, new StyleScoring(90000, 6000) },
+                { StyleType.A, new StyleScoring(100000, 8000) },
+                { StyleType.S, new StyleScoring(100000, 10000) },
+                { StyleType.SS, new StyleScoring(70000, 12000) },
+                { StyleType.SSS, new StyleScoring(48000, 16000) },
+            };
 
         public EventHandler<double>? OnScoring;
         public ScoreRank CurrentScoreRank { get; private set; }
         public ScoreRank? PreviousScoreRank { get; private set; }
         private readonly PlayerState playerState;
         private readonly StyleRankHandler rankHandler;
-        private readonly CombatStopwatch combatStopwatch;
+        private Dictionary<StyleType, StyleScoring> jobScoringTable;
         
         private bool isCastingLb;
 
@@ -39,9 +67,12 @@ namespace DragoonMayCry.Score
 
         public ScoreManager(StyleRankHandler styleRankHandler, ActionTracker actionTracker)
         {
-            combatStopwatch = CombatStopwatch.GetInstance();
+            jobScoringTable = DefaultScoreTable;
             gcdClippingStopwatch = new Stopwatch();
-            CurrentScoreRank = new(0, styleRankHandler.CurrentRank!.Value);
+
+            var styleRank = styleRankHandler.CurrentStyle!.Value;
+            CurrentScoreRank = new(0, styleRank, jobScoringTable[styleRank]);
+
             ResetScore();
 
             this.playerState = PlayerState.GetInstance();
@@ -67,14 +98,6 @@ namespace DragoonMayCry.Score
             Service.ClientState.Logout -= ResetScore;
         }
 
-        public bool IsActive()
-        {
-            return playerState.IsInCombat &&
-                   ((!playerState.IsInsideInstance &&
-                     Plugin.Configuration!.ActiveOutsideInstance)
-                    || playerState.IsInsideInstance);
-        }
-
         private void AddScore(object? sender, float val)
         {
             if (damageInstancesToCancel > 0)
@@ -90,17 +113,17 @@ namespace DragoonMayCry.Score
             var points = val;
 
             CurrentScoreRank.Score += points;
-            if (CurrentScoreRank.Rank.StyleType == StyleType.SSS)
+            if (CurrentScoreRank.Rank == StyleType.SSS)
             {
                 CurrentScoreRank.Score = Math.Min(
-                    CurrentScoreRank.Score, CurrentScoreRank.Rank.Threshold);
+                    CurrentScoreRank.Score, CurrentScoreRank.StyleScoring.Threshold);
             }
             OnScoring?.Invoke(this, points);
         }
 
         public void UpdateScore(IFramework framework)
         {
-            if (!IsActive())
+            if (!Plugin.CanRunDmc())
             {
                 return;
             }
@@ -113,15 +136,15 @@ namespace DragoonMayCry.Score
             if (isCastingLb)
             {
                 CurrentScoreRank.Score +=
-                    (float)(framework.UpdateDelta.TotalSeconds * CurrentScoreRank.Rank.ReductionPerSecond * 100);
+                    (float)(framework.UpdateDelta.TotalSeconds * CurrentScoreRank.StyleScoring.ReductionPerSecond * 100);
                 CurrentScoreRank.Score = Math.Clamp(
-                    CurrentScoreRank.Score, 0, CurrentScoreRank.Rank.Threshold * 1.2f);
+                    CurrentScoreRank.Score, 0, CurrentScoreRank.StyleScoring.Threshold * 1.2f);
             }
             else
             {
                 var scoreReduction =
                     (float)(framework.UpdateDelta.TotalSeconds *
-                            CurrentScoreRank.Rank.ReductionPerSecond);
+                            CurrentScoreRank.StyleScoring.ReductionPerSecond);
                 if (AreGcdClippingRestrictionsActive())
                 {
                     scoreReduction *= 10;
@@ -155,6 +178,8 @@ namespace DragoonMayCry.Score
             {
                 ResetScore();
             }
+            damageInstancesToCancel = 0;
+            gcdClippingStopwatch.Reset();
         }
 
         private void OnLimitBreakCast(object? sender, ActionTracker.LimitBreakEvent e)
@@ -162,7 +187,7 @@ namespace DragoonMayCry.Score
             this.isCastingLb = e.IsCasting;
             if (!isCastingLb)
             {
-                CurrentScoreRank.Score = CurrentScoreRank.Rank.Threshold;
+                CurrentScoreRank.Score = CurrentScoreRank.StyleScoring.Threshold;
             }
         }
 
@@ -174,35 +199,41 @@ namespace DragoonMayCry.Score
 
         private void OnRankChange(object sender, RankChangeData data)
         {
-            PreviousScoreRank = CurrentScoreRank;
-            if ((int)CurrentScoreRank.Rank.StyleType < (int)data.NewRank.StyleType)
+            if (!jobScoringTable.ContainsKey(data.NewRank))
             {
+                return;
+            }
+
+            var styleScoring = jobScoringTable[data.NewRank];
+            if ((int)CurrentScoreRank.Rank < (int)data.NewRank)
+            {
+                
                 CurrentScoreRank.Score = (float)Math.Clamp(CurrentScoreRank.Score %
-                    data.NewRank.Threshold, 0, data.NewRank.Threshold * 0.5); ;
+                                                           styleScoring.Threshold, 0, styleScoring.Threshold * 0.5); ;
             }
             else if (data.IsBlunder)
             {
-                if (data.NewRank.StyleType == data.PreviousRank?.StyleType)
+                if (data.NewRank == data.PreviousRank)
                 {
                     CurrentScoreRank.Score = 0;
                 }
                 else
                 {
-                    CurrentScoreRank.Score = Math.Max(CurrentScoreRank.Score - CurrentScoreRank.Rank.Threshold * 0.1f, 0);
+                    CurrentScoreRank.Score = Math.Max(CurrentScoreRank.Score - CurrentScoreRank.StyleScoring.Threshold * 0.1f, 0);
                 }
             }
             else
             {
-                CurrentScoreRank.Score = data.NewRank.Threshold * 0.8f;
+                CurrentScoreRank.Score = styleScoring.Threshold * 0.8f;
             }
 
-            
+            PreviousScoreRank = CurrentScoreRank;
             CurrentScoreRank.Rank = data.NewRank;
         }
 
         private void OnGcdClip(object? send, float clippingTime)
         {
-            var newScore = CurrentScoreRank.Score - CurrentScoreRank.Rank.Threshold * 0.3f;
+            var newScore = CurrentScoreRank.Score - CurrentScoreRank.StyleScoring.Threshold * 0.3f;
             CurrentScoreRank.Score = Math.Max(newScore, 0);
             gcdClippingStopwatch.Restart();
             damageInstancesToCancel = Plugin.Configuration!.DamageInstancesToCancelOnGcdClip;
@@ -219,6 +250,7 @@ namespace DragoonMayCry.Score
         private void ResetScore()
         {
             CurrentScoreRank.Score = 0;
+            isCastingLb = false;
         }
 
         private bool AreGcdClippingRestrictionsActive()

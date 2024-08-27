@@ -9,6 +9,7 @@ using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Style;
 using DragoonMayCry.State;
 using DragoonMayCry.UI;
+using DragoonMayCry.Util;
 
 namespace DragoonMayCry;
 
@@ -49,8 +50,18 @@ public unsafe class Plugin : IDalamudPlugin
 
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
-            HelpMessage = "A useful message to display in /xlhelp"
+            HelpMessage = "Greed all the way"
         });
+    }
+
+    public static bool CanRunDmc()
+    {
+        var playerState = PlayerState.GetInstance();
+        return JobHelper.IsCombatJob()
+               && playerState.IsInCombat
+               && (playerState.IsInsideInstance ||
+                   Configuration!.ActiveOutsideInstance);
+
     }
 
     public void Dispose()

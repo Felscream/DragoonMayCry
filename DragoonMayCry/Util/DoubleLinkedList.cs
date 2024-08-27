@@ -15,12 +15,6 @@ namespace DragoonMayCry.Util
         public DoubleLinkedNode<T>? Tail { get; private set; }
         int size;
 
-        public DoubleLinkedList()
-        {
-            Head = null;
-            Tail = null;
-            size = 0;
-        }
         public DoubleLinkedList(params T[] values)
         {
             size = 0;
@@ -48,24 +42,6 @@ namespace DragoonMayCry.Util
             Head = node;
             Tail = node;
             size = 1;
-        }
-
-        public void Add(T value)
-        {
-            var node = new DoubleLinkedNode<T>(value);
-            Head ??= node;
-            
-            if(Tail == null)
-            {
-                Tail = node;
-            } else
-            {
-                node.Previous = Tail;
-                Tail.Next = node;
-                Tail = node;
-            }
-            
-            size++;
         }
     }
 

@@ -315,7 +315,7 @@ namespace DragoonMayCry.UI
 
         private void OnRankChange(object send, StyleRankHandler.RankChangeData data)
         {
-            if (currentStyle < data.NewRank.StyleType)
+            if (currentStyle < data.NewRank)
             {
                 rankTransition.Restart();
             }
@@ -324,7 +324,7 @@ namespace DragoonMayCry.UI
                 rankTransition.Reset();
             }
             previousStyle = currentStyle;
-            currentStyle = data.NewRank.StyleType;
+            currentStyle = data.NewRank;
         }
 
         private void OnCombatChange(object send, bool enteringCombat)

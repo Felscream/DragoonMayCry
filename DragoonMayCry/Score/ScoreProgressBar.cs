@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Style;
+using DragoonMayCry.State;
 using ImGuiNET;
 
 namespace DragoonMayCry.Score
@@ -31,9 +32,9 @@ namespace DragoonMayCry.Score
             }
         }
 
-        public EventHandler OnDemotionStart;
-        public EventHandler OnDemotionEnd;
-        public EventHandler OnDemotionCanceled;
+        public EventHandler? OnDemotionStart;
+        public EventHandler? OnDemotionEnd;
+        public EventHandler? OnDemotionCanceled;
 
         private static readonly double InterpolationWeight = 0.09d;
         private readonly ScoreManager scoreManager;
@@ -56,6 +57,7 @@ namespace DragoonMayCry.Score
             this.actionTracker.OnLimitBreakEffect += OnLimitBreakEffect;
             this.actionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
 
+            PlayerState.GetInstance().RegisterCombatStateChangeHandler(OnCombat);
             demotionStopwatch = new Stopwatch();
         }
 
@@ -66,13 +68,13 @@ namespace DragoonMayCry.Score
 
         public void UpdateScoreInterpolation(IFramework framework)
         {
-            if (!scoreManager.IsActive())
+            if (!Plugin.CanRunDmc())
             {
                 return;
             }
 
             var currentScoreRank = scoreManager.CurrentScoreRank;
-            var threshold = currentScoreRank.Rank.Threshold;
+            var threshold = currentScoreRank.StyleScoring.Threshold;
             interpolatedScore = double.Lerp(
                 interpolatedScore, currentScoreRank.Score,
                 InterpolationWeight);
@@ -84,21 +86,21 @@ namespace DragoonMayCry.Score
             {
                 if (isCastingLb)
                 {
-                    if (currentScoreRank.Rank.StyleType != StyleType.SS && currentScoreRank.Rank.StyleType != StyleType.SSS)
+                    if (currentScoreRank.Rank != StyleType.SS && currentScoreRank.Rank != StyleType.SSS)
                     {
-                        styleRankHandler.GoToNextRank(false, false);
+                        styleRankHandler.GoToNextRank(false);
                     }
-
                     return;
                 }
-                else if(timeSinceLastRankChange > Plugin.Configuration.MinTimeBetweenPromotions)
+                if(timeSinceLastRankChange > Plugin.Configuration!.MinTimeBetweenPromotions)
                 {
-                    styleRankHandler.GoToNextRank(true, false);
+                    styleRankHandler.GoToNextRank(true);
                 }
-                
             }
-
-            ApplyDemotion(currentScoreRank, timeSinceLastRankChange);
+            else
+            {
+                ApplyDemotion(currentScoreRank, timeSinceLastRankChange);
+            }
         }
 
         private void ApplyDemotion(ScoreManager.ScoreRank currentScoreRank,
@@ -127,7 +129,7 @@ namespace DragoonMayCry.Score
 
         private bool CanCancelDemotion(ScoreManager.ScoreRank currentScoreRank)
         {
-            return demotionStopwatch.IsRunning && currentScoreRank.Score > Math.Ceiling(currentScoreRank.Rank.Threshold * 0.1);
+            return demotionStopwatch.IsRunning && currentScoreRank.Score > Math.Ceiling(currentScoreRank.StyleScoring.Threshold * 0.1);
         }
 
         private bool CanStartDemotionTimer(ScoreManager.ScoreRank currentScoreRank)
@@ -148,6 +150,7 @@ namespace DragoonMayCry.Score
         {
             interpolatedScore = 0;
             lastRankChangeTime = ImGui.GetTime();
+            demotionStopwatch.Reset();
         }
 
         private void OnLimitBreakCast(object? sender, ActionTracker.LimitBreakEvent e)
@@ -168,6 +171,18 @@ namespace DragoonMayCry.Score
         private void OnLimitBreakEffect(object? sender, EventArgs e)
         {
             styleRankHandler.GoToNextRank(true, false, true);
+        }
+
+        private void OnCombat(object? sender, bool enteredCombat)
+        {
+            isCastingLb = false;
+            lastRankChangeTime = 0;
+            interpolatedScore = 0;
+            if (demotionStopwatch.IsRunning)
+            {
+                OnDemotionCanceled?.Invoke(this, EventArgs.Empty);
+            }
+            demotionStopwatch.Reset();
         }
     }
 }
