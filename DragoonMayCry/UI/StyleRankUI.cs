@@ -14,6 +14,7 @@ using System.Reflection;
 using DragoonMayCry.UI.Model;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = FFXIVClientStructs.FFXIV.Common.Math.Vector4;
+using static FFXIVClientStructs.FFXIV.Client.UI.Misc.GroupPoseModule;
 
 namespace DragoonMayCry.UI
 {
@@ -41,11 +42,13 @@ namespace DragoonMayCry.UI
         private StyleType currentStyle = StyleType.NO_STYLE;
         private StyleType previousStyle = StyleType.NO_STYLE;
         private bool showProgressGauge;
+        private bool demotionInProgress;
 
         private readonly Easing rankTransition;
         private readonly Stopwatch shakeStopwatch;
         private readonly float shakeDuration = 400f;
         private readonly float shakeIntensity = 6f;
+        private readonly string gaugeDefault = "DragoonMayCry.Assets.GaugeDefault.png";
 
         public StyleRankUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager)
         {
@@ -58,9 +61,12 @@ namespace DragoonMayCry.UI
             
             this.styleRankHandler.StyleRankChange += OnRankChange!;
 
-            long duration = 1500000;
-            rankTransition = new OutCubic(new(duration));
+            rankTransition = new OutCubic(new(1500000));
             shakeStopwatch = new Stopwatch();
+
+            this.scoreProgressBar.OnDemotionCanceled += OnDemotionCanceled;
+            this.scoreProgressBar.OnDemotionStart += OnDemotionStarted;
+            this.scoreProgressBar.OnDemotionEnd += OnDemotionStopped;
 
             random = new();
         }
@@ -124,7 +130,7 @@ namespace DragoonMayCry.UI
                 // Stolen from https://github.com/marconsou/mp-tick-bar
                 if ((showProgressGauge || Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay) && Service.TextureProvider
                                             .GetFromManifestResource(Assembly.GetExecutingAssembly(),
-                                                "DragoonMayCry.Assets.GaugeDefault.png")
+                                                gaugeDefault)
                                             .TryGetWrap(out var gauge, out var _))
                 {
                     DrawProgressGauge(gauge, scoreProgressBar.Progress, style.GaugeColor);
@@ -152,7 +158,7 @@ namespace DragoonMayCry.UI
                 }
                 if(Service.TextureProvider
                           .GetFromManifestResource(Assembly.GetExecutingAssembly(),
-                                                   "DragoonMayCry.Assets.GaugeDefault.png")
+                                                   gaugeDefault)
                           .TryGetWrap(out var gauge, out var _))
                 {
                     DrawProgressGauge(gauge, progress, new(255,255,255));
@@ -182,6 +188,14 @@ namespace DragoonMayCry.UI
             RenderBarUIElement(gauge, offsetX, offsetY, gaugeWidth,
                                gaugeHeight, textureToElementScale, progress, color);
             RenderBackgroundUIElement(gauge, offsetX, offsetY, gaugeWidth, gaugeHeight, textureToElementScale, false);
+            if (Service.TextureProvider
+                       .GetFromManifestResource(Assembly.GetExecutingAssembly(),
+                                                gaugeDefault)
+                       .TryGetWrap(out var marker, out var _))
+            {
+                RenderDemotionMarker(marker, offsetX, offsetY, gaugeWidth);
+            }
+            
         }
 
         private void DrawCurrentRank(IDalamudTextureWrap rankIcon)
@@ -191,16 +205,16 @@ namespace DragoonMayCry.UI
             var size = rankSize * animationTransitionValue;
 
             
-            var textureUV0 = Vector2.Zero;
-            var textureUV1 = Vector2.One;
-            var color = scoreProgressBar.DemotionAlertStarted
-                            ? new Vector4(1, 1, 1,
-                                          AlphaModificationFunction(
-                                              (float)ImGui.GetTime()))
-                            : Vector4.One;
+            var textureUv0 = Vector2.Zero;
+            var textureUv1 = Vector2.One;
+            var alpha = demotionInProgress
+                            ? AlphaModificationFunction(
+                                (float)ImGui.GetTime())
+                            : 1;
+            var color = new System.Numerics.Vector4(1,1,1,alpha);
 
             ImGui.SetCursorPos(pos);
-            ImGui.Image(rankIcon.ImGuiHandle, size, textureUV0, textureUV1, color);
+            ImGui.Image(rankIcon.ImGuiHandle, size, textureUv0, textureUv1, color);
         }
 
         private Vector2 ComputeRankPosition()
@@ -231,6 +245,20 @@ namespace DragoonMayCry.UI
             return pos;
         }
 
+        private void RenderDemotionMarker(IDalamudTextureWrap texture, float initialOffsetX, float initialOffsetY, float gaugeWidth)
+        {
+            var x = initialOffsetX + gaugeWidth * 0.1f;
+            var y = initialOffsetY;
+            var width = gaugeWidth;
+            var height = texture.Height;
+            var textureX = 0f;
+            var textureY = 0f;
+            var textureW = 1.0f;
+            var textureH = 1f;
+            ImGui.SetCursorPos(new(x, y));
+            ImGui.Image(texture.ImGuiHandle, new(width, height), new(textureX, textureY), new(textureW, textureH), Vector4.One);
+
+        }
 
         private void RenderBackgroundUIElement(IDalamudTextureWrap texture, float offsetX, float offsetY, float gaugeWidth, float gaugeHeight, float textureToElementScale, bool isBackground)
         {
@@ -318,5 +346,9 @@ namespace DragoonMayCry.UI
         {
             return styleUis.ContainsKey(type);
         }
+
+        private void OnDemotionStarted(object? sender, EventArgs e) => demotionInProgress = true;
+        private void OnDemotionStopped(object? sender, EventArgs e) => demotionInProgress = false;
+        private void OnDemotionCanceled(object? sender, EventArgs e) => demotionInProgress = false;
     }
 }

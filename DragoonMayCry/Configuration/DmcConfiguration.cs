@@ -16,7 +16,8 @@ public class DmcConfiguration : IPluginConfiguration
     public int AnnouncerCooldown { get; set; } = 0;
     public bool ApplyGameVolume { get; set; } = true;
     public bool ActiveOutsideInstance { get; set; } = false;
-    public int TimeBeforeDemotion { get; set; } = 3000; //milliseconds
+    public int TimeBeforeDemotion { get; set; } = 4000; //milliseconds
+    public float MinTimeBetweenPromotions { get; set; } = 1.5f;
     public float GcdDropThreshold { get; set; } = 0.1f;
     public int DamageInstancesToCancelOnGcdClip { get; set; } = 3;
     public int GcdClippingRestrictionDuration { get; set; } = 6000; //milliseconds

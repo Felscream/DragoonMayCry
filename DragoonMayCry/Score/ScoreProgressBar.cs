@@ -31,15 +31,17 @@ namespace DragoonMayCry.Score
             }
         }
 
-        public bool DemotionAlertStarted { get; private set; }
+        public EventHandler OnDemotionStart;
+        public EventHandler OnDemotionEnd;
+        public EventHandler OnDemotionCanceled;
 
         private static readonly double InterpolationWeight = 0.09d;
         private readonly ScoreManager scoreManager;
         private readonly StyleRankHandler styleRankHandler;
         private readonly ActionTracker actionTracker;
-        private readonly Stopwatch rankFloorStopwatch;
+        private readonly Stopwatch demotionStopwatch;
         private double interpolatedScore = 0;
-        private double lastRankChange = 0;
+        private double lastRankChangeTime = 0;
         private float progress;
         private bool isCastingLb;
 
@@ -54,7 +56,7 @@ namespace DragoonMayCry.Score
             this.actionTracker.OnLimitBreakEffect += OnLimitBreakEffect;
             this.actionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
 
-            rankFloorStopwatch = new Stopwatch();
+            demotionStopwatch = new Stopwatch();
         }
 
         public void Dispose()
@@ -76,7 +78,7 @@ namespace DragoonMayCry.Score
                 InterpolationWeight);
             Progress = (float)Math.Min(interpolatedScore / threshold , 1);
             double time = ImGui.GetTime();
-            double timeSinceLastRankChange = time - lastRankChange;
+            double timeSinceLastRankChange = time - lastRankChangeTime;
 
             if (Progress > 0.995f)
             {
@@ -85,10 +87,11 @@ namespace DragoonMayCry.Score
                     if (currentScoreRank.Rank.StyleType != StyleType.SS && currentScoreRank.Rank.StyleType != StyleType.SSS)
                     {
                         styleRankHandler.GoToNextRank(false, false);
-                        return;
                     }
+
+                    return;
                 }
-                else if(timeSinceLastRankChange > 1.5)
+                else if(timeSinceLastRankChange > Plugin.Configuration.MinTimeBetweenPromotions)
                 {
                     styleRankHandler.GoToNextRank(true, false);
                 }
@@ -101,36 +104,60 @@ namespace DragoonMayCry.Score
         private void ApplyDemotion(ScoreManager.ScoreRank currentScoreRank,
                                    double timeSinceLastRankChange)
         {
-            if (currentScoreRank.Score == 0 && !rankFloorStopwatch.IsRunning)
+            if (CanStartDemotionTimer(currentScoreRank))
             {
-                rankFloorStopwatch.Restart();
-                DemotionAlertStarted = true;
+                demotionStopwatch.Restart();
+                OnDemotionStart?.Invoke(this, EventArgs.Empty);
                 return;
             }
-            if (rankFloorStopwatch.IsRunning && currentScoreRank.Score > 0)
+            if (CanCancelDemotion(currentScoreRank))
             {
-                DemotionAlertStarted = false;
-                rankFloorStopwatch.Reset();
+                demotionStopwatch.Reset();
+                OnDemotionCanceled?.Invoke(this, EventArgs.Empty);
                 return;
             }
 
-            if (currentScoreRank.Score == 0 && timeSinceLastRankChange > 2.5  && rankFloorStopwatch.ElapsedMilliseconds > Plugin.Configuration!.TimeBeforeDemotion && !Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay)
+            if (CanApplyDemotion(currentScoreRank, timeSinceLastRankChange))
             {
                 styleRankHandler.ReturnToPreviousRank(false);
-                rankFloorStopwatch.Reset();
-                DemotionAlertStarted = false;
+                demotionStopwatch.Reset();
+                OnDemotionEnd?.Invoke(this, EventArgs.Empty);
             }
+        }
+
+        private bool CanCancelDemotion(ScoreManager.ScoreRank currentScoreRank)
+        {
+            return demotionStopwatch.IsRunning && currentScoreRank.Score > Math.Ceiling(currentScoreRank.Rank.Threshold * 0.1);
+        }
+
+        private bool CanStartDemotionTimer(ScoreManager.ScoreRank currentScoreRank)
+        {
+            return currentScoreRank.Score == 0
+                   && !demotionStopwatch.IsRunning;
+        }
+
+        private bool CanApplyDemotion(ScoreManager.ScoreRank currentScoreRank, double timeSinceLastRankChange)
+        {
+            return currentScoreRank.Score <= 0 
+                   && timeSinceLastRankChange > 4  
+                   && demotionStopwatch.ElapsedMilliseconds > Plugin.Configuration!.TimeBeforeDemotion 
+                   && !Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay;
         }
 
         private void OnRankChange(object? sender, StyleRankHandler.RankChangeData data)
         {
             interpolatedScore = 0;
-            lastRankChange = ImGui.GetTime();
+            lastRankChangeTime = ImGui.GetTime();
         }
 
         private void OnLimitBreakCast(object? sender, ActionTracker.LimitBreakEvent e)
         {
             this.isCastingLb = e.IsCasting;
+            if (demotionStopwatch.IsRunning)
+            {
+                OnDemotionCanceled?.Invoke(this, EventArgs.Empty);
+                demotionStopwatch.Reset();
+            }
         }
 
         private void OnLimitBreakCanceled(object? sender, EventArgs e)
