@@ -207,9 +207,9 @@ namespace DragoonMayCry.Score.Action
                 StartLimitBreakUse((uint)actionId);
             }
 
-            var combo = actionManager->Combo;
+            var combo = actionManager->Combo; //value is 0 when a combo is dropped
             var action = luminaActionCache.GetRow(combo.Action);
-            Service.Log.Debug($"Action {action.Name} captured actionId {actionId} action manager id {combo.Action}");
+            
             
             RegisterNewAction((uint)actionId);
         }

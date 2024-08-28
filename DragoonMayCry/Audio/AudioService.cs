@@ -26,10 +26,12 @@ namespace DragoonMayCry.Audio
             };
 
         private readonly Dictionary<SoundId, int> soundIdsNextAvailability;
+        private readonly AudioEngine audioEngine;
 
         public AudioService()
         {
             soundIdsNextAvailability = new();
+            audioEngine = new AudioEngine();
         }
 
         public void PlaySfx(SoundId key, bool force = false)
@@ -45,7 +47,7 @@ namespace DragoonMayCry.Audio
                 return;
             }
 
-            AudioEngine.PlaySfx(key, SfxPaths[key], GetSfxVolume());
+            audioEngine.PlaySfx(key, SfxPaths[key], GetSfxVolume());
 
             if (!soundIdsNextAvailability.ContainsKey(key) || force || soundIdsNextAvailability[key] == 0)
             {

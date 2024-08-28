@@ -46,7 +46,7 @@ namespace DragoonMayCry.UI
         private readonly Easing rankTransition;
         private readonly Stopwatch shakeStopwatch;
         private readonly Stopwatch demotionStopwatch;
-        private readonly float shakeDuration = 400f;
+        private readonly float shakeDuration = 300;
         private readonly float shakeIntensity = 6f;
         private readonly string gaugeDefault = "DragoonMayCry.Assets.GaugeDefault.png";
 
@@ -67,7 +67,6 @@ namespace DragoonMayCry.UI
 
             this.scoreProgressBar.DemotionCanceled += OnDemotionCanceled;
             this.scoreProgressBar.DemotionStart += OnDemotionStarted;
-            this.scoreProgressBar.DemotionApplied += OnDemotionApplied;
 
             random = new();
         }
@@ -174,7 +173,7 @@ namespace DragoonMayCry.UI
             }
         }
 
-        public void Shake()
+        private void Shake()
         {
             shakeStopwatch.Restart();
         }
@@ -207,10 +206,13 @@ namespace DragoonMayCry.UI
             
             var textureUv0 = Vector2.Zero;
             var textureUv1 = Vector2.One;
-            var alpha = demotionStopwatch.IsRunning
-                            ? GetDemotionAlpha(
-                                demotionStopwatch.ElapsedMilliseconds /1000f, demotionDuration/1000f)
-                            : 1;
+            var alpha = 1f;
+            if (demotionStopwatch.IsRunning)
+            {
+                alpha = GetDemotionAlpha(
+                    demotionStopwatch.ElapsedMilliseconds / 1000f,
+                    demotionDuration / 1000f);
+            }
             var color = new System.Numerics.Vector4(1,1,1,alpha);
 
             ImGui.SetCursorPos(pos);
@@ -310,11 +312,15 @@ namespace DragoonMayCry.UI
             }
             previousStyle = currentStyle;
             currentStyle = data.NewRank;
+            demotionStopwatch.Reset();
         }
 
         private void OnCombatChange(object send, bool enteringCombat)
         {
             isInCombat = enteringCombat;
+            rankTransition.Reset();
+            shakeStopwatch.Reset();
+            demotionStopwatch.Reset();
         }
 
         private void OnScoring(object sender, double points)
@@ -336,11 +342,6 @@ namespace DragoonMayCry.UI
         {
             demotionDuration = duration;
             demotionStopwatch.Restart();
-        }
-
-        private void OnDemotionApplied(object? sender, bool playSfx)
-        {
-            demotionStopwatch.Reset();
         }
 
         private void OnDemotionCanceled(object? sender, EventArgs e)

@@ -10,11 +10,11 @@ namespace DragoonMayCry.Audio
 {
     internal class AudioEngine
     {
-        private static readonly IDictionary<SoundId, byte> SoundState = new ConcurrentDictionary<SoundId, byte>();
+        private readonly IDictionary<SoundId, byte> soundState = new ConcurrentDictionary<SoundId, byte>();
 
         // Copied from PeepingTom plugin, by ascclemens:
         // https://git.anna.lgbt/anna/PeepingTom/src/commit/b1de54bcae64edf97c9f90614a588e64b5d0ae34/Peeping%20Tom/TargetWatcher.cs#L161
-        public static void PlaySfx(SoundId trigger, string path, float volume)
+        public void PlaySfx(SoundId trigger, string path, float volume)
         {
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
             {
@@ -49,18 +49,18 @@ namespace DragoonMayCry.Audio
                     {
                         output.Init(channel);
                         output.Play();
-                        SoundState[trigger] = 1;
+                        soundState[trigger] = 1;
 
                         while (output.PlaybackState == PlaybackState.Playing)
                         {
-                            if (!SoundState.ContainsKey(trigger))
+                            if (!soundState.ContainsKey(trigger))
                             {
                                 output.Stop();
                             }
 
                             Thread.Sleep(500);
                         }
-                        SoundState.Remove(trigger);
+                        soundState.Remove(trigger);
                     }
                     catch (Exception ex)
                     {

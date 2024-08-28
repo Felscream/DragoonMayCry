@@ -50,19 +50,17 @@ namespace DragoonMayCry.Score
         private readonly PlayerState playerState;
         private readonly StyleRankHandler rankHandler;
 
-        private const int GcdClippingRestrictionDuration = 6000; //milliseconds
-        private const int DamageInstancesToCancelOnGcdClip = 3;
+        private const int PointsReductionDuration = 7300; //milliseconds
         private bool isCastingLb;
         private Dictionary<StyleType, StyleScoring> jobScoringTable;
-        private readonly Stopwatch gcdClippingStopwatch;
-        private int damageInstancesToCancel;
+        private readonly Stopwatch pointsReductionStopwatch;
 
         public ScoreManager(StyleRankHandler styleRankHandler, PlayerActionTracker playerActionTracker)
         {
-            gcdClippingStopwatch = new Stopwatch();
+            pointsReductionStopwatch = new Stopwatch();
 
             jobScoringTable = ScoringTable.MeleeScoringTable;
-            var styleRank = styleRankHandler.CurrentStyle!.Value;
+            var styleRank = styleRankHandler.CurrentStyle.Value;
             CurrentScoreRank = new(0, styleRank, jobScoringTable[styleRank]);
 
             playerState = PlayerState.GetInstance();
@@ -100,7 +98,7 @@ namespace DragoonMayCry.Score
 
             if (CanDisableGcdClippingRestrictions())
             {
-                DisableGcdClippingRestrictions();
+                DisablePointsGainedReduction();
             }
 
             if (isCastingLb)
@@ -126,17 +124,12 @@ namespace DragoonMayCry.Score
         }
         private void AddScore(object? sender, float val)
         {
-            if (damageInstancesToCancel > 0)
-            {
-                damageInstancesToCancel--;
-                Service.Log.Info($"{damageInstancesToCancel} remaining");
-                if (CanDisableGcdClippingRestrictions())
-                {
-                    DisableGcdClippingRestrictions();
-                }
-                return;
-            }
             var points = val * CurrentScoreRank.StyleScoring.PointCoefficient;
+            if (AreGcdClippingRestrictionsActive())
+            {
+                Service.Log.Debug($"Points are reduced");
+                points *= 0.75f;
+            }
 
             CurrentScoreRank.Score += points;
             if (CurrentScoreRank.Rank == StyleType.SSS)
@@ -147,12 +140,8 @@ namespace DragoonMayCry.Score
             OnScoring?.Invoke(this, points);
         }
 
-        private bool CanDisableGcdClippingRestrictions()
-        {
-            return gcdClippingStopwatch.IsRunning &&
-                   (gcdClippingStopwatch.ElapsedMilliseconds > GcdClippingRestrictionDuration 
-                    || damageInstancesToCancel <= 0);
-        }
+        private bool CanDisableGcdClippingRestrictions() => pointsReductionStopwatch.IsRunning 
+            && pointsReductionStopwatch.ElapsedMilliseconds > PointsReductionDuration;
 
         private void OnInstanceChange(object send, bool value)
         {
@@ -166,13 +155,13 @@ namespace DragoonMayCry.Score
                 ResetScore();
             }
 
-            DisableGcdClippingRestrictions();
+            DisablePointsGainedReduction();
             isCastingLb = false;
         }
 
         private void OnLimitBreakCast(object? sender, PlayerActionTracker.LimitBreakEvent e)
         {
-            this.isCastingLb = e.IsCasting;
+            isCastingLb = e.IsCasting;
             if (!isCastingLb)
             {
                 CurrentScoreRank.Score = CurrentScoreRank.StyleScoring.Threshold;
@@ -211,42 +200,30 @@ namespace DragoonMayCry.Score
         {
             var newScore = CurrentScoreRank.Score - CurrentScoreRank.StyleScoring.Threshold * 0.3f;
             CurrentScoreRank.Score = Math.Max(newScore, 0);
-            gcdClippingStopwatch.Restart();
-            damageInstancesToCancel = DamageInstancesToCancelOnGcdClip;
-            Service.Log.Debug($"Clipping detected {damageInstancesToCancel} instances of damage will be blocked");
+            pointsReductionStopwatch.Restart();
         }
 
-        private void DisableGcdClippingRestrictions()
+        private void DisablePointsGainedReduction()
         {
-            gcdClippingStopwatch.Reset();
-            damageInstancesToCancel = 0;
+            pointsReductionStopwatch.Reset();
             Service.Log.Debug($"Clipping restrictions removed");
         }
 
         private void ResetScore()
         {
             CurrentScoreRank.Score = 0;
-            CurrentScoreRank.StyleScoring = jobScoringTable[StyleType.NoStyle];
-            isCastingLb = false;
         }
 
         private bool AreGcdClippingRestrictionsActive()
         {
-            return gcdClippingStopwatch.IsRunning &&
-                   damageInstancesToCancel > 0;
+            return pointsReductionStopwatch.IsRunning;
         }
 
         private void OnJobChange(object? sender, JobIds jobId)
         {
             jobScoringTable = GetJobScoringTable(jobId);
             ResetScore();
-            DisableGcdClippingRestrictions();
-        }
-
-        private Dictionary<StyleType, StyleScoring> GetJobScoringTable()
-        {
-            var currentJob = JobHelper.GetCurrentJob();
-            return GetJobScoringTable(currentJob);
+            DisablePointsGainedReduction();
         }
 
         private Dictionary<StyleType, StyleScoring> GetJobScoringTable(JobIds job)
@@ -268,7 +245,11 @@ namespace DragoonMayCry.Score
 
         private void OnDeath(object? sender, bool isDead)
         {
-            DisableGcdClippingRestrictions();
+            if (isDead)
+            {
+                DisablePointsGainedReduction();
+                ResetScore();
+            }
         }
     }
 }
