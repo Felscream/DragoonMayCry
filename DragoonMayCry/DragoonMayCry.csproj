@@ -2,8 +2,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="Dalamud.Plugin.Bootstrap.targets" />
 
+  <PropertyGroup Label="Target">
+      <PlatformTarget>x64</PlatformTarget>
+      <TargetFramework>net8.0-windows</TargetFramework>
+      <LangVersion>preview</LangVersion>
+      <Platforms>x64</Platforms>
+      <Configurations>Debug;Release</Configurations>
+  </PropertyGroup>
   <PropertyGroup>
-    <Version>0.0.6</Version>
+    <Version>0.1.0</Version>
     <Description>DragoonMayCry</Description>
     <PackageProjectUrl>https://github.com/Felscream/DragoonMayCry</PackageProjectUrl>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>

@@ -28,7 +28,7 @@ public unsafe class Plugin : IDalamudPlugin
     private readonly PlayerActionTracker playerActionTracker;
     private readonly StyleRankHandler styleRankHandler;
 
-    public Plugin(IDalamudPluginInterface pluginInterface)
+    public Plugin()
     {
         PluginInterface.Create<Service>();
         
