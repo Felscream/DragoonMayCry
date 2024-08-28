@@ -16,7 +16,9 @@ namespace DragoonMayCry.UI
         private readonly StyleRankUI styleRankUi;
         private readonly IDalamudPluginInterface pluginInterface;
         private readonly PlayerState playerState;
-        private Stopwatch hideRankUiStopwatch;
+        private readonly Stopwatch hideRankUiStopwatch;
+        private const float timeToResetScoreAfterCombat = 10000;
+        
         public PluginUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager)
         {
             ConfigWindow = new ConfigWindow(Plugin.Configuration!, styleRankHandler);
@@ -50,7 +52,7 @@ namespace DragoonMayCry.UI
         private void DrawUI()
         {
             if (hideRankUiStopwatch.IsRunning &&
-                hideRankUiStopwatch.ElapsedMilliseconds > Plugin.Configuration!.TimeToResetScoreAfterCombat)
+                hideRankUiStopwatch.ElapsedMilliseconds > timeToResetScoreAfterCombat)
             {
                 hideRankUiStopwatch.Stop();
             }

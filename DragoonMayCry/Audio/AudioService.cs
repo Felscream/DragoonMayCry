@@ -9,10 +9,10 @@ using Dalamud.Plugin.Ipc.Exceptions;
 
 namespace DragoonMayCry.Audio
 {
-    public static class AudioService
+    public class AudioService
     {
         
-        private static Dictionary<SoundId, string> SfxPaths =
+        private static readonly Dictionary<SoundId, string> SfxPaths =
             new Dictionary<SoundId, string>
             {
                 { SoundId.DeadWeight, GetPathToAudio("dead_weight") },
@@ -25,48 +25,51 @@ namespace DragoonMayCry.Audio
                 { SoundId.Sensational, GetPathToAudio("sensational") }
             };
 
-        private static Dictionary<SoundId, DateTime> soundIdsNextAvailability =
-            new Dictionary<SoundId, DateTime>();
+        private readonly Dictionary<SoundId, int> soundIdsNextAvailability;
 
-        private static DateTime LastPlayedSfxTime;
-        private static DateTime LastPlayedDeadWeight;
-        private static float DeadWeightCooldown = 16f;
+        public AudioService()
+        {
+            soundIdsNextAvailability = new();
+        }
 
-        public static void PlaySfx(SoundId key, bool force = false)
+        public void PlaySfx(SoundId key, bool force = false)
         {
             if (!SfxPaths.ContainsKey(key))
             {
-                Service.Log.Debug($"No sfx for {key}");
+                return;
             }
             
             if (!force && !CanPlaySfx(key))
             {
+                soundIdsNextAvailability[key] -= 1;
                 return;
             }
 
-            LastPlayedSfxTime = DateTime.Now;
-            if (key == SoundId.DeadWeight)
-            {
-                LastPlayedDeadWeight = DateTime.Now;
-            }
             AudioEngine.PlaySfx(key, SfxPaths[key], GetSfxVolume());
+
+            if (!soundIdsNextAvailability.ContainsKey(key) || force || soundIdsNextAvailability[key] == 0)
+            {
+                soundIdsNextAvailability[key] = Plugin.Configuration!.PlaySfxEveryOccurrences - 1;
+            }
         }
 
-        public static void PlaySfx(StyleType type, bool force = false)
+        public void PlaySfx(StyleType type, bool force = false)
         {
             PlaySfx(StyleTypeToSoundId(type), force);
         }
 
-        private static bool CanPlaySfx(SoundId type)
+        public void ResetSfxPlayCounter()
         {
-            float sfxCooldown = Plugin.Configuration!.AnnouncerCooldown;
-            DateTime time = DateTime.Now;
-            if (type == SoundId.DeadWeight)
+            foreach (var entry in soundIdsNextAvailability)
             {
-                var delay = Math.Max(DeadWeightCooldown, sfxCooldown);
-                return LastPlayedDeadWeight.AddSeconds(delay) < time;
+                soundIdsNextAvailability[entry.Key] = 0;
             }
-            return LastPlayedSfxTime.AddSeconds(sfxCooldown) < time;
+        }
+
+        private bool CanPlaySfx(SoundId type)
+        {
+            return !soundIdsNextAvailability.ContainsKey(type) ||
+                   soundIdsNextAvailability[type] <= 0;
         }
 
         private static string GetPathToAudio(string name)
@@ -76,7 +79,7 @@ namespace DragoonMayCry.Audio
                 $"Assets\\Audio\\{name}.wav");
         }
 
-        private static float GetSfxVolume()
+        private float GetSfxVolume()
         {
             if (Plugin.Configuration!.ApplyGameVolume && (Service.GameConfig.System.GetBool("IsSndSe") ||
                             Service.GameConfig.System.GetBool("IsSndMaster")))
@@ -93,7 +96,7 @@ namespace DragoonMayCry.Audio
             return gameVolume * (Plugin.Configuration!.SfxVolume / 100f);
         }
 
-        private static SoundId StyleTypeToSoundId(StyleType type)
+        private SoundId StyleTypeToSoundId(StyleType type)
         {
             return type switch
             {

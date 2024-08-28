@@ -46,8 +46,8 @@ public unsafe class Plugin : IDalamudPlugin
         scoreProgressBar = new(scoreManager, styleRankHandler, playerActionTracker);
         pluginUi = new(scoreProgressBar, styleRankHandler, scoreManager);
 
-        scoreProgressBar.OnDemotionApplied += styleRankHandler.OnDemotion;
-        scoreProgressBar.OnPromotion += styleRankHandler.OnPromotion;
+        scoreProgressBar.DemotionApplied += styleRankHandler.OnDemotion;
+        scoreProgressBar.Promotion += styleRankHandler.OnPromotion;
 
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {

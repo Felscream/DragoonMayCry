@@ -26,9 +26,9 @@ namespace DragoonMayCry.Score
             TankScoringTable = new Dictionary<StyleType, ScoreManager.StyleScoring>
             {
                 { StyleType.NoStyle, new ScoreManager.StyleScoring(40000, 500, 0, 1) },
-                { StyleType.D, new ScoreManager.StyleScoring(40000, 3000, 4000, 1) },
-                { StyleType.C, new ScoreManager.StyleScoring(48000, 7000, 4800, 1) },
-                { StyleType.B, new ScoreManager.StyleScoring(54000, 8000, 5400, 1) },
+                { StyleType.D, new ScoreManager.StyleScoring(50000, 3000, 4000, 1) },
+                { StyleType.C, new ScoreManager.StyleScoring(58000, 7000, 4800, 1) },
+                { StyleType.B, new ScoreManager.StyleScoring(58000, 8000, 5400, 1) },
                 { StyleType.A, new ScoreManager.StyleScoring(60000, 8000, 6000, 1) },
                 { StyleType.S, new ScoreManager.StyleScoring(60000, 10000, 6000, 0.75f) },
                 { StyleType.SS, new ScoreManager.StyleScoring(60000, 13000, 6000, 0.65f) },

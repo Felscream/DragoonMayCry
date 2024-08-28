@@ -68,10 +68,11 @@ public class ConfigWindow : Window, IDisposable
             configuration.Save();
         }
 
-        var announcerCooldown = configuration.AnnouncerCooldown;
-        if (ImGui.InputInt("Announcer cooldown (seconds)", ref announcerCooldown))
+        var announcerCooldown = configuration.PlaySfxEveryOccurrences;
+        ImGui.Text("Play each unique SFX only once every");
+        if (ImGui.SliderInt("occurrences", ref announcerCooldown, 1, 20))
         {
-            configuration.AnnouncerCooldown = announcerCooldown;
+            configuration.PlaySfxEveryOccurrences = announcerCooldown;
             configuration.Save();
         }
     }

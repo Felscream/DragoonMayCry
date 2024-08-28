@@ -41,10 +41,11 @@ namespace DragoonMayCry.UI
         private StyleType currentStyle = StyleType.NoStyle;
         private StyleType previousStyle = StyleType.NoStyle;
         private bool isInCombat;
-        private bool demotionInProgress;
+        private float demotionDuration = 1f;
 
         private readonly Easing rankTransition;
         private readonly Stopwatch shakeStopwatch;
+        private readonly Stopwatch demotionStopwatch;
         private readonly float shakeDuration = 400f;
         private readonly float shakeIntensity = 6f;
         private readonly string gaugeDefault = "DragoonMayCry.Assets.GaugeDefault.png";
@@ -62,19 +63,17 @@ namespace DragoonMayCry.UI
 
             rankTransition = new OutCubic(new(1500000));
             shakeStopwatch = new Stopwatch();
+            demotionStopwatch = new Stopwatch();
 
-            this.scoreProgressBar.OnDemotionCanceled += OnDemotionCanceled;
-            this.scoreProgressBar.OnDemotionStart += OnDemotionStarted;
-            this.scoreProgressBar.OnDemotionApplied += OnDemotionApplied;
+            this.scoreProgressBar.DemotionCanceled += OnDemotionCanceled;
+            this.scoreProgressBar.DemotionStart += OnDemotionStarted;
+            this.scoreProgressBar.DemotionApplied += OnDemotionApplied;
 
             random = new();
         }
 
         public void Draw() {
-            if (shakeStopwatch.IsRunning && shakeStopwatch.ElapsedMilliseconds > shakeDuration)
-            {
-                shakeStopwatch.Reset();
-            }
+            
 
             var windowFlags = Plugin.Configuration!.StyleRankUiConfiguration.LockScoreWindow ?
                                   ImGuiWindowFlags.NoTitleBar |
@@ -141,6 +140,16 @@ namespace DragoonMayCry.UI
                     DrawScore();
                 }
             }
+
+            if (shakeStopwatch.IsRunning && shakeStopwatch.ElapsedMilliseconds > shakeDuration)
+            {
+                shakeStopwatch.Reset();
+            }
+
+            if (demotionStopwatch.IsRunning && demotionStopwatch.ElapsedMilliseconds > demotionDuration)
+            {
+                demotionStopwatch.Reset();
+            }
         }
 
         private void DrawMock(ImGuiWindowFlags windowFlags)
@@ -198,9 +207,9 @@ namespace DragoonMayCry.UI
             
             var textureUv0 = Vector2.Zero;
             var textureUv1 = Vector2.One;
-            var alpha = demotionInProgress
-                            ? AlphaModificationFunction(
-                                (float)ImGui.GetTime())
+            var alpha = demotionStopwatch.IsRunning
+                            ? GetDemotionAlpha(
+                                demotionStopwatch.ElapsedMilliseconds /1000f, demotionDuration/1000f)
                             : 1;
             var color = new System.Numerics.Vector4(1,1,1,alpha);
 
@@ -313,9 +322,9 @@ namespace DragoonMayCry.UI
             Shake();
         }
 
-        private static float AlphaModificationFunction(float t)
+        private static float GetDemotionAlpha(float t, float duration)
         {
-            return (float)((Math.Sin(3*Math.PI * t + Math.PI / 2) + 1) / 4) + 0.5f;
+            return Math.Clamp(1 - (1 / duration) * t, 0, 1);
         }
 
         private bool CanRetrieveStyleDisplay(StyleType type)
@@ -323,8 +332,20 @@ namespace DragoonMayCry.UI
             return styleUis.ContainsKey(type);
         }
 
-        private void OnDemotionStarted(object? sender, EventArgs e) => demotionInProgress = true;
-        private void OnDemotionApplied(object? sender, bool playSfx) => demotionInProgress = false;
-        private void OnDemotionCanceled(object? sender, EventArgs e) => demotionInProgress = false;
+        private void OnDemotionStarted(object? sender, float duration)
+        {
+            demotionDuration = duration;
+            demotionStopwatch.Restart();
+        }
+
+        private void OnDemotionApplied(object? sender, bool playSfx)
+        {
+            demotionStopwatch.Reset();
+        }
+
+        private void OnDemotionCanceled(object? sender, EventArgs e)
+        {
+            demotionStopwatch.Reset();
+        }
     }
 }
