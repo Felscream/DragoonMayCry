@@ -61,18 +61,15 @@ namespace DragoonMayCry.Score
         {
             gcdClippingStopwatch = new Stopwatch();
 
+            jobScoringTable = ScoringTable.MeleeScoringTable;
             var styleRank = styleRankHandler.CurrentStyle!.Value;
-
-            
+            CurrentScoreRank = new(0, styleRank, jobScoringTable[styleRank]);
 
             playerState = PlayerState.GetInstance();
             playerState.RegisterJobChangeHandler(((sender, ids) => ResetScore()));
             playerState.RegisterInstanceChangeHandler(OnInstanceChange!);
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             playerState.RegisterJobChangeHandler(OnJobChange);
-
-            jobScoringTable = GetJobScoringTable();
-            CurrentScoreRank = new(0, styleRank, jobScoringTable[styleRank]);
 
             this.rankHandler = styleRankHandler;
             this.rankHandler.StyleRankChange += OnRankChange!;

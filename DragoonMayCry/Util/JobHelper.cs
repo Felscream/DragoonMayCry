@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.JobGauge.Types;
+using DragoonMayCry.State;
 using FFXIVClientStructs.Havok.Animation.Rig;
 using static FFXIVClientStructs.FFXIV.Client.Game.Character.VfxContainer;
 
@@ -37,12 +38,12 @@ namespace DragoonMayCry.Util
 
         public static JobIds GetCurrentJob()
         {
-            if (Service.ClientState.LocalPlayer == null)
+            if (PlayerState.GetInstance().Player == null)
             {
                 return JobIds.OTHER;
             }
 
-            return IdToJob(Service.ClientState.LocalPlayer.ClassJob.Id);
+            return IdToJob(PlayerState.GetInstance().Player!.ClassJob.Id);
         }
 
         public static bool IsTank(JobIds job)
