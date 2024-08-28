@@ -92,6 +92,7 @@ namespace DragoonMayCry.Score.Action
 
         private Hook<OnCastDelegate>? onCastHook;
 
+        private readonly State.ActionManager* actionManager;
         private readonly PlayerState playerState;
         private ExcelSheet<LuminaAction>? sheet;
 
@@ -125,7 +126,8 @@ namespace DragoonMayCry.Score.Action
             playerState = PlayerState.GetInstance();
             combatStopwatch = CombatStopwatch.GetInstance();
             limitBreakStopwatch = new Stopwatch();
-
+            actionManager =
+                (State.ActionManager*)FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
             sheet = Service.DataManager.GetExcelSheet<LuminaAction>();
             try
             {
@@ -192,9 +194,8 @@ namespace DragoonMayCry.Score.Action
             }
 
             var actionId = Marshal.ReadInt32(effectHeader, 0x8);
-            
             var type = TypeForActionId((uint)actionId);
-            if (type == PlayerActionType.Other)
+            if (type == PlayerActionType.Other || actionId == 7) // 7 -> auto attack
             {
                 return;
             }
@@ -203,6 +204,10 @@ namespace DragoonMayCry.Score.Action
             {
                 StartLimitBreakUse((uint)actionId);
             }
+
+            var combo = actionManager->Combo;
+            var action = sheet.GetRow(combo.Action);
+            Service.Log.Debug($"Action {action.Name} captured actionId {actionId} action manager id {combo.Action}");
             
             RegisterNewAction((uint)actionId);
         }
@@ -408,8 +413,8 @@ namespace DragoonMayCry.Score.Action
 
         private unsafe void DetectClipping()
         {
-            var animationLock = Plugin.ActionManager->animationLock;
-            if (lastDetectedClip == Plugin.ActionManager->currentSequence || Plugin.ActionManager->isGCDRecastActive || animationLock <= 0)
+            var animationLock = actionManager->animationLock;
+            if (lastDetectedClip == actionManager->currentSequence || actionManager->isGCDRecastActive || animationLock <= 0)
             {
                 return;
             }
@@ -428,7 +433,7 @@ namespace DragoonMayCry.Score.Action
                 }
             }
 
-            lastDetectedClip = Plugin.ActionManager->currentSequence;
+            lastDetectedClip = actionManager->currentSequence;
         }
 
         private unsafe void DetectWastedGCD()
@@ -438,9 +443,9 @@ namespace DragoonMayCry.Score.Action
                 // do not track dropped GCDs if the LB is being cast
                 return;
             }
-            if (!Plugin.ActionManager->isGCDRecastActive && !Plugin.ActionManager->isQueued)
+            if (!actionManager->isGCDRecastActive && !actionManager->isQueued)
             {
-                if (Plugin.ActionManager->animationLock > 0) return;
+                if (actionManager->animationLock > 0) return;
                 currentWastedGcd += ImGui.GetIO().DeltaTime;
                 if (!isGcdDropped && currentWastedGcd > GcdDropThreshold)
                 {

@@ -38,12 +38,13 @@ namespace DragoonMayCry.Util
 
         public static JobIds GetCurrentJob()
         {
-            if (PlayerState.GetInstance().Player == null)
+            var playerState = PlayerState.GetInstance();
+            if (playerState.Player == null)
             {
                 return JobIds.OTHER;
             }
 
-            return IdToJob(PlayerState.GetInstance().Player!.ClassJob.Id);
+            return IdToJob(playerState.Player.ClassJob.Id);
         }
 
         public static bool IsTank(JobIds job)

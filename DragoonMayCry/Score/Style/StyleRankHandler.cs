@@ -48,7 +48,7 @@ namespace DragoonMayCry.Score.Style
             audioService = new AudioService();
             var playerState = PlayerState.GetInstance();
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
-
+            playerState.RegisterDeathStateChangeHandler(OnDeath);
             playerActionTracker.OnGcdDropped += OnGcdDropped;
             playerActionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
             playerActionTracker.OnLimitBreak += OnLimitBreak;
@@ -174,6 +174,14 @@ namespace DragoonMayCry.Score.Style
         private void OnLimitBreakCanceled(object? sender, EventArgs args)
         {
             ForceRankTo(StyleType.D, true);
+        }
+
+        private void OnDeath(object? sender, bool isDead)
+        {
+            if (isDead)
+            {
+                ForceRankTo(StyleType.D, true);
+            }
         }
 
         private void OnLimitBreak(

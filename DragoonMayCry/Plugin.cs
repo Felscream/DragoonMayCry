@@ -17,7 +17,6 @@ namespace DragoonMayCry;
 public unsafe class Plugin : IDalamudPlugin
 {
     [PluginService] public static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
-    public static ActionManager* ActionManager { get; private set; }
     public static DmcConfiguration? Configuration { get; private set; }
 
     private const string CommandName = "/dmc";
@@ -32,8 +31,7 @@ public unsafe class Plugin : IDalamudPlugin
     public Plugin(IDalamudPluginInterface pluginInterface)
     {
         PluginInterface.Create<Service>();
-        ActionManager =
-            (ActionManager*)FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
+        
         
         playerState = PlayerState.GetInstance();
         Configuration = PluginInterface.GetPluginConfig() as DmcConfiguration ?? new DmcConfiguration();
