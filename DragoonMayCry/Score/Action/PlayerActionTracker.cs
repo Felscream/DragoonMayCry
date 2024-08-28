@@ -207,11 +207,11 @@ namespace DragoonMayCry.Score.Action
                 StartLimitBreakUse((uint)actionId);
             }
 
-            var combo = actionManager->Combo; //value is 0 when a combo is dropped
+            /*var combo = actionManager->Combo; //value is 0 when a combo is dropped
             var action = luminaActionCache.GetRow(combo.Action);
             
             
-            RegisterNewAction((uint)actionId);
+            RegisterNewAction((uint)actionId);*/
         }
 
         private PlayerActionType TypeForActionId(uint actionId)
@@ -311,8 +311,6 @@ namespace DragoonMayCry.Score.Action
                 luminaAction.PreservesCombo, combatStopwatch.TimeInCombat(), duration);
             Service.Log.Warning($"Registering new action");
             Service.Log.Warning($"{luminaAction.Name} type {type} has combo {luminaAction.ActionCombo?.Value != null && luminaAction.ActionCombo?.Value.RowId != 0}");
-            
-            
         }
 
         private unsafe float GetGcdTime(uint actionId)
