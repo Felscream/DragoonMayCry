@@ -70,6 +70,7 @@ namespace DragoonMayCry.Score
             playerState.RegisterInstanceChangeHandler(OnInstanceChange!);
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             playerState.RegisterJobChangeHandler(OnJobChange);
+            playerState.RegisterDeathStateChangeHandler(OnDeath);
 
             this.rankHandler = styleRankHandler;
             this.rankHandler.StyleRankChange += OnRankChange!;
@@ -263,6 +264,11 @@ namespace DragoonMayCry.Score
             }
             Service.Log.Debug($"Setting Melee scoring table");
             return ScoringTable.MeleeScoringTable;
+        }
+
+        private void OnDeath(object? sender, bool isDead)
+        {
+            DisableGcdClippingRestrictions();
         }
     }
 }

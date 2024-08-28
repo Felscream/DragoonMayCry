@@ -10,6 +10,7 @@ using DragoonMayCry.Util;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using ImGuiNET;
+using KamiLib.Caching;
 using Lumina.Excel;
 using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
 using LuminaAction = Lumina.Excel.GeneratedSheets.Action;
@@ -94,7 +95,7 @@ namespace DragoonMayCry.Score.Action
 
         private readonly State.ActionManager* actionManager;
         private readonly PlayerState playerState;
-        private ExcelSheet<LuminaAction>? sheet;
+        private LuminaCache<LuminaAction> luminaActionCache;
 
         private CombatStopwatch combatStopwatch;
 
@@ -123,12 +124,13 @@ namespace DragoonMayCry.Score.Action
             };
         public PlayerActionTracker()
         {
+            luminaActionCache = LuminaCache<LuminaAction>.Instance;
             playerState = PlayerState.GetInstance();
             combatStopwatch = CombatStopwatch.GetInstance();
             limitBreakStopwatch = new Stopwatch();
             actionManager =
                 (State.ActionManager*)FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
-            sheet = Service.DataManager.GetExcelSheet<LuminaAction>();
+            
             try
             {
                 onActionUsedHook = Service.Hook.HookFromSignature<OnActionUsedDelegate>("40 ?? 56 57 41 ?? 41 ?? 41 ?? 48 ?? ?? ?? ?? ?? ?? ?? 48", OnActionUsed);
@@ -206,7 +208,7 @@ namespace DragoonMayCry.Score.Action
             }
 
             var combo = actionManager->Combo;
-            var action = sheet.GetRow(combo.Action);
+            var action = luminaActionCache.GetRow(combo.Action);
             Service.Log.Debug($"Action {action.Name} captured actionId {actionId} action manager id {combo.Action}");
             
             RegisterNewAction((uint)actionId);
@@ -214,7 +216,7 @@ namespace DragoonMayCry.Score.Action
 
         private PlayerActionType TypeForActionId(uint actionId)
         {
-            var action = sheet?.GetRow(actionId);
+            var action = luminaActionCache.GetRow(actionId);
             if (action == null)
             {
                 return PlayerActionType.Other;
@@ -288,11 +290,7 @@ namespace DragoonMayCry.Score.Action
 
         private void RegisterNewAction(uint actionId)
         {
-            if (sheet == null)
-            {
-                return;
-            }
-            var luminaAction = sheet.GetRow(actionId);
+            var luminaAction = luminaActionCache.GetRow(actionId);
             if (luminaAction == null || !luminaAction.IsPlayerAction)
             {
                 return;
@@ -404,8 +402,8 @@ namespace DragoonMayCry.Score.Action
             // the +3 is just to give enough time to register the gcd clipping just after
             var gracePeriod = isTankLb ? tankLimitBreakDelays[actionId] : castTime + 3f;
 
-            var luminaAction = sheet?.GetRow(actionId);
-            limitBreakCast = new LimitBreak(gracePeriod, isTankLb, luminaAction?.Name!);
+            var action = luminaActionCache?.GetRow(actionId);
+            limitBreakCast = new LimitBreak(gracePeriod, isTankLb, action?.Name!);
             limitBreakStopwatch.Restart();
             
             OnLimitBreak?.Invoke(this, new LimitBreakEvent(isTankLb, true));
