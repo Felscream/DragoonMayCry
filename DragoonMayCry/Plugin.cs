@@ -22,14 +22,12 @@ public unsafe class Plugin : IDalamudPlugin
 
     private const string CommandName = "/dmc";
 
-
-
     private readonly ScoreManager scoreManager;
     private readonly PluginUI pluginUi;
     private readonly PlayerState playerState;
     private readonly ScoreProgressBar scoreProgressBar;
     private readonly PlayerActionTracker playerActionTracker;
-    private StyleRankHandler styleRankHandler;
+    private readonly StyleRankHandler styleRankHandler;
 
     public Plugin(IDalamudPluginInterface pluginInterface)
     {
@@ -51,7 +49,7 @@ public unsafe class Plugin : IDalamudPlugin
 
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
-            HelpMessage = "Greed all the way"
+            HelpMessage = "opens configuration menu"
         });
     }
 
@@ -62,24 +60,22 @@ public unsafe class Plugin : IDalamudPlugin
                && playerState.IsInCombat
                && (playerState.IsInsideInstance ||
                    Configuration!.ActiveOutsideInstance);
-
     }
 
     public void Dispose()
     {
-        pluginUi?.Dispose();
-        playerState.Dispose();
         scoreProgressBar.Dispose();
         playerActionTracker.Dispose();
-        scoreManager?.Dispose();
-
+        scoreManager.Dispose();
+        playerState.Dispose();
+        pluginUi.Dispose();
         Service.CommandManager.RemoveHandler(CommandName);
     }
 
     private void OnCommand(string command, string args)
     {
         // in response to the slash command, just toggle the display status of our main ui
-        pluginUi?.ToggleConfigUI();
+        pluginUi.ToggleConfigUI();
     }
 
     
