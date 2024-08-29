@@ -5,6 +5,7 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Audio;
 using DragoonMayCry.Configuration;
+using DragoonMayCry.Data;
 using DragoonMayCry.Score;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Style;
@@ -27,13 +28,15 @@ public unsafe class Plugin : IDalamudPlugin
     private readonly ScoreProgressBar scoreProgressBar;
     private readonly PlayerActionTracker playerActionTracker;
     private readonly StyleRankHandler styleRankHandler;
+    private static bool IsCombatJob = false;
 
     public Plugin()
     {
         PluginInterface.Create<Service>();
         
-        
         playerState = PlayerState.GetInstance();
+        playerState.RegisterJobChangeHandler(OnJobChange);
+
         Configuration = PluginInterface.GetPluginConfig() as DmcConfiguration ?? new DmcConfiguration();
         playerActionTracker = new();
 
@@ -44,7 +47,7 @@ public unsafe class Plugin : IDalamudPlugin
 
         scoreProgressBar.DemotionApplied += styleRankHandler.OnDemotion;
         scoreProgressBar.Promotion += styleRankHandler.OnPromotion;
-
+        
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
             HelpMessage = "opens configuration menu"
@@ -54,7 +57,7 @@ public unsafe class Plugin : IDalamudPlugin
     public static bool CanRunDmc()
     {
         var playerState = PlayerState.GetInstance();
-        return JobHelper.IsCombatJob()
+        return IsCombatJob
                && playerState.IsInCombat
                && (playerState.IsInsideInstance ||
                    Configuration!.ActiveOutsideInstance);
@@ -76,5 +79,9 @@ public unsafe class Plugin : IDalamudPlugin
         pluginUi.ToggleConfigUI();
     }
 
+    private void OnJobChange(object? sender, JobIds job)
+    {
+        IsCombatJob = playerState.IsCombatJob();
+    }
     
 }

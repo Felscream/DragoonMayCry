@@ -28,13 +28,12 @@ namespace DragoonMayCry.State
         private static PlayerState? Instance;
         private PlayerState()
         {
-            Service.Framework.Update += Update;
             inCombatStateTracker = new();
             onDeathStateTracker = new();
             onEnteringInstanceStateTracker = new();
             loginStateTracker = new();
             jobChangeTracker = new();
-            
+            Service.Framework.Update += Update;
         }
 
         public static PlayerState GetInstance()
@@ -49,7 +48,7 @@ namespace DragoonMayCry.State
 
         public void Update(IFramework framework)
         {
-            if (!JobHelper.IsCombatJob())
+            if (!IsCombatJob())
             {
                 return;
             }
@@ -83,6 +82,26 @@ namespace DragoonMayCry.State
         public void RegisterJobChangeHandler(EventHandler<JobIds> onJobChange)
         {
             jobChangeTracker.OnChange += onJobChange;
+        }
+
+        public JobIds GetCurrentJob()
+        {
+            if (Player == null)
+            {
+                return JobIds.OTHER;
+            }
+
+            return JobHelper.IdToJob(Player.ClassJob.Id);
+        }
+
+        public bool IsTank()
+        {
+            return JobHelper.IsTank(GetCurrentJob());
+        }
+
+        public bool IsCombatJob()
+        {
+            return JobHelper.IsCombatJob(GetCurrentJob());
         }
 
         public void Dispose()

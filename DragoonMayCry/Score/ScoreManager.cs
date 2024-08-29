@@ -233,7 +233,7 @@ namespace DragoonMayCry.Score
 
         private Dictionary<StyleType, StyleScoring> GetJobScoringTable()
         {
-            var job = JobHelper.GetCurrentJob();
+            var job = playerState.GetCurrentJob();
             var ilvl = itemLevelCalculator.CalculateCurrentItemLevel();
             if (JobHelper.IsTank(job))
             {

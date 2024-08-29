@@ -1,6 +1,7 @@
 using DragoonMayCry.Data;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,7 +14,6 @@ namespace DragoonMayCry.Util
 {
     public class JobHelper
     {
-        
         public static JobIds IdToJob(uint job) => job < 19 ? JobIds.OTHER : (JobIds)job;
 
         private static readonly ISet<JobIds> Tanks = new HashSet<JobIds>
@@ -36,25 +36,9 @@ namespace DragoonMayCry.Util
             JobIds.RDM, JobIds.SMN
         };
 
-        public static JobIds GetCurrentJob()
-        {
-            var playerState = PlayerState.GetInstance();
-            if (playerState.Player == null)
-            {
-                return JobIds.OTHER;
-            }
-
-            return IdToJob(playerState.Player.ClassJob.Id);
-        }
-
         public static bool IsTank(JobIds job)
         {
             return Tanks.Contains(job);
-        }
-
-        public static bool IsTank()
-        {
-            return IsTank(GetCurrentJob());
         }
 
         public static bool IsHealer(JobIds job)
@@ -89,11 +73,6 @@ namespace DragoonMayCry.Util
         public static bool IsCombatJob(JobIds job)
         {
             return job != JobIds.OTHER;
-        }
-
-        public static bool IsCombatJob()
-        {
-            return IsCombatJob(GetCurrentJob());
         }
     }
 }

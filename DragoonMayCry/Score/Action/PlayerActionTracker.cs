@@ -391,7 +391,7 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-            var isTankLb = JobHelper.IsTank();
+            var isTankLb = playerState.IsTank();
             var castTime = GetCastTime(actionId);
 
             // the +3 is just to give enough time to register the gcd clipping just after
