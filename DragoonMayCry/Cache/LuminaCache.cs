@@ -6,7 +6,8 @@ using Dalamud.Game;
 using DragoonMayCry;
 using Lumina.Excel;
 
-namespace KamiLib.Caching;
+namespace DragoonMayCry.Cache;
+//From KaminaLib
 
 public class LuminaCache<T> : IEnumerable<T> where T : ExcelRow
 {

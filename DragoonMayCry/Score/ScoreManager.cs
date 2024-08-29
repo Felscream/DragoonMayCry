@@ -8,11 +8,12 @@ using DragoonMayCry.Data;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Util;
 using DragoonMayCry.Score.Style;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using static DragoonMayCry.Score.Style.StyleRankHandler;
 
 namespace DragoonMayCry.Score
 {
-    public class ScoreManager : IDisposable
+    public unsafe class ScoreManager : IDisposable
 
     {
         public class ScoreRank
@@ -49,6 +50,7 @@ namespace DragoonMayCry.Score
         public ScoreRank CurrentScoreRank { get; private set; }
         private readonly PlayerState playerState;
         private readonly StyleRankHandler rankHandler;
+        private readonly ItemLevelCalculator itemLevelCalculator;
 
         private const int PointsReductionDuration = 7300; //milliseconds
         private bool isCastingLb;
@@ -59,16 +61,14 @@ namespace DragoonMayCry.Score
         {
             pointsReductionStopwatch = new Stopwatch();
 
-            jobScoringTable = ScoringTable.MeleeScoringTable;
-            var styleRank = styleRankHandler.CurrentStyle.Value;
-            CurrentScoreRank = new(0, styleRank, jobScoringTable[styleRank]);
-
             playerState = PlayerState.GetInstance();
             playerState.RegisterJobChangeHandler(((sender, ids) => ResetScore()));
             playerState.RegisterInstanceChangeHandler(OnInstanceChange!);
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             playerState.RegisterJobChangeHandler(OnJobChange);
             playerState.RegisterDeathStateChangeHandler(OnDeath);
+
+            itemLevelCalculator = new ItemLevelCalculator();
 
             this.rankHandler = styleRankHandler;
             this.rankHandler.StyleRankChange += OnRankChange!;
@@ -80,6 +80,11 @@ namespace DragoonMayCry.Score
 
             Service.Framework.Update += UpdateScore;
             Service.ClientState.Logout += ResetScore;
+
+            jobScoringTable = ScoringTable.DefaultScoringTable;
+            var styleRank = styleRankHandler.CurrentStyle.Value;
+            CurrentScoreRank = new(0, styleRank, jobScoringTable[styleRank]);
+
             ResetScore();
         }
 
@@ -127,7 +132,6 @@ namespace DragoonMayCry.Score
             var points = val * CurrentScoreRank.StyleScoring.PointCoefficient;
             if (AreGcdClippingRestrictionsActive())
             {
-                Service.Log.Debug($"Points are reduced");
                 points *= 0.75f;
             }
 
@@ -146,12 +150,15 @@ namespace DragoonMayCry.Score
         private void OnInstanceChange(object send, bool value)
         {
             ResetScore();
+            Service.Log.Debug($"{itemLevelCalculator.CalculateCurrentItemLevel()}");
         }
 
         private void OnCombatChange(object send, bool enteringCombat)
         {
             if(enteringCombat)
             {
+                //jobScoringTable = GetJobScoringTable();
+                jobScoringTable = ScoringTable.DefaultScoringTable;
                 ResetScore();
             }
 
@@ -206,7 +213,6 @@ namespace DragoonMayCry.Score
         private void DisablePointsGainedReduction()
         {
             pointsReductionStopwatch.Reset();
-            Service.Log.Debug($"Clipping restrictions removed");
         }
 
         private void ResetScore()
@@ -221,26 +227,42 @@ namespace DragoonMayCry.Score
 
         private void OnJobChange(object? sender, JobIds jobId)
         {
-            jobScoringTable = GetJobScoringTable(jobId);
             ResetScore();
             DisablePointsGainedReduction();
         }
 
-        private Dictionary<StyleType, StyleScoring> GetJobScoringTable(JobIds job)
+        private Dictionary<StyleType, StyleScoring> GetJobScoringTable()
         {
+            var job = JobHelper.GetCurrentJob();
+            var ilvl = itemLevelCalculator.CalculateCurrentItemLevel();
             if (JobHelper.IsTank(job))
             {
                 Service.Log.Debug($"Setting tank scoring table");
-                return ScoringTable.TankScoringTable;
+                return ScoringTable.GenerateTankScoring(ilvl);
             }
 
             if (JobHelper.IsHealer(job))
             {
                 Service.Log.Debug($"Setting healer scoring table");
-                return ScoringTable.HealerScoringTable;
+                return ScoringTable.GenerateHealerScoring(ilvl);
             }
+
+            //BLM and PIC damage output comparable to melee
+            //MCH raw damage output comparable to casters
+            if ((JobHelper.IsCaster(job) || job == JobIds.MCH) && job != JobIds.BLM && job != JobIds.PCT) 
+            {
+                Service.Log.Debug($"Setting Caster scoring table");
+                return ScoringTable.GenerateCasterScoring(ilvl);
+            }
+
+            if (JobHelper.IsPhysRange(job))
+            {
+                Service.Log.Debug($"Setting Phys Range scoring table");
+                return ScoringTable.GeneratePhysRangeScoring(ilvl);
+            }
+
             Service.Log.Debug($"Setting Melee scoring table");
-            return ScoringTable.MeleeScoringTable;
+            return ScoringTable.GenerateMeleeScoring(ilvl);
         }
 
         private void OnDeath(object? sender, bool isDead)

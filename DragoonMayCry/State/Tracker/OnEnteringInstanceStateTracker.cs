@@ -15,6 +15,7 @@ namespace DragoonMayCry.State.Tracker
             {
                 Service.Log.Debug("Player entered instance");
                 OnChange?.Invoke(this, CurrentValue);
+                
             }
             else if (!CurrentValue && LastValue)
             {

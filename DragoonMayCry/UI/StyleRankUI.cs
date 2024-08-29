@@ -232,7 +232,7 @@ namespace DragoonMayCry.UI
                     new Vector2(lerpedCoordinates, lerpedCoordinates);
 
                 var intensity =
-                    CustomEasing.InCube(scoreProgressBar.Progress) * 1.5f;
+                    MathFunctionsUtils.InCube(scoreProgressBar.Progress) * 1.5f;
                 if (shakeStopwatch.IsRunning)
                 {
                     intensity = shakeIntensity;

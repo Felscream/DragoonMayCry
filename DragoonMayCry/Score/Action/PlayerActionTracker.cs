@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Dalamud.Game.Gui.FlyText;
+using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.State;
@@ -10,7 +11,7 @@ using DragoonMayCry.Util;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using ImGuiNET;
-using KamiLib.Caching;
+using DragoonMayCry.Cache;
 using Lumina.Excel;
 using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
 using LuminaAction = Lumina.Excel.GeneratedSheets.Action;
@@ -130,7 +131,7 @@ namespace DragoonMayCry.Score.Action
             limitBreakStopwatch = new Stopwatch();
             actionManager =
                 (State.ActionManager*)FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
-            
+            Service.FlyText.FlyTextCreated += OnFlyText;
             try
             {
                 onActionUsedHook = Service.Hook.HookFromSignature<OnActionUsedDelegate>("40 ?? 56 57 41 ?? 41 ?? 41 ?? 48 ?? ?? ?? ?? ?? ?? ?? 48", OnActionUsed);
@@ -140,10 +141,6 @@ namespace DragoonMayCry.Score.Action
                 
 
                 onCastHook = Service.Hook.HookFromSignature<OnCastDelegate>("40 56 41 56 48 81 EC ?? ?? ?? ?? 48 8B F2", OnCast);
-                
-
-                var addFlyTextAddress = Service.Scanner.ScanText("E8 ?? ?? ?? ?? FF C7 41 D1 C7");
-                addFlyTextHook = Service.Hook.HookFromAddress<AddFlyTextDelegate>(addFlyTextAddress, AddFlyTextDetour);
             }
             catch (Exception e)
             {
@@ -446,7 +443,6 @@ namespace DragoonMayCry.Score.Action
                 if (!isGcdDropped && currentWastedGcd > GcdDropThreshold)
                 {
                     isGcdDropped = true;
-                    Service.Log.Debug($"GCD dropped");
                     OnGcdDropped?.Invoke(this, EventArgs.Empty);
                 }
             }
@@ -468,98 +464,59 @@ namespace DragoonMayCry.Score.Action
             }
         }
 
-        private unsafe void AddFlyTextDetour(
-            IntPtr addonFlyText,
-            uint actorIndex,
-            uint messageMax,
-            IntPtr numbers,
-            uint offsetNum,
-            uint offsetNumMax,
-            IntPtr strings,
-            uint offsetStr,
-            uint offsetStrMax,
-            int unknown)
+        private unsafe void OnFlyText(
+            ref FlyTextKind kind,
+            ref int val1,
+            ref int val2,
+            ref SeString text1,
+            ref SeString text2,
+            ref uint color,
+            ref uint icon,
+            ref uint damageTypeIcon,
+            ref float yOffset,
+            ref bool handled)
         {
-            addFlyTextHook?.Original(
-                addonFlyText,
-                actorIndex,
-                messageMax,
-                numbers,
-                offsetNum,
-                offsetNumMax,
-                strings,
-                offsetStr,
-                offsetStrMax,
-                unknown);
+            
             if (!Plugin.CanRunDmc())
             {
                 return;
             }
-            try
             {
-                // Known valid flytext region within the atk arrays
-                // actual index
-                var strIndex = 27;
-                var numIndex = 30;
-                var atkArrayDataHolder = ((UIModule*)Service.GameGui.GetUIModule())->GetRaptureAtkModule()->AtkModule.AtkArrayDataHolder;
+                var damage = val1;
+                var actionName = text1.ToString();
 
-                try
+
+                if (actionName == null || text2 == null)
                 {
-                    var strArray = atkArrayDataHolder._StringArrays[strIndex];
-                    var flyText1Ptr = strArray->StringArray[offsetStr];
-                    if (flyText1Ptr == null || (nint)flyText1Ptr == IntPtr.Zero)
-                    {
-                        return;
-                    }
-                    var numArray = atkArrayDataHolder._NumberArrays[numIndex];
-                    var kind = numArray->IntArray[offsetNum + 1];
-                    var damage = numArray->IntArray[offsetNum + 2];
-                    var actionName = Marshal.PtrToStringUTF8((nint)flyText1Ptr);
-                    var flyText2Ptr = strArray->StringArray[offsetStr + 1];
-                    var text2 = Marshal.PtrToStringUTF8((nint)flyText2Ptr);
+                    return;
+                }
+                if (actionName.EndsWith("\\u00A7") && actionName.Length >= 1)
+                {
+                    return;
+                }
 
-
-                    if (actionName == null || text2 == null)
-                    {
+                // TODO Some DoTs deal no damage on application,
+                // will have to figure out what to do about that
+                if (actionName.StartsWith('+'))
+                {
+                    actionName = actionName.Substring(2);
+                }
+                
+                if (!validTextKind.Contains(kind) && 
+                    (limitBreakCast == null || limitBreakCast.Name != actionName))
+                {
                         return;
-                    }
-                    if (actionName.EndsWith("\\u00A7") && actionName.Length >= 1)
-                    {
-                        return;
-                    }
-
-                    FlyTextKind flyKind = (FlyTextKind)kind;
-                    // TODO Some DoTs deal no damage on application,
-                    // will have to figure out what to do about that
-                    if (actionName.StartsWith('+'))
-                    {
-                        actionName = actionName.Substring(2);
-                    }
                     
-                    if (!validTextKind.Contains(flyKind) && 
-                        (limitBreakCast == null || limitBreakCast.Name != actionName))
-                    {
-                            return;
-                        
-                    }
+                }
 
-                    if (limitBreakCast != null && actionName == limitBreakCast.Name)
-                    {
-                        OnLimitBreakEffect?.Invoke(this, EventArgs.Empty);
-                    }
-                    else
-                    {
-                        OnFlyTextCreation?.Invoke(this, damage);
-                    }
-                }
-                catch (Exception e)
+                if (limitBreakCast != null && actionName == limitBreakCast.Name)
                 {
-                    Service.Log.Error(e, "Skipping");
+                    OnLimitBreakEffect?.Invoke(this, EventArgs.Empty);
                 }
-            }
-            catch (Exception e)
-            {
-                Service.Log.Error(e, "An error has occurred in DragoonMayCry");
+                else
+                {
+                    OnFlyTextCreation?.Invoke(this, damage);
+                }
             }
         }
     }

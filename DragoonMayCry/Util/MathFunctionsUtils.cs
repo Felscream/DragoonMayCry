@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DragoonMayCry.Util
 {
-    public class CustomEasing
+    public class MathFunctionsUtils
     {
         public static float InCube(float x)
         {

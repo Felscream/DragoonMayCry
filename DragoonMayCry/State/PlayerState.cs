@@ -5,6 +5,7 @@ using DragoonMayCry.State.Tracker;
 using System;
 using System.Linq;
 using DragoonMayCry.Data;
+using DragoonMayCry.Util;
 
 namespace DragoonMayCry.State
 {
@@ -33,6 +34,7 @@ namespace DragoonMayCry.State
             onEnteringInstanceStateTracker = new();
             loginStateTracker = new();
             jobChangeTracker = new();
+            
         }
 
         public static PlayerState GetInstance()
@@ -47,6 +49,10 @@ namespace DragoonMayCry.State
 
         public void Update(IFramework framework)
         {
+            if (!JobHelper.IsCombatJob())
+            {
+                return;
+            }
             inCombatStateTracker.Update(this);
             onDeathStateTracker.Update(this);
             onEnteringInstanceStateTracker.Update(this);
@@ -71,7 +77,7 @@ namespace DragoonMayCry.State
 
         public void RegisterLoginStateChangeHandler(EventHandler<bool> onLoginStateChange)
         {
-            onEnteringInstanceStateTracker.OnChange += onLoginStateChange;
+            loginStateTracker.OnChange += onLoginStateChange;
         }
 
         public void RegisterJobChangeHandler(EventHandler<JobIds> onJobChange)
