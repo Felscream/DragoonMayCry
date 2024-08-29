@@ -9,3 +9,5 @@ You fill your gauge by dealing damage, and progress between tiers depending on y
 Clipping your GCD or delaying it will penalize you.
 
 Values are currently unbalanced between jobs and only applicable to current content.
+
+Can be installed using this custom repo `https://raw.githubusercontent.com/Felscream/DalamudPlugins/main/repo.json` if you want to test it and give feedback
