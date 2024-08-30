@@ -42,7 +42,10 @@ namespace DragoonMayCry.Score
 
             var territory = Service.ClientState.TerritoryType;
 
+            // The iLvl sync for a specific instance ex: UCOB is 345, UWU is 375
             var iLvlSyncForInstance = territoryCache.GetRow(territory)?.ContentFinderCondition?.Value?.ItemLevelSync;
+
+            // The iLvl sync in general for the content lvl. ex : at lvl 70 it 400, at lvl 90 it is 660
             ushort? iLvlSyncForContentLvl = 0;
             if (isLvlSync)
             {
@@ -55,7 +58,7 @@ namespace DragoonMayCry.Score
                 return 0;
             }
 
-            var totalILvl = 0;
+            uint totalILvl = 0;
             var itemCount = 0;
             for (uint i = 0; i < equippedItems->Size; ++i)
             {
@@ -82,40 +85,51 @@ namespace DragoonMayCry.Score
                     continue;
                 }
 
-                var itemIlvl = item.LevelItem?.Value?.RowId;
+                uint itemLevel = item.LevelItem?.Value?.RowId ?? 0;
                 var isItemSynced =
-                    iLvlSyncForInstance != 0 && itemIlvl > iLvlSyncForInstance || iLvlSyncForContentLvl != 0 && itemIlvl > iLvlSyncForContentLvl;
-                
-                var finalIlvl = isItemSynced ? Math.Max((int)iLvlSyncForInstance!, (int)iLvlSyncForContentLvl!) : (int)itemIlvl!;
+                    iLvlSyncForInstance > 0 && itemLevel > iLvlSyncForInstance || iLvlSyncForContentLvl > 0 && itemLevel > iLvlSyncForContentLvl;
+                if (isItemSynced)
+                {
+                    if (iLvlSyncForInstance > 0 && iLvlSyncForContentLvl > 0)
+                    {
+                        // the instance ilvl sync overrides the general content level ilvl sync
+                        itemLevel = (uint)iLvlSyncForInstance;
+                    }
+                    else
+                    {
+                        itemLevel = Math.Max((uint)iLvlSyncForInstance!,
+                                             (uint)iLvlSyncForContentLvl!);
+                    }
+                }
 #if DEBUG
-                Service.Log.Debug($"Processing {item.Name} with iLvl {finalIlvl}");
+                Service.Log.Debug($"Processing {item.Name} with iLvl {itemLevel}");
 #endif
-                totalILvl += finalIlvl;
+                totalILvl += itemLevel;
                 itemCount++;
                 if (itemEquipSlotCategory.Head == -1)
                 {
-                    totalILvl += finalIlvl;
+                    totalILvl += itemLevel;
                     itemCount++;
                 }
                 if (itemEquipSlotCategory.Legs == -1)
                 {
-                    totalILvl += finalIlvl;
+                    totalILvl += itemLevel;
                     itemCount++;
                 }
                 if (itemEquipSlotCategory.Feet == -1)
                 {
-                    totalILvl += finalIlvl;
+                    totalILvl += itemLevel;
                     itemCount++;
                 }
 
                 if (itemEquipSlotCategory.Gloves == -1)
                 {
-                    totalILvl += finalIlvl;
+                    totalILvl += itemLevel;
                     itemCount++;
                 }
                 if (itemEquipSlotCategory.OffHand == -1)
                 {
-                    totalILvl += finalIlvl;
+                    totalILvl += itemLevel;
                     itemCount++;
                 }
             }

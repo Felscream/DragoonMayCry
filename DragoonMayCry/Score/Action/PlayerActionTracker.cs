@@ -396,7 +396,7 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-            if (animationLock != 0.1f)
+            if (animationLock >= 0.1f)
             {
                 Service.Log.Debug($"GCD Clip: {animationLock} s");
                 if (limitBreakCast == null)
