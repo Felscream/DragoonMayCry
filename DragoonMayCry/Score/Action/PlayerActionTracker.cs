@@ -55,19 +55,6 @@ namespace DragoonMayCry.Score.Action
             FlyTextKind.DamageCritDh
         };
 
-        private delegate void AddFlyTextDelegate(
-            IntPtr addonFlyText,
-            uint actorIndex,
-            uint messageMax,
-            IntPtr numbers,
-            uint offsetNum,
-            uint offsetNumMax,
-            IntPtr strings,
-            uint offsetStr,
-            uint offsetStrMax,
-            int unknown);
-        private readonly Hook<AddFlyTextDelegate>? addFlyTextHook;
-
         public EventHandler? OnGcdDropped;
         public EventHandler? OnCastCanceled;
         public EventHandler<float>? OnFlyTextCreation;
@@ -150,7 +137,6 @@ namespace DragoonMayCry.Score.Action
             onActionUsedHook?.Enable();
             onActorControlHook?.Enable();
             onCastHook?.Enable();
-            addFlyTextHook?.Enable();
 
             Service.Framework.Update += Update;
             playerState.RegisterCombatStateChangeHandler(OnCombat);
@@ -160,8 +146,6 @@ namespace DragoonMayCry.Score.Action
         public void Dispose()
         {
             Service.Framework.Update -= Update;
-            addFlyTextHook?.Disable();
-            addFlyTextHook?.Dispose();
                 
             onActionUsedHook?.Disable();
             onActionUsedHook?.Dispose();

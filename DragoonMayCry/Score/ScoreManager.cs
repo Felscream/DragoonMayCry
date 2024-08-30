@@ -157,8 +157,7 @@ namespace DragoonMayCry.Score
         {
             if(enteringCombat)
             {
-                //jobScoringTable = GetJobScoringTable();
-                jobScoringTable = ScoringTable.DefaultScoringTable;
+                jobScoringTable = GetJobScoringTable();
                 ResetScore();
             }
 

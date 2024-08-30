@@ -170,7 +170,9 @@ namespace DragoonMayCry.Score
             GenerateMeleeScoring(int ilvl)
         {
             float expectedDpsAtILvl = GetMeleeDpsAtILvl(ilvl);
+#if DEBUG
             Service.Log.Debug($"Estimated DPS {expectedDpsAtILvl}");
+#endif
             return GenerateScoringTable(expectedDpsAtILvl, MeleeScoringTableCoefficient, MeleeScoringTable);
         }
 
@@ -178,7 +180,9 @@ namespace DragoonMayCry.Score
             GenerateCasterScoring(int ilvl)
         {
             float expectedDpsAtILvl = GetCasterDpsAtILvl(ilvl);
+#if DEBUG
             Service.Log.Debug($"Estimated DPS {expectedDpsAtILvl}");
+#endif
             return GenerateScoringTable(expectedDpsAtILvl, CasterScoringCoefficient, CasterScoringTable);
         }
 
@@ -186,7 +190,9 @@ namespace DragoonMayCry.Score
             GeneratePhysRangeScoring(int ilvl)
         {
             float expectedDpsAtILvl = GetPhysRangeDpsAtILvl(ilvl);
+#if DEBUG
             Service.Log.Debug($"Estimated DPS {expectedDpsAtILvl}");
+#endif
             return GenerateScoringTable(expectedDpsAtILvl, PhysRangeScoringCoefficient, PhysRangeScoringTable);
         }
 
@@ -194,7 +200,9 @@ namespace DragoonMayCry.Score
             GenerateTankScoring(int ilvl)
         {
             float expectedDpsAtILvl = GetTankDpsAtILvl(ilvl);
+#if DEBUG
             Service.Log.Debug($"Estimated DPS {expectedDpsAtILvl}");
+#endif
             return GenerateScoringTable(expectedDpsAtILvl, TankScoringCoefficient, TankScoringTable);
         }
 
@@ -202,7 +210,9 @@ namespace DragoonMayCry.Score
             GenerateHealerScoring(int ilvl)
         {
             float expectedDpsAtILvl = GetTankDpsAtILvl(ilvl);
+#if DEBUG
             Service.Log.Debug($"Estimated DPS {expectedDpsAtILvl}");
+#endif
             return GenerateScoringTable(expectedDpsAtILvl, HealerScoringCoefficient, HealerScoringTable);
         }
 
