@@ -49,6 +49,7 @@ namespace DragoonMayCry.Score.Style
             var playerState = PlayerState.GetInstance();
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             playerState.RegisterDeathStateChangeHandler(OnDeath);
+            playerState.RegisterDamageDownHandler(OnDamageDown);
             playerActionTracker.OnGcdDropped += OnGcdDropped;
             playerActionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
             playerActionTracker.OnLimitBreak += OnLimitBreak;
@@ -146,6 +147,7 @@ namespace DragoonMayCry.Score.Style
 
             if (isBlunder)
             {
+                Service.Log.Debug("Forcing sfx to play");
                 audioService.PlaySfx(SoundId.DeadWeight, true);
             }
 
@@ -191,6 +193,16 @@ namespace DragoonMayCry.Score.Style
             {
                 ForceRankTo(StyleType.A, false);
             }
+        }
+
+        private void OnDamageDown(object? sender, bool hasDamageDown)
+        {
+            if(!hasDamageDown)
+            {
+                return;
+            }
+
+            ForceRankTo(StyleType.D, true);
         }
     }
 }

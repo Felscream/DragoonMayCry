@@ -25,6 +25,7 @@ namespace DragoonMayCry.State
         private readonly OnEnteringInstanceStateTracker onEnteringInstanceStateTracker;
         private readonly LoginStateTracker loginStateTracker;
         private readonly JobChangeTracker jobChangeTracker;
+        private readonly DamageDownTracker damageDownTracker;
         private static PlayerState? Instance;
         private PlayerState()
         {
@@ -33,6 +34,7 @@ namespace DragoonMayCry.State
             onEnteringInstanceStateTracker = new();
             loginStateTracker = new();
             jobChangeTracker = new();
+            damageDownTracker = new();
             Service.Framework.Update += Update;
         }
 
@@ -52,11 +54,12 @@ namespace DragoonMayCry.State
             {
                 return;
             }
-            inCombatStateTracker.Update(this);
             onDeathStateTracker.Update(this);
+            inCombatStateTracker.Update(this);
             onEnteringInstanceStateTracker.Update(this);
             loginStateTracker.Update(this);
             jobChangeTracker.Update(this);
+            damageDownTracker.Update(this);
         }
 
         public void RegisterCombatStateChangeHandler(EventHandler<bool> inCombatHandler)
@@ -82,6 +85,11 @@ namespace DragoonMayCry.State
         public void RegisterJobChangeHandler(EventHandler<JobIds> onJobChange)
         {
             jobChangeTracker.OnChange += onJobChange;
+        }
+
+        public void RegisterDamageDownHandler(EventHandler<bool> onDamageDown)
+        {
+            damageDownTracker.OnChange += onDamageDown;
         }
 
         public JobIds GetCurrentJob()

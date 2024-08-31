@@ -47,6 +47,7 @@ namespace DragoonMayCry.Audio
                 return;
             }
 
+            Service.Log.Debug($"Playing SFX {key}");
             audioEngine.PlaySfx(key, SfxPaths[key], GetSfxVolume());
 
             if (!soundIdsNextAvailability.ContainsKey(key) || force || soundIdsNextAvailability[key] == 0)
