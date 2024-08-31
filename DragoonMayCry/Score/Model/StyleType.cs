@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DragoonMayCry.Score.Style
+namespace DragoonMayCry.Score.Model
 {
     public enum StyleType
     {

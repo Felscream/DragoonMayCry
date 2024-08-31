@@ -7,6 +7,7 @@ using Dalamud.Interface.Animation;
 using Dalamud.Interface.Animation.EasingFunctions;
 using Dalamud.Interface.Textures.TextureWraps;
 using DragoonMayCry.Score;
+using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Style;
 using DragoonMayCry.State;
 using DragoonMayCry.UI.Model;

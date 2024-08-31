@@ -23,10 +23,11 @@ namespace DragoonMayCry.State.Tracker
                 return;
             }
             StatusList statuses = playerState.Player.StatusList;
+
             for(int i = 0; i < statuses.Length; i++)
             {
                 var status = statuses[i];
-                if (damageDownIds.Contains(status.GameData.RowId))
+                if (status != null && damageDownIds.Contains(status.GameData.RowId))
                 {
                     if (!hasDamageDown)
                     {

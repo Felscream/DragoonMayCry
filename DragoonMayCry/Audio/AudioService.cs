@@ -1,11 +1,11 @@
 using System;
-using DragoonMayCry.Score.Style;
 using ImGuiNET;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using Dalamud.Plugin.Ipc.Exceptions;
+using DragoonMayCry.Score.Model;
 
 namespace DragoonMayCry.Audio
 {
@@ -36,7 +36,7 @@ namespace DragoonMayCry.Audio
 
         public void PlaySfx(SoundId key, bool force = false)
         {
-            if (!Plugin.Configuration.PlaySoundEffects || !SfxPaths.ContainsKey(key))
+            if (!Plugin.Configuration!.PlaySoundEffects || !SfxPaths.ContainsKey(key))
             {
                 return;
             }
@@ -49,7 +49,7 @@ namespace DragoonMayCry.Audio
 
             audioEngine.PlaySfx(key, SfxPaths[key], GetSfxVolume());
 
-            if (!soundIdsNextAvailability.ContainsKey(key) || force || soundIdsNextAvailability[key] == 0)
+            if (!soundIdsNextAvailability.ContainsKey(key) || force || soundIdsNextAvailability[key] <= 0)
             {
                 soundIdsNextAvailability[key] = Plugin.Configuration!.PlaySfxEveryOccurrences - 1;
             }

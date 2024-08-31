@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Score.Action;
+using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Style;
 using DragoonMayCry.State;
 using ImGuiNET;

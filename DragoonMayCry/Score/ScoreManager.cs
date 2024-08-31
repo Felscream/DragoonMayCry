@@ -10,6 +10,8 @@ using DragoonMayCry.Util;
 using DragoonMayCry.Score.Style;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using static DragoonMayCry.Score.Style.StyleRankHandler;
+using DragoonMayCry.Score.Table;
+using DragoonMayCry.Score.Model;
 
 namespace DragoonMayCry.Score
 {
@@ -30,27 +32,14 @@ namespace DragoonMayCry.Score
             }
         }
 
-        public struct StyleScoring
-        {
-            public float Threshold;
-            public int ReductionPerSecond;
-            public float DemotionThreshold;
-            public float PointCoefficient;
-
-            public StyleScoring(int threshold, int reductionPerSecond, int demotionThreshold, float pointCoefficient)
-            {
-                Threshold = threshold;
-                ReductionPerSecond = reductionPerSecond;
-                DemotionThreshold = demotionThreshold;
-                PointCoefficient = pointCoefficient;
-            }
-        }
+        
 
         public EventHandler<double>? OnScoring;
         public ScoreRank CurrentScoreRank { get; private set; }
         private readonly PlayerState playerState;
         private readonly StyleRankHandler rankHandler;
         private readonly ItemLevelCalculator itemLevelCalculator;
+        private readonly ScoringTableFactory scoringTableFactory;
 
         private const int PointsReductionDuration = 7300; //milliseconds
         private bool isCastingLb;
@@ -81,7 +70,9 @@ namespace DragoonMayCry.Score
             Service.Framework.Update += UpdateScore;
             Service.ClientState.Logout += ResetScore;
 
-            jobScoringTable = ScoringTable.DefaultScoringTable;
+            scoringTableFactory = new ScoringTableFactory();
+            jobScoringTable = ScoringTableFactory.DefaultScoringTable;
+
             var styleRank = styleRankHandler.CurrentStyle.Value;
             CurrentScoreRank = new(0, styleRank, jobScoringTable[styleRank]);
 
@@ -150,7 +141,6 @@ namespace DragoonMayCry.Score
         private void OnInstanceChange(object send, bool value)
         {
             ResetScore();
-            Service.Log.Debug($"{itemLevelCalculator.CalculateCurrentItemLevel()}");
         }
 
         private void OnCombatChange(object send, bool enteringCombat)
@@ -232,36 +222,9 @@ namespace DragoonMayCry.Score
 
         private Dictionary<StyleType, StyleScoring> GetJobScoringTable()
         {
-            var job = playerState.GetCurrentJob();
-            var ilvl = itemLevelCalculator.CalculateCurrentItemLevel();
-            if (JobHelper.IsTank(job))
-            {
-                Service.Log.Debug($"Setting tank scoring table");
-                return ScoringTable.GenerateTankScoring(ilvl);
-            }
-
-            if (JobHelper.IsHealer(job))
-            {
-                Service.Log.Debug($"Setting healer scoring table");
-                return ScoringTable.GenerateHealerScoring(ilvl);
-            }
-
-            //BLM and PIC damage output comparable to melee
-            //MCH raw damage output comparable to casters
-            if ((JobHelper.IsCaster(job) || job == JobIds.MCH) && job != JobIds.BLM && job != JobIds.PCT) 
-            {
-                Service.Log.Debug($"Setting Caster scoring table");
-                return ScoringTable.GenerateCasterScoring(ilvl);
-            }
-
-            if (JobHelper.IsPhysRange(job))
-            {
-                Service.Log.Debug($"Setting Phys Range scoring table");
-                return ScoringTable.GeneratePhysRangeScoring(ilvl);
-            }
-
-            Service.Log.Debug($"Setting Melee scoring table");
-            return ScoringTable.GenerateMeleeScoring(ilvl);
+            int ilvl = itemLevelCalculator.CalculateCurrentItemLevel();
+            var currentJob = playerState.GetCurrentJob();
+            return scoringTableFactory.GetScoringTable(ilvl, currentJob);
         }
 
         private void OnDeath(object? sender, bool isDead)

@@ -6,6 +6,7 @@ using System.IO;
 using DragoonMayCry.Data;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.State;
+using DragoonMayCry.Score.Model;
 
 namespace DragoonMayCry.Score.Style
 {
