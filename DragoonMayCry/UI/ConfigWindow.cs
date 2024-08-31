@@ -32,7 +32,7 @@ public class ConfigWindow : Window, IDisposable
     public override void Draw()
     {
         var lockScoreWindow = configuration.StyleRankUiConfiguration.LockScoreWindow;
-        if (ImGui.Checkbox("Lock Score Window", ref lockScoreWindow))
+        if (ImGui.Checkbox("Lock score window", ref lockScoreWindow))
         {
             configuration.StyleRankUiConfiguration.LockScoreWindow = lockScoreWindow;
             configuration.Save();
@@ -50,6 +50,13 @@ public class ConfigWindow : Window, IDisposable
         if (ImGui.Checkbox("Play sound effects", ref playSoundEffects))
         {
             configuration.PlaySoundEffects = playSoundEffects;
+            configuration.Save();
+        }
+
+        var playSoundEffectsOnBlunder = configuration.PlaySoundEffectsOnBlunder;
+        if (ImGui.Checkbox("Play sound effect on blunders", ref playSoundEffectsOnBlunder))
+        {
+            configuration.PlaySoundEffectsOnBlunder = playSoundEffectsOnBlunder;
             configuration.Save();
         }
 

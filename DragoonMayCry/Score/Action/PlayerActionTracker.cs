@@ -415,9 +415,10 @@ namespace DragoonMayCry.Score.Action
 
         private unsafe void DetectWastedGCD()
         {
+            // do not track dropped GCDs if the LB is being cast
+            // or the player died between 2 GCDs
             if (limitBreakCast != null)
             {
-                // do not track dropped GCDs if the LB is being cast
                 return;
             }
             if (!actionManager->isGCDRecastActive && !actionManager->isQueued)

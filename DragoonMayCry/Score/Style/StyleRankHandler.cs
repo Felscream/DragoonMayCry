@@ -41,12 +41,13 @@ namespace DragoonMayCry.Score.Style
             StyleType.SSS);
 
         private readonly AudioService audioService;
+        private readonly PlayerState playerState;
 
         public StyleRankHandler(PlayerActionTracker playerActionTracker)
         {
             Reset();
             audioService = new AudioService();
-            var playerState = PlayerState.GetInstance();
+            playerState = PlayerState.GetInstance();
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             playerState.RegisterDeathStateChangeHandler(OnDeath);
             playerState.RegisterDamageDownHandler(OnDamageDown);
@@ -76,7 +77,7 @@ namespace DragoonMayCry.Score.Style
         {
             if (CurrentStyle.Next == null)
             {
-                if (Plugin.Configuration!.PlaySoundEffects && playSfx && forceSfx)
+                if (playSfx && forceSfx)
                 {
                     audioService.PlaySfx(CurrentStyle.Value);
                 }
@@ -91,7 +92,7 @@ namespace DragoonMayCry.Score.Style
                 StyleRankChange?.Invoke(this, new(CurrentStyle.Value, CurrentStyle.Next.Value, false));
                 CurrentStyle = CurrentStyle.Next;
                 Service.Log.Debug($"New rank reached {CurrentStyle.Value}");
-                if (Plugin.Configuration!.PlaySoundEffects && playSfx)
+                if (playSfx)
                 {
                     audioService.PlaySfx(CurrentStyle.Value);
                 }
@@ -165,7 +166,11 @@ namespace DragoonMayCry.Score.Style
 
         private void OnGcdDropped(object? sender, EventArgs args)
         {
-            if (CurrentStyle.Value != StyleType.NoStyle && Plugin.Configuration!.PlaySoundEffects)
+            if (playerState.IsDead)
+            {
+                return;
+            }
+            if (CurrentStyle.Value != StyleType.NoStyle && Plugin.Configuration!.PlaySoundEffectsOnBlunder)
             {
                 audioService.PlaySfx(SoundId.DeadWeight);
             }
@@ -175,14 +180,18 @@ namespace DragoonMayCry.Score.Style
 
         private void OnLimitBreakCanceled(object? sender, EventArgs args)
         {
-            ForceRankTo(StyleType.D, true);
+            if (playerState.IsDead)
+            {
+                return;
+            }
+            ForceRankTo(StyleType.D, Plugin.Configuration!.PlaySoundEffectsOnBlunder);
         }
 
         private void OnDeath(object? sender, bool isDead)
         {
             if (isDead)
             {
-                ForceRankTo(StyleType.D, true);
+                ForceRankTo(StyleType.D, Plugin.Configuration!.PlaySoundEffectsOnBlunder);
             }
         }
 
@@ -197,12 +206,12 @@ namespace DragoonMayCry.Score.Style
 
         private void OnDamageDown(object? sender, bool hasDamageDown)
         {
-            if(!hasDamageDown)
+            if(!hasDamageDown || playerState.IsDead)
             {
                 return;
             }
 
-            ForceRankTo(StyleType.D, true);
+            ForceRankTo(StyleType.D, Plugin.Configuration!.PlaySoundEffectsOnBlunder);
         }
     }
 }

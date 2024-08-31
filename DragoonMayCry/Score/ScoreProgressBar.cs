@@ -127,21 +127,18 @@ namespace DragoonMayCry.Score
 
         private void StartDemotionAlert()
         {
-            Service.Log.Debug("Starting demotion");
             demotionApplicationStopwatch.Restart();
             DemotionStart?.Invoke(this, DemotionTimerDuration);
         }
 
         private void ApplyDemotion()
         {
-            Service.Log.Debug("Applying demotion");
             demotionApplicationStopwatch.Reset();
             DemotionApplied?.Invoke(this, false);
         }
 
         private void CancelDemotion()
         {
-            Service.Log.Debug("Cancelling demotion");
             demotionApplicationStopwatch.Reset();
             DemotionCanceled?.Invoke(this, EventArgs.Empty);
         }
