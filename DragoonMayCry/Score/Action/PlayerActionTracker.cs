@@ -1,18 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using Dalamud.Game.Gui.FlyText;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
 using Dalamud.Plugin.Services;
-using DragoonMayCry.State;
-using DragoonMayCry.Util;
-using FFXIVClientStructs.FFXIV.Client.Game;
-using FFXIVClientStructs.FFXIV.Client.UI;
-using ImGuiNET;
 using DragoonMayCry.Cache;
-using Lumina.Excel;
+using DragoonMayCry.State;
+using FFXIVClientStructs.FFXIV.Client.Game;
+using ImGuiNET;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
 using LuminaAction = Lumina.Excel.GeneratedSheets.Action;
 
@@ -396,7 +393,7 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-            if (animationLock >= 0.1f)
+            if (animationLock > 0.1f)
             {
                 Service.Log.Debug($"GCD Clip: {animationLock} s");
                 if (limitBreakCast == null)
