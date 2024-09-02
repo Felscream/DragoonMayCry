@@ -17,9 +17,7 @@ namespace DragoonMayCry.Score
         private Dictionary<StyleType, double> timeInEachTier;
         private Stopwatch tierTimer;
         private StyleType currentTier = StyleType.NoStyle;
-        private CombatStopwatch combatStopwatch;
         public FinalRankCalculator(PlayerState playerState, StyleRankHandler styleRankHandler) {
-            combatStopwatch = CombatStopwatch.GetInstance();
 
             timeInEachTier = new Dictionary<StyleType, double>();
             tierTimer = new Stopwatch();
@@ -29,16 +27,15 @@ namespace DragoonMayCry.Score
 
         private StyleType DetermineFinalRank()
         {
-            var timeInCombat = combatStopwatch.TimeInCombat();
             StyleType finalRank = StyleType.D;
-            double maxPercentageTime = 0;
+            double maxTime = 0;
        
             foreach(KeyValuePair<StyleType, double> entry in timeInEachTier)
             {
-                var percentageTimeInTier = entry.Value / timeInCombat;
-                if(percentageTimeInTier > maxPercentageTime)
+                var timeInTier = entry.Value ;
+                if(timeInTier > maxTime)
                 {
-                    maxPercentageTime = percentageTimeInTier;
+                    maxTime = timeInTier;
                     finalRank = entry.Key;
                 }
             }
