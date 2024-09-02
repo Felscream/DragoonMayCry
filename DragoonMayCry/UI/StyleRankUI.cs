@@ -156,7 +156,7 @@ namespace DragoonMayCry.UI
         {
             if (ImGui.Begin("DmC", windowFlags))
             {
-                var iconPath = playerState.IsInCombat ? styleUis[currentStyle].IconPath! : styleUis[StyleType.S].IconPath;
+                var iconPath = CanRetrieveStyleDisplay(currentStyle) ? styleUis[currentStyle].IconPath! : styleUis[StyleType.S].IconPath;
                 var progress = scoreProgressBar.Progress;
                 if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), iconPath).TryGetWrap(out var rankIcon, out var _))
                 {
