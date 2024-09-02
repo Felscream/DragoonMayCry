@@ -62,7 +62,7 @@ namespace DragoonMayCry.Score
         private void OnRankChange(object? sender, RankChangeData rankChange)
         {
             saveTimeInTier();
-            if(rankChange.NewRank < rankChange.PreviousRank && rankChange.NewRank < StyleType.S)
+            if(rankChange.NewRank < rankChange.PreviousRank && rankChange.NewRank < StyleType.A)
             {
                 if (timeInEachTier.ContainsKey(StyleType.S))
                 {

@@ -175,7 +175,15 @@ namespace DragoonMayCry.Score.Style
             {
                 audioService.PlaySfx(SoundId.DeadWeight);
             }
-            ReturnToPreviousRank(true);
+            if(CurrentStyle.Value < StyleType.S)
+            {
+                ReturnToPreviousRank(true);
+            }
+            else
+            {
+                ForceRankTo(StyleType.B, true);
+            }
+            
             
         }
 
