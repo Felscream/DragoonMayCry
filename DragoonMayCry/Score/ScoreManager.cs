@@ -41,7 +41,8 @@ namespace DragoonMayCry.Score
         private readonly ItemLevelCalculator itemLevelCalculator;
         private readonly ScoringTableFactory scoringTableFactory;
 
-        private const int PointsReductionDuration = 7300; //milliseconds
+        private const int PointsReductionDuration = 8300; //milliseconds
+        private const float PointReductionFactor = 0.8f;
         private bool isCastingLb;
         private Dictionary<StyleType, StyleScoring> jobScoringTable;
         private readonly Stopwatch pointsReductionStopwatch;
@@ -123,7 +124,7 @@ namespace DragoonMayCry.Score
             var points = val * CurrentScoreRank.StyleScoring.PointCoefficient;
             if (AreGcdClippingRestrictionsActive())
             {
-                points *= 0.75f;
+                points *= PointReductionFactor;
             }
 
             CurrentScoreRank.Score += points;
