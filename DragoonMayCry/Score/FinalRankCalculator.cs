@@ -53,15 +53,26 @@ namespace DragoonMayCry.Score
             else
             {
                 saveTimeInTier();
+                tierTimer.Reset();
                 var finalRank = DetermineFinalRank();
                 FinalRankCalculated?.Invoke(this, finalRank);
-                tierTimer.Reset();
             }
         }
 
         private void OnRankChange(object? sender, RankChangeData rankChange)
         {
             saveTimeInTier();
+            if(rankChange.NewRank < rankChange.PreviousRank && rankChange.NewRank < StyleType.S)
+            {
+                if (timeInEachTier.ContainsKey(StyleType.S))
+                {
+                    timeInEachTier[StyleType.S] -= 10d;
+                }
+                else
+                {
+                    timeInEachTier.Add(StyleType.S, -10d);
+                }
+            }
 
             currentTier = rankChange.NewRank;
             if (!timeInEachTier.ContainsKey(currentTier))
