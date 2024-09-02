@@ -12,7 +12,7 @@ namespace DragoonMayCry.Util
         public EaseOutBack(TimeSpan duration):base(duration) { }
         public override void Update()
         {
-            var c1 = 1.70158d;
+            var c1 = 2.70158d;
             var c3 = c1 + 1d;
             double progress = base.Progress;
             base.Value = 1 + c3 * Math.Pow(progress - 1, 3) + c1 * Math.Pow(progress - 1, 2);

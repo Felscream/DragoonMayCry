@@ -69,7 +69,7 @@ namespace DragoonMayCry.UI
             this.styleRankHandler.StyleRankChange += OnRankChange!;
 
             rankTransition = new OutCubic(new(1500000));
-            finalRankTransition = new EaseOutBack(new(4000000));
+            finalRankTransition = new EaseOutBack(new(3000000));
             shakeStopwatch = new Stopwatch();
             demotionStopwatch = new Stopwatch();
 
@@ -240,13 +240,9 @@ namespace DragoonMayCry.UI
 
         private float GetAnimationTransitionValue(Easing currentAnimation)
         {
-            if (rankTransition.IsRunning)
+            if (currentAnimation.IsRunning)
             {
-                return (float)rankTransition.Value;
-            }
-            if (finalRankTransition.IsRunning)
-            {
-                return (float)finalRankTransition.Value;
+                return (float)currentAnimation.Value;
             }
             return 1f;
         }
@@ -270,9 +266,8 @@ namespace DragoonMayCry.UI
 
                 pos = transitionPosition + offset;
             }
-            else if (finalRankTransition.IsRunning)
+            else if (currentAnimation.IsRunning)
             {
-                currentAnimation = finalRankTransition;
                 pos = GetPositionByAnimation(currentAnimation);
             }
 
