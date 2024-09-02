@@ -36,6 +36,8 @@ namespace DragoonMayCry.UI
         private readonly Random random;
         private readonly StyleRankHandler styleRankHandler;
         private readonly PlayerState playerState;
+        private readonly FinalRankCalculator finalRankCalculator;
+        
         private readonly Vector2 rankPosition = new (8, 8);
         private readonly Vector2 rankSize = new(130, 130);
         private readonly Vector2 rankTransitionStartPosition = new(83, 83);
@@ -45,24 +47,29 @@ namespace DragoonMayCry.UI
         private float demotionDuration = 1f;
 
         private readonly Easing rankTransition;
+        private readonly Easing finalRankTransition;
         private readonly Stopwatch shakeStopwatch;
         private readonly Stopwatch demotionStopwatch;
+        
         private readonly float shakeDuration = 300;
         private readonly float shakeIntensity = 6f;
         private readonly string gaugeDefault = "DragoonMayCry.Assets.GaugeDefault.png";
 
-        public StyleRankUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager)
+        public StyleRankUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager, FinalRankCalculator finalRankCalculator)
         {
             this.scoreProgressBar = scoreProgressBar;
             this.styleRankHandler = styleRankHandler;
             this.scoreManager = scoreManager;
+            this.finalRankCalculator = finalRankCalculator;
             this.scoreManager.OnScoring += OnScoring!;
+            this.finalRankCalculator.FinalRankCalculated += OnFinalRankCalculated!;
             this.playerState = PlayerState.GetInstance();
             this.playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             
             this.styleRankHandler.StyleRankChange += OnRankChange!;
 
             rankTransition = new OutCubic(new(1500000));
+            finalRankTransition = new EaseOutBack(new(4000000));
             shakeStopwatch = new Stopwatch();
             demotionStopwatch = new Stopwatch();
 
@@ -72,8 +79,9 @@ namespace DragoonMayCry.UI
             random = new();
         }
 
-        public void Draw() {
-            
+        public void Draw()
+        {
+
 
             var windowFlags = Plugin.Configuration!.StyleRankUiConfiguration.LockScoreWindow ?
                                   ImGuiWindowFlags.NoTitleBar |
@@ -94,15 +102,8 @@ namespace DragoonMayCry.UI
                                   ImGuiWindowFlags.NoDocking
                                   :
                                   ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize;
-
-            if (rankTransition.IsRunning)
-            {
-                rankTransition.Update();
-                if (rankTransition.IsDone)
-                {
-                    rankTransition.Stop();
-                }
-            }
+            UpdateRankTransitionAnimation();
+            UpdateFinalRankTransitionAnimation();
 
             ImGui.SetNextWindowSize(Vector2.Zero, ImGuiCond.Always);
             if (!Plugin.Configuration.StyleRankUiConfiguration.LockScoreWindow)
@@ -110,7 +111,7 @@ namespace DragoonMayCry.UI
                 DrawMock(windowFlags);
                 return;
             }
-            
+
 
             if (ImGui.Begin("DmC", windowFlags))
             {
@@ -126,18 +127,12 @@ namespace DragoonMayCry.UI
                 }
 
                 // Stolen from https://github.com/marconsou/mp-tick-bar
-                if ((isInCombat || Plugin.Configuration.StyleRankUiConfiguration.TestRankDisplay) && Service.TextureProvider
+                if ((isInCombat) && Service.TextureProvider
                                             .GetFromManifestResource(Assembly.GetExecutingAssembly(),
                                                 gaugeDefault)
                                             .TryGetWrap(out var gauge, out var _))
                 {
                     DrawProgressGauge(gauge, scoreProgressBar.Progress, style.GaugeColor);
-                }
-
-                if (Plugin.Configuration.StyleRankUiConfiguration
-                          .TestRankDisplay)
-                {
-                    DrawScore();
                 }
             }
 
@@ -149,6 +144,30 @@ namespace DragoonMayCry.UI
             if (demotionStopwatch.IsRunning && demotionStopwatch.ElapsedMilliseconds > demotionDuration)
             {
                 demotionStopwatch.Reset();
+            }
+        }
+
+        private void UpdateFinalRankTransitionAnimation()
+        {
+            if (finalRankTransition.IsDone)
+            {
+                finalRankTransition.Stop();
+            }
+            if (finalRankTransition.IsRunning)
+            {
+                finalRankTransition.Update();
+            }
+        }
+
+        private void UpdateRankTransitionAnimation()
+        {
+            if (rankTransition.IsDone)
+            {
+                rankTransition.Stop();
+            }
+            if (rankTransition.IsRunning)
+            {
+                rankTransition.Update();
             }
         }
 
@@ -198,9 +217,10 @@ namespace DragoonMayCry.UI
 
         private void DrawCurrentRank(IDalamudTextureWrap rankIcon)
         {
-            var pos = ComputeRankPosition();
-            var animationTransitionValue = rankTransition.IsRunning ? (float)rankTransition.Value : 1f;
-            var size = rankSize * animationTransitionValue;
+            Easing currentAnimation = isInCombat ? rankTransition : finalRankTransition;
+            var pos = ComputeRankPosition(currentAnimation);
+            var animationTransitionValue = GetAnimationTransitionValue(currentAnimation);
+            var size = rankSize * (float)animationTransitionValue;
 
             
             var textureUv0 = Vector2.Zero;
@@ -218,17 +238,25 @@ namespace DragoonMayCry.UI
             ImGui.Image(rankIcon.ImGuiHandle, size, textureUv0, textureUv1, color);
         }
 
-        private Vector2 ComputeRankPosition()
+        private float GetAnimationTransitionValue(Easing currentAnimation)
+        {
+            if (rankTransition.IsRunning)
+            {
+                return (float)rankTransition.Value;
+            }
+            if (finalRankTransition.IsRunning)
+            {
+                return (float)finalRankTransition.Value;
+            }
+            return 1f;
+        }
+
+        private Vector2 ComputeRankPosition(Easing currentAnimation)
         {
             var pos = rankPosition;
-            if (playerState.IsInCombat)
+            if (isInCombat)
             {
-                var lerpedCoordinates = (float)double.Lerp(
-                    rankTransitionStartPosition.X, rankPosition.X,
-                    rankTransition.Value);
-
-                var transitionPosition =
-                    new Vector2(lerpedCoordinates, lerpedCoordinates);
+                var transitionPosition = GetPositionByAnimation(currentAnimation);
 
                 var intensity =
                     MathFunctionsUtils.InCube(scoreProgressBar.Progress) * 1.5f;
@@ -242,8 +270,27 @@ namespace DragoonMayCry.UI
 
                 pos = transitionPosition + offset;
             }
+            else if (finalRankTransition.IsRunning)
+            {
+                currentAnimation = finalRankTransition;
+                pos = GetPositionByAnimation(currentAnimation);
+            }
 
             return pos;
+        }
+
+        private Vector2 GetPositionByAnimation(Easing currentAnimation)
+        {
+            var lerpedCoordinatesX = (float)double.Lerp(
+                                rankTransitionStartPosition.X, rankPosition.X,
+                                currentAnimation.Value);
+            var lerpedCoordinatesY = (float)double.Lerp(
+                rankTransitionStartPosition.Y, rankPosition.Y,
+                currentAnimation.Value);
+
+            var transitionPosition =
+                new Vector2(lerpedCoordinatesX, lerpedCoordinatesY);
+            return transitionPosition;
         }
 
         private void RenderBackgroundUIElement(IDalamudTextureWrap texture, float offsetX, float offsetY, float gaugeWidth, float gaugeHeight, float textureToElementScale, bool isBackground)
@@ -320,6 +367,10 @@ namespace DragoonMayCry.UI
             rankTransition.Reset();
             shakeStopwatch.Reset();
             demotionStopwatch.Reset();
+            if(enteringCombat)
+            {
+                finalRankTransition.Reset();
+            }
         }
 
         private void OnScoring(object sender, double points)
@@ -346,6 +397,12 @@ namespace DragoonMayCry.UI
         private void OnDemotionCanceled(object? sender, EventArgs e)
         {
             demotionStopwatch.Reset();
+        }
+
+        private void OnFinalRankCalculated(object? sender, StyleType finalRank)
+        {
+            currentStyle = finalRank;
+            finalRankTransition.Start();
         }
     }
 }

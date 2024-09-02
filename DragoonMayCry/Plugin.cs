@@ -28,6 +28,7 @@ public unsafe class Plugin : IDalamudPlugin
     private readonly ScoreProgressBar scoreProgressBar;
     private readonly PlayerActionTracker playerActionTracker;
     private readonly StyleRankHandler styleRankHandler;
+    private readonly FinalRankCalculator finalRankCalculator;
     private static bool IsCombatJob = false;
 
     public Plugin()
@@ -43,7 +44,8 @@ public unsafe class Plugin : IDalamudPlugin
         styleRankHandler = new(playerActionTracker);
         scoreManager = new(styleRankHandler, playerActionTracker);
         scoreProgressBar = new(scoreManager, styleRankHandler, playerActionTracker);
-        pluginUi = new(scoreProgressBar, styleRankHandler, scoreManager);
+        finalRankCalculator = new (playerState, styleRankHandler);
+        pluginUi = new(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator);
 
         scoreProgressBar.DemotionApplied += styleRankHandler.OnDemotion;
         scoreProgressBar.Promotion += styleRankHandler.OnPromotion;

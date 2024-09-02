@@ -50,7 +50,7 @@ namespace DragoonMayCry.State
 
         public void Update(IFramework framework)
         {
-            if (!IsCombatJob())
+            if (!CanUpdateStates())
             {
                 return;
             }
@@ -60,6 +60,15 @@ namespace DragoonMayCry.State
             loginStateTracker.Update(this);
             jobChangeTracker.Update(this);
             damageDownTracker.Update(this);
+        }
+
+        private bool CanUpdateStates()
+        {
+            if(!IsInsideInstance && !Plugin.Configuration!.ActiveOutsideInstance)
+            {
+                return false;
+            }
+            return IsCombatJob();
         }
 
         public void RegisterCombatStateChangeHandler(EventHandler<bool> inCombatHandler)

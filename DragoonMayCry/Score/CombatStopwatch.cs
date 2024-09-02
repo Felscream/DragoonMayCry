@@ -6,7 +6,7 @@ namespace DragoonMayCry.Score
 {
     public class CombatStopwatch
     {
-        public float TimeInCombat() => (float)stopwatch.ElapsedMilliseconds / 1000;
+        public double TimeInCombat() => stopwatch.Elapsed.TotalSeconds;
         
         private readonly Stopwatch stopwatch;
         private static CombatStopwatch? Instance;
@@ -28,8 +28,7 @@ namespace DragoonMayCry.Score
         }
         private void Start()
         {
-            stopwatch.Reset();
-            stopwatch.Start();
+            stopwatch.Restart();
         }
 
         private void Stop()

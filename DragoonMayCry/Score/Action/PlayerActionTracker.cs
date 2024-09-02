@@ -89,8 +89,6 @@ namespace DragoonMayCry.Score.Action
         private float currentWastedGcd = 0;
 
         private bool isGcdDropped;
-        private PlayerAction? currentAction;
-        private PlayerAction? previousAction;
 
 
         private Stopwatch limitBreakStopwatch;
@@ -264,31 +262,6 @@ namespace DragoonMayCry.Score.Action
             {
                 StartLimitBreakUse(actionId);
             }
-        }
-
-        private void RegisterNewAction(uint actionId)
-        {
-            var luminaAction = luminaActionCache.GetRow(actionId);
-            if (luminaAction == null || !luminaAction.IsPlayerAction)
-            {
-                return;
-            }
-
-            PlayerActionType type = TypeForActionId(actionId);
-            if (type != PlayerActionType.Weaponskill && type != PlayerActionType.Spell && type != PlayerActionType.LimitBreak)
-            {
-                return;
-            }
-
-            var duration = type == PlayerActionType.Weaponskill
-                               ? GetGcdTime(actionId)
-                               : GetCastTime(actionId);
-
-            var playerAction = new PlayerAction(
-                actionId, type, luminaAction.ActionCombo?.Value?.RowId,
-                luminaAction.PreservesCombo, combatStopwatch.TimeInCombat(), duration);
-            Service.Log.Warning($"Registering new action");
-            Service.Log.Warning($"{luminaAction.Name} type {type} has combo {luminaAction.ActionCombo?.Value != null && luminaAction.ActionCombo?.Value.RowId != 0}");
         }
 
         private unsafe float GetGcdTime(uint actionId)

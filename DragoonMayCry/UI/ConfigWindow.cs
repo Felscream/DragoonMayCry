@@ -10,12 +10,11 @@ namespace DragoonMayCry.UI;
 public class ConfigWindow : Window, IDisposable
 {
     private readonly DmcConfiguration configuration;
-    private readonly StyleRankHandler styleRankHandler;
 
     // We give this window a constant ID using ###
     // This allows for labels being dynamic, like "{FPS Counter}fps###XYZ counter window",
     // and the window ID will always be "###XYZ counter window" for ImGui
-    public ConfigWindow(DmcConfiguration configuration, StyleRankHandler styleRankHandler) : base("Dragoon May Cry###DmC")
+    public ConfigWindow(DmcConfiguration configuration) : base("Dragoon May Cry###DmC")
     {
         Flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
                 ImGuiWindowFlags.NoScrollWithMouse;
@@ -24,7 +23,6 @@ public class ConfigWindow : Window, IDisposable
         SizeCondition = ImGuiCond.Always;
 
         this.configuration = configuration;
-        this.styleRankHandler = styleRankHandler;
     }
 
     public void Dispose() { }

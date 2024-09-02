@@ -20,11 +20,6 @@ namespace DragoonMayCry.Score
         {
             get
             {
-                if (Plugin.Configuration!.StyleRankUiConfiguration.TestRankDisplay)
-                {
-                    return Plugin.Configuration.StyleRankUiConfiguration
-                                 .DebugProgressValue;
-                }
                 return progress;
             }
             private set
@@ -162,8 +157,7 @@ namespace DragoonMayCry.Score
         private bool CanApplyDemotion(float demotionThreshold)
         {
             return Progress < demotionThreshold
-                   && demotionApplicationStopwatch.ElapsedMilliseconds > DemotionTimerDuration
-                   && !Plugin.Configuration!.StyleRankUiConfiguration.TestRankDisplay;
+                   && demotionApplicationStopwatch.ElapsedMilliseconds > DemotionTimerDuration;
         }
 
         private void OnRankChange(object? sender, StyleRankHandler.RankChangeData data)
