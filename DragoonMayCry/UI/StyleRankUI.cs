@@ -161,8 +161,6 @@ namespace DragoonMayCry.UI
                 if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), iconPath).TryGetWrap(out var rankIcon, out var _))
                 {
                     ImGui.Image(rankIcon.ImGuiHandle, rankSize);
-
-                        
                 }
                 if(Service.TextureProvider
                           .GetFromManifestResource(Assembly.GetExecutingAssembly(),
