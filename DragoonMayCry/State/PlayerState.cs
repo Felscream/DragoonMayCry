@@ -64,11 +64,18 @@ namespace DragoonMayCry.State
 
         private bool CanUpdateStates()
         {
-            if(!IsInsideInstance && !Plugin.Configuration!.ActiveOutsideInstance)
+            if(!IsInsideInstance 
+                && Plugin.Configuration != null && !Plugin.Configuration.ActiveOutsideInstance 
+                || IsInPvp())
             {
                 return false;
             }
             return IsCombatJob();
+        }
+
+        public bool IsInPvp()
+        {
+            return Service.ClientState.IsPvP;
         }
 
         public void RegisterCombatStateChangeHandler(EventHandler<bool> inCombatHandler)

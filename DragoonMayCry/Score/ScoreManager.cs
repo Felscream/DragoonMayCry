@@ -100,8 +100,11 @@ namespace DragoonMayCry.Score
 
             if (isCastingLb)
             {
-                CurrentScoreRank.Score +=
-                    (float)(framework.UpdateDelta.TotalSeconds * CurrentScoreRank.StyleScoring.ReductionPerSecond * 100);
+                CurrentScoreRank.Score =
+                    Math.Clamp(CurrentScoreRank.Score 
+                    + (float)(framework.UpdateDelta.TotalSeconds * CurrentScoreRank.StyleScoring.ReductionPerSecond * 100),
+                    0, 
+                    CurrentScoreRank.StyleScoring.Threshold);
             }
             else
             {

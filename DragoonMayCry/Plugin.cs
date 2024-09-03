@@ -57,6 +57,7 @@ public unsafe class Plugin : IDalamudPlugin
         var playerState = PlayerState.GetInstance();
         return IsCombatJob
                && playerState.IsInCombat
+               && !playerState.IsInPvp()
                && (playerState.IsInsideInstance ||
                    Configuration!.ActiveOutsideInstance);
     }
