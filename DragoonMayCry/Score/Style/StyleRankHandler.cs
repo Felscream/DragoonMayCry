@@ -149,7 +149,7 @@ namespace DragoonMayCry.Score.Style
 
             if (isBlunder)
             {
-                audioService.PlaySfx(SoundId.DeadWeight, Plugin.Configuration.ForceSoundEffectsOnBlunder);
+                audioService.PlaySfx(SoundId.DeadWeight, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
             }
 
             StyleRankChange?.Invoke(this, new(tempRank.Value, CurrentStyle.Value, isBlunder));
