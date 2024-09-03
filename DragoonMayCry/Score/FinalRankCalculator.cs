@@ -34,7 +34,6 @@ namespace DragoonMayCry.Score
        
             foreach(KeyValuePair<StyleType, double> entry in timeInEachTier)
             {
-                Service.Log.Debug($"{entry.Key} {entry.Value}");
                 var timeInTier = entry.Value ;
                 if(timeInTier > maxTime)
                 {
@@ -42,7 +41,6 @@ namespace DragoonMayCry.Score
                     finalRank = entry.Key;
                 }
             }
-            Service.Log.Debug($"{finalRank}");
             return finalRank;
 
         }
@@ -56,7 +54,6 @@ namespace DragoonMayCry.Score
             }
             else if(tierTimer.IsRunning)
             {
-                Service.Log.Debug($"{timeInEachTier.Count}");
                 saveTimeInTier(currentTier);
                 tierTimer.Reset();
                 var finalRank = DetermineFinalRank();
@@ -101,12 +98,10 @@ namespace DragoonMayCry.Score
             }
             if (!timeInEachTier.ContainsKey(tier))
             {
-                Service.Log.Debug($"Adding to {tier}");
                 timeInEachTier.Add(tier, tierTimer.Elapsed.TotalSeconds);
             }
             else
             {
-                Service.Log.Debug($"Adding to {tier}");
                 timeInEachTier[tier] += tierTimer.Elapsed.TotalSeconds;
             }
         }
