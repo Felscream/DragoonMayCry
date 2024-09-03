@@ -164,14 +164,17 @@ namespace DragoonMayCry.Score.Action
             {
                 return;
             }
+            
 
             var player = playerState.Player;
+            
             if (sourceId != player!.GameObjectId)
             {
                 return;
             }
 
             var actionId = Marshal.ReadInt32(effectHeader, 0x8);
+           
             var type = TypeForActionId((uint)actionId);
             if (type == PlayerActionType.Other || actionId == 7) // 7 -> auto attack
             {
@@ -182,12 +185,6 @@ namespace DragoonMayCry.Score.Action
             {
                 StartLimitBreakUse((uint)actionId);
             }
-
-            /*var combo = actionManager->Combo; //value is 0 when a combo is dropped
-            var action = luminaActionCache.GetRow(combo.Action);
-            
-            
-            RegisterNewAction((uint)actionId);*/
         }
 
         private PlayerActionType TypeForActionId(uint actionId)
@@ -346,10 +343,15 @@ namespace DragoonMayCry.Score.Action
             }
 
             var isTankLb = playerState.IsTank();
+            if(isTankLb && !tankLimitBreakDelays.ContainsKey(actionId))
+            {
+                return;
+            }
+
             var castTime = GetCastTime(actionId);
 
             // the +3 is just to give enough time to register the gcd clipping just after
-            var gracePeriod = isTankLb && tankLimitBreakDelays.ContainsKey(actionId) ? tankLimitBreakDelays[actionId] : castTime + 3f;
+            var gracePeriod = isTankLb ? tankLimitBreakDelays[actionId] : castTime + 3f;
 
             var action = luminaActionCache?.GetRow(actionId);
             limitBreakCast = new LimitBreak(gracePeriod, isTankLb, action?.Name!);
@@ -432,47 +434,48 @@ namespace DragoonMayCry.Score.Action
             ref bool handled)
         {
             
-            if (!Plugin.CanRunDmc())
+            if (!Plugin.CanRunDmc() || color == 4278190218) //color for damage taken
             {
                 return;
             }
+
+            var damage = val1;
+            var actionName = text1.ToString();
+
+            // TODO Some DoTs deal no damage on application,
+            // will have to figure out what to do about that
+            if (actionName == null || text2 == null || damage == 0)
             {
-                var damage = val1;
-                var actionName = text1.ToString();
-
-
-                if (actionName == null || text2 == null)
-                {
-                    return;
-                }
-                if (actionName.EndsWith("\\u00A7") && actionName.Length >= 1)
-                {
-                    return;
-                }
-
-                // TODO Some DoTs deal no damage on application,
-                // will have to figure out what to do about that
-                if (actionName.StartsWith('+'))
-                {
-                    actionName = actionName.Substring(2);
-                }
-                
-                if (!validTextKind.Contains(kind) && 
-                    (limitBreakCast == null || limitBreakCast.Name != actionName))
-                {
-                        return;
-                    
-                }
-
-                if (limitBreakCast != null && actionName == limitBreakCast.Name)
-                {
-                    OnLimitBreakEffect?.Invoke(this, EventArgs.Empty);
-                }
-                else
-                {
-                    OnFlyTextCreation?.Invoke(this, damage);
-                }
+                return;
             }
+
+            if (actionName.EndsWith("\\u00A7") && actionName.Length >= 1)
+            {
+                return;
+            }
+
+            
+            if (actionName.StartsWith('+'))
+            {
+                actionName = actionName.Substring(2);
+            }
+                
+            if (!validTextKind.Contains(kind) && 
+                (limitBreakCast == null || limitBreakCast.Name != actionName))
+            {
+                    return;
+                    
+            }
+
+            if (limitBreakCast != null && actionName == limitBreakCast.Name)
+            {
+                OnLimitBreakEffect?.Invoke(this, EventArgs.Empty);
+            }
+            else
+            {
+                OnFlyTextCreation?.Invoke(this, damage);
+            }
+            
         }
     }
 }
