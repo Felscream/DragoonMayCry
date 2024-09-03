@@ -15,7 +15,7 @@ using DragoonMayCry.Score.Model;
 
 namespace DragoonMayCry.Score
 {
-    public unsafe class ScoreManager : IDisposable
+    public unsafe class ScoreManager : IDisposable, IResettable
 
     {
         public class ScoreRank
@@ -102,7 +102,6 @@ namespace DragoonMayCry.Score
             {
                 CurrentScoreRank.Score +=
                     (float)(framework.UpdateDelta.TotalSeconds * CurrentScoreRank.StyleScoring.ReductionPerSecond * 100);
-                
             }
             else
             {
@@ -235,6 +234,13 @@ namespace DragoonMayCry.Score
                 DisablePointsGainedReduction();
                 ResetScore();
             }
+        }
+
+        public void Reset()
+        {
+            isCastingLb = false;
+            ResetScore();
+            DisablePointsGainedReduction();
         }
     }
 }

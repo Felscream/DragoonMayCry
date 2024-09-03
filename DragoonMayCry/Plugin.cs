@@ -1,9 +1,6 @@
 using Dalamud.Game.Command;
-using Dalamud.Interface.Utility.Raii;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using Dalamud.Plugin.Services;
-using DragoonMayCry.Audio;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
 using DragoonMayCry.Score;
@@ -11,7 +8,6 @@ using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Style;
 using DragoonMayCry.State;
 using DragoonMayCry.UI;
-using DragoonMayCry.Util;
 
 namespace DragoonMayCry;
 
@@ -45,7 +41,7 @@ public unsafe class Plugin : IDalamudPlugin
         scoreManager = new(styleRankHandler, playerActionTracker);
         scoreProgressBar = new(scoreManager, styleRankHandler, playerActionTracker);
         finalRankCalculator = new (playerState, styleRankHandler);
-        pluginUi = new(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator);
+        pluginUi = new(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator, OnActiveOutsideInstanceConfChange);
 
         scoreProgressBar.DemotionApplied += styleRankHandler.OnDemotion;
         scoreProgressBar.Promotion += styleRankHandler.OnPromotion;
@@ -85,5 +81,15 @@ public unsafe class Plugin : IDalamudPlugin
     {
         IsCombatJob = playerState.IsCombatJob();
     }
-    
+    private void OnActiveOutsideInstanceConfChange(object? sender, bool activeOutsideInstance)
+    {
+        if(playerState.IsInsideInstance || activeOutsideInstance)
+        {
+            return;
+        }
+        scoreProgressBar.Reset();
+        scoreManager.Reset();
+        finalRankCalculator.Reset();
+        styleRankHandler.Reset();
+    }
 }

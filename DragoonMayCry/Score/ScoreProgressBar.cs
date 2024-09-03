@@ -10,23 +10,14 @@ using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Style;
 using DragoonMayCry.State;
+using DragoonMayCry.Util;
 using ImGuiNET;
 
 namespace DragoonMayCry.Score
 {
-    public class ScoreProgressBar : IDisposable
+    public class ScoreProgressBar : IDisposable, IResettable
     {
-        public float Progress
-        {
-            get
-            {
-                return progress;
-            }
-            private set
-            {
-                progress = value;
-            }
-        }
+        public float Progress { get; private set; }
 
         public EventHandler<float>? DemotionStart;
         public EventHandler<bool>? DemotionApplied;
@@ -43,7 +34,6 @@ namespace DragoonMayCry.Score
         private readonly Stopwatch demotionApplicationStopwatch;
         private float interpolatedScore = 0;
         private double lastPromotionTime = 0;
-        private float progress;
         private bool isCastingLb;
 
         public ScoreProgressBar(ScoreManager scoreManager, StyleRankHandler styleRankHandler, PlayerActionTracker playerActionTracker)
@@ -180,8 +170,7 @@ namespace DragoonMayCry.Score
             this.isCastingLb = e.IsCasting;
             if (demotionApplicationStopwatch.IsRunning)
             {
-                DemotionCanceled?.Invoke(this, EventArgs.Empty);
-                demotionApplicationStopwatch.Reset();
+                CancelDemotion();
             }
         }
 
@@ -216,6 +205,19 @@ namespace DragoonMayCry.Score
         {
             return scoreManager.CurrentScoreRank.StyleScoring.DemotionThreshold /
                    scoreManager.CurrentScoreRank.StyleScoring.Threshold;
+        }
+
+        public void Reset()
+        {
+            Progress = 0;
+            lastPromotionTime = 0;
+            isCastingLb = false;
+            interpolatedScore = 0;
+            if (demotionApplicationStopwatch.IsRunning)
+            {
+                CancelDemotion();
+            }
+            
         }
     }
 }

@@ -1,6 +1,7 @@
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Style;
 using DragoonMayCry.State;
+using DragoonMayCry.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,18 +12,19 @@ using static DragoonMayCry.Score.Style.StyleRankHandler;
 
 namespace DragoonMayCry.Score
 {
-    public class FinalRankCalculator
+    public class FinalRankCalculator : IResettable
     {
         public EventHandler<StyleType> FinalRankCalculated;
+        private readonly PlayerState playerState;
         private Dictionary<StyleType, double> timeInEachTier;
         private Stopwatch tierTimer;
         private StyleType currentTier = StyleType.NoStyle;
         public FinalRankCalculator(PlayerState playerState, StyleRankHandler styleRankHandler) {
-
             timeInEachTier = new Dictionary<StyleType, double>();
             tierTimer = new Stopwatch();
             styleRankHandler.StyleRankChange += OnRankChange;
-            playerState.RegisterCombatStateChangeHandler(OnCombat);
+            this.playerState = playerState;
+            this.playerState.RegisterCombatStateChangeHandler(OnCombat);
         }
 
         private StyleType DetermineFinalRank()
@@ -50,7 +52,7 @@ namespace DragoonMayCry.Score
                 timeInEachTier = new Dictionary<StyleType, double>();
                 tierTimer.Start();
             }
-            else
+            else if(tierTimer.IsRunning)
             {
                 saveTimeInTier();
                 tierTimer.Reset();
@@ -61,6 +63,9 @@ namespace DragoonMayCry.Score
 
         private void OnRankChange(object? sender, RankChangeData rankChange)
         {
+            if(!tierTimer.IsRunning) {
+                return;
+            }
             saveTimeInTier();
             if(rankChange.NewRank < rankChange.PreviousRank && rankChange.NewRank < StyleType.A)
             {
@@ -100,6 +105,12 @@ namespace DragoonMayCry.Score
             {
                 timeInEachTier[tier] += tierTimer.Elapsed.TotalSeconds;
             }
+        }
+
+        public void Reset()
+        {
+            timeInEachTier = new Dictionary<StyleType, double>();
+            tierTimer.Reset();
         }
     }
 }

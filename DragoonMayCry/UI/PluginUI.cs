@@ -19,9 +19,11 @@ namespace DragoonMayCry.UI
         private readonly Stopwatch hideRankUiStopwatch;
         private const float TimeToResetScoreAfterCombat = 10000;
         
-        public PluginUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager, FinalRankCalculator finalRankCalculator)
+        public PluginUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager, FinalRankCalculator finalRankCalculator, EventHandler<bool> OnActiveOutsideInstanceChange)
         {
             ConfigWindow = new ConfigWindow(Plugin.Configuration!);
+            ConfigWindow.ActiveOutsideInstanceChange += OnActiveOutsideInstanceChange;
+
             styleRankUi = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator);
 
             windowSystem.AddWindow(ConfigWindow);

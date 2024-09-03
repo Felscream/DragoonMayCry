@@ -11,7 +11,7 @@ public class DmcConfiguration : IPluginConfiguration
     public int Version { get; set; } = 0;
     public int SfxVolume { get; set; } = 80;
     public bool PlaySoundEffects { get; set; } = true;
-    public bool PlaySoundEffectsOnBlunder { get; set; } = true;
+    public bool ForceSoundEffectsOnBlunder { get; set; } = false;
     public int PlaySfxEveryOccurrences { get; set; } = 3;
     public bool ApplyGameVolume { get; set; } = true;
     public bool ActiveOutsideInstance { get; set; } = false;

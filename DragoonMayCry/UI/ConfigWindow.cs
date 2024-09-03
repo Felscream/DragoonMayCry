@@ -9,6 +9,7 @@ namespace DragoonMayCry.UI;
 
 public class ConfigWindow : Window, IDisposable
 {
+    public EventHandler<bool> ActiveOutsideInstanceChange;
     private readonly DmcConfiguration configuration;
 
     // We give this window a constant ID using ###
@@ -30,7 +31,7 @@ public class ConfigWindow : Window, IDisposable
     public override void Draw()
     {
         var lockScoreWindow = configuration.StyleRankUiConfiguration.LockScoreWindow;
-        if (ImGui.Checkbox("Lock score window", ref lockScoreWindow))
+        if (ImGui.Checkbox("Lock rank window", ref lockScoreWindow))
         {
             configuration.StyleRankUiConfiguration.LockScoreWindow = lockScoreWindow;
             configuration.Save();
@@ -42,6 +43,7 @@ public class ConfigWindow : Window, IDisposable
         {
             configuration.ActiveOutsideInstance = activeOutsideInstance;
             configuration.Save();
+            ActiveOutsideInstanceChange?.Invoke(this, activeOutsideInstance);
         }
 
         var playSoundEffects = configuration.PlaySoundEffects;
@@ -51,10 +53,10 @@ public class ConfigWindow : Window, IDisposable
             configuration.Save();
         }
 
-        var playSoundEffectsOnBlunder = configuration.PlaySoundEffectsOnBlunder;
-        if (ImGui.Checkbox("Play sound effect on blunders", ref playSoundEffectsOnBlunder))
+        var playSoundEffectsOnBlunder = configuration.ForceSoundEffectsOnBlunder;
+        if (ImGui.Checkbox("Force sound effect on blunders", ref playSoundEffectsOnBlunder))
         {
-            configuration.PlaySoundEffectsOnBlunder = playSoundEffectsOnBlunder;
+            configuration.ForceSoundEffectsOnBlunder = playSoundEffectsOnBlunder;
             configuration.Save();
         }
 
