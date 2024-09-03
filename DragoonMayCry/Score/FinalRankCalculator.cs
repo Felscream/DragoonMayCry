@@ -34,6 +34,7 @@ namespace DragoonMayCry.Score
        
             foreach(KeyValuePair<StyleType, double> entry in timeInEachTier)
             {
+                Service.Log.Debug($"{entry.Key} {entry.Value}");
                 var timeInTier = entry.Value ;
                 if(timeInTier > maxTime)
                 {
@@ -41,6 +42,7 @@ namespace DragoonMayCry.Score
                     finalRank = entry.Key;
                 }
             }
+            Service.Log.Debug($"{finalRank}");
             return finalRank;
 
         }
@@ -54,7 +56,8 @@ namespace DragoonMayCry.Score
             }
             else if(tierTimer.IsRunning)
             {
-                saveTimeInTier();
+                Service.Log.Debug($"{timeInEachTier.Count}");
+                saveTimeInTier(currentTier);
                 tierTimer.Reset();
                 var finalRank = DetermineFinalRank();
                 FinalRankCalculated?.Invoke(this, finalRank);
@@ -63,10 +66,11 @@ namespace DragoonMayCry.Score
 
         private void OnRankChange(object? sender, RankChangeData rankChange)
         {
-            if(!tierTimer.IsRunning) {
+            currentTier = rankChange.NewRank;
+            if (!tierTimer.IsRunning) {
                 return;
             }
-            saveTimeInTier();
+            saveTimeInTier(rankChange.PreviousRank);
             if(rankChange.NewRank < rankChange.PreviousRank && rankChange.NewRank < StyleType.A)
             {
                 if (timeInEachTier.ContainsKey(StyleType.S))
@@ -78,8 +82,7 @@ namespace DragoonMayCry.Score
                     timeInEachTier.Add(StyleType.S, -10d);
                 }
             }
-
-            currentTier = rankChange.NewRank;
+            
             if (!timeInEachTier.ContainsKey(currentTier))
             {
                 timeInEachTier.Add(currentTier, 0);
@@ -87,9 +90,8 @@ namespace DragoonMayCry.Score
             tierTimer.Restart();
         }
 
-        private void saveTimeInTier()
+        private void saveTimeInTier(StyleType tier)
         {
-            var tier = currentTier;
             if(tier == StyleType.NoStyle)
             {
                 tier = StyleType.D;
@@ -99,10 +101,12 @@ namespace DragoonMayCry.Score
             }
             if (!timeInEachTier.ContainsKey(tier))
             {
+                Service.Log.Debug($"Adding to {tier}");
                 timeInEachTier.Add(tier, tierTimer.Elapsed.TotalSeconds);
             }
             else
             {
+                Service.Log.Debug($"Adding to {tier}");
                 timeInEachTier[tier] += tierTimer.Elapsed.TotalSeconds;
             }
         }

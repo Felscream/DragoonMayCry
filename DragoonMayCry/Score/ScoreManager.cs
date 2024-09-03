@@ -104,7 +104,7 @@ namespace DragoonMayCry.Score
                     Math.Clamp(CurrentScoreRank.Score 
                     + (float)(framework.UpdateDelta.TotalSeconds * CurrentScoreRank.StyleScoring.ReductionPerSecond * 100),
                     0, 
-                    CurrentScoreRank.StyleScoring.Threshold);
+                    CurrentScoreRank.StyleScoring.Threshold * 1.5f);
             }
             else
             {

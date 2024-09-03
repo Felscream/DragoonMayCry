@@ -349,7 +349,7 @@ namespace DragoonMayCry.Score.Action
             var castTime = GetCastTime(actionId);
 
             // the +3 is just to give enough time to register the gcd clipping just after
-            var gracePeriod = isTankLb ? tankLimitBreakDelays[actionId] : castTime + 3f;
+            var gracePeriod = isTankLb && tankLimitBreakDelays.ContainsKey(actionId) ? tankLimitBreakDelays[actionId] : castTime + 3f;
 
             var action = luminaActionCache?.GetRow(actionId);
             limitBreakCast = new LimitBreak(gracePeriod, isTankLb, action?.Name!);
