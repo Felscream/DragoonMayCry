@@ -5,6 +5,7 @@ using Dalamud.Plugin.Services;
 using DragoonMayCry.Cache;
 using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
@@ -90,7 +91,6 @@ namespace DragoonMayCry.Score.Action
 
         private bool isGcdDropped;
 
-
         private Stopwatch limitBreakStopwatch;
         private LimitBreak? limitBreakCast;
 
@@ -164,11 +164,9 @@ namespace DragoonMayCry.Score.Action
             {
                 return;
             }
-            
 
             var player = playerState.Player;
-            
-            if (sourceId != player!.GameObjectId)
+            if (player == null || sourceId != player.GameObjectId)
             {
                 return;
             }
@@ -176,7 +174,7 @@ namespace DragoonMayCry.Score.Action
             var actionId = Marshal.ReadInt32(effectHeader, 0x8);
            
             var type = TypeForActionId((uint)actionId);
-            if (type == PlayerActionType.Other || actionId == 7) // 7 -> auto attack
+            if (type == PlayerActionType.Other || type == PlayerActionType.AutoAttack)
             {
                 return;
             }
@@ -200,7 +198,7 @@ namespace DragoonMayCry.Score.Action
                 2 => PlayerActionType.Spell,
                 4 => PlayerActionType.OffGCD,
                 6 => PlayerActionType.Other,
-                7 => PlayerActionType.Other,
+                7 => PlayerActionType.AutoAttack,
                 9 => PlayerActionType.LimitBreak,
                 15 => PlayerActionType.LimitBreak,
                 _ => PlayerActionType.Weaponskill,
@@ -360,7 +358,9 @@ namespace DragoonMayCry.Score.Action
         private unsafe void DetectClipping()
         {
             var animationLock = actionManager->animationLock;
-            if (lastDetectedClip == actionManager->currentSequence || actionManager->isGCDRecastActive || animationLock <= 0)
+            if (lastDetectedClip == actionManager->currentSequence 
+                || actionManager->isGCDRecastActive 
+                || animationLock <= 0)
             {
                 return;
             }
@@ -386,7 +386,7 @@ namespace DragoonMayCry.Score.Action
         {
             // do not track dropped GCDs if the LB is being cast
             // or the player died between 2 GCDs
-            if (limitBreakCast != null || playerState.IsDead)
+            if (limitBreakCast != null || playerState.IsDead || playerState.IsIncapacitated())
             {
                 return;
             }
@@ -431,7 +431,7 @@ namespace DragoonMayCry.Score.Action
             ref bool handled)
         {
             
-            if (!Plugin.CanRunDmc() || color == 4278190218) //color for damage taken
+            if (!Plugin.CanRunDmc() || color == 4278190218) //color for damage taken will break if users are able to change it
             {
                 return;
             }

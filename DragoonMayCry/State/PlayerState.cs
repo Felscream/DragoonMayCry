@@ -6,6 +6,8 @@ using System;
 using System.Linq;
 using DragoonMayCry.Data;
 using DragoonMayCry.Util;
+using System.Collections.Generic;
+using Dalamud.Game.ClientState.Statuses;
 
 namespace DragoonMayCry.State
 {
@@ -19,6 +21,16 @@ namespace DragoonMayCry.State
         private ICondition Condition => Service.Condition;
         
         private bool CheckCondition(ConditionFlag[] conditionFlags) => conditionFlags.Any(x => Condition[x]);
+
+        private readonly ConditionFlag[] unableToAct = new ConditionFlag[] { ConditionFlag.Transformed, ConditionFlag.Swimming,
+            ConditionFlag.Diving, ConditionFlag.WatchingCutscene, 
+            ConditionFlag.OccupiedInCutSceneEvent, ConditionFlag.WatchingCutscene78 };
+
+        private readonly HashSet<uint> incapacitatedDebuffIds = new HashSet<uint>
+        {
+            625, 774, 783, 896, 1762, 1785, 1950, 1953, 1963, 2408, 2910, 2961, 3165, 3501, 3730, 3908, 3983, 4132, // down for the count
+            292 // fetters
+        };
 
         private readonly InCombatStateTracker inCombatStateTracker;
         private readonly OnDeathStateTracker onDeathStateTracker;
@@ -126,6 +138,34 @@ namespace DragoonMayCry.State
         public bool IsCombatJob()
         {
             return JobHelper.IsCombatJob(GetCurrentJob());
+        }
+
+        public bool IsIncapacitated()
+        {
+            if(Player == null || Player.IsDead)
+            {
+                return true;
+            }
+
+            if (CheckCondition(unableToAct))
+            {
+                return true;
+            }
+
+            StatusList statuses = Player.StatusList;
+            for(int i = 0; i < statuses.Length; i++)
+            {
+                var status = statuses[i];
+                if (status == null)
+                {
+                    continue;
+                }
+                if (incapacitatedDebuffIds.Contains(status.GameData.RowId))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public void Dispose()

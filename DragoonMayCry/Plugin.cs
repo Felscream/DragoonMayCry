@@ -25,14 +25,12 @@ public unsafe class Plugin : IDalamudPlugin
     private readonly PlayerActionTracker playerActionTracker;
     private readonly StyleRankHandler styleRankHandler;
     private readonly FinalRankCalculator finalRankCalculator;
-    private static bool IsCombatJob = false;
 
     public Plugin()
     {
         PluginInterface.Create<Service>();
         
         playerState = PlayerState.GetInstance();
-        playerState.RegisterJobChangeHandler(OnJobChange);
 
         Configuration = PluginInterface.GetPluginConfig() as DmcConfiguration ?? new DmcConfiguration();
         playerActionTracker = new();
@@ -78,10 +76,6 @@ public unsafe class Plugin : IDalamudPlugin
         pluginUi.ToggleConfigUI();
     }
 
-    private void OnJobChange(object? sender, JobIds job)
-    {
-        IsCombatJob = playerState.IsCombatJob();
-    }
     private void OnActiveOutsideInstanceConfChange(object? sender, bool activeOutsideInstance)
     {
         if(playerState.IsInsideInstance || activeOutsideInstance)

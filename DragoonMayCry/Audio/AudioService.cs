@@ -27,6 +27,8 @@ namespace DragoonMayCry.Audio
 
         private readonly Dictionary<SoundId, int> soundIdsNextAvailability;
         private readonly AudioEngine audioEngine;
+        private readonly float sfxCooldown = 1f;
+        private double lastPlayTime = 0f;
 
         public AudioService()
         {
@@ -48,7 +50,7 @@ namespace DragoonMayCry.Audio
             }
 
             audioEngine.PlaySfx(key, SfxPaths[key], GetSfxVolume());
-
+            lastPlayTime = ImGui.GetTime();
             if (!soundIdsNextAvailability.ContainsKey(key) || force || soundIdsNextAvailability[key] <= 0)
             {
                 soundIdsNextAvailability[key] = Plugin.Configuration!.PlaySfxEveryOccurrences - 1;
@@ -70,8 +72,10 @@ namespace DragoonMayCry.Audio
 
         private bool CanPlaySfx(SoundId type)
         {
-            return !soundIdsNextAvailability.ContainsKey(type) ||
-                   soundIdsNextAvailability[type] <= 0;
+            double lastPlayTimeDiff = ImGui.GetTime() - lastPlayTime;
+            return lastPlayTimeDiff > sfxCooldown
+                && (!soundIdsNextAvailability.ContainsKey(type) ||
+                   soundIdsNextAvailability[type] <= 0);
         }
 
         private static string GetPathToAudio(string name)
