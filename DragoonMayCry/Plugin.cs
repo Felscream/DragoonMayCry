@@ -37,7 +37,7 @@ public unsafe class Plugin : IDalamudPlugin
 
         styleRankHandler = new(playerActionTracker);
         scoreManager = new(styleRankHandler, playerActionTracker);
-        scoreProgressBar = new(scoreManager, styleRankHandler, playerActionTracker);
+        scoreProgressBar = new(scoreManager, styleRankHandler, playerActionTracker, playerState);
         finalRankCalculator = new (playerState, styleRankHandler);
         pluginUi = new(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator, OnActiveOutsideInstanceConfChange);
 

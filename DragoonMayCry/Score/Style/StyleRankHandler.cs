@@ -189,7 +189,7 @@ namespace DragoonMayCry.Score.Style
 
         private void OnLimitBreakCanceled(object? sender, EventArgs args)
         {
-            if (playerState.IsDead)
+            if (playerState.IsDead || playerState.IsIncapacitated())
             {
                 return;
             }

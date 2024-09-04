@@ -18,7 +18,6 @@ namespace DragoonMayCry.State
         [FieldOffset(0x60)] public ComboDetail Combo;
         [FieldOffset(0x68)] public bool isQueued;
         [FieldOffset(0x110)] public ushort currentSequence;
-        //[FieldOffset(0x112)] public ushort unknownSequence; // ???
         [FieldOffset(0x5E8)] public bool isGCDRecastActive;
         [FieldOffset(0x5EC)] public uint currentGCDAction;
         [FieldOffset(0x5F0)] public float elapsedGCDRecastTime;

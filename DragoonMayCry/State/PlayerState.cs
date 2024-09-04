@@ -26,11 +26,7 @@ namespace DragoonMayCry.State
             ConditionFlag.Diving, ConditionFlag.WatchingCutscene, 
             ConditionFlag.OccupiedInCutSceneEvent, ConditionFlag.WatchingCutscene78 };
 
-        private readonly HashSet<uint> incapacitatedDebuffIds = new HashSet<uint>
-        {
-            625, 774, 783, 896, 1762, 1785, 1950, 1953, 1963, 2408, 2910, 2961, 3165, 3501, 3730, 3908, 3983, 4132, // down for the count
-            292 // fetters
-        };
+        
 
         private readonly InCombatStateTracker inCombatStateTracker;
         private readonly OnDeathStateTracker onDeathStateTracker;
@@ -72,6 +68,7 @@ namespace DragoonMayCry.State
             loginStateTracker.Update(this);
             jobChangeTracker.Update(this);
             damageDownTracker.Update(this);
+            
         }
 
         private bool CanUpdateStates()
@@ -160,12 +157,17 @@ namespace DragoonMayCry.State
                 {
                     continue;
                 }
-                if (incapacitatedDebuffIds.Contains(status.GameData.RowId))
+                if (DebuffIds.IsIncapacitatingDebuff(status.GameData.RowId))
                 {
                     return true;
                 }
             }
             return false;
+        }
+
+        public bool HasTarget()
+        {
+            return Player != null && Player.TargetObject != null;
         }
 
         public void Dispose()

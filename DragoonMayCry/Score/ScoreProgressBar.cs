@@ -31,12 +31,13 @@ namespace DragoonMayCry.Score
         private readonly ScoreManager scoreManager;
         private readonly StyleRankHandler styleRankHandler;
         private readonly PlayerActionTracker playerActionTracker;
+        private readonly PlayerState playerState;
         private readonly Stopwatch demotionApplicationStopwatch;
         private float interpolatedScore = 0;
         private double lastPromotionTime = 0;
         private bool isCastingLb;
 
-        public ScoreProgressBar(ScoreManager scoreManager, StyleRankHandler styleRankHandler, PlayerActionTracker playerActionTracker)
+        public ScoreProgressBar(ScoreManager scoreManager, StyleRankHandler styleRankHandler, PlayerActionTracker playerActionTracker, PlayerState playerState)
         {
             this.scoreManager = scoreManager;
             Service.Framework.Update += UpdateScoreInterpolation;
@@ -46,7 +47,8 @@ namespace DragoonMayCry.Score
             this.playerActionTracker.OnLimitBreak += OnLimitBreakCast;
             this.playerActionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
 
-            PlayerState.GetInstance().RegisterCombatStateChangeHandler(OnCombat);
+            this.playerState = playerState;
+            playerState.RegisterCombatStateChangeHandler(OnCombat);
             demotionApplicationStopwatch = new Stopwatch();
         }
 
@@ -138,8 +140,10 @@ namespace DragoonMayCry.Score
 
         private bool CanStartDemotionTimer(float demotionThreshold)
         {
-            return Progress < demotionThreshold
-                   && scoreManager.CurrentScoreRank.Rank != StyleType.NoStyle
+            return this.Progress < demotionThreshold
+                   && playerState.HasTarget()
+                   && !playerState.IsIncapacitated()
+                   && styleRankHandler.CurrentStyle.Value != StyleType.NoStyle
                    && !demotionApplicationStopwatch.IsRunning
                    && GetTimeSinceLastPromotion() > PromotionSafeguardDuration;
         }

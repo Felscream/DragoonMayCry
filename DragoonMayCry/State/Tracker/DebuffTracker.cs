@@ -1,30 +1,17 @@
 using Dalamud.Game.ClientState.Statuses;
+using DragoonMayCry.Data;
 using System.Collections.Generic;
 
 namespace DragoonMayCry.State.Tracker
 {
     internal class DebuffTracker : StateTracker<bool>
     {
-        private readonly HashSet<uint> damageDownIds = new HashSet<uint>
-        {
-            215, 628, 696, 1016, 1090, 2092, 2404, 2522, 2911, 3166, 3304, 3964
-        };
+        
 
-        private readonly HashSet<uint> sustainedDamageIds = new HashSet<uint>
-        {
-            2935, // found on Valigarmanda, M1S, P9S, P10S
-            3692, // P10S poison
-            4149, // M3S
-        };
-
-        private readonly HashSet<uint> vulnerabilityUpIds = new HashSet<uint>
-        {
-            1789, // found on Valigarmanda, Zoraal Ja
-        };
-
-        private readonly Dictionary<ushort, ISet<uint>> debuffBlackListPerInstance = new Dictionary<ushort, ISet<uint>>{
+        private readonly Dictionary<ushort, ISet<uint>> debuffInstanceBlacklist = new Dictionary<ushort, ISet<uint>>{
             { 937, new HashSet<uint> {2935} }, // Sustained damage on P9S is applied after a TB
-            { 939, new HashSet<uint> {2935} } // Failed tower soak on P10S, may not be the player's fault
+            { 939, new HashSet<uint> {2935} }, // Failed tower soak on P10S, may not be the player's fault
+            { 63, new HashSet<uint> {202} }, // Ifrit ex
         };
 
 
@@ -72,13 +59,13 @@ namespace DragoonMayCry.State.Tracker
 
             uint id = status.GameData.RowId;
             ushort territory = Service.ClientState.TerritoryType;
-            if (debuffBlackListPerInstance.ContainsKey(territory) && debuffBlackListPerInstance[territory].Contains(id))
+            if (debuffInstanceBlacklist.ContainsKey(territory) && debuffInstanceBlacklist[territory].Contains(id))
             {
                 return false;
             }
 
             
-            return damageDownIds.Contains(id) || sustainedDamageIds.Contains(id) || vulnerabilityUpIds.Contains(id);
+            return DebuffIds.DamageDownIds.Contains(id) || DebuffIds.SustainedDamageIds.Contains(id) || DebuffIds.VulnerabilityUpIds.Contains(id);
         }
     }
 }

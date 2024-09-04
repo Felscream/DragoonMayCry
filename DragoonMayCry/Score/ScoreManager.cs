@@ -170,7 +170,10 @@ namespace DragoonMayCry.Score
         private void OnLimitBreakCanceled(object? sender, EventArgs e)
         {
             isCastingLb = false;
-            ResetScore();
+            if (!playerState.IsIncapacitated())
+            {
+                ResetScore();
+            }
         }
 
         private void OnRankChange(object sender, RankChangeData data)
