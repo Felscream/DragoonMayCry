@@ -8,26 +8,40 @@ using System.Threading.Tasks;
 
 namespace DragoonMayCry.State.Tracker
 {
-    internal class DamageDownTracker : StateTracker<bool>
+    internal class DebuffTracker : StateTracker<bool>
     {
         private readonly HashSet<uint> damageDownIds = new HashSet<uint>
         {
             62, 215, 628, 696, 1016, 1090, 2092, 2404, 2522, 2911, 3166, 3304, 3964
         };
+
+        private readonly HashSet<uint> sustainedDamageIds = new HashSet<uint>
+        {
+            2935, // found on Valigarmanda, M1S
+            4149, // M3S
+        };
+
+        private readonly HashSet<uint> vulnerabilityUpIds = new HashSet<uint>
+        {
+            1789, // found on Valigarmanda, Zoraal Ja
+        };
+
         private bool hasDamageDown;
         
         public override void Update(PlayerState playerState)
         {
-            if(playerState.Player == null || playerState.IsDead)
+            var player = playerState.Player;
+            if (player == null || playerState.IsDead)
             {
                 return;
             }
-            StatusList statuses = playerState.Player.StatusList;
+            
+            StatusList statuses = player.StatusList;
 
             for(int i = 0; i < statuses.Length; i++)
             {
                 var status = statuses[i];
-                if (status != null && damageDownIds.Contains(status.GameData.RowId))
+                if (StatusIndicatesFailedMechanic(status))
                 {
                     if (!hasDamageDown)
                     {
@@ -46,6 +60,17 @@ namespace DragoonMayCry.State.Tracker
                 hasDamageDown = false;
                 OnChange?.Invoke(this, hasDamageDown);
             }
+        }
+
+        private bool StatusIndicatesFailedMechanic(Status? status)
+        {
+            if(status == null)
+            {
+                return false;
+            }
+
+            uint id = status.GameData.RowId;
+            return damageDownIds.Contains(id) || sustainedDamageIds.Contains(id) || vulnerabilityUpIds.Contains(id);
         }
     }
 }

@@ -55,7 +55,7 @@ public unsafe class Plugin : IDalamudPlugin
     public static bool CanRunDmc()
     {
         var playerState = PlayerState.GetInstance();
-        return IsCombatJob
+        return playerState.IsCombatJob()
                && playerState.IsInCombat
                && !playerState.IsInPvp()
                && (playerState.IsInsideInstance ||

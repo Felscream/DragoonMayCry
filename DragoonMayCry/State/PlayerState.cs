@@ -25,7 +25,7 @@ namespace DragoonMayCry.State
         private readonly OnEnteringInstanceStateTracker onEnteringInstanceStateTracker;
         private readonly LoginStateTracker loginStateTracker;
         private readonly JobChangeTracker jobChangeTracker;
-        private readonly DamageDownTracker damageDownTracker;
+        private readonly DebuffTracker damageDownTracker;
         private static PlayerState? Instance;
         private PlayerState()
         {

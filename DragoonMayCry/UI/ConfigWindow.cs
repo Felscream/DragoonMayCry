@@ -17,11 +17,9 @@ public class ConfigWindow : Window, IDisposable
     // and the window ID will always be "###XYZ counter window" for ImGui
     public ConfigWindow(DmcConfiguration configuration) : base("Dragoon May Cry###DmC")
     {
-        Flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
-                ImGuiWindowFlags.NoScrollWithMouse;
 
-        Size = new Vector2(0,0);
-        SizeCondition = ImGuiCond.Always;
+        Size = new Vector2(400,250);
+        SizeCondition = ImGuiCond.FirstUseEver;
 
         this.configuration = configuration;
     }

@@ -302,13 +302,10 @@ namespace DragoonMayCry.Score.Action
 
         private void OnCombat(object? sender, bool enteredCombat)
         {
-            if (enteredCombat)
+            currentWastedGcd = 0;
+            if (!enteredCombat)
             {
-                currentWastedGcd = 0;
-            }
-            else
-            {
-                if (limitBreakCast != null)
+                if (limitBreakCast != null || limitBreakStopwatch.IsRunning)
                 {
                     ResetLimitBreakUse();
                 }
@@ -389,7 +386,7 @@ namespace DragoonMayCry.Score.Action
         {
             // do not track dropped GCDs if the LB is being cast
             // or the player died between 2 GCDs
-            if (limitBreakCast != null)
+            if (limitBreakCast != null || playerState.IsDead)
             {
                 return;
             }
@@ -457,14 +454,13 @@ namespace DragoonMayCry.Score.Action
             
             if (actionName.StartsWith('+'))
             {
-                actionName = actionName.Substring(2);
+                actionName = actionName[2..];
             }
                 
-            if (!validTextKind.Contains(kind) && 
-                (limitBreakCast == null || limitBreakCast.Name != actionName))
+            if (!validTextKind.Contains(kind) 
+                && (limitBreakCast == null || limitBreakCast.Name != actionName))
             {
-                    return;
-                    
+                return;
             }
 
             if (limitBreakCast != null && actionName == limitBreakCast.Name)

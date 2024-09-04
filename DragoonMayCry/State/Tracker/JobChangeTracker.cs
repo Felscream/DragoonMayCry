@@ -17,6 +17,7 @@ namespace DragoonMayCry.State.Tracker
             {
                 return;
             }
+            
             var job = JobHelper.IdToJob(playerState.Player.ClassJob.Id);
             if (job != CurrentJob)
             {
