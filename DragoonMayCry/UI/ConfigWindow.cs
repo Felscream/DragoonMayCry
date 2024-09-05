@@ -11,23 +11,30 @@ public class ConfigWindow : Window, IDisposable
 {
     public EventHandler<bool> ActiveOutsideInstanceChange;
     private readonly DmcConfiguration configuration;
+    private readonly PluginUI pluginUI;
 
     // We give this window a constant ID using ###
     // This allows for labels being dynamic, like "{FPS Counter}fps###XYZ counter window",
     // and the window ID will always be "###XYZ counter window" for ImGui
-    public ConfigWindow(DmcConfiguration configuration) : base("Dragoon May Cry###DmC")
+    public ConfigWindow(PluginUI pluginUi, DmcConfiguration configuration) : base("DragoonMayCry - Configuration")
     {
 
         Size = new Vector2(400,250);
         SizeCondition = ImGuiCond.FirstUseEver;
 
         this.configuration = configuration;
+        this.pluginUI = pluginUi;
     }
 
     public void Dispose() { }
 
     public override void Draw()
     {
+        if (ImGui.Button("How it works"))
+        {
+            pluginUI.ToggleHowItWorks();
+        }
+
         var lockScoreWindow = configuration.StyleRankUiConfiguration.LockScoreWindow;
         if (ImGui.Checkbox("Lock rank window", ref lockScoreWindow))
         {

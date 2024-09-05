@@ -3,6 +3,7 @@ using Dalamud.Plugin;
 using DragoonMayCry.Score;
 using DragoonMayCry.Score.Style;
 using DragoonMayCry.State;
+using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Diagnostics;
 
@@ -12,6 +13,7 @@ namespace DragoonMayCry.UI
     {
         private readonly WindowSystem windowSystem = new("DragoonMayCry");
         private ConfigWindow ConfigWindow { get; init; }
+        private HowItWorksWindow HowItWorksWindow { get; init; }
 
         private readonly StyleRankUI styleRankUi;
         private readonly IDalamudPluginInterface pluginInterface;
@@ -21,16 +23,19 @@ namespace DragoonMayCry.UI
         
         public PluginUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager, FinalRankCalculator finalRankCalculator, EventHandler<bool> OnActiveOutsideInstanceChange)
         {
-            ConfigWindow = new ConfigWindow(Plugin.Configuration!);
+            ConfigWindow = new ConfigWindow(this, Plugin.Configuration!);
             ConfigWindow.ActiveOutsideInstanceChange += OnActiveOutsideInstanceChange;
+
+            HowItWorksWindow = new HowItWorksWindow();
 
             styleRankUi = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator);
 
             windowSystem.AddWindow(ConfigWindow);
+            windowSystem.AddWindow(HowItWorksWindow);
 
             pluginInterface = Plugin.PluginInterface;
             pluginInterface.UiBuilder.Draw += DrawUI;
-            pluginInterface.UiBuilder.OpenMainUi += ToggleConfigUI;
+            pluginInterface.UiBuilder.OpenMainUi += ToggleHowItWorks;
             pluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUI;
 
             this.playerState = PlayerState.GetInstance();
@@ -49,6 +54,7 @@ namespace DragoonMayCry.UI
             windowSystem.RemoveAllWindows();
 
             ConfigWindow.Dispose();
+            HowItWorksWindow.Dispose();
         }
 
         private void DrawUI()
@@ -92,6 +98,11 @@ namespace DragoonMayCry.UI
         public void ToggleConfigUI()
         {
             ConfigWindow.Toggle();
+        }
+
+        public void ToggleHowItWorks()
+        {
+            HowItWorksWindow.Toggle();
         }
     }
 }
