@@ -139,7 +139,7 @@ namespace DragoonMayCry.State
 
         public bool IsIncapacitated()
         {
-            if(Player == null || Player.IsDead)
+            if(Player == null)
             {
                 return true;
             }

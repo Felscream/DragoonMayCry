@@ -45,7 +45,6 @@ namespace DragoonMayCry.Audio
             
             if (!force && !CanPlaySfx(key))
             {
-                soundIdsNextAvailability[key] -= 1;
                 return;
             }
 
