@@ -10,7 +10,7 @@
       <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>0.7.0</Version>
+    <Version>0.7.1</Version>
     <Description>DragoonMayCry</Description>
     <PackageProjectUrl>https://github.com/Felscream/DragoonMayCry</PackageProjectUrl>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
