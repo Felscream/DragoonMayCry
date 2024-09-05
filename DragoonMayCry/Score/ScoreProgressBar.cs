@@ -141,11 +141,11 @@ namespace DragoonMayCry.Score
         private bool CanStartDemotionTimer(float demotionThreshold)
         {
             return this.Progress < demotionThreshold
-                   && playerState.HasTarget()
                    && !playerState.IsIncapacitated()
                    && styleRankHandler.CurrentStyle.Value != StyleType.NoStyle
                    && !demotionApplicationStopwatch.IsRunning
-                   && GetTimeSinceLastPromotion() > PromotionSafeguardDuration;
+                   && GetTimeSinceLastPromotion() > PromotionSafeguardDuration
+                   && playerState.CanTargetEnemy();
         }
 
         private bool CanApplyDemotion(float demotionThreshold)

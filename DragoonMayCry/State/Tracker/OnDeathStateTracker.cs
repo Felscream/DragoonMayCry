@@ -10,6 +10,10 @@ namespace DragoonMayCry.State.Tracker
     {
         public override void Update(PlayerState playerState)
         {
+            if (!playerState.IsInCombat)
+            {
+                return;
+            }
             CurrentValue = playerState.IsDead;
             if (CurrentValue && !LastValue)
             {

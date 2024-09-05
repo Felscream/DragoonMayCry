@@ -1,17 +1,23 @@
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.SubKinds;
-using Dalamud.Plugin.Services;
-using DragoonMayCry.State.Tracker;
-using System;
-using System.Linq;
-using DragoonMayCry.Data;
-using DragoonMayCry.Util;
-using System.Collections.Generic;
 using Dalamud.Game.ClientState.Statuses;
+using Dalamud.Plugin.Services;
+using DragoonMayCry.Data;
+using DragoonMayCry.State.Tracker;
+using DragoonMayCry.Util;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using FFXIVClientStructs.FFXIV.Client.UI;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
+using CSFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
+using DalamudGameObject = Dalamud.Game.ClientState.Objects.Types.IGameObject;
+using ObjectKind = Dalamud.Game.ClientState.Objects.Enums.ObjectKind;
 
 namespace DragoonMayCry.State
 {
-    public class PlayerState : IDisposable
+    public unsafe class PlayerState : IDisposable
     {
         public bool IsInCombat => CheckCondition([ConditionFlag.InCombat]);
         public bool IsInsideInstance => CheckCondition([ConditionFlag.BoundByDuty]);
@@ -19,7 +25,8 @@ namespace DragoonMayCry.State
         public bool IsLoggedIn => Player != null;
         public IPlayerCharacter? Player => Service.ClientState.LocalPlayer;
         private ICondition Condition => Service.Condition;
-        
+        private static RaptureAtkModule* RaptureAtkModule => CSFramework.Instance()->GetUIModule()->GetRaptureAtkModule();
+
         private bool CheckCondition(ConditionFlag[] conditionFlags) => conditionFlags.Any(x => Condition[x]);
 
         private readonly ConditionFlag[] unableToAct = new ConditionFlag[] { ConditionFlag.Transformed, ConditionFlag.Swimming,
@@ -33,7 +40,7 @@ namespace DragoonMayCry.State
         private readonly OnEnteringInstanceStateTracker onEnteringInstanceStateTracker;
         private readonly LoginStateTracker loginStateTracker;
         private readonly JobChangeTracker jobChangeTracker;
-        private readonly DebuffTracker damageDownTracker;
+        private readonly DebuffTracker debuffTracker;
         private static PlayerState? Instance;
         private PlayerState()
         {
@@ -42,7 +49,7 @@ namespace DragoonMayCry.State
             onEnteringInstanceStateTracker = new();
             loginStateTracker = new();
             jobChangeTracker = new();
-            damageDownTracker = new();
+            debuffTracker = new();
             Service.Framework.Update += Update;
         }
 
@@ -67,7 +74,7 @@ namespace DragoonMayCry.State
             onEnteringInstanceStateTracker.Update(this);
             loginStateTracker.Update(this);
             jobChangeTracker.Update(this);
-            damageDownTracker.Update(this);
+            debuffTracker.Update(this);
             
         }
 
@@ -114,7 +121,7 @@ namespace DragoonMayCry.State
 
         public void RegisterDamageDownHandler(EventHandler<bool> onDamageDown)
         {
-            damageDownTracker.OnChange += onDamageDown;
+            debuffTracker.OnChange += onDamageDown;
         }
 
         public JobIds GetCurrentJob()
@@ -165,9 +172,55 @@ namespace DragoonMayCry.State
             return false;
         }
 
-        public bool HasTarget()
+        public bool CanTargetEnemy()
         {
-            return Player != null && Player.TargetObject != null;
+            var player = Player != null ? (GameObject*)Player.Address : null;
+            if (player == null)
+                return false;
+
+            var targets = Service.ObjectTable.Where(o => 
+                ObjectKind.BattleNpc.Equals(o.ObjectKind)
+                && o != Player
+                && CanAttack(o)
+             ).ToList();
+
+            var enemyList = GetEnemyListObjectIds();
+            for(int i = 0; i < targets.Count; i++)
+            {
+                if (enemyList.Contains(targets[i].EntityId))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private bool CanAttack(DalamudGameObject o)
+        {
+            var address = (GameObject*)o.Address;
+            if (address == null)
+            {
+                return false;
+            }
+            return address->GetIsTargetable()
+                && ActionManager.CanUseActionOnTarget(142, address);
+        }
+
+        private ISet<uint> GetEnemyListObjectIds()
+        {
+            var addonByName = Service.GameGui.GetAddonByName("_EnemyList", 1);
+            if (addonByName == IntPtr.Zero)
+                return new HashSet<uint>();
+
+            var addon = (AddonEnemyList*)addonByName;
+            var numArray = RaptureAtkModule->AtkModule.AtkArrayDataHolder.NumberArrays[21];
+            var enemyIdSet = new HashSet<uint>();
+            for (var i = 0; i < addon->EnemyCount; i++)
+            {
+                var id = (uint)numArray->IntArray[8 + (i * 6)];
+                enemyIdSet.Add(id);
+            }
+            return enemyIdSet;
         }
 
         public void Dispose()

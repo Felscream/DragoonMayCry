@@ -12,9 +12,9 @@ namespace DragoonMayCry
 {
     public class Service
     {
-        [PluginService] public static ITextureProvider TextureProvider { get; private set; } = null!;
-        [PluginService] public static IClientState ClientState { get; private set; } = null!;
-        [PluginService] public static ICommandManager CommandManager { get; private set; } = null!;
+        [PluginService] public static ITextureProvider TextureProvider { get; set; } = null!;
+        [PluginService] public static IClientState ClientState { get; set; } = null!;
+        [PluginService] public static ICommandManager CommandManager { get; set; } = null!;
         [PluginService] public static ISigScanner Scanner { get; set; } = null!;
         [PluginService] public static IFlyTextGui FlyText { get; set; } = null!;
         [PluginService] public static IGameInteropProvider Hook { get; set; } = null!;
@@ -23,6 +23,7 @@ namespace DragoonMayCry
         [PluginService] public static ICondition Condition { get; set; } = null!;
         [PluginService] public static IFramework Framework { get; set; } = null!;
         [PluginService] public static IGameConfig GameConfig { get; set; } = null!;
-        [PluginService] public static IDataManager DataManager { get; private set; } = null!;
+        [PluginService] public static IDataManager DataManager { get; set; } = null!;
+        [PluginService] public static IObjectTable ObjectTable { get; set; } = null!;
     }
 }

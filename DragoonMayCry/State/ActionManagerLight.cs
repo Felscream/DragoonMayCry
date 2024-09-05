@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace DragoonMayCry.State
 {
     [StructLayout(LayoutKind.Explicit)]
-    public struct ActionManager
+    public struct ActionManagerLight
     {
         [FieldOffset(0x8)] public float animationLock;
         [FieldOffset(0x28)] public bool isCasting;

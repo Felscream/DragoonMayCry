@@ -4,6 +4,8 @@ using ImGuiNET;
 using System;
 using System.Numerics;
 using DragoonMayCry.Score.Style;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using DragoonMayCry.State;
 
 namespace DragoonMayCry.UI;
 

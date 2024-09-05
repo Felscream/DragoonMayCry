@@ -6,8 +6,6 @@ namespace DragoonMayCry.State.Tracker
 {
     internal class DebuffTracker : StateTracker<bool>
     {
-        
-
         private readonly Dictionary<ushort, ISet<uint>> debuffInstanceBlacklist = new Dictionary<ushort, ISet<uint>>{
             { 937, new HashSet<uint> {2935} }, // Sustained damage on P9S is applied after a TB
             { 939, new HashSet<uint> {2935} }, // Failed tower soak on P10S, may not be the player's fault
@@ -19,6 +17,10 @@ namespace DragoonMayCry.State.Tracker
         
         public override void Update(PlayerState playerState)
         {
+            if (!playerState.IsInCombat)
+            {
+                return;
+            }
             var player = playerState.Player;
             if (player == null || playerState.IsDead)
             {

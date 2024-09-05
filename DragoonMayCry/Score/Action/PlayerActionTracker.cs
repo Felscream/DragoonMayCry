@@ -79,7 +79,7 @@ namespace DragoonMayCry.Score.Action
 
         private Hook<OnCastDelegate>? onCastHook;
 
-        private readonly State.ActionManager* actionManager;
+        private readonly State.ActionManagerLight* actionManager;
         private readonly PlayerState playerState;
         private LuminaCache<LuminaAction> luminaActionCache;
 
@@ -112,7 +112,7 @@ namespace DragoonMayCry.Score.Action
             combatStopwatch = CombatStopwatch.GetInstance();
             limitBreakStopwatch = new Stopwatch();
             actionManager =
-                (State.ActionManager*)FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
+                (State.ActionManagerLight*)FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
             Service.FlyText.FlyTextCreated += OnFlyText;
             try
             {
@@ -397,7 +397,7 @@ namespace DragoonMayCry.Score.Action
                 if (!isGcdDropped && currentWastedGcd > GcdDropThreshold)
                 {
                     isGcdDropped = true;
-                    if (!playerState.IsIncapacitated() && playerState.HasTarget())
+                    if (!playerState.IsIncapacitated() && playerState.CanTargetEnemy())
                     {
                         OnGcdDropped?.Invoke(this, EventArgs.Empty);
                     }
