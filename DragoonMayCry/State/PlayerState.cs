@@ -164,7 +164,7 @@ namespace DragoonMayCry.State
                 {
                     continue;
                 }
-                if (DebuffIds.IsIncapacitatingDebuff(status.GameData.RowId))
+                if (DebuffIds.IsIncapacitatingDebuff(status.StatusId))
                 {
                     return true;
                 }

@@ -1,14 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DragoonMayCry.Cache;
-using DragoonMayCry.Data;
 using DragoonMayCry.State;
-using DragoonMayCry.Util;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using KamiLib.Caching;
 using Lumina.Excel.GeneratedSheets;
+using System;
 
 namespace DragoonMayCry.Score
 {

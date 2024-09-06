@@ -1,8 +1,6 @@
 using Dalamud.Game.ClientState.Statuses;
-using DragoonMayCry.Cache;
 using DragoonMayCry.Data;
 using System.Collections.Generic;
-using LuminaStatus = Lumina.Excel.GeneratedSheets.Status;
 namespace DragoonMayCry.State.Tracker
 {
     internal class DebuffTracker : StateTracker<bool>
