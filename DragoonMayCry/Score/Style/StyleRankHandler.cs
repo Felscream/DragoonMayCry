@@ -125,7 +125,7 @@ namespace DragoonMayCry.Score.Style
         private void ForceRankTo(StyleType type, bool isBlunder)
         {
             
-            if (CurrentStyle?.Value == type || isBlunder && type < CurrentStyle?.Value)
+            if (CurrentStyle?.Value == type || isBlunder && CurrentStyle?.Value < type)
             {
                 return;
             }

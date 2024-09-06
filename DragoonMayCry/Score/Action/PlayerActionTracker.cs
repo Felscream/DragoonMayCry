@@ -43,8 +43,11 @@ namespace DragoonMayCry.Score.Action
                 GracePeriod = gracePeriod;
                 IsTankLb = isTankLb;
                 Name = name;
+
             }
         }
+
+        
 
         private HashSet<FlyTextKind> validTextKind = new HashSet<FlyTextKind>() {
             FlyTextKind.Damage,
@@ -93,6 +96,8 @@ namespace DragoonMayCry.Score.Action
 
         private Stopwatch limitBreakStopwatch;
         private LimitBreak? limitBreakCast;
+        private const int maxActionHistorySize = 6;
+        private Queue<FlyTextData> actionHistory;
 
         // added 0.1f to all duration
         private Dictionary<uint, float> tankLimitBreakDelays =
@@ -107,6 +112,7 @@ namespace DragoonMayCry.Score.Action
             };
         public PlayerActionTracker()
         {
+            actionHistory = new Queue<FlyTextData>();
             luminaActionCache = LuminaCache<LuminaAction>.Instance;
             playerState = PlayerState.GetInstance();
             combatStopwatch = CombatStopwatch.GetInstance();
@@ -301,6 +307,7 @@ namespace DragoonMayCry.Score.Action
         private void OnCombat(object? sender, bool enteredCombat)
         {
             currentWastedGcd = 0;
+            actionHistory.Clear();
             if (!enteredCombat)
             {
                 if (limitBreakCast != null || limitBreakStopwatch.IsRunning)
@@ -434,7 +441,7 @@ namespace DragoonMayCry.Score.Action
             ref float yOffset,
             ref bool handled)
         {
-            
+
             if (!Plugin.CanRunDmc() || color == 4278190218) //color for damage taken will break if users are able to change it
             {
                 return;
@@ -455,17 +462,34 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-            
+
             if (actionName.StartsWith('+'))
             {
                 actionName = actionName[2..];
             }
-                
-            if (!validTextKind.Contains(kind) 
+
+            if (!validTextKind.Contains(kind)
                 && (limitBreakCast == null || limitBreakCast.Name != actionName))
             {
                 return;
             }
+
+            RegisterAndFireFlyText(kind, damage, actionName);
+        }
+
+        private void RegisterAndFireFlyText(FlyTextKind kind, int damage, string actionName)
+        {
+            var newFlyText = new FlyTextData(actionName, damage, kind);
+            if (actionHistory.Contains(newFlyText))
+            {
+                return;
+            }
+
+            if (actionHistory.Count >= maxActionHistorySize)
+            {
+                actionHistory.Dequeue();
+            }
+            actionHistory.Enqueue(newFlyText);
 
             if (limitBreakCast != null && actionName == limitBreakCast.Name)
             {
@@ -475,7 +499,33 @@ namespace DragoonMayCry.Score.Action
             {
                 OnFlyTextCreation?.Invoke(this, damage);
             }
-            
+        }
+
+        private class FlyTextData
+        {
+            public string Name { get; private set; }
+            public int Damage { get; private set; }
+            public FlyTextKind Kind { get; private set; }
+
+            public FlyTextData(string name, int damage, FlyTextKind kind)
+            {
+                Name = name;
+                Damage = damage;
+                Kind = kind;
+            }
+
+            public override bool Equals(object? obj)
+            {
+                return obj is FlyTextData text &&
+                       Name == text.Name &&
+                       Damage == text.Damage &&
+                       Kind == text.Kind;
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(Name, Damage, Kind);
+            }
         }
     }
 }
