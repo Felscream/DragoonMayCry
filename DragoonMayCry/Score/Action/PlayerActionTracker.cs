@@ -445,7 +445,7 @@ namespace DragoonMayCry.Score.Action
 
             // TODO Some DoTs deal no damage on application,
             // will have to figure out what to do about that
-            if (actionName == null || text2 == null || damage == 0)
+            if (actionName == null || text2 == null)
             {
                 return;
             }
