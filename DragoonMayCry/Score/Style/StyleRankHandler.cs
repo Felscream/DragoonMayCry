@@ -193,14 +193,14 @@ namespace DragoonMayCry.Score.Style
             {
                 return;
             }
-            ForceRankTo(StyleType.D, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
+            ForceRankTo(StyleType.D, true);
         }
 
         private void OnDeath(object? sender, bool isDead)
         {
             if (isDead)
             {
-                ForceRankTo(StyleType.D, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
+                ForceRankTo(StyleType.D, true);
             }
         }
 
@@ -220,7 +220,7 @@ namespace DragoonMayCry.Score.Style
                 return;
             }
 
-            ForceRankTo(StyleType.D, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
+            ForceRankTo(StyleType.D, true);
         }
 
         public void Reset()

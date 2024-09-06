@@ -1,7 +1,8 @@
 using Dalamud.Game.ClientState.Statuses;
+using DragoonMayCry.Cache;
 using DragoonMayCry.Data;
 using System.Collections.Generic;
-
+using LuminaStatus = Lumina.Excel.GeneratedSheets.Status;
 namespace DragoonMayCry.State.Tracker
 {
     internal class DebuffTracker : StateTracker<bool>
@@ -11,7 +12,6 @@ namespace DragoonMayCry.State.Tracker
             { 939, new HashSet<uint> {2935} }, // Failed tower soak on P10S, may not be the player's fault
             { 63, new HashSet<uint> {202} }, // Ifrit ex
         };
-
 
         private bool hasDamageDown;
         
@@ -28,6 +28,7 @@ namespace DragoonMayCry.State.Tracker
             }
             
             StatusList statuses = player.StatusList;
+            
             for(int i = 0; i < statuses.Length; i++)
             {
                 var status = statuses[i];
@@ -58,16 +59,15 @@ namespace DragoonMayCry.State.Tracker
             {
                 return false;
             }
-
-            uint id = status.GameData.RowId;
+            
             ushort territory = Service.ClientState.TerritoryType;
-            if (debuffInstanceBlacklist.ContainsKey(territory) && debuffInstanceBlacklist[territory].Contains(id))
+            if (debuffInstanceBlacklist.ContainsKey(territory) && debuffInstanceBlacklist[territory].Contains(status.StatusId))
             {
                 return false;
             }
 
             
-            return DebuffIds.DamageDownIds.Contains(id) || DebuffIds.SustainedDamageIds.Contains(id) || DebuffIds.VulnerabilityUpIds.Contains(id);
+            return DebuffIds.DamageDownIds.Contains(status.StatusId) || DebuffIds.SustainedDamageIds.Contains(status.StatusId) || DebuffIds.VulnerabilityUpIds.Contains(status.StatusId);
         }
     }
 }
