@@ -7,14 +7,14 @@ using DragoonMayCry.Score.Style;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using DragoonMayCry.State;
 using KamiLib.Drawing;
+using KamiLib;
 
 namespace DragoonMayCry.UI;
 
 public class ConfigWindow : Window, IDisposable
 {
-    public EventHandler<bool> ActiveOutsideInstanceChange;
+    public EventHandler<bool>? ActiveOutsideInstanceChange;
     private readonly DmcConfigurationOne configuration;
-    private readonly PluginUI pluginUI;
 
     // We give this window a constant ID using ###
     // This allows for labels being dynamic, like "{FPS Counter}fps###XYZ counter window",
@@ -26,21 +26,22 @@ public class ConfigWindow : Window, IDisposable
         SizeCondition = ImGuiCond.FirstUseEver;
 
         this.configuration = configuration;
-        this.pluginUI = pluginUi;
     }
 
     public void Dispose() { }
 
     public override void Draw()
     {
-        if (ImGui.Button("How it works"))
-        {
-            pluginUI.ToggleHowItWorks();
-        }
-
         InfoBox.Instance.AddTitle("General")
             .AddConfigCheckbox("Lock rank window", configuration.LockScoreWindow)
-            .AddConfigCheckbox("Active outside instance", configuration.ActiveOutsideInstance)
+            //.AddConfigCheckbox("Active outside instance", configuration.ActiveOutsideInstance)
+            .AddAction(() =>
+            {
+                if(ImGui.Checkbox("Active outside instance", ref configuration.ActiveOutsideInstance.Value)){
+                    KamiCommon.SaveConfiguration();
+                    ActiveOutsideInstanceChange?.Invoke(this, configuration.ActiveOutsideInstance.Value);
+                }
+            })
             .Draw();
 
         InfoBox.Instance.AddTitle("Audio")
