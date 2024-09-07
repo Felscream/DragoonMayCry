@@ -35,6 +35,7 @@ namespace DragoonMayCry.Score
         
 
         public EventHandler<double>? OnScoring;
+        public EventHandler<StyleScoring> StyleScoringChange;
         public ScoreRank CurrentScoreRank { get; private set; }
         private readonly PlayerState playerState;
         private readonly StyleRankHandler rankHandler;
@@ -196,6 +197,7 @@ namespace DragoonMayCry.Score
 
             CurrentScoreRank.Rank = data.NewRank;
             CurrentScoreRank.StyleScoring = nextStyleScoring;
+            StyleScoringChange?.Invoke(this, CurrentScoreRank.StyleScoring);
         }
 
         private void OnGcdClip(object? send, float clippingTime)
