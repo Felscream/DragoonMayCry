@@ -22,8 +22,8 @@ public class ConfigWindow : Window, IDisposable
     public ConfigWindow(PluginUI pluginUi, DmcConfigurationOne configuration) : base("DragoonMayCry - Configuration")
     {
 
-        Size = new Vector2(400,250);
-        SizeCondition = ImGuiCond.FirstUseEver;
+        Size = new Vector2(600,300);
+        SizeCondition = ImGuiCond.Appearing;
 
         this.configuration = configuration;
     }
@@ -34,7 +34,6 @@ public class ConfigWindow : Window, IDisposable
     {
         InfoBox.Instance.AddTitle("General")
             .AddConfigCheckbox("Lock rank window", configuration.LockScoreWindow)
-            //.AddConfigCheckbox("Active outside instance", configuration.ActiveOutsideInstance)
             .AddAction(() =>
             {
                 if(ImGui.Checkbox("Active outside instance", ref configuration.ActiveOutsideInstance.Value)){
