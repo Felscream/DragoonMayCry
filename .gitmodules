@@ -1,4 +1,3 @@
 [submodule "KamiLib"]
 	path = KamiLib
-	url = https://github.com/jkchen2/KamiLib
-	branch = berna-downstream
+	url = https://github.com/Felscream/KamiLib
