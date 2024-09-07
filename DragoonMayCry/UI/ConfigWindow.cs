@@ -16,6 +16,7 @@ public class ConfigWindow : Window, IDisposable
 {
     public EventHandler<bool>? ActiveOutsideInstanceChange;
     public EventHandler<int>? SfxVolumeChange;
+    public EventHandler<int>? BgmVolumeChange;
     private readonly DmcConfigurationOne configuration;
 
     // We give this window a constant ID using ###
@@ -87,41 +88,51 @@ public class ConfigWindow : Window, IDisposable
             })
             .Draw();
 
-            InfoBox.Instance.AddTitle("Audio")
-                .AddConfigCheckbox("Play sound effects", configuration.PlaySoundEffects)
-                .AddConfigCheckbox("Force sound effect on blunders", configuration.ForceSoundEffectsOnBlunder)
-                .AddAction(() => {
-                    if (ImGui.Checkbox("Apply game volume", ref configuration.ApplyGameVolume.Value))
-                    {
-                        KamiCommon.SaveConfiguration();
-                        SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
-                    }
-                })
-                .AddAction(() =>
+        InfoBox.Instance.AddTitle("Audio")
+            .AddConfigCheckbox("Play sound effects", configuration.PlaySoundEffects)
+            .AddConfigCheckbox("Force sound effect on blunders", configuration.ForceSoundEffectsOnBlunder)
+            .AddAction(() => { 
+                if(ImGui.Checkbox("Apply game volume", ref configuration.ApplyGameVolume.Value)){
+                    KamiCommon.SaveConfiguration();
+                    SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
+                }
+            })
+            .AddAction(() =>
+            {
+                ImGui.SetNextItemWidth(200f);
+                if (ImGui.SliderInt("Sound effect volume", ref configuration.SfxVolume.Value, 0, 100))
                 {
-                    ImGui.SetNextItemWidth(200f);
-                    if (ImGui.SliderInt("Sound effect volume", ref configuration.SfxVolume.Value, 0, 100))
-                    {
-                        KamiCommon.SaveConfiguration();
-                        SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
-                    }
-                })
-                .AddString("Play each unique SFX only once every")
-                .SameLine()
-                .AddSliderInt("occurrences", configuration.PlaySfxEveryOccurrences, 1, 20)
-                .Draw();
+                    KamiCommon.SaveConfiguration();
+                    SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
+                }
+            })
+            .AddAction(() =>
+            {
+                ImGui.SetNextItemWidth(200f);
+                if (ImGui.SliderInt("Background music volume", ref configuration.BgmVolume.Value, 0, 100))
+                {
+                    KamiCommon.SaveConfiguration();
+                    BgmVolumeChange?.Invoke(this, configuration.BgmVolume.Value);
+                }
+            })
+            .AddString("Play each unique SFX only once every")
+            .SameLine()
+            .AddSliderInt("occurrences", configuration.PlaySfxEveryOccurrences, 1, 20)
+            .Draw();
 
 #if DEBUG
-            InfoBox.Instance.AddTitle("Debug")
-                .AddButton("Dead weight", () => AudioService.Instance.PlaySfx(SoundId.DeadWeight))
-                .SameLine().AddButton("D", () => AudioService.Instance.PlaySfx(SoundId.Dirty))
-                .SameLine().AddButton("C", () => AudioService.Instance.PlaySfx(SoundId.Cruel))
-                .SameLine().AddButton("B", () => AudioService.Instance.PlaySfx(SoundId.Brutal))
-                .SameLine().AddButton("A", () => AudioService.Instance.PlaySfx(SoundId.Anarchic))
-                .SameLine().AddButton("S", () => AudioService.Instance.PlaySfx(SoundId.Savage))
-                .SameLine().AddButton("SS", () => AudioService.Instance.PlaySfx(SoundId.Sadistic))
-                .SameLine().AddButton("SSS", () => AudioService.Instance.PlaySfx(SoundId.Sensational))
-                .Draw();
+        InfoBox.Instance.AddTitle("Debug")
+            .AddButton("Dead weight", () => AudioService.Instance.PlaySfx(SoundId.DeadWeight))
+            .SameLine().AddButton("D", () => AudioService.Instance.PlaySfx(SoundId.Dirty))
+            .SameLine().AddButton("C", () => AudioService.Instance.PlaySfx(SoundId.Cruel))
+            .SameLine().AddButton("B", () => AudioService.Instance.PlaySfx(SoundId.Brutal))
+            .SameLine().AddButton("A", () => AudioService.Instance.PlaySfx(SoundId.Anarchic))
+            .SameLine().AddButton("S", () => AudioService.Instance.PlaySfx(SoundId.Savage))
+            .SameLine().AddButton("SS", () => AudioService.Instance.PlaySfx(SoundId.Sadistic))
+            .SameLine().AddButton("SSS", () => AudioService.Instance.PlaySfx(SoundId.Sensational))
+            .SameLine().AddButton("BGM test", () => Plugin.StartBgm())
+            .SameLine().AddButton("Stop BGM", () => Plugin.StopBgm())
+            .Draw();
 #endif
         }
     }

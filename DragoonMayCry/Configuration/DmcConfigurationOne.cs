@@ -15,6 +15,7 @@ public class DmcConfigurationOne : IPluginConfiguration
     public int Version { get; set; } = 1;
     public Setting<bool> ActiveOutsideInstance = new(false);
     public Setting<int> SfxVolume = new(80);
+    public Setting<int> BgmVolume = new(80);
     public Setting<bool> PlaySoundEffects = new(true);
     public Setting<bool> ForceSoundEffectsOnBlunder = new(false);
     public Setting<int> PlaySfxEveryOccurrences = new(3);

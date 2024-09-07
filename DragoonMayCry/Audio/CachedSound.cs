@@ -1,9 +1,7 @@
+
 using NAudio.Wave;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DragoonMayCry.Audio
 {
@@ -13,6 +11,7 @@ namespace DragoonMayCry.Audio
         internal WaveFormat WaveFormat { get; private set; }
         internal CachedSound(string audioFileName)
         {
+            Service.Log.Debug(audioFileName);
             using (var audioFileReader = new AudioFileReader(audioFileName))
             {
                 WaveFormat = audioFileReader.WaveFormat;

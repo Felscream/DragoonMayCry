@@ -43,6 +43,10 @@
     <ItemGroup>
         <ProjectReference Include="..\KamiLib\KamiLib.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Audio\FSM\States\BuryTheLight\Intro\" />
+    </ItemGroup>
     <PropertyGroup>
         <NoWarn>CA1416</NoWarn>  <!-- Validate platform compatibility -->
     </PropertyGroup>

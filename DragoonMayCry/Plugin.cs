@@ -1,6 +1,8 @@
 using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
+using DragoonMayCry.Audio;
+using DragoonMayCry.Audio.FSM;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
 using DragoonMayCry.Score;
@@ -32,7 +34,8 @@ public unsafe class Plugin : IDalamudPlugin
     private readonly PlayerActionTracker playerActionTracker;
     private readonly StyleRankHandler styleRankHandler;
     private readonly FinalRankCalculator finalRankCalculator;
-
+    private readonly AudioService audioService;
+    private static BuryTheLightFsm buryTheLight;
     public Plugin()
     {
         PluginInterface.Create<Service>();
@@ -53,12 +56,28 @@ public unsafe class Plugin : IDalamudPlugin
         scoreProgressBar.DemotionApplied += styleRankHandler.OnDemotion;
         scoreProgressBar.Promotion += styleRankHandler.OnPromotion;
 
+
+        this.audioService = AudioService.Instance;
+        buryTheLight = new BuryTheLightFsm(AudioService.Instance, Service.Framework);
+        buryTheLight.CacheBgm();
+
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
             HelpMessage = "opens configuration menu"
         });
 
         AssetsManager.VerifyAndUpdateAssets();
+    }
+
+    public static void StartBgm()
+    {
+        buryTheLight.Start();
+    }
+
+    public static void StopBgm()
+    {
+        buryTheLight.Reset();
+        AudioService.Instance.StopBgm();
     }
 
     public static bool CanRunDmc()
@@ -73,6 +92,8 @@ public unsafe class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
+        buryTheLight.Dispose();
+        audioService.Dispose();
         KamiCommon.Dispose();
         scoreProgressBar.Dispose();
         playerActionTracker.Dispose();

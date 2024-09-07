@@ -27,7 +27,8 @@ namespace DragoonMayCry.UI
         {
             ConfigWindow = new ConfigWindow(this, Plugin.Configuration!);
             ConfigWindow.ActiveOutsideInstanceChange += OnActiveOutsideInstanceChange;
-            ConfigWindow.SfxVolumeChange += AudioService.Instance.OnVolumeChange;
+            ConfigWindow.SfxVolumeChange += AudioService.Instance.OnSfxVolumeChange;
+            ConfigWindow.BgmVolumeChange += AudioService.Instance.OnBgmVolumeChange;
 
             HowItWorksWindow = new HowItWorksWindow();
 

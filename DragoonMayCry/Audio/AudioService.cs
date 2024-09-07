@@ -7,10 +7,11 @@ using System.Reflection;
 using Dalamud.Plugin.Ipc.Exceptions;
 using DragoonMayCry.Score.Model;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using DragoonMayCry.Audio.FSM;
 
 namespace DragoonMayCry.Audio
 {
-    public class AudioService
+    public class AudioService : IDisposable
     {
         public static AudioService Instance { get {
                 if(instance == null)
@@ -88,7 +89,7 @@ namespace DragoonMayCry.Audio
             }
         }
 
-        public void OnVolumeChange(object? sender, int volume)
+        public void OnSfxVolumeChange(object? sender, int volume)
         {
             audioEngine.UpdateSfxVolume(GetSfxVolume());
         }
@@ -102,6 +103,18 @@ namespace DragoonMayCry.Audio
             }
 
             audioEngine.RegisterSfx(DmcAnnouncer);
+        }
+
+        public void OnBgmVolumeChange(object? sender, int volume)
+        {
+            Service.Log.Debug("BGM Volume change");
+            audioEngine.UpdateBgmVolume(GetBgmVolume());
+        }
+
+        public void RegisterBgmPart(BgmId id, string path)
+        {
+            Service.Log.Debug($"Registering bgm {id}");
+            audioEngine.RegisterBgmPart(id, path);
         }
 
         private bool CanPlaySfx(SoundId type)
@@ -134,6 +147,22 @@ namespace DragoonMayCry.Audio
             return gameVolume * (Plugin.Configuration!.SfxVolume.Value / 100f);
         }
 
+        private float GetBgmVolume()
+        {
+            if (Plugin.Configuration!.ApplyGameVolume && Service.GameConfig.System.GetBool("IsSndMaster"))
+            {
+                return 0;
+            }
+
+            var gameVolume = Plugin.Configuration!.ApplyGameVolume
+                                 ? Service.GameConfig.System
+                                          .GetUInt("SoundBgm") / 100f *
+                                   (Service.GameConfig.System.GetUInt(
+                                        "SoundMaster") / 100f)
+                                 : 1;
+            return gameVolume * (Plugin.Configuration!.BgmVolume.Value / 100f);
+        }
+
         private SoundId StyleTypeToSoundId(StyleType type)
         {
             return type switch
@@ -147,6 +176,19 @@ namespace DragoonMayCry.Audio
                 StyleType.SSS => SoundId.Sensational,
                 _ => SoundId.Unknown
             };
+        }
+        public void PlayBgm(BgmId id)
+        {
+            audioEngine.PlayBgm(id);
+        }
+
+        public void StopBgm()
+        {
+            audioEngine.RemoveAllBgm();
+        }
+        public void Dispose()
+        {
+            audioEngine.Dispose();
         }
 
 #if DEBUG   
