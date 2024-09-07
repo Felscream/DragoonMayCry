@@ -4,14 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DragoonMayCry.Audio.FSM
+namespace DragoonMayCry.Audio
 {
     public enum BgmId
     {
-        IntroOne,
-        IntroTwo,
-        IntroThree,
-        IntroLoopOne,
-        IntroLoopTwo,
+        Intro,
+        IntroExit,
+        CombatEnter,
+        CombatVerse1,
+        CombatVerse2,
+        CombatCoreLoop,
     }
 }

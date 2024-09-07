@@ -106,6 +106,7 @@ public class ConfigWindow : Window, IDisposable
                     SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
                 }
             })
+            .AddConfigCheckbox("Enable dynamic background music", configuration.EnableDynamicBgm, "This will disable the game background music, you may have to enable it manually if you dsable this plugin")
             .AddAction(() =>
             {
                 ImGui.SetNextItemWidth(200f);
@@ -132,6 +133,7 @@ public class ConfigWindow : Window, IDisposable
             .SameLine().AddButton("SSS", () => AudioService.Instance.PlaySfx(SoundId.Sensational))
             .SameLine().AddButton("BGM test", () => Plugin.StartBgm())
             .SameLine().AddButton("Stop BGM", () => Plugin.StopBgm())
+            .SameLine().AddButton("BGM transition", () => Plugin.BgmTransition())
             .Draw();
 #endif
         }

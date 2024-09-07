@@ -7,7 +7,7 @@ using System.Reflection;
 using Dalamud.Plugin.Ipc.Exceptions;
 using DragoonMayCry.Score.Model;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using DragoonMayCry.Audio.FSM;
+using NAudio.Wave;
 
 namespace DragoonMayCry.Audio
 {
@@ -177,9 +177,14 @@ namespace DragoonMayCry.Audio
                 _ => SoundId.Unknown
             };
         }
-        public void PlayBgm(BgmId id)
+        public ISampleProvider? PlayBgm(BgmId id)
         {
-            audioEngine.PlayBgm(id);
+            return audioEngine.PlayBgm(id);
+        }
+
+        public void RemoveBgmPart(ISampleProvider sample)
+        {
+            audioEngine.RemoveInput(sample);
         }
 
         public void StopBgm()

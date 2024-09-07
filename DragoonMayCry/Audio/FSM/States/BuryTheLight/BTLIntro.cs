@@ -1,3 +1,4 @@
+using Lumina.Data.Parsing;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
@@ -10,99 +11,49 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
 {
     public class BTLIntro : FsmState
     {
-        enum IntroStates
-        {
-            Intro,
-            Loop,
-            TransitionToCombat
-        }
 
         public string Name { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public BgmState ID { get; set; }
 
         private Dictionary<BgmId, BgmTrackData> transitionTimePerId = new Dictionary<BgmId, BgmTrackData> {
-            { BgmId.IntroOne, new BgmTrackData(1.6d, 14.5d) },
-            { BgmId.IntroTwo, new BgmTrackData(1.6d, 14.5d) },
-            { BgmId.IntroThree, new BgmTrackData(1.6d, 14.5d) },
-            { BgmId.IntroLoopOne, new BgmTrackData(1.59d, 14.4d) },
-            { BgmId.IntroLoopTwo, new BgmTrackData(1.59d, 14.41d) }
+            { BgmId.Intro, new BgmTrackData(1600, 50293) },
+            { BgmId.IntroExit, new BgmTrackData(1588, 3150) }
         };
 
         public Dictionary<BgmId, string> BgmPaths = new Dictionary<BgmId, string> {
-            { BgmId.IntroOne, BuryTheLightFsm.GetPathToAudio("Intro\\083.mp3") },
-            { BgmId.IntroTwo, BuryTheLightFsm.GetPathToAudio("Intro\\012.mp3") },
-            { BgmId.IntroThree, BuryTheLightFsm.GetPathToAudio("Intro\\048.mp3") },
-            { BgmId.IntroLoopOne, BuryTheLightFsm.GetPathToAudio("Intro\\033.mp3") },
-            { BgmId.IntroLoopTwo, BuryTheLightFsm.GetPathToAudio("Intro\\055.mp3") }
+            { BgmId.Intro, BuryTheLightFsm.GetPathToAudio("Intro\\intro.mp3") },
+            { BgmId.IntroExit, BuryTheLightFsm.GetPathToAudio("Intro\\111.mp3") }
         };
 
-        private LinkedList<BgmId> outOfCombatLoop;
-        private LinkedList<BgmId> introSequence;
-        private LinkedList<BgmId> currentSequence;
-        private AudioService audioService;
-        private Stopwatch currentTrackStopwatch;
-        private LinkedListNode<BgmId> currentBgmNode;
-        private const float MaxTime = 30f;
-        private double transitionTime = 0f;
-        private IntroStates currentState;
+        private readonly AudioService audioService;
+        private readonly Stopwatch currentTrackStopwatch;
+        private int transitionTime = 0;
+        private readonly Queue<ISampleProvider> samples;
+        private bool isLeavingState = false;
+        private int nextStateTransitionTime = 0;
 
         public BTLIntro(BgmState id, AudioService audioService)
         {
             ID = id;
             currentTrackStopwatch = new Stopwatch();
-            introSequence = new LinkedList<BgmId>();
-            introSequence.AddLast(BgmId.IntroOne);
-            introSequence.AddLast(BgmId.IntroTwo);
-            introSequence.AddLast(BgmId.IntroThree);
 
-            outOfCombatLoop = new LinkedList<BgmId>();
-            outOfCombatLoop.AddLast(BgmId.IntroLoopOne);
-            outOfCombatLoop.AddLast(BgmId.IntroLoopTwo);
-
-            currentSequence = new LinkedList<BgmId>();
             this.audioService = audioService;
+            samples = new Queue<ISampleProvider>();
         }
 
-        public void Start()
+        public void Enter()
         {
-            currentState = IntroStates.Intro;
-            currentSequence = introSequence;
-            currentBgmNode = currentSequence.First!;
-#if DEBUG
-            currentState = IntroStates.Loop;
-            currentSequence = outOfCombatLoop;
-            currentBgmNode = currentSequence.First!;
-#endif
-            Service.Log.Debug($"Playing {currentBgmNode.Value}");
-            audioService.PlayBgm(currentBgmNode.Value);
+            isLeavingState = false;
+            Service.Log.Debug($"Playing {BgmId.Intro}");
+            var sample = audioService.PlayBgm(BgmId.Intro);
+            if(sample != null)
+            {
+                samples.Enqueue(sample);
+            }
+
+            transitionTime = transitionTimePerId[BgmId.Intro].TransitionStart;
             currentTrackStopwatch.Restart();
-            ComputeNextTransitionTiming();
-        }
-
-        private void ComputeNextTransitionTiming()
-        {
-            if (currentBgmNode.Next != null)
-            {
-                var currentBgmData = transitionTimePerId[currentBgmNode.Value];
-                var nextBgmData = transitionTimePerId[currentBgmNode.Next.Value];
-                transitionTime = currentBgmData.TransitionStart - nextBgmData.EffectiveStart;
-            }
-            else if(currentState == IntroStates.Intro)
-            {
-                var currentBgmData = transitionTimePerId[currentBgmNode.Value];
-                var nextBgmData = transitionTimePerId[outOfCombatLoop.First!.Value];
-                transitionTime = currentBgmData.TransitionStart - nextBgmData.EffectiveStart;
-            }
-            else if(currentState == IntroStates.Loop) {
-                var currentBgmData = transitionTimePerId[currentBgmNode.Value];
-                var nextBgmData = transitionTimePerId[currentSequence.First!.Value];
-                // the loop isn't perfect, the substraction is an adjustment
-                transitionTime = currentBgmData.TransitionStart - nextBgmData.EffectiveStart - 0.05f;
-            } else
-            {
-                Service.Log.Warning($"Cannot continue current BGM sequence");
-                transitionTime = 0;
-            }
+            Service.Log.Debug($"{transitionTime}");
         }
 
         public void Update()
@@ -111,46 +62,72 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             {
                 return;
             }
-
-            Service.Log.Debug($"Current ID {currentBgmNode.Value} - elasped : {currentTrackStopwatch.Elapsed.TotalSeconds}");
-            if(currentTrackStopwatch.Elapsed.TotalSeconds > transitionTime && transitionTime != 0)
+            Service.Log.Debug($"Time {currentTrackStopwatch.Elapsed.TotalMilliseconds} vs {transitionTime}");
+            if (currentTrackStopwatch.Elapsed.TotalMilliseconds > transitionTime && transitionTime >= 0)
             {
-                // transition to loop state if we reached the end of intro
-                if(currentState == IntroStates.Intro && currentBgmNode.Next == null) {
-                    currentSequence = outOfCombatLoop;
-                    currentState = IntroStates.Loop;
-                } 
-                
-                if(currentBgmNode.Next != null)
+                if (isLeavingState)
                 {
-                    currentBgmNode = currentBgmNode.Next;
-                    
-                } else if(currentState == IntroStates.Loop)
+                    TransitionToNextState();
+                    return;
+                } else
                 {
-                    currentBgmNode = currentSequence.First!;
+                    var sample = audioService.PlayBgm(BgmId.Intro);
+                    if (sample != null)
+                    {
+                        samples.Enqueue(sample);
+                    }
+                    currentTrackStopwatch.Restart();
                 }
-
-                Service.Log.Debug($"Playing {currentBgmNode.Value}");
-                audioService.PlayBgm(currentBgmNode.Value);
-                currentTrackStopwatch.Restart();
-                ComputeNextTransitionTiming();
-            }
-
-            if(currentTrackStopwatch.Elapsed.TotalSeconds > MaxTime)
-            {
-                currentTrackStopwatch.Reset();
+                
             }
         }
 
         public void Reset()
         {
-            currentBgmNode = introSequence.First!;
+            samples.Clear();
             currentTrackStopwatch.Reset();
+            isLeavingState = false;
         }
 
         public Dictionary<BgmId, string> GetBgmPaths()
         {
             return BgmPaths;
+        }
+
+        public int Exit()
+        {
+            if (!currentTrackStopwatch.IsRunning)
+            {
+                return 0;
+            }
+            // we are already leaving this state, player transitioned rapidly between multiple ranks
+            if (isLeavingState)
+            {
+                nextStateTransitionTime = (int)Math.Max(nextStateTransitionTime - currentTrackStopwatch.Elapsed.TotalMilliseconds, 0);
+            } else
+            {
+                nextStateTransitionTime = transitionTimePerId[BgmId.IntroExit].TransitionStart;
+                audioService.PlayBgm(BgmId.IntroExit);
+                transitionTime = transitionTimePerId[BgmId.IntroExit].EffectiveStart;
+                currentTrackStopwatch.Restart();
+            }
+            isLeavingState = true;
+            return nextStateTransitionTime;
+        }
+
+        private void TransitionToNextState()
+        {
+            Service.Log.Debug("Going to next state");
+            while (samples.Count > 0)
+            {
+                audioService.RemoveBgmPart(samples.Dequeue());
+            }
+            Reset();
+        }
+
+
+        public void OnEnter()
+        {
         }
     }
 }

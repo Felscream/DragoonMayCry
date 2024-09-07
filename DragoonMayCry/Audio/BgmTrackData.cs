@@ -8,10 +8,10 @@ namespace DragoonMayCry.Audio
 {
     public class BgmTrackData
     {
-        public double EffectiveStart { get; private set; }
-        public double TransitionStart { get; private set; }
+        public int EffectiveStart { get; private set; }
+        public int TransitionStart { get; private set; }
 
-        public BgmTrackData(double effectiveStart, double transitionStart)
+        public BgmTrackData(int effectiveStart, int transitionStart)
         {
             EffectiveStart = effectiveStart;
             TransitionStart = transitionStart;

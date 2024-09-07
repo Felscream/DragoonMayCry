@@ -20,7 +20,8 @@ public class DmcConfigurationOne : IPluginConfiguration
     public Setting<bool> ForceSoundEffectsOnBlunder = new(false);
     public Setting<int> PlaySfxEveryOccurrences = new(3);
     public Setting<bool> ApplyGameVolume = new(true);
-    
+    public Setting<bool> EnableDynamicBgm = new(false);
+
     public Setting<bool> LockScoreWindow { get; set; } = new(true);
 
     public void Save()

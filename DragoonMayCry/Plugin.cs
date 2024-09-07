@@ -76,7 +76,7 @@ public unsafe class Plugin : IDalamudPlugin
 
     public static void StopBgm()
     {
-        buryTheLight.Reset();
+        buryTheLight.ResetToIntro();
         AudioService.Instance.StopBgm();
     }
 
@@ -101,6 +101,11 @@ public unsafe class Plugin : IDalamudPlugin
         playerState.Dispose();
         pluginUi.Dispose();
         Service.CommandManager.RemoveHandler(CommandName);
+    }
+
+    public static void BgmTransition()
+    {
+        buryTheLight.TriggerTransition(BgmState.CombatLoop);
     }
 
     private void OnCommand(string command, string args)

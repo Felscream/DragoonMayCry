@@ -1,5 +1,4 @@
 using Dalamud.Plugin.Services;
-using DragoonMayCry.Audio.FSM;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Style;
 using NAudio.Wave;
@@ -8,6 +7,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace DragoonMayCry.Audio
@@ -103,6 +103,7 @@ namespace DragoonMayCry.Audio
         {
             ISampleProvider mixerInput = ConvertToRightChannelCount(bgmMixer, input);
             bgmMixer.AddMixerInput(mixerInput);
+            Service.Log.Debug($"{bgmMixer.MixerInputs.Count()}");
             return mixerInput;
         }
 
@@ -141,9 +142,13 @@ namespace DragoonMayCry.Audio
             }
         }
 
-        public void removeInput()
+        public void RemoveInput(ISampleProvider sample)
         {
-
+            if(sample == null)
+            {
+                return;
+            }
+            bgmMixer.RemoveMixerInput(sample);
         }
 
         public void RemoveAllBgm()

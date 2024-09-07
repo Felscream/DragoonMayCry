@@ -9,22 +9,26 @@ namespace DragoonMayCry.Audio.FSM
 {
     public class BuryTheLightFsm : IDisposable
     {
-        protected Dictionary<BgmState, FsmState> states;
+        private Dictionary<BgmState, FsmState> states;
         // The current state.
-        protected FsmState currentState;
+        private FsmState currentState;
+        private FsmState? candidateState;
         private AudioService audioService;
         private IFramework framework;
         private bool isActive;
-        private Stopwatch bgmTimer;
+        private Stopwatch stateTransitionStopwatch;
+        private int nextTransitionTime = -1;
         private bool isGameBgmActive;
         public BuryTheLightFsm(AudioService audioService, IFramework framework)
         {
             this.framework = framework;
             this.audioService = audioService;
-            bgmTimer = new Stopwatch();
+            stateTransitionStopwatch = new Stopwatch();
             FsmState intro = new BTLIntro(BgmState.Intro, audioService);
+            FsmState combat = new BTLCombatLoop(BgmState.CombatLoop, audioService);
             states = new Dictionary<BgmState, FsmState>();
             states.Add(BgmState.Intro, intro);
+            states.Add(BgmState.CombatLoop, combat);
             currentState = intro;
 
             this.framework.Update += Update;
@@ -49,12 +53,17 @@ namespace DragoonMayCry.Audio.FSM
             }
             DisableGameBgm();
             isActive = true;
-            currentState.Start();
+            currentState.Enter();
         }
 
         public void Update(IFramework framework)
         {
             currentState.Update();
+
+            if(stateTransitionStopwatch.IsRunning && new decimal(stateTransitionStopwatch.Elapsed.TotalMilliseconds) > nextTransitionTime)
+            {
+                GoToNextState();
+            }
         }
 
         public void CacheBgm()
@@ -70,7 +79,7 @@ namespace DragoonMayCry.Audio.FSM
 
         public void Dispose()
         {
-            ResetGameBgm();
+            //ResetGameBgm();
             this.framework.Update -= Update;
         }
 
@@ -81,7 +90,17 @@ namespace DragoonMayCry.Audio.FSM
             {
                 entry.Value.Reset();
             }
-            ResetGameBgm();
+            //ResetGameBgm();
+        }
+
+        public void ResetToIntro()
+        {
+            isActive = false;
+            foreach (KeyValuePair<BgmState, FsmState> entry in states)
+            {
+                entry.Value.Reset();
+            }
+            currentState = states[BgmState.Intro];
         }
 
         private void DisableGameBgm()
@@ -92,6 +111,29 @@ namespace DragoonMayCry.Audio.FSM
         private void ResetGameBgm()
         {
             Service.GameConfig.Set(Dalamud.Game.Config.SystemConfigOption.IsSndBgm, isGameBgmActive);
+        }
+        private void GoToNextState()
+        {
+            if(candidateState == null)
+            {
+                return;
+            }
+            stateTransitionStopwatch.Reset();
+            currentState = candidateState;
+            currentState.Enter();
+            candidateState = null;
+            
+        }
+
+        public void TriggerTransition(BgmState bgmState)
+        {
+            if (!states.ContainsKey(bgmState) || currentState.ID == bgmState || candidateState?.ID == bgmState)
+            {
+                return;
+            }
+            candidateState = states[bgmState];
+            stateTransitionStopwatch.Restart();
+            nextTransitionTime = currentState.Exit();
         }
     }
 

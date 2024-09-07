@@ -9,7 +9,6 @@ namespace DragoonMayCry.Audio
     public enum BgmState
     {
         Intro,
-        CombatStart,
         CombatLoop,
         CombatPeak
     }
