@@ -47,7 +47,7 @@ namespace DragoonMayCry.Score.Style
         public StyleRankHandler(PlayerActionTracker playerActionTracker)
         {
             ResetRank();
-            audioService = new AudioService();
+            audioService = AudioService.Instance;
             playerState = PlayerState.GetInstance();
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             playerState.RegisterDeathStateChangeHandler(OnDeath);

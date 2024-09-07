@@ -1,5 +1,6 @@
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
+using DragoonMayCry.Audio;
 using DragoonMayCry.Score;
 using DragoonMayCry.Score.Style;
 using DragoonMayCry.State;
@@ -26,6 +27,7 @@ namespace DragoonMayCry.UI
         {
             ConfigWindow = new ConfigWindow(this, Plugin.Configuration!);
             ConfigWindow.ActiveOutsideInstanceChange += OnActiveOutsideInstanceChange;
+            ConfigWindow.SfxVolumeChange += AudioService.Instance.OnVolumeChange;
 
             HowItWorksWindow = new HowItWorksWindow();
 

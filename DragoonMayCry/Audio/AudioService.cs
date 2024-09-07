@@ -6,12 +6,21 @@ using System.IO;
 using System.Reflection;
 using Dalamud.Plugin.Ipc.Exceptions;
 using DragoonMayCry.Score.Model;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 
 namespace DragoonMayCry.Audio
 {
     public class AudioService
     {
-        
+        public static AudioService Instance { get {
+                if(instance == null)
+                {
+                    instance = new AudioService();
+                }
+                return instance;
+            } 
+        }
+
         private static readonly Dictionary<SoundId, string> SfxPaths =
             new Dictionary<SoundId, string>
             {
@@ -29,11 +38,12 @@ namespace DragoonMayCry.Audio
         private readonly AudioEngine audioEngine;
         private readonly float sfxCooldown = 1f;
         private double lastPlayTime = 0f;
-
-        public AudioService()
+        private static AudioService? instance;
+        private AudioService()
         {
             soundIdsNextAvailability = new();
-            audioEngine = new AudioEngine();
+            audioEngine = new AudioEngine(SfxPaths);
+            audioEngine.UpdateSfxVolume(GetSfxVolume());
         }
 
         public void PlaySfx(SoundId key, bool force = false)
@@ -56,7 +66,7 @@ namespace DragoonMayCry.Audio
                 return;
             }
 
-            audioEngine.PlaySfx(key, SfxPaths[key], GetSfxVolume());
+            audioEngine.PlaySfx(key);
             lastPlayTime = ImGui.GetTime();
             if (!soundIdsNextAvailability.ContainsKey(key) || force || soundIdsNextAvailability[key] <= 0)
             {
@@ -75,6 +85,12 @@ namespace DragoonMayCry.Audio
             {
                 soundIdsNextAvailability[entry.Key] = 0;
             }
+        }
+
+        public void OnVolumeChange(object? sender, int volume)
+        {
+            Service.Log.Debug("Valume change");
+            audioEngine.UpdateSfxVolume(GetSfxVolume());
         }
 
         private bool CanPlaySfx(SoundId type)
@@ -123,5 +139,12 @@ namespace DragoonMayCry.Audio
                 _ => SoundId.Unknown
             };
         }
+
+#if DEBUG   
+        public void PlaySfx(SoundId id)
+        {
+            audioEngine.PlaySfx(id);
+        }
+#endif
     }
 }

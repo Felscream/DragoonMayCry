@@ -63,7 +63,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
     <Reference Include="Lumina">
         <HintPath>$(DalamudLibPath)Lumina.dll</HintPath>
         <Private>false</Private>
@@ -77,4 +77,7 @@
     <ItemGroup>
         <ProjectReference Include="..\KamiLib\KamiLib.csproj" />
     </ItemGroup>
+    <PropertyGroup>
+        <NoWarn>CA1416</NoWarn>  <!-- Validate platform compatibility -->
+    </PropertyGroup>
 </Project>

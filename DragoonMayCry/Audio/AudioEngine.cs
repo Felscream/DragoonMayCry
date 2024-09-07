@@ -1,5 +1,8 @@
+using Dalamud.Plugin.Services;
+using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Style;
 using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -12,62 +15,63 @@ namespace DragoonMayCry.Audio
     {
         private readonly IDictionary<SoundId, byte> soundState = new ConcurrentDictionary<SoundId, byte>();
 
-        // Copied from PeepingTom plugin, by ascclemens:
-        // https://git.anna.lgbt/anna/PeepingTom/src/commit/b1de54bcae64edf97c9f90614a588e64b5d0ae34/Peeping%20Tom/TargetWatcher.cs#L161
-        public void PlaySfx(SoundId trigger, string path, float volume)
+        private readonly IWavePlayer sfxOutputDevice;
+        private readonly Dictionary<SoundId, CachedSound> sounds;
+        private readonly VolumeSampleProvider sfxSampleProvider;
+        private readonly MixingSampleProvider sfxMixer;
+
+        public AudioEngine(Dictionary<SoundId, string> sfx)
         {
-            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            sfxOutputDevice = new WaveOutEvent();
+
+            sounds = new Dictionary<SoundId, CachedSound>();
+            foreach(KeyValuePair<SoundId, string> entry in sfx)
             {
-                Service.Log.Error($"Could not find audio file: [{path}]");
-                return;
+                sounds.Add(entry.Key, new(entry.Value));
             }
 
-            var soundDevice = DirectSoundOut.DSDEVID_DefaultPlayback;
-            new Thread(() =>
+            sfxMixer = new(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2))
             {
-                WaveStream reader;
-                try
-                {
-                    reader = new MediaFoundationReader(path);
-                }
-                catch (Exception e)
-                {
-                    Service.Log.Error(e.Message);
-                    return;
-                }
-                using var channel = new WaveChannel32(reader)
-                {
-                    Volume = volume,
-                    PadWithZeroes = false,
-                };
+                ReadFully = true
+            };
 
-                using (reader)
-                {
-                    using var output = new DirectSoundOut(soundDevice);
+            sfxSampleProvider = new(sfxMixer);
 
-                    try
-                    {
-                        output.Init(channel);
-                        output.Play();
-                        soundState[trigger] = 1;
+            sfxOutputDevice.Init(sfxSampleProvider);
+            sfxOutputDevice.Play();
+        }
 
-                        while (output.PlaybackState == PlaybackState.Playing)
-                        {
-                            if (!soundState.ContainsKey(trigger))
-                            {
-                                output.Stop();
-                            }
+        public void UpdateSfxVolume(float value)
+        {
+            sfxSampleProvider.Volume = value;
+        }
 
-                            Thread.Sleep(500);
-                        }
-                        soundState.Remove(trigger);
-                    }
-                    catch (Exception ex)
-                    {
-                        Service.Log.Error(ex, "Exception playing sound");
-                    }
-                }
-            }).Start();
+        private ISampleProvider ConvertToRightChannelCount(ISampleProvider input)
+        {
+            if (input.WaveFormat.Channels == sfxMixer.WaveFormat.Channels)
+            {
+                return input;
+            }
+            if (input.WaveFormat.Channels == 1 && sfxMixer.WaveFormat.Channels == 2)
+            {
+                return new MonoToStereoSampleProvider(input);
+            }
+            throw new NotImplementedException("Not yet implemented this channel count conversion");
+        }
+
+        private void AddSFXMixerInput(ISampleProvider input)
+        {
+            ISampleProvider mixerInput = ConvertToRightChannelCount(input);
+            sfxMixer.AddMixerInput(mixerInput);
+        }
+
+        public void PlaySfx(SoundId trigger)
+        {
+            if (!sounds.ContainsKey(trigger))
+            {
+                return;
+            }
+            AddSFXMixerInput(new CachedSoundSampleProvider(sounds[trigger]));
         }
     }
 }
