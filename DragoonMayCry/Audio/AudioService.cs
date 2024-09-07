@@ -60,7 +60,7 @@ namespace DragoonMayCry.Audio
             lastPlayTime = ImGui.GetTime();
             if (!soundIdsNextAvailability.ContainsKey(key) || force || soundIdsNextAvailability[key] <= 0)
             {
-                soundIdsNextAvailability[key] = Plugin.Configuration!.PlaySfxEveryOccurrences - 1;
+                soundIdsNextAvailability[key] = Plugin.Configuration!.PlaySfxEveryOccurrences.Value - 1;
             }
         }
 
@@ -106,7 +106,7 @@ namespace DragoonMayCry.Audio
                                    (Service.GameConfig.System.GetUInt(
                                         "SoundMaster") / 100f)
                                  : 1;
-            return gameVolume * (Plugin.Configuration!.SfxVolume / 100f);
+            return gameVolume * (Plugin.Configuration!.SfxVolume.Value / 100f);
         }
 
         private SoundId StyleTypeToSoundId(StyleType type)

@@ -1,27 +1,43 @@
 using Dalamud.Configuration;
-using Dalamud.Plugin;
-using DragoonMayCry.Configuration;
+using KamiLib.Configuration;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace DragoonMayCry.Configuration;
-
-[Serializable]
-public class DmcConfiguration : IPluginConfiguration
+namespace DragoonMayCry.Configuration
 {
-    public int Version { get; set; } = 0;
-    public int SfxVolume { get; set; } = 80;
-    public bool PlaySoundEffects { get; set; } = true;
-    public bool ForceSoundEffectsOnBlunder { get; set; } = false;
-    public int PlaySfxEveryOccurrences { get; set; } = 3;
-    public bool ApplyGameVolume { get; set; } = true;
-    public bool ActiveOutsideInstance { get; set; } = false;
-
-    public StyleRankUiConfiguration StyleRankUiConfiguration = new();
-
-
-    // the below exist just to make saving less cumbersome
-    public void Save()
+    internal class DmcConfiguration : IPluginConfiguration
     {
-        Plugin.PluginInterface.SavePluginConfig(this);
+        public int Version { get; set; } = 0;
+        public int SfxVolume = 80;
+        public bool PlaySoundEffects = true;
+        public bool ForceSoundEffectsOnBlunder = false;
+        public int PlaySfxEveryOccurrences = 3;
+        public bool ApplyGameVolume = true;
+        public bool ActiveOutsideInstance = false;
+
+        public StyleRankUiConfiguration StyleRankUiConfiguration = new();
+
+
+        // the below exist just to make saving less cumbersome
+        public void Save()
+        {
+            Plugin.PluginInterface.SavePluginConfig(this);
+        }
+
+        public DmcConfigurationOne MigrateToOne()
+        {
+            var configOne = new DmcConfigurationOne();
+            configOne.SfxVolume = new(SfxVolume);
+            configOne.PlaySoundEffects = new(PlaySoundEffects);
+            configOne.ForceSoundEffectsOnBlunder = new(ForceSoundEffectsOnBlunder);
+            configOne.PlaySfxEveryOccurrences = new(PlaySfxEveryOccurrences);
+            configOne.ApplyGameVolume = new(ApplyGameVolume);
+            configOne.ActiveOutsideInstance = new(ActiveOutsideInstance);
+            configOne.LockScoreWindow = new(StyleRankUiConfiguration.LockScoreWindow);
+            return configOne;
+        }
     }
 }

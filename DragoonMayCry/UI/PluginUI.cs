@@ -3,6 +3,7 @@ using Dalamud.Plugin;
 using DragoonMayCry.Score;
 using DragoonMayCry.Score.Style;
 using DragoonMayCry.State;
+using KamiLib;
 using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Diagnostics;
@@ -30,8 +31,8 @@ namespace DragoonMayCry.UI
 
             styleRankUi = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator);
 
-            windowSystem.AddWindow(ConfigWindow);
-            windowSystem.AddWindow(HowItWorksWindow);
+            KamiCommon.WindowManager.AddWindow(ConfigWindow);
+            KamiCommon.WindowManager.AddWindow(HowItWorksWindow);
 
             pluginInterface = Plugin.PluginInterface;
             pluginInterface.UiBuilder.Draw += DrawUI;
@@ -49,7 +50,7 @@ namespace DragoonMayCry.UI
         {
             pluginInterface.UiBuilder.Draw -= DrawUI;
             pluginInterface.UiBuilder.OpenMainUi -= ToggleConfigUI;
-            pluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUI;
+           pluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUI;
 
             windowSystem.RemoveAllWindows();
 
@@ -75,7 +76,7 @@ namespace DragoonMayCry.UI
 
         private bool CanDrawStyleRank()
         {
-            if (!Plugin.Configuration!.StyleRankUiConfiguration.LockScoreWindow)
+            if (!Plugin.Configuration!.LockScoreWindow)
             {
                 return true;
             }
@@ -97,12 +98,18 @@ namespace DragoonMayCry.UI
 
         public void ToggleConfigUI()
         {
-            ConfigWindow.Toggle();
+            if(KamiCommon.WindowManager.GetWindowOfType<ConfigWindow>() is { } window)
+            {
+                window.IsOpen = !window.IsOpen;
+            }
         }
 
         public void ToggleHowItWorks()
         {
-            HowItWorksWindow.Toggle();
+            if (KamiCommon.WindowManager.GetWindowOfType<HowItWorksWindow>() is { } window)
+            {
+                window.IsOpen = !window.IsOpen;
+            }
         }
     }
 }

@@ -8,13 +8,20 @@ using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Style;
 using DragoonMayCry.State;
 using DragoonMayCry.UI;
+using KamiLib;
+using KamiLib.ChatCommands;
+using Newtonsoft.Json;
+using System;
+using System.IO;
+using System.Text.Json;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace DragoonMayCry;
 
 public unsafe class Plugin : IDalamudPlugin
 {
     [PluginService] public static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
-    public static DmcConfiguration? Configuration { get; private set; }
+    public static DmcConfigurationOne? Configuration { get; private set; }
 
     private const string CommandName = "/dmc";
 
@@ -29,21 +36,22 @@ public unsafe class Plugin : IDalamudPlugin
     public Plugin()
     {
         PluginInterface.Create<Service>();
-        
+        KamiCommon.Initialize(PluginInterface, "DragoonMayCry", () => Configuration?.Save());
         playerState = PlayerState.GetInstance();
 
-        Configuration = PluginInterface.GetPluginConfig() as DmcConfiguration ?? new DmcConfiguration();
+        Configuration = InitConfig();
+        Configuration.Save();
         playerActionTracker = new();
 
         styleRankHandler = new(playerActionTracker);
         scoreManager = new(styleRankHandler, playerActionTracker);
         scoreProgressBar = new(scoreManager, styleRankHandler, playerActionTracker, playerState);
-        finalRankCalculator = new (playerState, styleRankHandler);
+        finalRankCalculator = new(playerState, styleRankHandler);
         pluginUi = new(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator, OnActiveOutsideInstanceConfChange);
 
         scoreProgressBar.DemotionApplied += styleRankHandler.OnDemotion;
         scoreProgressBar.Promotion += styleRankHandler.OnPromotion;
-        
+
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
             HelpMessage = "opens configuration menu"
@@ -62,6 +70,7 @@ public unsafe class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
+        KamiCommon.Dispose();
         scoreProgressBar.Dispose();
         playerActionTracker.Dispose();
         scoreManager.Dispose();
@@ -78,7 +87,7 @@ public unsafe class Plugin : IDalamudPlugin
 
     private void OnActiveOutsideInstanceConfChange(object? sender, bool activeOutsideInstance)
     {
-        if(playerState.IsInsideInstance || activeOutsideInstance)
+        if (playerState.IsInsideInstance || activeOutsideInstance)
         {
             return;
         }
@@ -86,5 +95,42 @@ public unsafe class Plugin : IDalamudPlugin
         scoreManager.Reset();
         finalRankCalculator.Reset();
         styleRankHandler.Reset();
+    }
+
+    private static DmcConfigurationOne InitConfig()
+    {
+        var configFile = PluginInterface.ConfigFile.FullName;
+        if (!File.Exists(configFile))
+        {
+            return new DmcConfigurationOne();
+        }
+
+        var configText = File.ReadAllText(configFile);
+        try
+        {
+            var versionCheck = JsonSerializer.Deserialize<BaseConfiguration>(configText);
+            if (versionCheck is null)
+            {
+                return new DmcConfigurationOne();
+            }
+
+            var version = versionCheck.Version;
+            var config = version switch
+            {
+                0 => JsonSerializer.Deserialize<DmcConfiguration>(configText)?.MigrateToOne() ?? new DmcConfigurationOne(),
+                1 => JsonConvert.DeserializeObject<DmcConfigurationOne>(configText) ?? new DmcConfigurationOne(),
+                _ => new DmcConfigurationOne()
+            };
+            return config;
+        }
+        catch (Exception e)
+        {
+            if (e.StackTrace is not null)
+            {
+                Service.Log.Debug(e.StackTrace);
+            }
+            Service.Log.Warning("Your configuration migration failed, it has been reinitialized");
+            return new DmcConfigurationOne();
+        }
     }
 }

@@ -6,19 +6,20 @@ using System.Numerics;
 using DragoonMayCry.Score.Style;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using DragoonMayCry.State;
+using KamiLib.Drawing;
 
 namespace DragoonMayCry.UI;
 
 public class ConfigWindow : Window, IDisposable
 {
     public EventHandler<bool> ActiveOutsideInstanceChange;
-    private readonly DmcConfiguration configuration;
+    private readonly DmcConfigurationOne configuration;
     private readonly PluginUI pluginUI;
 
     // We give this window a constant ID using ###
     // This allows for labels being dynamic, like "{FPS Counter}fps###XYZ counter window",
     // and the window ID will always be "###XYZ counter window" for ImGui
-    public ConfigWindow(PluginUI pluginUi, DmcConfiguration configuration) : base("DragoonMayCry - Configuration")
+    public ConfigWindow(PluginUI pluginUi, DmcConfigurationOne configuration) : base("DragoonMayCry - Configuration")
     {
 
         Size = new Vector2(400,250);
@@ -37,57 +38,19 @@ public class ConfigWindow : Window, IDisposable
             pluginUI.ToggleHowItWorks();
         }
 
-        var lockScoreWindow = configuration.StyleRankUiConfiguration.LockScoreWindow;
-        if (ImGui.Checkbox("Lock rank window", ref lockScoreWindow))
-        {
-            configuration.StyleRankUiConfiguration.LockScoreWindow = lockScoreWindow;
-            configuration.Save();
-        }
+        InfoBox.Instance.AddTitle("General")
+            .AddConfigCheckbox("Lock rank window", configuration.LockScoreWindow)
+            .AddConfigCheckbox("Active outside instance", configuration.ActiveOutsideInstance)
+            .Draw();
 
-        var activeOutsideInstance = configuration.ActiveOutsideInstance;
-        if (ImGui.Checkbox("Active outside instance",
-                           ref activeOutsideInstance))
-        {
-            configuration.ActiveOutsideInstance = activeOutsideInstance;
-            configuration.Save();
-            ActiveOutsideInstanceChange?.Invoke(this, activeOutsideInstance);
-        }
-
-        var playSoundEffects = configuration.PlaySoundEffects;
-        if (ImGui.Checkbox("Play sound effects", ref playSoundEffects))
-        {
-            configuration.PlaySoundEffects = playSoundEffects;
-            configuration.Save();
-        }
-
-        var playSoundEffectsOnBlunder = configuration.ForceSoundEffectsOnBlunder;
-        if (ImGui.Checkbox("Force sound effect on blunders", ref playSoundEffectsOnBlunder))
-        {
-            configuration.ForceSoundEffectsOnBlunder = playSoundEffectsOnBlunder;
-            configuration.Save();
-        }
-
-        var applyGameVolume = configuration.ApplyGameVolume;
-        if (ImGui.Checkbox("Apply game volume", ref applyGameVolume))
-        {
-            configuration.ApplyGameVolume = applyGameVolume;
-            configuration.Save();
-        }
-
-        var soundEffectVolume = configuration.SfxVolume;
-        if (ImGui.SliderInt("Sound effect volume", ref soundEffectVolume, 0,
-                            100))
-        {
-            configuration.SfxVolume = soundEffectVolume;
-            configuration.Save();
-        }
-
-        var announcerCooldown = configuration.PlaySfxEveryOccurrences;
-        ImGui.Text("Play each unique SFX only once every");
-        if (ImGui.SliderInt("occurrences", ref announcerCooldown, 1, 20))
-        {
-            configuration.PlaySfxEveryOccurrences = announcerCooldown;
-            configuration.Save();
-        }
+        InfoBox.Instance.AddTitle("Audio")
+            .AddConfigCheckbox("Play sound effects", configuration.PlaySoundEffects)
+            .AddConfigCheckbox("Force sound effect on blunders", configuration.ForceSoundEffectsOnBlunder)
+            .AddConfigCheckbox("Apply game volume", configuration.ApplyGameVolume)
+            .AddSliderInt("Sound effect volume", configuration.SfxVolume, 0, 100)
+            .AddString("Play each unique SFX only once every")
+            .SameLine()
+            .AddSliderInt("occurrences", configuration.PlaySfxEveryOccurrences, 1, 20)
+            .Draw();
     }
 }
