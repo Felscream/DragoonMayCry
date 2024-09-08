@@ -149,12 +149,12 @@ namespace DragoonMayCry.Audio
 
         private float GetBgmVolume()
         {
-            if (Plugin.Configuration!.ApplyGameVolumeBgm && Service.GameConfig.System.GetBool("IsSndMaster"))
+            if (Plugin.Configuration!.ApplyGameVolumeBgm.Value && Service.GameConfig.System.GetBool("IsSndMaster"))
             {
                 return 0;
             }
 
-            var gameVolume = Plugin.Configuration!.ApplyGameVolumeBgm
+            var gameVolume = Plugin.Configuration!.ApplyGameVolumeBgm.Value
                                  ? Service.GameConfig.System
                                           .GetUInt("SoundBgm") / 100f *
                                    (Service.GameConfig.System.GetUInt(

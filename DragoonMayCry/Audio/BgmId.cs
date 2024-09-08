@@ -9,8 +9,8 @@ namespace DragoonMayCry.Audio
     public enum BgmId
     {
         Intro,
-        IntroExit,
-        CombatEnter,
+        CombatEnter1,
+        CombatEnter2,
         CombatVerse1,
         CombatVerse2,
         CombatCoreLoop,

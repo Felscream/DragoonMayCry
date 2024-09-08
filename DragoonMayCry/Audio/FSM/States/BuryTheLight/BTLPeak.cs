@@ -133,7 +133,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
                         {
                             audioService.RemoveBgmPart(samples.Dequeue());
                         }
-                        Reset();
+                        currentTrackStopwatch.Reset();
                         break;
                     default:
                         PlayNextPart();
@@ -215,7 +215,8 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             {
                 audioService.RemoveBgmPart(samples.Dequeue());
             }
-            Reset();
+            currentTrackStopwatch.Reset();
+            
         }
 
         private void PlayNextPart()
@@ -303,19 +304,12 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
 
         public void Reset()
         {
-            currentTrackStopwatch.Reset();
-        }
-
-        public void CancelExit()
-        {
-            if(currentState != PeakState.LeavingStateDemotion)
+            while (samples.Count > 0)
             {
-                return;
+                audioService.RemoveBgmPart(samples.Dequeue());
             }
-
-            currentState = stateBeforeDemotion;
-            transitionTime = transitionTimePerId[currentTrack!.Value].TransitionStart;
-
+            currentTrackStopwatch.Reset();
+            currentState = PeakState.VerseIntro;
         }
     }
 }

@@ -22,7 +22,8 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
         public BgmState ID { get { return BgmState.CombatLoop; } }
 
         private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new Dictionary<BgmId, BgmTrackData> {
-            { BgmId.CombatEnter, new BgmTrackData(1590, 12800) },
+            { BgmId.CombatEnter1, new BgmTrackData(0, 3150) },
+            { BgmId.CombatEnter2, new BgmTrackData(0, 12800) },
             { BgmId.CombatVerse1, new BgmTrackData(0, 25412) },
             { BgmId.CombatVerse2, new BgmTrackData(0, 25412) },
             { BgmId.CombatCoreLoop, new BgmTrackData(0, 91950) },
@@ -30,7 +31,8 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
         };
 
         private readonly Dictionary<BgmId, string> BgmPaths = new Dictionary<BgmId, string> {
-            { BgmId.CombatEnter, BuryTheLightFsm.GetPathToAudio("CombatLoop\\029.mp3") },
+            { BgmId.CombatEnter1, BuryTheLightFsm.GetPathToAudio("Intro\\111.mp3") },
+            { BgmId.CombatEnter2, BuryTheLightFsm.GetPathToAudio("CombatLoop\\029.mp3") },
             { BgmId.CombatVerse1, BuryTheLightFsm.GetPathToAudio("CombatLoop\\017.mp3") },
             { BgmId.CombatVerse2, BuryTheLightFsm.GetPathToAudio("CombatLoop\\040.mp3") },
             { BgmId.CombatCoreLoop, BuryTheLightFsm.GetPathToAudio("CombatLoop\\coreloop.mp3") },
@@ -38,6 +40,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
         };
 
         private LinkedList<BgmId> combatLoop = new LinkedList<BgmId>();
+        private readonly LinkedList<BgmId> combatIntro = new LinkedList<BgmId>();
         private LinkedListNode<BgmId>? currentTrack;
         private readonly AudioService audioService;
         private readonly Stopwatch currentTrackStopwatch;
@@ -49,6 +52,9 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             this.audioService = audioService;
             currentTrackStopwatch = new Stopwatch();
             samples = new Queue<ISampleProvider>();
+
+            combatIntro.AddLast(BgmId.CombatEnter1);
+            combatIntro.AddLast(BgmId.CombatEnter2);
         }
 
         public void Enter(bool fromVerse)
@@ -65,7 +71,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             }
             else
             {
-                currentTrack = new LinkedListNode<BgmId>(BgmId.CombatEnter);
+                currentTrack = combatIntro.First!;
                 sample = audioService.PlayBgm(currentTrack.Value);
                 currentState = CombatLoopState.Intro;
             }
@@ -104,8 +110,15 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             // transition to loop state if we reached the end of intro
             if (currentState == CombatLoopState.Intro)
             {
-                currentTrack = combatLoop.First!;
-                currentState = CombatLoopState.CoreLoop;
+                if(currentTrack!.Next == null)
+                {
+                    currentTrack = combatLoop.First!;
+                    currentState = CombatLoopState.CoreLoop;
+                }
+                else
+                {
+                    currentTrack = currentTrack.Next;
+                }
             }
             else if (currentState == CombatLoopState.CoreLoop)
             {
@@ -141,22 +154,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
 
         private int ComputeNextTransitionTiming()
         {
-            int transitionUpdateDelay = (int)Math.Max(currentTrackStopwatch.Elapsed.TotalMilliseconds - transitionTime, 0);
-            int timing = -1;
-            if (currentTrack!.Next != null)
-            {
-                var currentBgmData = transitionTimePerId[currentTrack.Value];
-                var nextBgmData = transitionTimePerId[currentTrack.Next.Value];
-                timing = currentBgmData.TransitionStart - nextBgmData.EffectiveStart;
-            }
-            else
-            {
-                var currentBgmData = transitionTimePerId[currentTrack.Value];
-                var nextBgmData = transitionTimePerId[combatLoop.First!.Value];
-                timing = currentBgmData.TransitionStart - nextBgmData.EffectiveStart;
-            }
-
-            return timing - transitionUpdateDelay;
+            return transitionTimePerId[currentTrack!.Value].TransitionStart;
         }
 
         private void LeaveState()
@@ -202,7 +200,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
 
         public void Reset()
         {
-            
+            LeaveState();
         }
 
         private Queue<BgmId> RandomizeVerseQueue()

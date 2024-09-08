@@ -14,20 +14,18 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
         enum IntroState
         {
             OutOfCombat,
-            CombatStart,
-            EndOfCombat
+            CombatStart
         }
         public string Name { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public BgmState ID { get { return BgmState.Intro; } }
 
         private Dictionary<BgmId, BgmTrackData> transitionTimePerId = new Dictionary<BgmId, BgmTrackData> {
             { BgmId.Intro, new BgmTrackData(1600, 50293) },
-            { BgmId.IntroExit, new BgmTrackData(1588, 3150) }
         };
 
         public Dictionary<BgmId, string> BgmPaths = new Dictionary<BgmId, string> {
             { BgmId.Intro, BuryTheLightFsm.GetPathToAudio("Intro\\intro.mp3") },
-            { BgmId.IntroExit, BuryTheLightFsm.GetPathToAudio("Intro\\111.mp3") }
+            
         };
 
         private readonly AudioService audioService;
@@ -66,8 +64,10 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             {
                 return;
             }
+
             if (currentTrackStopwatch.Elapsed.TotalMilliseconds > transitionTime)
             {
+                
                 if (state != IntroState.OutOfCombat)
                 {
                     TransitionToNextState(state);
@@ -81,15 +81,16 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
                     }
                     currentTrackStopwatch.Restart();
                 }
-                
             }
         }
 
         public void Reset()
         {
-            samples.Clear();
+            while (samples.Count > 0)
+            {
+                audioService.RemoveBgmPart(samples.Dequeue());
+            }
             currentTrackStopwatch.Reset();
-            state = IntroState.OutOfCombat;
         }
 
         public Dictionary<BgmId, string> GetBgmPaths()
@@ -111,9 +112,8 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             else if(exit == ExitType.Promotion)
             {
                 state = IntroState.CombatStart;
-                nextStateTransitionTime = transitionTimePerId[BgmId.IntroExit].TransitionStart;
-                samples.Enqueue(audioService.PlayBgm(BgmId.IntroExit)!);
-                transitionTime = transitionTimePerId[BgmId.IntroExit].EffectiveStart;
+                nextStateTransitionTime = 0;
+                transitionTime = 1600;
                 currentTrackStopwatch.Restart();
             }
 
@@ -125,32 +125,19 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
                 currentTrackStopwatch.Restart();
                 audioService.PlayBgm(BgmId.CombatEnd);
             }
+            Service.Log.Debug($"{nextStateTransitionTime}");
             return nextStateTransitionTime;
         }
 
         private void TransitionToNextState(IntroState type)
         {
             Service.Log.Debug("Going to next state");
-            if(type == IntroState.CombatStart)
+            while (samples.Count > 0)
             {
-                while (samples.Count > 1)
-                {
-                    audioService.RemoveBgmPart(samples.Dequeue());
-                }
-            } else if(type == IntroState.OutOfCombat)
-            {
-                while (samples.Count > 0)
-                {
-                    audioService.RemoveBgmPart(samples.Dequeue());
-                }
+                audioService.RemoveBgmPart(samples.Dequeue());
             }
             
             Reset();
-        }
-
-        public void CancelExit()
-        {
-
         }
     }
 }

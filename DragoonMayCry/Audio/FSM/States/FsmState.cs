@@ -14,6 +14,5 @@ namespace DragoonMayCry.Audio.FSM.States
 
         public void Reset();
         public int Exit(ExitType exit);
-        public void CancelExit();
     }
 }

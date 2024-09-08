@@ -58,7 +58,7 @@ public unsafe class Plugin : IDalamudPlugin
 
 
         this.audioService = AudioService.Instance;
-        buryTheLight = new BuryTheLightFsm(AudioService.Instance, Service.Framework);
+        buryTheLight = new BuryTheLightFsm(AudioService.Instance, playerState, styleRankHandler, Service.Framework);
         buryTheLight.CacheBgm();
 
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
