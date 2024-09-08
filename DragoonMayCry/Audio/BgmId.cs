@@ -22,6 +22,7 @@ namespace DragoonMayCry.Audio
         Chorus3,
         ChorusTransition1,
         ChorusTransition2,
-        CombatEnd
+        CombatEnd,
+        Demotion
     }
 }

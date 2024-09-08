@@ -14,7 +14,7 @@ namespace DragoonMayCry.Score
 {
     public class FinalRankCalculator : IResettable
     {
-        public EventHandler<StyleType> FinalRankCalculated;
+        public EventHandler<StyleType>? FinalRankCalculated;
         private readonly PlayerState playerState;
         private Dictionary<StyleType, double> timeInEachTier;
         private Stopwatch tierTimer;

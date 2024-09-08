@@ -9,10 +9,11 @@ namespace DragoonMayCry.Audio.FSM.States
         public BgmState ID { get; }
 
         public Dictionary<BgmId, string> GetBgmPaths();
-        public void Enter();
+        public void Enter(bool fromLoop);
         public void Update();
 
         public void Reset();
-        public int Exit(bool outOfCombat);
+        public int Exit(ExitType exit);
+        public void CancelExit();
     }
 }

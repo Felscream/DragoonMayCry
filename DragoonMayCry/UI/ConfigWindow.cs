@@ -25,7 +25,7 @@ public class ConfigWindow : Window, IDisposable
     public ConfigWindow(PluginUI pluginUi, DmcConfigurationOne configuration) : base("DragoonMayCry - Configuration")
     {
 
-        Size = new Vector2(600,300);
+        Size = new Vector2(600,400);
         SizeCondition = ImGuiCond.Appearing;
 
         this.configuration = configuration;
@@ -88,7 +88,7 @@ public class ConfigWindow : Window, IDisposable
             })
             .Draw();
 
-        InfoBox.Instance.AddTitle("Audio")
+        InfoBox.Instance.AddTitle("SFX")
             .AddConfigCheckbox("Play sound effects", configuration.PlaySoundEffects)
             .AddConfigCheckbox("Force sound effect on blunders", configuration.ForceSoundEffectsOnBlunder)
             .AddAction(() => { 
@@ -106,8 +106,15 @@ public class ConfigWindow : Window, IDisposable
                     SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
                 }
             })
-            .AddConfigCheckbox("Enable dynamic background music", configuration.EnableDynamicBgm, "This will disable the game background music inside instances, you may have to enable it manually if you dsable this plugin")
-            .AddAction(() => {
+            .AddString("Play each unique SFX only once every")
+            .SameLine()
+            .AddSliderInt("occurrences", configuration.PlaySfxEveryOccurrences, 1, 20)
+            .Draw();
+
+        InfoBox.Instance.AddTitle("Dynamic BGM - mega experimental")
+            .AddConfigCheckbox("Enable dynamic background music", configuration.EnableDynamicBgm, "This will disable the game background music inside instances, you may have to change your BGM configuration.")
+            .AddAction(() =>
+            {
                 if (ImGui.Checkbox("Apply game volume on dynamic background music", ref configuration.ApplyGameVolumeBgm.Value))
                 {
                     KamiCommon.SaveConfiguration();
@@ -123,9 +130,6 @@ public class ConfigWindow : Window, IDisposable
                     BgmVolumeChange?.Invoke(this, configuration.BgmVolume.Value);
                 }
             })
-            .AddString("Play each unique SFX only once every")
-            .SameLine()
-            .AddSliderInt("occurrences", configuration.PlaySfxEveryOccurrences, 1, 20)
             .Draw();
 
 #if DEBUG
@@ -140,8 +144,9 @@ public class ConfigWindow : Window, IDisposable
             .SameLine().AddButton("SSS", () => AudioService.Instance.PlaySfx(SoundId.Sensational))
             .SameLine().AddButton("BGM test", () => Plugin.StartBgm())
             .SameLine().AddButton("Stop BGM", () => Plugin.StopBgm())
-            .AddButton("BGM combat", () => Plugin.BgmTransitionNext())
+            .AddButton("BGM Rank up", () => Plugin.BgmTransitionNext())
             .SameLine().AddButton("EndCombat", () => Plugin.BgmEndCombat())
+            .SameLine().AddButton("Demotion", () => Plugin.BgmDemotion())
 
             .Draw();
 #endif

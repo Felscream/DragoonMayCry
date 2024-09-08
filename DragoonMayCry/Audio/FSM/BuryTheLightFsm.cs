@@ -64,13 +64,21 @@ namespace DragoonMayCry.Audio.FSM
             currentState = states[currentStateNode.Value];
             DisableGameBgm();
             isActive = true;
-            currentState.Enter();
+            currentState.Enter(false);
         }
 
         public void Update(IFramework framework)
         {
-            currentState.Update();
+            if(!isActive)
+            {
+                return;
+            }
 
+            currentState.Update();
+            if(candidateState?.ID == BgmState.CombatLoop && currentState.ID == BgmState.CombatPeak)
+            {
+                Service.Log.Debug($"State demotion {stateTransitionStopwatch.ElapsedMilliseconds} vs {nextTransitionTime}");
+            }
             if(stateTransitionStopwatch.IsRunning && stateTransitionStopwatch.Elapsed.TotalMilliseconds > nextTransitionTime)
             {
                 GoToNextState();
@@ -114,6 +122,8 @@ namespace DragoonMayCry.Audio.FSM
                 entry.Value.Reset();
             }
             currentState = states[BgmState.Intro];
+            currentStateNode = bgmStates.Head!;
+            stateTransitionStopwatch.Reset();
         }
 
         private void DisableGameBgm()
@@ -127,32 +137,30 @@ namespace DragoonMayCry.Audio.FSM
         }
         private void GoToNextState()
         {
-            if(candidateState == null)
+            stateTransitionStopwatch.Reset();
+            if (candidateState == null)
             {
                 return;
             }
-            stateTransitionStopwatch.Reset();
+            
             if(candidateState.ID == BgmState.Intro)
             {
                 currentStateNode = bgmStates.Head!;
-            } else if (currentStateNode.Next != null)
+            } else if (currentStateNode.Next != null && currentStateNode.Next.Value == candidateState.ID)
             {
                 currentStateNode = currentStateNode.Next!;
             }
-            currentState = candidateState;
-            currentState.Enter();
-            candidateState = null;
-            
-        }
-        private void GoToPreviousState()
-        {
-            if (candidateState == null || currentStateNode.Previous == null || currentStateNode.Previous.Value == BgmState.Intro)
+            else
             {
-                return;
+                currentStateNode = bgmStates.Find(candidateState.ID)!;
             }
+            var fromVerse = currentState.ID == BgmState.CombatPeak && candidateState.ID == BgmState.CombatLoop;
+            currentState = candidateState;
+            currentState.Enter(fromVerse);
+            candidateState = null;
         }
 
-        public void TriggerTransition()
+        public void Promotion()
         {
             if (currentStateNode.Next == null || candidateState?.ID == currentStateNode.Value)
             {
@@ -161,13 +169,26 @@ namespace DragoonMayCry.Audio.FSM
 
             candidateState = states[currentStateNode.Next.Value];
             stateTransitionStopwatch.Restart();
-            nextTransitionTime = currentState.Exit(false);
+            nextTransitionTime = currentState.Exit(ExitType.Promotion);
         }
 
         public void LeaveCombat()
         {
-            nextTransitionTime = currentState.Exit(true);
+            nextTransitionTime = currentState.Exit(ExitType.EndOfCombat);
             candidateState = states[BgmState.Intro];
+            stateTransitionStopwatch.Restart();
+        }
+
+        public void Demotion()
+        {
+            // we can only go to the previous state for ranks S and above
+            if (currentState.ID != BgmState.CombatPeak || candidateState != null)
+            {
+                return;
+            }
+            
+            candidateState = states[currentStateNode.Previous!.Value];
+            nextTransitionTime = currentState.Exit(ExitType.Demotion);
             stateTransitionStopwatch.Restart();
         }
     }

@@ -35,7 +35,7 @@ namespace DragoonMayCry.Score
         
 
         public EventHandler<double>? OnScoring;
-        public EventHandler<StyleScoring> StyleScoringChange;
+        public EventHandler<StyleScoring>? StyleScoringChange;
         public ScoreRank CurrentScoreRank { get; private set; }
         private readonly PlayerState playerState;
         private readonly StyleRankHandler rankHandler;

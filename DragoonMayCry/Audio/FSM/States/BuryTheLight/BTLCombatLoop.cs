@@ -38,7 +38,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
         };
 
         private LinkedList<BgmId> combatLoop = new LinkedList<BgmId>();
-        private LinkedListNode<BgmId> currentTrack;
+        private LinkedListNode<BgmId>? currentTrack;
         private readonly AudioService audioService;
         private readonly Stopwatch currentTrackStopwatch;
         private CombatLoopState currentState;
@@ -109,7 +109,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             }
             else if (currentState == CombatLoopState.CoreLoop)
             {
-                if (currentTrack.Next != null)
+                if (currentTrack!.Next != null)
                 {
                     currentTrack = currentTrack.Next;
                 }
@@ -119,7 +119,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
                 }
             }
 
-            Service.Log.Debug($"Playing {currentTrack.Value}");
+            Service.Log.Debug($"Playing {currentTrack!.Value}");
             PlayBgmPart();
             transitionTime = ComputeNextTransitionTiming();
             currentTrackStopwatch.Restart();
@@ -132,7 +132,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
                 samples.Dequeue();
             }
 
-            var sample = audioService.PlayBgm(currentTrack.Value);
+            var sample = audioService.PlayBgm(currentTrack!.Value);
             if (sample != null)
             {
                 samples.Enqueue(sample);
@@ -143,7 +143,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
         {
             int transitionUpdateDelay = (int)Math.Max(currentTrackStopwatch.Elapsed.TotalMilliseconds - transitionTime, 0);
             int timing = -1;
-            if (currentTrack.Next != null)
+            if (currentTrack!.Next != null)
             {
                 var currentBgmData = transitionTimePerId[currentTrack.Value];
                 var nextBgmData = transitionTimePerId[currentTrack.Next.Value];
@@ -170,7 +170,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             currentTrackStopwatch.Reset();
         }
 
-        public int Exit(bool outOfCombat)
+        public int Exit(ExitType exit)
         {
             var nextTransitionTime = transitionTimePerId[BgmId.CombatCoreLoopExit].TransitionStart;
             if(currentState == CombatLoopState.Exit)
@@ -179,10 +179,10 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             } 
             else
             {
-                if (!outOfCombat)
+                if (exit == ExitType.Promotion)
                 {
                     audioService.PlayBgm(BgmId.CombatCoreLoopExit);
-                } else
+                } else if(exit == ExitType.EndOfCombat)
                 {
                     audioService.PlayBgm(BgmId.CombatEnd);
                     nextTransitionTime = 8000;
@@ -190,7 +190,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
                 currentTrackStopwatch.Restart();
             }
             currentState = CombatLoopState.Exit;
-            transitionTime = outOfCombat ? 1600 : transitionTimePerId[BgmId.CombatCoreLoopExit].EffectiveStart;
+            transitionTime = exit == ExitType.EndOfCombat ? 1600 : transitionTimePerId[BgmId.CombatCoreLoopExit].EffectiveStart;
             
             return nextTransitionTime;
         }
@@ -233,9 +233,9 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             return res;
         }
 
-        public void Enter()
+        public void CancelExit()
         {
-            Enter(false);
+
         }
     }
 }

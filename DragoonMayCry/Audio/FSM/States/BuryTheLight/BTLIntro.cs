@@ -40,7 +40,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             samples = new Queue<ISampleProvider>();
         }
 
-        public void Enter()
+        public void Enter(bool fromVerse)
         {
             isLeavingState = false;
             Service.Log.Debug($"Playing {BgmId.Intro}");
@@ -92,7 +92,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             return BgmPaths;
         }
 
-        public int Exit(bool outOfCombat)
+        public int Exit(ExitType exit)
         {
             if (!currentTrackStopwatch.IsRunning)
             {
@@ -103,17 +103,18 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             {
                 nextStateTransitionTime = (int)Math.Max(nextStateTransitionTime - currentTrackStopwatch.Elapsed.TotalMilliseconds, 0);
             }
-            else if(!outOfCombat)
+            else if(exit == ExitType.Promotion)
             {
                 nextStateTransitionTime = transitionTimePerId[BgmId.IntroExit].TransitionStart;
                 audioService.PlayBgm(BgmId.IntroExit);
                 transitionTime = transitionTimePerId[BgmId.IntroExit].EffectiveStart;
                 currentTrackStopwatch.Restart();
             }
-            if(outOfCombat)
+
+            if(exit == ExitType.EndOfCombat)
             {
                 transitionTime = 1600;
-                nextStateTransitionTime = 8000;
+                nextStateTransitionTime = isLeavingState ? nextStateTransitionTime : 8000;
                 currentTrackStopwatch.Restart();
                 audioService.PlayBgm(BgmId.CombatEnd);
             }
@@ -129,6 +130,11 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
                 audioService.RemoveBgmPart(samples.Dequeue());
             }
             Reset();
+        }
+
+        public void CancelExit()
+        {
+
         }
     }
 }

@@ -105,12 +105,17 @@ public unsafe class Plugin : IDalamudPlugin
 
     public static void BgmTransitionNext()
     {
-        buryTheLight.TriggerTransition();
+        buryTheLight.Promotion();
     }
 
     public static void BgmEndCombat()
     {
         buryTheLight.LeaveCombat();
+    }
+
+    public static void BgmDemotion()
+    {
+        buryTheLight.Demotion();
     }
 
     private void OnCommand(string command, string args)

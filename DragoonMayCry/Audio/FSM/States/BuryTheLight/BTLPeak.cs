@@ -15,7 +15,9 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             VerseIntro,
             Loop,
             Transition,
-            LeavingState
+            LeavingStateOutOfCombat,
+            LeavingStateDemotion,
+            CleaningUpDemotion
         }
 
         public BgmState ID { get { return BgmState.CombatPeak; } }
@@ -27,19 +29,20 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             { BgmId.Chorus3, new BgmTrackData(0, 78200)},
             { BgmId.ChorusTransition1, new BgmTrackData(0, 1550) },
             { BgmId.ChorusTransition2, new BgmTrackData(0, 1550) },
+            { BgmId.Demotion, new BgmTrackData(0, 25600) },
         };
 
         private readonly Dictionary<BgmId, List<int>> possibleTransitionTimesToNewState = new Dictionary<BgmId, List<int>> {
-            { BgmId.ChorusIntro1, new List<int>{ 25600 } },
-            { BgmId.ChorusIntro2, new List<int>{ 51200 } },
-            { BgmId.Chorus1, new List<int>{ 25600, 52800} },
-            { BgmId.Chorus2, new List<int>{ 25600, 78200, 102400, 129400} },
-            { BgmId.Chorus3, new List<int>{ 25600, 78200} },
-            { BgmId.ChorusTransition1, new List<int>{ 1550 } },
-            { BgmId.ChorusTransition2, new List<int>{ 1550 } },
+            { BgmId.ChorusIntro1, new List<int>{ 27200 } },
+            { BgmId.ChorusIntro2, new List<int>{ 52800 } },
+            { BgmId.Chorus1, new List<int>{ 27200, 52800} },
+            { BgmId.Chorus2, new List<int>{ 27200, 78400, 104000, 129600} },
+            { BgmId.Chorus3, new List<int>{ 27200, 78400 } },
+            { BgmId.ChorusTransition1, new List<int>{ 3220 } },
+            { BgmId.ChorusTransition2, new List<int>{ 3220 } },
         };
 
-        private readonly Dictionary<BgmId, string> BgmPaths = new Dictionary<BgmId, string> {
+        private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
             { BgmId.ChorusIntro1, BuryTheLightFsm.GetPathToAudio("CombatChorus\\025.mp3") },
             { BgmId.ChorusIntro2, BuryTheLightFsm.GetPathToAudio("CombatChorus\\094.mp3") },
             { BgmId.Chorus1, BuryTheLightFsm.GetPathToAudio("CombatChorus\\chorus1.mp3") },
@@ -47,6 +50,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             { BgmId.Chorus3, BuryTheLightFsm.GetPathToAudio("CombatChorus\\chorus3.mp3") },
             { BgmId.ChorusTransition1, BuryTheLightFsm.GetPathToAudio("CombatChorus\\transition1.mp3") },
             { BgmId.ChorusTransition2, BuryTheLightFsm.GetPathToAudio("CombatChorus\\transition2.mp3") },
+            { BgmId.Demotion, BuryTheLightFsm.GetPathToAudio("CombatChorus\\demotion.mp3") },
         };
 
         private readonly AudioService audioService;
@@ -54,11 +58,13 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
         private readonly Stopwatch currentTrackStopwatch;
         private readonly Queue<ISampleProvider> samples;
 
+        
         private readonly LinkedList<BgmId> loopSequence;
 
-        private LinkedListNode<BgmId> currentTrack;
+        private LinkedListNode<BgmId>? currentTrack;
 
         private PeakState currentState;
+        private PeakState stateBeforeDemotion;
         // indicates when we can change tracks in this state
         private int transitionTime = 0;
         // indicates when it is appropriate to transition to a new FSM state
@@ -78,7 +84,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             loopSequence.AddLast(BgmId.Chorus3);
         }
 
-        public void Enter()
+        public void Enter(bool fromVerse)
         {
             BgmId chorus = SelectRandomChorus();
             currentTrack = new LinkedListNode<BgmId>(chorus);
@@ -92,7 +98,6 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             transitionTime = ComputeNextTransitionTiming();
             currentTrackStopwatch.Restart();
             nextPosibleStateTransitionTime = ComputeNextStateTransitionTime();
-            
         }
 
         public void Update()
@@ -101,29 +106,61 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             {
                 return;
             }
-
+            if(currentState == PeakState.LeavingStateDemotion || currentState == PeakState.CleaningUpDemotion)
+            {
+                Service.Log.Debug($"Demotion in progress {currentTrackStopwatch.ElapsedMilliseconds} vs {transitionTime} sample count {samples.Count}");
+            }
             if (currentTrackStopwatch.ElapsedMilliseconds >= transitionTime)
             {
-                if(currentState != PeakState.LeavingState)
+                switch (currentState)
                 {
-                    PlayNextPart();
+                    case PeakState.LeavingStateOutOfCombat:
+                        LeaveStateOutOfCombat();
+                        break;
+                    case PeakState.LeavingStateDemotion:
+                        StartDemotionTransition();
+                        break;
+                    case PeakState.CleaningUpDemotion:
+                        while (samples.Count > 1)
+                        {
+                            audioService.RemoveBgmPart(samples.Dequeue());
+                        }
+                        Reset();
+                        break;
+                    default:
+                        PlayNextPart();
+                        break;
                 }
-                else
-                {
-                    LeaveState();
-                }
-                
             }
 
-            if (currentTrackStopwatch.ElapsedMilliseconds > nextPosibleStateTransitionTime)
+            if (currentTrackStopwatch.ElapsedMilliseconds > nextPosibleStateTransitionTime && currentState != PeakState.LeavingStateDemotion)
             {
                 nextPosibleStateTransitionTime = ComputeNextStateTransitionTime();
             }
         }
 
+        private void StartDemotionTransition()
+        {
+            currentState = PeakState.CleaningUpDemotion;
+            while (samples.Count > 1)
+            {
+                audioService.RemoveBgmPart(samples.Dequeue());
+            }
+            var sample = audioService.PlayBgm(BgmId.Demotion);
+            if (sample != null)
+            {
+                samples.Enqueue(sample);
+            }
+            currentState = PeakState.CleaningUpDemotion;
+            nextStateTransitionTime = 1590;
+            currentTrackStopwatch.Restart();
+            
+            
+        }
+
         private int ComputeNextTransitionTiming()
         {
-            var currentBgmData = transitionTimePerId[currentTrack.Value];
+            var currentBgmData = transitionTimePerId[currentTrack!.Value];
             if (currentState != PeakState.Transition)
             {
                 return currentBgmData.TransitionStart;
@@ -132,7 +169,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             return transitionTimePerId[BgmId.ChorusTransition1].TransitionStart;
         }
 
-        private void LeaveState()
+        private void LeaveStateOutOfCombat()
         {
             while(samples.Count > 0)
             {
@@ -160,7 +197,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             {
                 // swap to loop
                 currentState = PeakState.Loop;
-                if (currentTrack.Next != null)
+                if (currentTrack!.Next != null)
                 {
                     currentTrack = currentTrack.Next;
                 }
@@ -192,7 +229,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
 
         private int ComputeNextStateTransitionTime()
         {
-            List<int> possibleTransitionTimes = currentState != PeakState.Transition ? possibleTransitionTimesToNewState[currentTrack.Value] : possibleTransitionTimesToNewState[BgmId.ChorusTransition1];
+            List<int> possibleTransitionTimes = currentState != PeakState.Transition ? possibleTransitionTimesToNewState[currentTrack!.Value] : possibleTransitionTimesToNewState[BgmId.ChorusTransition1];
             int transition = possibleTransitionTimes[0];
             for (int i = 0; i < possibleTransitionTimes.Count; i++)
             {
@@ -206,18 +243,30 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             return transition;
         }
 
-        public int Exit(bool outOfCombat)
+        public int Exit(ExitType exit)
         {
             nextStateTransitionTime = 0;
-            if (outOfCombat)
+            if (exit == ExitType.EndOfCombat)
             {
                 transitionTime = 1600;
                 nextPosibleStateTransitionTime = 8000;
                 nextStateTransitionTime = 8000;
                 audioService.PlayBgm(BgmId.CombatEnd);
+                currentState = PeakState.LeavingStateOutOfCombat;
+            } 
+            else if (currentState == PeakState.LeavingStateDemotion)
+            {
+                return nextStateTransitionTime - (int)currentTrackStopwatch.Elapsed.TotalMilliseconds;
+            }
+            else if (exit == ExitType.Demotion)
+            {
+                transitionTime = nextPosibleStateTransitionTime - (int)currentTrackStopwatch.Elapsed.TotalMilliseconds;
+                nextStateTransitionTime = transitionTime + transitionTimePerId[BgmId.Demotion].TransitionStart;
+                stateBeforeDemotion = currentState;
+                currentState = PeakState.LeavingStateDemotion;
             }
             currentTrackStopwatch.Restart();
-            currentState = PeakState.LeavingState;
+            
             return nextStateTransitionTime;
         }
 
@@ -235,12 +284,24 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
 
         public Dictionary<BgmId, string> GetBgmPaths()
         {
-            return BgmPaths;
+            return bgmPaths;
         }
 
         public void Reset()
         {
             currentTrackStopwatch.Reset();
+        }
+
+        public void CancelExit()
+        {
+            if(currentState != PeakState.LeavingStateDemotion)
+            {
+                return;
+            }
+
+            currentState = stateBeforeDemotion;
+            transitionTime = transitionTimePerId[currentTrack.Value].TransitionStart;
+
         }
     }
 }

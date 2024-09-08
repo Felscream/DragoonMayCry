@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FFXIVClientStructs.Havok.Animation.Rig;
+using System.Xml.Schema;
 
 namespace DragoonMayCry.Util
 {
@@ -42,6 +43,20 @@ namespace DragoonMayCry.Util
             Head = node;
             Tail = node;
             size = 1;
+        }
+
+        public DoubleLinkedNode<T>? Find(T value)
+        {
+            var node = Head;
+            while(node != null)
+            {
+                if(value.Equals(node.Value))
+                {
+                    return node;
+                }
+                node = node.Next;
+            }
+            return null;
         }
     }
 
