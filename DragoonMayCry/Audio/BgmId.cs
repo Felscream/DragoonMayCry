@@ -18,11 +18,11 @@ namespace DragoonMayCry.Audio
         ChorusIntro1,
         ChorusIntro2,
         Chorus1,
-        Chorus2,
-        Chorus3,
+        Riff1,
         ChorusTransition1,
         ChorusTransition2,
         CombatEnd,
-        Demotion
+        Demotion,
+        
     }
 }
