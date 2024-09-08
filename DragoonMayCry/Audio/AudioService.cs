@@ -132,13 +132,13 @@ namespace DragoonMayCry.Audio
 
         private float GetSfxVolume()
         {
-            if (Plugin.Configuration!.ApplyGameVolume && (Service.GameConfig.System.GetBool("IsSndSe") ||
+            if (Plugin.Configuration!.ApplyGameVolumeSfx && (Service.GameConfig.System.GetBool("IsSndSe") ||
                             Service.GameConfig.System.GetBool("IsSndMaster")))
             {
                 return 0;
             }
 
-            var gameVolume = Plugin.Configuration!.ApplyGameVolume
+            var gameVolume = Plugin.Configuration!.ApplyGameVolumeSfx
                                  ? Service.GameConfig.System
                                           .GetUInt("SoundSe") / 100f *
                                    (Service.GameConfig.System.GetUInt(
@@ -149,12 +149,12 @@ namespace DragoonMayCry.Audio
 
         private float GetBgmVolume()
         {
-            if (Plugin.Configuration!.ApplyGameVolume && Service.GameConfig.System.GetBool("IsSndMaster"))
+            if (Plugin.Configuration!.ApplyGameVolumeBgm && Service.GameConfig.System.GetBool("IsSndMaster"))
             {
                 return 0;
             }
 
-            var gameVolume = Plugin.Configuration!.ApplyGameVolume
+            var gameVolume = Plugin.Configuration!.ApplyGameVolumeBgm
                                  ? Service.GameConfig.System
                                           .GetUInt("SoundBgm") / 100f *
                                    (Service.GameConfig.System.GetUInt(
@@ -177,9 +177,9 @@ namespace DragoonMayCry.Audio
                 _ => SoundId.Unknown
             };
         }
-        public ISampleProvider? PlayBgm(BgmId id)
+        public ISampleProvider? PlayBgm(BgmId id, double fadingDuration = 0)
         {
-            return audioEngine.PlayBgm(id);
+            return audioEngine.PlayBgm(id, fadingDuration);
         }
 
         public void RemoveBgmPart(ISampleProvider sample)

@@ -16,16 +16,17 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
         enum CombatLoopState
         {
             Intro,
-            CoreLoop
+            CoreLoop,
+            Exit
         }
-        public string Name { get; set; }
-        public BgmState ID { get; set; }
+        public BgmState ID { get { return BgmState.CombatLoop; } }
 
         private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new Dictionary<BgmId, BgmTrackData> {
-            { BgmId.CombatEnter, new BgmTrackData(1590, 12810) },
+            { BgmId.CombatEnter, new BgmTrackData(1590, 12800) },
             { BgmId.CombatVerse1, new BgmTrackData(0, 25412) },
             { BgmId.CombatVerse2, new BgmTrackData(0, 25412) },
-            { BgmId.CombatCoreLoop, new BgmTrackData(0, 91956) },
+            { BgmId.CombatCoreLoop, new BgmTrackData(0, 91950) },
+            { BgmId.CombatCoreLoopExit, new BgmTrackData(1590, 4780) },
         };
 
         private readonly Dictionary<BgmId, string> BgmPaths = new Dictionary<BgmId, string> {
@@ -33,6 +34,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             { BgmId.CombatVerse1, BuryTheLightFsm.GetPathToAudio("CombatLoop\\017.mp3") },
             { BgmId.CombatVerse2, BuryTheLightFsm.GetPathToAudio("CombatLoop\\040.mp3") },
             { BgmId.CombatCoreLoop, BuryTheLightFsm.GetPathToAudio("CombatLoop\\coreloop.mp3") },
+            { BgmId.CombatCoreLoopExit, BuryTheLightFsm.GetPathToAudio("CombatLoop\\093.mp3") },
         };
 
         private LinkedList<BgmId> combatLoop = new LinkedList<BgmId>();
@@ -40,12 +42,11 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
         private readonly AudioService audioService;
         private readonly Stopwatch currentTrackStopwatch;
         private CombatLoopState currentState;
-        private decimal transitionTime = 0m;
+        private int transitionTime = 0;
         private readonly Queue<ISampleProvider> samples;
-        public BTLCombatLoop(BgmState id, AudioService audioService)
+        public BTLCombatLoop(AudioService audioService)
         {
             this.audioService = audioService;
-            ID = id;
             currentTrackStopwatch = new Stopwatch();
             samples = new Queue<ISampleProvider>();
         }
@@ -55,16 +56,22 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             Service.Log.Debug("Entering Combat loop");
             combatLoop = GenerateCombatLoop();
             currentTrackStopwatch.Restart();
+            ISampleProvider? sample;
             if(fromVerse)
             {
                 currentTrack = combatLoop.First!;
-                audioService.PlayBgm(currentTrack.Value);
+                sample = audioService.PlayBgm(currentTrack.Value);
+                currentState = CombatLoopState.CoreLoop;
             }
             else
             {
                 currentTrack = new LinkedListNode<BgmId>(BgmId.CombatEnter);
-                audioService.PlayBgm(currentTrack.Value);
+                sample = audioService.PlayBgm(currentTrack.Value);
                 currentState = CombatLoopState.Intro;
+            }
+            if(sample != null)
+            {
+                samples.Enqueue(sample);
             }
             transitionTime = ComputeNextTransitionTiming();
             currentTrackStopwatch.Restart();
@@ -76,29 +83,35 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             {
                 return;
             }
-            Service.Log.Debug($"{currentTrackStopwatch.ElapsedMilliseconds} vs transition {transitionTime}");
             
-            if(currentTrackStopwatch.IsRunning && currentTrackStopwatch.ElapsedMilliseconds > transitionTime)
+            if(currentTrackStopwatch.IsRunning && currentTrackStopwatch.ElapsedMilliseconds >= transitionTime)
             {
-                PlayNextPart();
-                currentTrackStopwatch.Restart();
+                if(currentState != CombatLoopState.Exit)
+                {
+                    PlayNextPart();
+                    currentTrackStopwatch.Restart();
+                }
+                else
+                {
+                    LeaveState();
+                }
+                
             }
         }
 
         private void PlayNextPart()
         {
-            Service.Log.Debug($"Current time {currentTrackStopwatch.Elapsed.TotalMilliseconds} vs expected transition time {transitionTime}");
             // transition to loop state if we reached the end of intro
             if (currentState == CombatLoopState.Intro)
             {
                 currentTrack = combatLoop.First!;
                 currentState = CombatLoopState.CoreLoop;
-            } else if(currentState == CombatLoopState.CoreLoop)
+            }
+            else if (currentState == CombatLoopState.CoreLoop)
             {
                 if (currentTrack.Next != null)
                 {
                     currentTrack = currentTrack.Next;
-
                 }
                 else
                 {
@@ -107,8 +120,14 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             }
 
             Service.Log.Debug($"Playing {currentTrack.Value}");
+            PlayBgmPart();
+            transitionTime = ComputeNextTransitionTiming();
+            currentTrackStopwatch.Restart();
+        }
 
-            if (samples.Count > 2)
+        private void PlayBgmPart()
+        {
+            if (samples.Count > 4)
             {
                 samples.Dequeue();
             }
@@ -118,14 +137,12 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             {
                 samples.Enqueue(sample);
             }
-            transitionTime = ComputeNextTransitionTiming();
-            currentTrackStopwatch.Restart();
         }
 
-        private decimal ComputeNextTransitionTiming()
+        private int ComputeNextTransitionTiming()
         {
-            decimal transitionUpdateDelay = Math.Max(new decimal(currentTrackStopwatch.Elapsed.TotalSeconds) - transitionTime, 0m);
-            decimal timing = -1m;
+            int transitionUpdateDelay = (int)Math.Max(currentTrackStopwatch.Elapsed.TotalMilliseconds - transitionTime, 0);
+            int timing = -1;
             if (currentTrack.Next != null)
             {
                 var currentBgmData = transitionTimePerId[currentTrack.Value];
@@ -142,19 +159,45 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             return timing - transitionUpdateDelay;
         }
 
-        public int Exit()
+        private void LeaveState()
         {
-            return 0;
+            while (samples.Count > 0)
+            {
+                Service.Log.Debug("Removing samples");
+                audioService.RemoveBgmPart(samples.Dequeue());
+            }
+            currentState = CombatLoopState.CoreLoop;
+            currentTrackStopwatch.Reset();
+        }
+
+        public int Exit(bool outOfCombat)
+        {
+            var nextTransitionTime = transitionTimePerId[BgmId.CombatCoreLoopExit].TransitionStart;
+            if(currentState == CombatLoopState.Exit)
+            {
+                nextTransitionTime = (int)Math.Max(nextTransitionTime - currentTrackStopwatch.ElapsedMilliseconds, 0);
+            } 
+            else
+            {
+                if (!outOfCombat)
+                {
+                    audioService.PlayBgm(BgmId.CombatCoreLoopExit);
+                } else
+                {
+                    audioService.PlayBgm(BgmId.CombatEnd);
+                    nextTransitionTime = 8000;
+                }
+                currentTrackStopwatch.Restart();
+            }
+            currentState = CombatLoopState.Exit;
+            transitionTime = outOfCombat ? 1600 : transitionTimePerId[BgmId.CombatCoreLoopExit].EffectiveStart;
+            
+            return nextTransitionTime;
         }
 
         public Dictionary<BgmId, string> GetBgmPaths()
         {
             return BgmPaths;
-        }
-
-        public void OnEnter()
-        {
-            
         }
 
         public void Reset()

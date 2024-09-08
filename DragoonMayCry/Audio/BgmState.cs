@@ -10,6 +10,7 @@ namespace DragoonMayCry.Audio
     {
         Intro,
         CombatLoop,
-        CombatPeak
+        CombatPeak,
+        LeavingCombat
     }
 }

@@ -1,6 +1,7 @@
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Audio.FSM.States;
 using DragoonMayCry.Audio.FSM.States.BuryTheLight;
+using DragoonMayCry.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,16 +20,24 @@ namespace DragoonMayCry.Audio.FSM
         private Stopwatch stateTransitionStopwatch;
         private int nextTransitionTime = -1;
         private bool isGameBgmActive;
+        private DoubleLinkedList<BgmState> bgmStates;
+        private DoubleLinkedNode<BgmState> currentStateNode;
         public BuryTheLightFsm(AudioService audioService, IFramework framework)
         {
             this.framework = framework;
             this.audioService = audioService;
             stateTransitionStopwatch = new Stopwatch();
-            FsmState intro = new BTLIntro(BgmState.Intro, audioService);
-            FsmState combat = new BTLCombatLoop(BgmState.CombatLoop, audioService);
-            states = new Dictionary<BgmState, FsmState>();
-            states.Add(BgmState.Intro, intro);
-            states.Add(BgmState.CombatLoop, combat);
+            FsmState intro = new BTLIntro(audioService);
+            FsmState combat = new BTLCombatLoop(audioService);
+            FsmState peak = new BTLPeak(audioService);
+            bgmStates = new DoubleLinkedList<BgmState>(BgmState.Intro, BgmState.CombatLoop, BgmState.CombatPeak);
+            currentStateNode = bgmStates.Head!;
+            states = new Dictionary<BgmState, FsmState>
+            {
+                { BgmState.Intro, intro },
+                { BgmState.CombatLoop, combat },
+                { BgmState.CombatPeak, peak },
+            };
             currentState = intro;
 
             this.framework.Update += Update;
@@ -51,6 +60,8 @@ namespace DragoonMayCry.Audio.FSM
             {
                 isGameBgmActive = val;
             }
+            currentStateNode = bgmStates.Head!;
+            currentState = states[currentStateNode.Value];
             DisableGameBgm();
             isActive = true;
             currentState.Enter();
@@ -60,7 +71,7 @@ namespace DragoonMayCry.Audio.FSM
         {
             currentState.Update();
 
-            if(stateTransitionStopwatch.IsRunning && new decimal(stateTransitionStopwatch.Elapsed.TotalMilliseconds) > nextTransitionTime)
+            if(stateTransitionStopwatch.IsRunning && stateTransitionStopwatch.Elapsed.TotalMilliseconds > nextTransitionTime)
             {
                 GoToNextState();
             }
@@ -75,6 +86,8 @@ namespace DragoonMayCry.Audio.FSM
                     audioService.RegisterBgmPart(parts.Key, parts.Value);
                 }
             }
+            audioService.RegisterBgmPart(BgmId.CombatEnd, GetPathToAudio("end.mp3"));
+
         }
 
         public void Dispose()
@@ -119,21 +132,43 @@ namespace DragoonMayCry.Audio.FSM
                 return;
             }
             stateTransitionStopwatch.Reset();
+            if(candidateState.ID == BgmState.Intro)
+            {
+                currentStateNode = bgmStates.Head!;
+            } else if (currentStateNode.Next != null)
+            {
+                currentStateNode = currentStateNode.Next!;
+            }
             currentState = candidateState;
             currentState.Enter();
             candidateState = null;
             
         }
-
-        public void TriggerTransition(BgmState bgmState)
+        private void GoToPreviousState()
         {
-            if (!states.ContainsKey(bgmState) || currentState.ID == bgmState || candidateState?.ID == bgmState)
+            if (candidateState == null || currentStateNode.Previous == null || currentStateNode.Previous.Value == BgmState.Intro)
             {
                 return;
             }
-            candidateState = states[bgmState];
+        }
+
+        public void TriggerTransition()
+        {
+            if (currentStateNode.Next == null || candidateState?.ID == currentStateNode.Value)
+            {
+                return;
+            }
+
+            candidateState = states[currentStateNode.Next.Value];
             stateTransitionStopwatch.Restart();
-            nextTransitionTime = currentState.Exit();
+            nextTransitionTime = currentState.Exit(false);
+        }
+
+        public void LeaveCombat()
+        {
+            nextTransitionTime = currentState.Exit(true);
+            candidateState = states[BgmState.Intro];
+            stateTransitionStopwatch.Restart();
         }
     }
 

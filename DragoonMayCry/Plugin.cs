@@ -103,9 +103,14 @@ public unsafe class Plugin : IDalamudPlugin
         Service.CommandManager.RemoveHandler(CommandName);
     }
 
-    public static void BgmTransition()
+    public static void BgmTransitionNext()
     {
-        buryTheLight.TriggerTransition(BgmState.CombatLoop);
+        buryTheLight.TriggerTransition();
+    }
+
+    public static void BgmEndCombat()
+    {
+        buryTheLight.LeaveCombat();
     }
 
     private void OnCommand(string command, string args)

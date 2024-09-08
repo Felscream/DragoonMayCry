@@ -99,11 +99,20 @@ namespace DragoonMayCry.Audio
             sfxMixer.AddMixerInput(mixerInput);
         }
 
-        private ISampleProvider AddBGMMixerInput(ISampleProvider input)
+        private ISampleProvider AddBGMMixerInput(ISampleProvider input, double fadeInDuration)
         {
             ISampleProvider mixerInput = ConvertToRightChannelCount(bgmMixer, input);
-            bgmMixer.AddMixerInput(mixerInput);
-            Service.Log.Debug($"{bgmMixer.MixerInputs.Count()}");
+            if(fadeInDuration > 0)
+            {
+                var fadingInput = new FadeInOutSampleProvider(mixerInput, true);
+                fadingInput.BeginFadeIn(fadeInDuration);
+                bgmMixer.AddMixerInput(fadingInput);
+                return fadingInput;
+            } else
+            {
+                bgmMixer.AddMixerInput(mixerInput);
+            }
+            
             return mixerInput;
         }
 
@@ -116,7 +125,7 @@ namespace DragoonMayCry.Audio
             AddSFXMixerInput(new CachedSoundSampleProvider(sounds[trigger]));
         }
 
-        public ISampleProvider? PlayBgm(BgmId id)
+        public ISampleProvider? PlayBgm(BgmId id, double fadeInDuration = 0d)
         {
             if (!bgmParts.ContainsKey(id))
             {
@@ -125,7 +134,7 @@ namespace DragoonMayCry.Audio
             }
             else
             {
-                return AddBGMMixerInput(new CachedSoundSampleProvider(bgmParts[id]));
+                return AddBGMMixerInput(new CachedSoundSampleProvider(bgmParts[id]), fadeInDuration);
             }
         }
 

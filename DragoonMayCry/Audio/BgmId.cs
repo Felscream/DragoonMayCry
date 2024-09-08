@@ -14,5 +14,14 @@ namespace DragoonMayCry.Audio
         CombatVerse1,
         CombatVerse2,
         CombatCoreLoop,
+        CombatCoreLoopExit,
+        ChorusIntro1,
+        ChorusIntro2,
+        Chorus1,
+        Chorus2,
+        Chorus3,
+        ChorusTransition1,
+        ChorusTransition2,
+        CombatEnd
     }
 }

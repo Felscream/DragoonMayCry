@@ -34,7 +34,7 @@ namespace DragoonMayCry.Configuration
             configOne.PlaySoundEffects = new(PlaySoundEffects);
             configOne.ForceSoundEffectsOnBlunder = new(ForceSoundEffectsOnBlunder);
             configOne.PlaySfxEveryOccurrences = new(PlaySfxEveryOccurrences);
-            configOne.ApplyGameVolume = new(ApplyGameVolume);
+            configOne.ApplyGameVolumeSfx = new(ApplyGameVolume);
             configOne.ActiveOutsideInstance = new(ActiveOutsideInstance);
             configOne.LockScoreWindow = new(StyleRankUiConfiguration.LockScoreWindow);
             return configOne;

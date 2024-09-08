@@ -92,7 +92,7 @@ public class ConfigWindow : Window, IDisposable
             .AddConfigCheckbox("Play sound effects", configuration.PlaySoundEffects)
             .AddConfigCheckbox("Force sound effect on blunders", configuration.ForceSoundEffectsOnBlunder)
             .AddAction(() => { 
-                if(ImGui.Checkbox("Apply game volume", ref configuration.ApplyGameVolume.Value)){
+                if(ImGui.Checkbox("Apply game volume on sound effects", ref configuration.ApplyGameVolumeSfx.Value)){
                     KamiCommon.SaveConfiguration();
                     SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
                 }
@@ -106,7 +106,14 @@ public class ConfigWindow : Window, IDisposable
                     SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
                 }
             })
-            .AddConfigCheckbox("Enable dynamic background music", configuration.EnableDynamicBgm, "This will disable the game background music, you may have to enable it manually if you dsable this plugin")
+            .AddConfigCheckbox("Enable dynamic background music", configuration.EnableDynamicBgm, "This will disable the game background music inside instances, you may have to enable it manually if you dsable this plugin")
+            .AddAction(() => {
+                if (ImGui.Checkbox("Apply game volume on dynamic background music", ref configuration.ApplyGameVolumeBgm.Value))
+                {
+                    KamiCommon.SaveConfiguration();
+                    BgmVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
+                }
+            })
             .AddAction(() =>
             {
                 ImGui.SetNextItemWidth(200f);
@@ -133,7 +140,9 @@ public class ConfigWindow : Window, IDisposable
             .SameLine().AddButton("SSS", () => AudioService.Instance.PlaySfx(SoundId.Sensational))
             .SameLine().AddButton("BGM test", () => Plugin.StartBgm())
             .SameLine().AddButton("Stop BGM", () => Plugin.StopBgm())
-            .SameLine().AddButton("BGM transition", () => Plugin.BgmTransition())
+            .AddButton("BGM combat", () => Plugin.BgmTransitionNext())
+            .SameLine().AddButton("EndCombat", () => Plugin.BgmEndCombat())
+
             .Draw();
 #endif
         }
