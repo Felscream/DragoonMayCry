@@ -81,7 +81,7 @@ namespace DragoonMayCry.State
         private bool CanUpdateStates()
         {
             if(!IsInsideInstance 
-                && Plugin.Configuration != null && !Plugin.Configuration.ActiveOutsideInstance 
+                && Plugin.Configuration != null && !Plugin.Configuration.ActiveOutsideInstance.Value 
                 || IsInPvp())
             {
                 return false;

@@ -48,7 +48,7 @@ namespace DragoonMayCry.Audio
 
         public void PlaySfx(SoundId key, bool force = false)
         {
-            if (!Plugin.Configuration!.PlaySoundEffects || !SfxPaths.ContainsKey(key))
+            if (!Plugin.Configuration!.PlaySoundEffects.Value || !SfxPaths.ContainsKey(key))
             {
                 return;
             }

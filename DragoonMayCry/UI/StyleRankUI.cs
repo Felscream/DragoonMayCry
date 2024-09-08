@@ -83,7 +83,7 @@ namespace DragoonMayCry.UI
         {
 
 
-            var windowFlags = Plugin.Configuration!.LockScoreWindow ?
+            var windowFlags = Plugin.Configuration!.LockScoreWindow.Value ?
                                   ImGuiWindowFlags.NoTitleBar |
                                   ImGuiWindowFlags.NoResize |
                                   ImGuiWindowFlags.NoMove |
@@ -106,7 +106,7 @@ namespace DragoonMayCry.UI
             UpdateFinalRankTransitionAnimation();
 
             ImGui.SetNextWindowSize(Vector2.Zero, ImGuiCond.Always);
-            if (!Plugin.Configuration.LockScoreWindow)
+            if (!Plugin.Configuration.LockScoreWindow.Value)
             {
                 DrawMock(windowFlags);
                 return;

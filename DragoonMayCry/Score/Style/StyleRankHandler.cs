@@ -149,7 +149,7 @@ namespace DragoonMayCry.Score.Style
 
             if (isBlunder)
             {
-                audioService.PlaySfx(SoundId.DeadWeight, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
+                audioService.PlaySfx(SoundId.DeadWeight, Plugin.Configuration!.ForceSoundEffectsOnBlunder.Value);
             }
 
             StyleRankChange?.Invoke(this, new(tempRank.Value, CurrentStyle.Value, isBlunder));
@@ -175,7 +175,7 @@ namespace DragoonMayCry.Score.Style
             {
                 if (CurrentStyle.Value != StyleType.NoStyle)
                 {
-                    audioService.PlaySfx(SoundId.DeadWeight, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
+                    audioService.PlaySfx(SoundId.DeadWeight, Plugin.Configuration!.ForceSoundEffectsOnBlunder.Value);
                 }
                 ReturnToPreviousRank(true);
             }
