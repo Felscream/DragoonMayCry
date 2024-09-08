@@ -11,7 +11,12 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
 {
     public class BTLIntro : FsmState
     {
-
+        enum IntroState
+        {
+            OutOfCombat,
+            CombatStart,
+            EndOfCombat
+        }
         public string Name { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public BgmState ID { get { return BgmState.Intro; } }
 
@@ -29,7 +34,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
         private readonly Stopwatch currentTrackStopwatch;
         private int transitionTime = 0;
         private readonly Queue<ISampleProvider> samples;
-        private bool isLeavingState = false;
+        private IntroState state = IntroState.OutOfCombat;
         private int nextStateTransitionTime = 0;
 
         public BTLIntro(AudioService audioService)
@@ -42,7 +47,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
 
         public void Enter(bool fromVerse)
         {
-            isLeavingState = false;
+            state = IntroState.OutOfCombat;
             Service.Log.Debug($"Playing {BgmId.Intro}");
             var sample = audioService.PlayBgm(BgmId.Intro, 20000);
             if(sample != null)
@@ -63,9 +68,9 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             }
             if (currentTrackStopwatch.Elapsed.TotalMilliseconds > transitionTime)
             {
-                if (isLeavingState)
+                if (state != IntroState.OutOfCombat)
                 {
-                    TransitionToNextState();
+                    TransitionToNextState(state);
                 } 
                 else
                 {
@@ -84,7 +89,7 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
         {
             samples.Clear();
             currentTrackStopwatch.Reset();
-            isLeavingState = false;
+            state = IntroState.OutOfCombat;
         }
 
         public Dictionary<BgmId, string> GetBgmPaths()
@@ -99,36 +104,47 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
                 return 0;
             }
             // we are already leaving this state, player transitioned rapidly between multiple ranks
-            if (isLeavingState)
+            if (state != IntroState.OutOfCombat)
             {
                 nextStateTransitionTime = (int)Math.Max(nextStateTransitionTime - currentTrackStopwatch.Elapsed.TotalMilliseconds, 0);
             }
             else if(exit == ExitType.Promotion)
             {
+                state = IntroState.CombatStart;
                 nextStateTransitionTime = transitionTimePerId[BgmId.IntroExit].TransitionStart;
-                audioService.PlayBgm(BgmId.IntroExit);
+                samples.Enqueue(audioService.PlayBgm(BgmId.IntroExit)!);
                 transitionTime = transitionTimePerId[BgmId.IntroExit].EffectiveStart;
                 currentTrackStopwatch.Restart();
             }
 
             if(exit == ExitType.EndOfCombat)
             {
+                state = IntroState.OutOfCombat;
                 transitionTime = 1600;
-                nextStateTransitionTime = isLeavingState ? nextStateTransitionTime : 8000;
+                nextStateTransitionTime = 8000;
                 currentTrackStopwatch.Restart();
                 audioService.PlayBgm(BgmId.CombatEnd);
             }
-            isLeavingState = true;
             return nextStateTransitionTime;
         }
 
-        private void TransitionToNextState()
+        private void TransitionToNextState(IntroState type)
         {
             Service.Log.Debug("Going to next state");
-            while (samples.Count > 0)
+            if(type == IntroState.CombatStart)
             {
-                audioService.RemoveBgmPart(samples.Dequeue());
+                while (samples.Count > 1)
+                {
+                    audioService.RemoveBgmPart(samples.Dequeue());
+                }
+            } else if(type == IntroState.OutOfCombat)
+            {
+                while (samples.Count > 0)
+                {
+                    audioService.RemoveBgmPart(samples.Dequeue());
+                }
             }
+            
             Reset();
         }
 

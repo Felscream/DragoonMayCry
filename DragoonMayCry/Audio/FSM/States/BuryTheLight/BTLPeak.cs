@@ -140,11 +140,6 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
                         break;
                 }
             }
-
-            /*if (currentTrackStopwatch.ElapsedMilliseconds > nextPosibleStateTransitionTime && currentState != PeakState.LeavingStateDemotion)
-            {
-                nextPosibleStateTransitionTime = ComputeNextStateTransitionTime();
-            }*/
         }
 
         private void StartDemotionTransition()
