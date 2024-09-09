@@ -35,7 +35,7 @@ namespace DragoonMayCry.Audio
                 ReadFully = true
             };
 
-            bgmMixer = new(WaveFormat.CreateIeeeFloatWaveFormat(48000, 2))
+            bgmMixer = new(WaveFormat.CreateIeeeFloatWaveFormat(48000, 4))
             {
                 ReadFully = true
             };
@@ -86,6 +86,7 @@ namespace DragoonMayCry.Audio
             {
                 return input;
             }
+
             if (input.WaveFormat.Channels == 1 && mixer.WaveFormat.Channels == 2)
             {
                 return new MonoToStereoSampleProvider(input);
@@ -108,11 +109,9 @@ namespace DragoonMayCry.Audio
                 fadingInput.BeginFadeIn(fadeInDuration);
                 bgmMixer.AddMixerInput(fadingInput);
                 return fadingInput;
-            } else
-            {
-                bgmMixer.AddMixerInput(mixerInput);
-            }
+            } 
             
+            bgmMixer.AddMixerInput(mixerInput);
             return mixerInput;
         }
 
@@ -167,7 +166,6 @@ namespace DragoonMayCry.Audio
 
         public void Dispose()
         {
-            Service.Log.Debug($"Dispose");
             sfxMixer.RemoveAllMixerInputs();
             bgmMixer.RemoveAllMixerInputs();
         }

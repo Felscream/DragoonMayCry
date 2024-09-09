@@ -12,7 +12,7 @@ namespace DragoonMayCry.Audio
         internal CachedSound(string audioFileName)
         {
             Service.Log.Debug(audioFileName);
-            using (var audioFileReader = new AudioFileReader(audioFileName))
+            using (var audioFileReader = new NAudio.Vorbis.VorbisWaveReader(audioFileName))
             {
                 WaveFormat = audioFileReader.WaveFormat;
                 var wholeFile = new List<float>((int)(audioFileReader.Length / 4));

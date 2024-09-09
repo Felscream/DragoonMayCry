@@ -9,12 +9,14 @@ using DragoonMayCry.State;
 using KamiLib.Drawing;
 using KamiLib;
 using DragoonMayCry.Audio;
+using Dalamud.Interface.Components;
 
 namespace DragoonMayCry.UI;
 
 public class ConfigWindow : Window, IDisposable
 {
     public EventHandler<bool>? ActiveOutsideInstanceChange;
+    public EventHandler<bool>? ActivateDynamicBgmChange;
     public EventHandler<int>? SfxVolumeChange;
     public EventHandler<int>? BgmVolumeChange;
     private readonly DmcConfigurationOne configuration;
@@ -112,11 +114,21 @@ public class ConfigWindow : Window, IDisposable
             .Draw();
 
         InfoBox.Instance.AddTitle("Dynamic BGM - mega experimental")
-            .AddConfigCheckbox("Enable dynamic background music", configuration.EnableDynamicBgm, "This will disable the game background music inside instances, you may have to change your BGM configuration.")
+            .AddAction(() =>
+            {
+                if (ImGui.Checkbox("Enable dynamic background music", ref configuration.EnableDynamicBgm.Value))
+                {
+
+                    KamiCommon.SaveConfiguration();
+                    ActivateDynamicBgmChange?.Invoke(this, configuration.EnableDynamicBgm.Value);
+                }
+                ImGuiComponents.HelpMarker("This will disable the game background music only inside instances. You may have to change your BGM configuration.");
+            })
             .AddAction(() =>
             {
                 if (ImGui.Checkbox("Apply game volume on dynamic background music", ref configuration.ApplyGameVolumeBgm.Value))
                 {
+                    
                     KamiCommon.SaveConfiguration();
                     BgmVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
                 }

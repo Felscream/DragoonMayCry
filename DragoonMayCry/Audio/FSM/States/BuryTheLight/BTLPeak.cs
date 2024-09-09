@@ -40,13 +40,13 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
-            { BgmId.ChorusIntro1, BuryTheLightFsm.GetPathToAudio("CombatChorus\\025.mp3") },
-            { BgmId.ChorusIntro2, BuryTheLightFsm.GetPathToAudio("CombatChorus\\094.mp3") },
-            { BgmId.Riff1, BuryTheLightFsm.GetPathToAudio("CombatChorus\\062.mp3") },
-            { BgmId.Chorus1, BuryTheLightFsm.GetPathToAudio("CombatChorus\\112.mp3") },
-            { BgmId.ChorusTransition1, BuryTheLightFsm.GetPathToAudio("CombatChorus\\transition1.mp3") },
-            { BgmId.ChorusTransition2, BuryTheLightFsm.GetPathToAudio("CombatChorus\\transition2.mp3") },
-            { BgmId.Demotion, BuryTheLightFsm.GetPathToAudio("CombatChorus\\demotion.mp3") },
+            { BgmId.ChorusIntro1, BuryTheLightFsm.GetPathToAudio("CombatChorus\\025.ogg") },
+            { BgmId.ChorusIntro2, BuryTheLightFsm.GetPathToAudio("CombatChorus\\094.ogg") },
+            { BgmId.Riff1, BuryTheLightFsm.GetPathToAudio("CombatChorus\\062.ogg") },
+            { BgmId.Chorus1, BuryTheLightFsm.GetPathToAudio("CombatChorus\\112.ogg") },
+            { BgmId.ChorusTransition1, BuryTheLightFsm.GetPathToAudio("CombatChorus\\transition1.ogg") },
+            { BgmId.ChorusTransition2, BuryTheLightFsm.GetPathToAudio("CombatChorus\\transition2.ogg") },
+            { BgmId.Demotion, BuryTheLightFsm.GetPathToAudio("CombatChorus\\demotion.ogg") },
         };
 
         private readonly AudioService audioService;
@@ -310,6 +310,16 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             }
             currentTrackStopwatch.Reset();
             currentState = PeakState.VerseIntro;
+        }
+
+        public bool CancelExit()
+        {
+            if(currentState != PeakState.LeavingStateDemotion)
+            {
+                return false;
+            }
+            currentState = PeakState.Loop;
+            return true;
         }
     }
 }

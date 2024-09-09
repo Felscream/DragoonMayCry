@@ -8,6 +8,7 @@ using Dalamud.Plugin.Ipc.Exceptions;
 using DragoonMayCry.Score.Model;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using NAudio.Wave;
+using FFXIVClientStructs.FFXIV.Common.Lua;
 
 namespace DragoonMayCry.Audio
 {
@@ -36,6 +37,8 @@ namespace DragoonMayCry.Audio
             };
 
         private readonly Dictionary<SoundId, int> soundIdsNextAvailability;
+        // to alternate between dead weight sfx
+        private readonly Queue<SoundId> deadWeightQueue;
         private readonly AudioEngine audioEngine;
         private readonly float sfxCooldown = 1f;
         private double lastPlayTime = 0f;
@@ -43,6 +46,9 @@ namespace DragoonMayCry.Audio
         private AudioService()
         {
             soundIdsNextAvailability = new();
+            deadWeightQueue = new();
+            deadWeightQueue.Enqueue(SoundId.DeadWeight);
+            deadWeightQueue.Enqueue(SoundId.DeadWeight2);
             audioEngine = new AudioEngine();
             audioEngine.UpdateSfxVolume(GetSfxVolume());
             AssetsManager.AssetsReady += OnAssetsReady;
@@ -54,25 +60,41 @@ namespace DragoonMayCry.Audio
             {
                 return;
             }
-            
-            if (!force && !CanPlaySfx(key))
+
+            var effectiveKey = key;
+            if(key == SoundId.DeadWeight2)
             {
-                if (!soundIdsNextAvailability.ContainsKey(key))
+                effectiveKey = SoundId.DeadWeight;
+            }
+
+            
+            if (!force && !CanPlaySfx(effectiveKey))
+            {
+                if (!soundIdsNextAvailability.ContainsKey(effectiveKey))
                 {
-                    soundIdsNextAvailability.Add(key, 0);
+                    soundIdsNextAvailability.Add(effectiveKey, 0);
                 }
                 else
                 {
-                    soundIdsNextAvailability[key]--;
+                    soundIdsNextAvailability[effectiveKey]--;
                 }
                 return;
             }
 
-            audioEngine.PlaySfx(key);
-            lastPlayTime = ImGui.GetTime();
-            if (!soundIdsNextAvailability.ContainsKey(key) || force || soundIdsNextAvailability[key] <= 0)
+            if(key == SoundId.DeadWeight || key == SoundId.DeadWeight2)
             {
-                soundIdsNextAvailability[key] = Plugin.Configuration!.PlaySfxEveryOccurrences.Value - 1;
+                var toPlay = deadWeightQueue.Dequeue();
+                deadWeightQueue.Enqueue(toPlay);
+                audioEngine.PlaySfx(toPlay);
+            } else
+            {
+                audioEngine.PlaySfx(key);
+            }
+            
+            lastPlayTime = ImGui.GetTime();
+            if (!soundIdsNextAvailability.ContainsKey(effectiveKey) || force || soundIdsNextAvailability[effectiveKey] <= 0)
+            {
+                soundIdsNextAvailability[effectiveKey] = Plugin.Configuration!.PlaySfxEveryOccurrences.Value - 1;
             }
         }
 
@@ -199,7 +221,15 @@ namespace DragoonMayCry.Audio
 #if DEBUG   
         public void PlaySfx(SoundId id)
         {
-            audioEngine.PlaySfx(id);
+            if (id == SoundId.DeadWeight || id == SoundId.DeadWeight2)
+            {
+                var toPlay = deadWeightQueue.Dequeue();
+                deadWeightQueue.Enqueue(toPlay);
+                audioEngine.PlaySfx(toPlay);
+            } else
+            {
+                audioEngine.PlaySfx(id);
+            }
         }
 #endif
     }

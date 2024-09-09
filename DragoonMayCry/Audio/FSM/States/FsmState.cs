@@ -5,7 +5,6 @@ namespace DragoonMayCry.Audio.FSM.States
 {
     public interface FsmState
     {
-        // The ID of the state.
         public BgmState ID { get; }
 
         public Dictionary<BgmId, string> GetBgmPaths();
@@ -14,5 +13,7 @@ namespace DragoonMayCry.Audio.FSM.States
 
         public void Reset();
         public int Exit(ExitType exit);
+        // Returns whether the transition can be cancelled or not
+        public bool CancelExit();
     }
 }

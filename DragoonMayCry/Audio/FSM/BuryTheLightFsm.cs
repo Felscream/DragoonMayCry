@@ -121,7 +121,7 @@ namespace DragoonMayCry.Audio.FSM
 
         public void Dispose()
         {
-            //ResetGameBgm();
+            audioService.StopBgm();
             this.framework.Update -= Update;
         }
 

@@ -20,11 +20,11 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
         public BgmState ID { get { return BgmState.Intro; } }
 
         private Dictionary<BgmId, BgmTrackData> transitionTimePerId = new Dictionary<BgmId, BgmTrackData> {
-            { BgmId.Intro, new BgmTrackData(1600, 50293) },
+            { BgmId.Intro, new BgmTrackData(1600, 38000) },
         };
 
         public Dictionary<BgmId, string> BgmPaths = new Dictionary<BgmId, string> {
-            { BgmId.Intro, BuryTheLightFsm.GetPathToAudio("Intro\\intro.mp3") },
+            { BgmId.Intro, BuryTheLightFsm.GetPathToAudio("Intro\\intro.ogg") },
             
         };
 
@@ -138,6 +138,11 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             }
             
             Reset();
+        }
+
+        public bool CancelExit()
+        {
+            return false;
         }
     }
 }

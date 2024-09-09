@@ -27,16 +27,16 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             { BgmId.CombatVerse1, new BgmTrackData(0, 25412) },
             { BgmId.CombatVerse2, new BgmTrackData(0, 25412) },
             { BgmId.CombatCoreLoop, new BgmTrackData(0, 91950) },
-            { BgmId.CombatCoreLoopExit, new BgmTrackData(1590, 4780) },
+            { BgmId.CombatCoreLoopExit, new BgmTrackData(1590, 1590) },
         };
 
         private readonly Dictionary<BgmId, string> BgmPaths = new Dictionary<BgmId, string> {
-            { BgmId.CombatEnter1, BuryTheLightFsm.GetPathToAudio("Intro\\111.mp3") },
-            { BgmId.CombatEnter2, BuryTheLightFsm.GetPathToAudio("CombatLoop\\029.mp3") },
-            { BgmId.CombatVerse1, BuryTheLightFsm.GetPathToAudio("CombatLoop\\017.mp3") },
-            { BgmId.CombatVerse2, BuryTheLightFsm.GetPathToAudio("CombatLoop\\040.mp3") },
-            { BgmId.CombatCoreLoop, BuryTheLightFsm.GetPathToAudio("CombatLoop\\coreloop.mp3") },
-            { BgmId.CombatCoreLoopExit, BuryTheLightFsm.GetPathToAudio("CombatLoop\\093.mp3") },
+            { BgmId.CombatEnter1, BuryTheLightFsm.GetPathToAudio("Intro\\111.ogg") },
+            { BgmId.CombatEnter2, BuryTheLightFsm.GetPathToAudio("CombatLoop\\029.ogg") },
+            { BgmId.CombatVerse1, BuryTheLightFsm.GetPathToAudio("CombatLoop\\017.ogg") },
+            { BgmId.CombatVerse2, BuryTheLightFsm.GetPathToAudio("CombatLoop\\040.ogg") },
+            { BgmId.CombatCoreLoop, BuryTheLightFsm.GetPathToAudio("CombatLoop\\coreloop.ogg") },
+            { BgmId.CombatCoreLoopExit, BuryTheLightFsm.GetPathToAudio("CombatLoop\\093.ogg") },
         };
 
         private LinkedList<BgmId> combatLoop = new LinkedList<BgmId>();
@@ -231,9 +231,9 @@ namespace DragoonMayCry.Audio.FSM.States.BuryTheLight
             return res;
         }
 
-        public void CancelExit()
+        public bool CancelExit()
         {
-
+            return false;
         }
     }
 }

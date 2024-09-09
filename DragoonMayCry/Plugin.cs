@@ -58,8 +58,8 @@ public unsafe class Plugin : IDalamudPlugin
 
 
         this.audioService = AudioService.Instance;
-        buryTheLight = new BuryTheLightFsm(AudioService.Instance, playerState, styleRankHandler, Service.Framework);
-        buryTheLight.CacheBgm();
+        //buryTheLight = new BuryTheLightFsm(AudioService.Instance, playerState, styleRankHandler, Service.Framework);
+        //buryTheLight.CacheBgm();
 
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
@@ -92,7 +92,8 @@ public unsafe class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
-        buryTheLight.Dispose();
+
+       // buryTheLight.Dispose();
         audioService.Dispose();
         KamiCommon.Dispose();
         scoreProgressBar.Dispose();
@@ -120,7 +121,6 @@ public unsafe class Plugin : IDalamudPlugin
 
     private void OnCommand(string command, string args)
     {
-        // in response to the slash command, just toggle the display status of our main ui
         pluginUi.ToggleConfigUI();
     }
 
