@@ -18,17 +18,23 @@ namespace DragoonMayCry
             Done
         }
 
-        public const string TargetAssetVersion = "0.7.5";
-        public const string TargetSha1 = "164765419ff8c7ffa2f65fbe279050f460d14a04";
+        private const string TargetAssetVersion = "0.7.5";
+        private const string TargetSha1 = "164765419ff8c7ffa2f65fbe279050f460d14a04";
+
+        private const string downloadUrl = "https://github.com/Felscream/DragoonMayCry/blob/download-assets/assets/Assets.zip";
+
 
         public static void FetchAudioFiles()
         {
             string localAssetDir = GetAssetsDirectory();
             Service.Log.Debug($"{localAssetDir}");
+            var needToUpdateFiles = true;
             if (Directory.Exists(localAssetDir))
             {
-                CheckLocalAssets();
+                needToUpdateFiles = CheckLocalAssets();
             }
+
+
         }
 
         public static void VerifyAndUpdateAssets()
