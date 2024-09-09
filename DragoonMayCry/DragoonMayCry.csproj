@@ -10,7 +10,7 @@
       <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>0.7.5</Version>
+    <Version>0.7.6</Version>
     <Description>DragoonMayCry</Description>
     <PackageProjectUrl>https://github.com/Felscream/DragoonMayCry</PackageProjectUrl>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
@@ -27,41 +27,7 @@
       <EmbeddedResource Include="Assets\SSS.png" />
       <EmbeddedResource Include="Assets\GaugeDefault.png" />
   </ItemGroup>
-  <ItemGroup>
-      <Content Include="Assets\Audio\dead_weight.wav">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <Visible>false</Visible>
-      </Content>
-      <Content Include="Assets\Audio\dirty.wav">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <Visible>false</Visible>
-      </Content>
-      <Content Include="Assets\Audio\cruel.wav">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <Visible>false</Visible>
-      </Content>
-      <Content Include="Assets\Audio\brutal.wav">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <Visible>false</Visible>
-      </Content>
-      <Content Include="Assets\Audio\anarchic.wav">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <Visible>false</Visible>
-      </Content>
-      <Content Include="Assets\Audio\savage.wav">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <Visible>false</Visible>
-      </Content>
-      <Content Include="Assets\Audio\sadistic.wav">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <Visible>false</Visible>
-      </Content>
-      <Content Include="Assets\Audio\sensational.wav">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <Visible>false</Visible>
-      </Content>
-  </ItemGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="NAudio" Version="2.2.1" />
     <Reference Include="Lumina">

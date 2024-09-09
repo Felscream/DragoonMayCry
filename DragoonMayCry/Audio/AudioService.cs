@@ -24,7 +24,7 @@ namespace DragoonMayCry.Audio
         private static readonly Dictionary<SoundId, string> DmcAnnouncer =
             new Dictionary<SoundId, string>
             {
-                { SoundId.DeadWeight, GetPathToAnnouncerAudio("dead_weight") },
+                { SoundId.DeadWeight, GetPathToAnnouncerAudio("dead_weight.wav") },
                 { SoundId.Dirty, GetPathToAnnouncerAudio("DmC/dirty.wav") },
                 { SoundId.Cruel, GetPathToAnnouncerAudio("DmC/`cruel.wav") },
                 { SoundId.Brutal, GetPathToAnnouncerAudio("DmC/brutal.wav") },
