@@ -25,5 +25,6 @@ namespace DragoonMayCry
         [PluginService] public static IGameConfig GameConfig { get; set; } = null!;
         [PluginService] public static IDataManager DataManager { get; set; } = null!;
         [PluginService] public static IObjectTable ObjectTable { get; set; } = null!;
+        [PluginService] public static INotificationManager NotificationManager { get; set;} = null!;
     }
 }

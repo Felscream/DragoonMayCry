@@ -36,6 +36,7 @@ public unsafe class Plugin : IDalamudPlugin
     public Plugin()
     {
         PluginInterface.Create<Service>();
+
         KamiCommon.Initialize(PluginInterface, "DragoonMayCry", () => Configuration?.Save());
         playerState = PlayerState.GetInstance();
 
@@ -56,6 +57,8 @@ public unsafe class Plugin : IDalamudPlugin
         {
             HelpMessage = "opens configuration menu"
         });
+
+        AssetsManager.VerifyAndUpdateAssets();
     }
 
     public static bool CanRunDmc()
