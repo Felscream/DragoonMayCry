@@ -78,7 +78,7 @@ namespace DragoonMayCry.UI
 
         private bool CanDrawStyleRank()
         {
-            if (!Plugin.Configuration!.LockScoreWindow.Value)
+            if (!Plugin.Configuration!.LockScoreWindow)
             {
                 return true;
             }

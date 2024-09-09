@@ -65,7 +65,7 @@ public unsafe class Plugin : IDalamudPlugin
                && playerState.IsInCombat
                && !playerState.IsInPvp()
                && (playerState.IsInsideInstance ||
-                   Configuration!.ActiveOutsideInstance.Value);
+                   Configuration!.ActiveOutsideInstance);
     }
 
     public void Dispose()
