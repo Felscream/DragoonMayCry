@@ -10,7 +10,7 @@ on:
     tags:
       - '*'
   pull_request:
-    branches: [main]
+    branches: [main, download-assets]
 
 env:
   PROJECT_NAME: DragoonMayCry
@@ -71,6 +71,10 @@ jobs:
       - name: Get tag name
         id: tag
         uses: WyriHaximus/github-action-get-previous-tag@v1
+
+      - name: Archive
+        run: |
+          Compress-Archive -Path assets\* -DestinationPath assets.zip
 
       - name: Create release
         uses: softprops/action-gh-release@v1
