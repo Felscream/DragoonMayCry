@@ -20,15 +20,11 @@ namespace DragoonMayCry.Audio
         private readonly VolumeSampleProvider sfxSampleProvider;
         private readonly MixingSampleProvider sfxMixer;
 
-        public AudioEngine(Dictionary<SoundId, string> sfx)
+        public AudioEngine()
         {
             sfxOutputDevice = new WaveOutEvent();
 
             sounds = new Dictionary<SoundId, CachedSound>();
-            foreach(KeyValuePair<SoundId, string> entry in sfx)
-            {
-                sounds.Add(entry.Key, new(entry.Value));
-            }
 
             sfxMixer = new(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2))
             {
@@ -44,6 +40,26 @@ namespace DragoonMayCry.Audio
         public void UpdateSfxVolume(float value)
         {
             sfxSampleProvider.Volume = value;
+        }
+
+        public void RegisterSfx(Dictionary<SoundId, string> sfx)
+        {
+            foreach (KeyValuePair<SoundId, string> entry in sfx)
+            {
+                if(!File.Exists(entry.Value)) {
+                    Service.Log.Error($"Could not find any file at {entry.Value}");
+                    continue;
+                }
+                if (!sounds.ContainsKey(entry.Key))
+                {
+                    sounds.Add(entry.Key, new(entry.Value));
+                }
+                else
+                {
+                    sounds[entry.Key] = new(entry.Value);
+                }
+                
+            }
         }
 
         private ISampleProvider ConvertToRightChannelCount(ISampleProvider input)

@@ -32,53 +32,97 @@ public class ConfigWindow : Window, IDisposable
 
     public void Dispose() { }
 
+
+
     public override void Draw()
     {
-        InfoBox.Instance.AddTitle("General")
+        switch (AssetsManager.status)
+        {
+            case AssetsManager.Status.Done:
+                DrawConfigMenu(); 
+                break;
+            case AssetsManager.Status.Updating:
+                ImGui.Text($"Downloading additional assets...");
+                break;
+            case AssetsManager.Status.FailedDownloading:
+            case AssetsManager.Status.FailedInsufficientDiskSpace:
+            case AssetsManager.Status.FailedFileIntegrity:
+                DrawError();
+                break;
+        }
+    }
+
+    private void DrawError()
+    {
+        var errorMessage = AssetsManager.status switch
+        {
+            AssetsManager.Status.FailedInsufficientDiskSpace => "Not enough disk space for additional assets",
+            AssetsManager.Status.FailedDownloading => "Could not retrieve additional assets",
+            AssetsManager.Status.FailedFileIntegrity => "File integrity check failed, redownload them",
+            _ => "An unexpected error occured",
+        };
+
+        ImGui.Indent();
+        ImGui.Text(errorMessage);
+        if(ImGui.Button("Download assets"))
+        {
+            AssetsManager.FetchAudioFiles();
+        }
+    }
+
+    private void DrawConfigMenu()
+    {
+
+        if (AssetsManager.status == AssetsManager.Status.Done)
+        {
+            InfoBox.Instance.AddTitle("General")
             .AddConfigCheckbox("Lock rank window", configuration.LockScoreWindow)
             .AddAction(() =>
             {
-                if(ImGui.Checkbox("Active outside instance", ref configuration.ActiveOutsideInstance.Value)){
+                if (ImGui.Checkbox("Active outside instance", ref configuration.ActiveOutsideInstance.Value))
+                {
                     KamiCommon.SaveConfiguration();
                     ActiveOutsideInstanceChange?.Invoke(this, configuration.ActiveOutsideInstance.Value);
                 }
             })
             .Draw();
 
-        InfoBox.Instance.AddTitle("Audio")
-            .AddConfigCheckbox("Play sound effects", configuration.PlaySoundEffects)
-            .AddConfigCheckbox("Force sound effect on blunders", configuration.ForceSoundEffectsOnBlunder)
-            .AddAction(() => { 
-                if(ImGui.Checkbox("Apply game volume", ref configuration.ApplyGameVolume.Value)){
-                    KamiCommon.SaveConfiguration();
-                    SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
-                }
-            })
-            .AddAction(() =>
-            {
-                ImGui.SetNextItemWidth(200f);
-                if (ImGui.SliderInt("Sound effect volume", ref configuration.SfxVolume.Value, 0, 100))
+            InfoBox.Instance.AddTitle("Audio")
+                .AddConfigCheckbox("Play sound effects", configuration.PlaySoundEffects)
+                .AddConfigCheckbox("Force sound effect on blunders", configuration.ForceSoundEffectsOnBlunder)
+                .AddAction(() => {
+                    if (ImGui.Checkbox("Apply game volume", ref configuration.ApplyGameVolume.Value))
+                    {
+                        KamiCommon.SaveConfiguration();
+                        SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
+                    }
+                })
+                .AddAction(() =>
                 {
-                    KamiCommon.SaveConfiguration();
-                    SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
-                }
-            })
-            .AddString("Play each unique SFX only once every")
-            .SameLine()
-            .AddSliderInt("occurrences", configuration.PlaySfxEveryOccurrences, 1, 20)
-            .Draw();
+                    ImGui.SetNextItemWidth(200f);
+                    if (ImGui.SliderInt("Sound effect volume", ref configuration.SfxVolume.Value, 0, 100))
+                    {
+                        KamiCommon.SaveConfiguration();
+                        SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
+                    }
+                })
+                .AddString("Play each unique SFX only once every")
+                .SameLine()
+                .AddSliderInt("occurrences", configuration.PlaySfxEveryOccurrences, 1, 20)
+                .Draw();
 
 #if DEBUG
-        InfoBox.Instance.AddTitle("Debug")
-            .AddButton("Dead weight", () => AudioService.Instance.PlaySfx(SoundId.DeadWeight))
-            .SameLine().AddButton("D", () => AudioService.Instance.PlaySfx(SoundId.Dirty))
-            .SameLine().AddButton("C", () => AudioService.Instance.PlaySfx(SoundId.Cruel))
-            .SameLine().AddButton("B", () => AudioService.Instance.PlaySfx(SoundId.Brutal))
-            .SameLine().AddButton("A", () => AudioService.Instance.PlaySfx(SoundId.Anarchic))
-            .SameLine().AddButton("S", () => AudioService.Instance.PlaySfx(SoundId.Savage))
-            .SameLine().AddButton("SS", () => AudioService.Instance.PlaySfx(SoundId.Sadistic))
-            .SameLine().AddButton("SSS", () => AudioService.Instance.PlaySfx(SoundId.Sensational))
-            .Draw();
+            InfoBox.Instance.AddTitle("Debug")
+                .AddButton("Dead weight", () => AudioService.Instance.PlaySfx(SoundId.DeadWeight))
+                .SameLine().AddButton("D", () => AudioService.Instance.PlaySfx(SoundId.Dirty))
+                .SameLine().AddButton("C", () => AudioService.Instance.PlaySfx(SoundId.Cruel))
+                .SameLine().AddButton("B", () => AudioService.Instance.PlaySfx(SoundId.Brutal))
+                .SameLine().AddButton("A", () => AudioService.Instance.PlaySfx(SoundId.Anarchic))
+                .SameLine().AddButton("S", () => AudioService.Instance.PlaySfx(SoundId.Savage))
+                .SameLine().AddButton("SS", () => AudioService.Instance.PlaySfx(SoundId.Sadistic))
+                .SameLine().AddButton("SSS", () => AudioService.Instance.PlaySfx(SoundId.Sensational))
+                .Draw();
 #endif
+        }
     }
 }

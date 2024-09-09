@@ -21,17 +21,17 @@ namespace DragoonMayCry.Audio
             } 
         }
 
-        private static readonly Dictionary<SoundId, string> SfxPaths =
+        private static readonly Dictionary<SoundId, string> DmcAnnouncer =
             new Dictionary<SoundId, string>
             {
-                { SoundId.DeadWeight, GetPathToAudio("dead_weight") },
-                { SoundId.Dirty, GetPathToAudio("dirty") },
-                { SoundId.Cruel, GetPathToAudio("cruel") },
-                { SoundId.Brutal, GetPathToAudio("brutal") },
-                { SoundId.Anarchic, GetPathToAudio("anarchic") },
-                { SoundId.Savage, GetPathToAudio("savage") },
-                { SoundId.Sadistic, GetPathToAudio("sadistic") },
-                { SoundId.Sensational, GetPathToAudio("sensational") }
+                { SoundId.DeadWeight, GetPathToAnnouncerAudio("dead_weight") },
+                { SoundId.Dirty, GetPathToAnnouncerAudio("DmC/dirty.wav") },
+                { SoundId.Cruel, GetPathToAnnouncerAudio("DmC/`cruel.wav") },
+                { SoundId.Brutal, GetPathToAnnouncerAudio("DmC/brutal.wav") },
+                { SoundId.Anarchic, GetPathToAnnouncerAudio("DmC/anarchic.wav") },
+                { SoundId.Savage, GetPathToAnnouncerAudio("DmC/savage.wav") },
+                { SoundId.Sadistic, GetPathToAnnouncerAudio("DmC/sadistic.wav") },
+                { SoundId.Sensational, GetPathToAnnouncerAudio("DmC/sensational.wav") }
             };
 
         private readonly Dictionary<SoundId, int> soundIdsNextAvailability;
@@ -42,13 +42,14 @@ namespace DragoonMayCry.Audio
         private AudioService()
         {
             soundIdsNextAvailability = new();
-            audioEngine = new AudioEngine(SfxPaths);
+            audioEngine = new AudioEngine();
             audioEngine.UpdateSfxVolume(GetSfxVolume());
+            AssetsManager.AssetsReady += OnAssetsReady;
         }
 
         public void PlaySfx(SoundId key, bool force = false)
         {
-            if (!Plugin.Configuration!.PlaySoundEffects || !SfxPaths.ContainsKey(key))
+            if (!Plugin.Configuration!.PlaySoundEffects || !DmcAnnouncer.ContainsKey(key))
             {
                 return;
             }
@@ -89,8 +90,18 @@ namespace DragoonMayCry.Audio
 
         public void OnVolumeChange(object? sender, int volume)
         {
-            Service.Log.Debug("Valume change");
             audioEngine.UpdateSfxVolume(GetSfxVolume());
+        }
+
+        private void OnAssetsReady(object? sender, bool ready)
+        {
+            Service.Log.Debug("Assets loaded");
+            if(!ready)
+            {
+                return;
+            }
+
+            audioEngine.RegisterSfx(DmcAnnouncer);
         }
 
         private bool CanPlaySfx(SoundId type)
@@ -101,11 +112,9 @@ namespace DragoonMayCry.Audio
                    soundIdsNextAvailability[type] <= 0);
         }
 
-        private static string GetPathToAudio(string name)
+        private static string GetPathToAnnouncerAudio(string name)
         {
-            return Path.Combine(
-                Plugin.PluginInterface.AssemblyLocation.Directory?.FullName!,
-                $"Assets\\Audio\\{name}.wav");
+            return Path.Combine(AssetsManager.GetAssetsDirectory(), $"Audio\\Announcer\\{name}");
         }
 
         private float GetSfxVolume()
