@@ -26,7 +26,7 @@ namespace DragoonMayCry.Audio
             {
                 { SoundId.DeadWeight, GetPathToAnnouncerAudio("dead_weight.wav") },
                 { SoundId.Dirty, GetPathToAnnouncerAudio("DmC/dirty.wav") },
-                { SoundId.Cruel, GetPathToAnnouncerAudio("DmC/`cruel.wav") },
+                { SoundId.Cruel, GetPathToAnnouncerAudio("DmC/cruel.wav") },
                 { SoundId.Brutal, GetPathToAnnouncerAudio("DmC/brutal.wav") },
                 { SoundId.Anarchic, GetPathToAnnouncerAudio("DmC/anarchic.wav") },
                 { SoundId.Savage, GetPathToAnnouncerAudio("DmC/savage.wav") },

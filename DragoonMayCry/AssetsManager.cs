@@ -27,8 +27,8 @@ namespace DragoonMayCry
         public static EventHandler<bool>? AssetsReady;
         public static bool IsReady = false;
         public static Status status = Status.Ready;
-        private const string TargetAssetVersion = "0.7.5";
-        private const string TargetSha1 = "009393b0650a21564d01e8f30fc9931fadc56303";
+        private const string TargetAssetVersion = "0.7.6";
+        private const string TargetSha1 = "9aceef37f0ba7d8a2db37c7e8e4304d35252cf0b";
         private const long RequiredDiskSpaceCompressed = 2_150_400;
         private const long RequiredDiskSpaceExtracted = 2_367_488;
 
@@ -54,7 +54,7 @@ namespace DragoonMayCry
             var areFilesValid = false;
             if (Directory.Exists(localAssetDir))
             {
-                areFilesValid = AreLocalFilesValid();
+                areFilesValid = AreLocalFilesValid() && TargetAssetVersion == CurrentDownloadedAssetVersion();
             }
 
             if (areFilesValid)
@@ -192,7 +192,22 @@ namespace DragoonMayCry
 
             Service.NotificationManager.AddNotification(notification);
         }
+
+        private static string? CurrentDownloadedAssetVersion()
+        {
+            string assetsDir = GetAssetsDirectory();
+            string manifestFile = $"{assetsDir}/manifest.json";
+
+            if (!File.Exists(manifestFile)) return null;
+
+            string jsonData = File.ReadAllText(manifestFile);
+            AssetsManifest? manifest = JsonConvert.DeserializeObject<AssetsManifest>(jsonData);
+
+            return manifest?.Version;
+        }
     }
+
+    
 
     class AssetsManifest
     {
