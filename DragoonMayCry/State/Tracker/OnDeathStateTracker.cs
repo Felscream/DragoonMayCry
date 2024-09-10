@@ -17,12 +17,10 @@ namespace DragoonMayCry.State.Tracker
             CurrentValue = playerState.IsDead;
             if (CurrentValue && !LastValue)
             {
-                Service.Log.Debug("Player died");
                 OnChange?.Invoke(this, CurrentValue);
             }
             else if (!CurrentValue && LastValue)
             {
-                Service.Log.Debug("Player revived");
                 OnChange?.Invoke(this, CurrentValue);
             }
 

@@ -13,13 +13,11 @@ namespace DragoonMayCry.State.Tracker
             CurrentValue = playerState.IsInsideInstance;
             if (CurrentValue && !LastValue)
             {
-                Service.Log.Debug("Player entered instance");
                 OnChange?.Invoke(this, CurrentValue);
                 
             }
             else if (!CurrentValue && LastValue)
             {
-                Service.Log.Debug("Player left instance");
                 OnChange?.Invoke(this, CurrentValue);
             }
 

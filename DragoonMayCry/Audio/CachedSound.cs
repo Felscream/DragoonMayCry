@@ -11,7 +11,6 @@ namespace DragoonMayCry.Audio
         internal WaveFormat WaveFormat { get; private set; }
         internal CachedSound(string audioFileName)
         {
-            Service.Log.Debug(audioFileName);
             using (var audioFileReader = new NAudio.Vorbis.VorbisWaveReader(audioFileName))
             {
                 WaveFormat = audioFileReader.WaveFormat;

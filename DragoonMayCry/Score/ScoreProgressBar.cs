@@ -209,7 +209,6 @@ namespace DragoonMayCry.Score
         private void OnStyleScoringChange(object? sender, StyleScoring styleScoring)
         {
             demotionThreshold = styleScoring.DemotionThreshold / styleScoring.Threshold;
-            Service.Log.Debug($"new demotion threshold ratio {demotionThreshold}");
         }
 
         public void Reset()

@@ -92,7 +92,6 @@ namespace DragoonMayCry.Score.Style
             {
                 StyleRankChange?.Invoke(this, new(CurrentStyle.Value, CurrentStyle.Next.Value, false));
                 CurrentStyle = CurrentStyle.Next;
-                Service.Log.Debug($"New rank reached {CurrentStyle.Value}");
                 if (playSfx)
                 {
                     audioService.PlaySfx(CurrentStyle.Value);
@@ -149,7 +148,7 @@ namespace DragoonMayCry.Score.Style
 
             if (isBlunder)
             {
-                audioService.PlaySfx(SoundId.DeadWeight, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
+                audioService.PlaySfx(SoundId.DeadWeight1, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
             }
 
             StyleRankChange?.Invoke(this, new(tempRank.Value, CurrentStyle.Value, isBlunder));
@@ -175,7 +174,7 @@ namespace DragoonMayCry.Score.Style
             {
                 if (CurrentStyle.Value != StyleType.NoStyle)
                 {
-                    audioService.PlaySfx(SoundId.DeadWeight, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
+                    audioService.PlaySfx(SoundId.DeadWeight1, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
                 }
                 ReturnToPreviousRank(true);
             }

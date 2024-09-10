@@ -1,14 +1,10 @@
-using System;
-using ImGuiNET;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Reflection;
-using Dalamud.Plugin.Ipc.Exceptions;
+using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Score.Model;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using ImGuiNET;
 using NAudio.Wave;
-using FFXIVClientStructs.FFXIV.Common.Lua;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace DragoonMayCry.Audio
 {
@@ -26,14 +22,15 @@ namespace DragoonMayCry.Audio
         private static readonly Dictionary<SoundId, string> DmcAnnouncer =
             new Dictionary<SoundId, string>
             {
-                { SoundId.DeadWeight, GetPathToAnnouncerAudio("dead_weight.wav") },
-                { SoundId.Dirty, GetPathToAnnouncerAudio("DmC/dirty.wav") },
-                { SoundId.Cruel, GetPathToAnnouncerAudio("DmC/cruel.wav") },
-                { SoundId.Brutal, GetPathToAnnouncerAudio("DmC/brutal.wav") },
-                { SoundId.Anarchic, GetPathToAnnouncerAudio("DmC/anarchic.wav") },
-                { SoundId.Savage, GetPathToAnnouncerAudio("DmC/savage.wav") },
-                { SoundId.Sadistic, GetPathToAnnouncerAudio("DmC/sadistic.wav") },
-                { SoundId.Sensational, GetPathToAnnouncerAudio("DmC/sensational.wav") }
+                { SoundId.DeadWeight1, GetPathToAnnouncerAudio("dead_weight1.ogg") },
+                { SoundId.DeadWeight2, GetPathToAnnouncerAudio("dead_weight2.ogg") },
+                { SoundId.Dirty, GetPathToAnnouncerAudio("DmC/dirty.ogg") },
+                { SoundId.Cruel, GetPathToAnnouncerAudio("DmC/cruel.ogg") },
+                { SoundId.Brutal, GetPathToAnnouncerAudio("DmC/brutal.ogg") },
+                { SoundId.Anarchic, GetPathToAnnouncerAudio("DmC/anarchic.ogg") },
+                { SoundId.Savage, GetPathToAnnouncerAudio("DmC/savage.ogg") },
+                { SoundId.Sadistic, GetPathToAnnouncerAudio("DmC/sadistic.ogg") },
+                { SoundId.Sensational, GetPathToAnnouncerAudio("DmC/sensational.ogg") }
             };
 
         private readonly Dictionary<SoundId, int> soundIdsNextAvailability;
@@ -47,7 +44,7 @@ namespace DragoonMayCry.Audio
         {
             soundIdsNextAvailability = new();
             deadWeightQueue = new();
-            deadWeightQueue.Enqueue(SoundId.DeadWeight);
+            deadWeightQueue.Enqueue(SoundId.DeadWeight1);
             deadWeightQueue.Enqueue(SoundId.DeadWeight2);
             audioEngine = new AudioEngine();
             audioEngine.UpdateSfxVolume(GetSfxVolume());
@@ -64,7 +61,7 @@ namespace DragoonMayCry.Audio
             var effectiveKey = key;
             if(key == SoundId.DeadWeight2)
             {
-                effectiveKey = SoundId.DeadWeight;
+                effectiveKey = SoundId.DeadWeight1;
             }
 
             
@@ -81,7 +78,7 @@ namespace DragoonMayCry.Audio
                 return;
             }
 
-            if(key == SoundId.DeadWeight || key == SoundId.DeadWeight2)
+            if(key == SoundId.DeadWeight1 || key == SoundId.DeadWeight2)
             {
                 var toPlay = deadWeightQueue.Dequeue();
                 deadWeightQueue.Enqueue(toPlay);
@@ -118,7 +115,6 @@ namespace DragoonMayCry.Audio
 
         private void OnAssetsReady(object? sender, bool ready)
         {
-            Service.Log.Debug("Assets loaded");
             if(!ready)
             {
                 return;
@@ -129,14 +125,26 @@ namespace DragoonMayCry.Audio
 
         public void OnBgmVolumeChange(object? sender, int volume)
         {
-            Service.Log.Debug("BGM Volume change");
             audioEngine.UpdateBgmVolume(GetBgmVolume());
         }
 
-        public void RegisterBgmPart(BgmId id, string path)
+        public bool RegisterBgmParts(Dictionary<BgmId, string> paths)
         {
-            Service.Log.Debug($"Registering bgm {id}");
-            audioEngine.RegisterBgmPart(id, path);
+            foreach (KeyValuePair<BgmId, string> entry in paths)
+            {
+                if (!File.Exists(entry.Value))
+                {
+                    Service.Log.Warning($"File {entry.Value} does not exist");
+                    return false;
+                }
+                audioEngine.RegisterBgmPart(entry.Key, entry.Value);
+            }
+            return true;
+        }
+
+        public void ClearBgmCache()
+        {
+            audioEngine.ClearBgmCache();
         }
 
         private bool CanPlaySfx(SoundId type)
@@ -166,23 +174,20 @@ namespace DragoonMayCry.Audio
                                    (Service.GameConfig.System.GetUInt(
                                         "SoundMaster") / 100f)
                                  : 1;
-            return gameVolume * (Plugin.Configuration!.SfxVolume.Value / 100f);
+            return Math.Clamp(gameVolume * (Plugin.Configuration!.SfxVolume.Value / 100f), 0, 1);
         }
 
         private float GetBgmVolume()
         {
-            if (Plugin.Configuration!.ApplyGameVolumeBgm.Value && Service.GameConfig.System.GetBool("IsSndMaster"))
+            if (Plugin.Configuration!.ApplyGameVolumeBgm.Value && (Service.GameConfig.System.GetBool("IsSndMaster")))
             {
                 return 0;
             }
 
             var gameVolume = Plugin.Configuration!.ApplyGameVolumeBgm.Value
-                                 ? Service.GameConfig.System
-                                          .GetUInt("SoundBgm") / 100f *
-                                   (Service.GameConfig.System.GetUInt(
-                                        "SoundMaster") / 100f)
+                                 ? (Service.GameConfig.System.GetUInt("SoundMaster") / 100f)
                                  : 1;
-            return gameVolume * (Plugin.Configuration!.BgmVolume.Value / 100f);
+            return Math.Clamp(gameVolume * (Plugin.Configuration!.BgmVolume.Value / 100f), 0, 1);
         }
 
         private SoundId StyleTypeToSoundId(StyleType type)
@@ -221,7 +226,7 @@ namespace DragoonMayCry.Audio
 #if DEBUG   
         public void PlaySfx(SoundId id)
         {
-            if (id == SoundId.DeadWeight || id == SoundId.DeadWeight2)
+            if (id == SoundId.DeadWeight1 || id == SoundId.DeadWeight2)
             {
                 var toPlay = deadWeightQueue.Dequeue();
                 deadWeightQueue.Enqueue(toPlay);

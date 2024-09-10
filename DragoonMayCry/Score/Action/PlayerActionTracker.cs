@@ -376,7 +376,6 @@ namespace DragoonMayCry.Score.Action
                 Service.Log.Debug($"GCD Clip: {animationLock} s");
                 if (limitBreakCast == null)
                 {
-                    Service.Log.Debug($"Sending clipping event");
                     OnGcdClip?.Invoke(this, animationLock);
                 }
                 else if(!limitBreakCast.IsTankLb)

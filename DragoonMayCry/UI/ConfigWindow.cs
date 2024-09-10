@@ -41,9 +41,6 @@ public class ConfigWindow : Window, IDisposable
     {
         switch (AssetsManager.status)
         {
-            case AssetsManager.Status.Done:
-                DrawConfigMenu(); 
-                break;
             case AssetsManager.Status.Updating:
                 ImGui.Text($"Downloading additional assets...");
                 break;
@@ -53,6 +50,7 @@ public class ConfigWindow : Window, IDisposable
                 DrawError();
                 break;
         }
+        DrawConfigMenu();
     }
 
     private void DrawError()
@@ -102,7 +100,7 @@ public class ConfigWindow : Window, IDisposable
             .AddAction(() =>
             {
                 ImGui.SetNextItemWidth(200f);
-                if (ImGui.SliderInt("Sound effect volume", ref configuration.SfxVolume.Value, 0, 100))
+                if (ImGui.SliderInt("Sound effect volume", ref configuration.SfxVolume.Value, 0, 200))
                 {
                     KamiCommon.SaveConfiguration();
                     SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
@@ -118,7 +116,6 @@ public class ConfigWindow : Window, IDisposable
             {
                 if (ImGui.Checkbox("Enable dynamic background music", ref configuration.EnableDynamicBgm.Value))
                 {
-
                     KamiCommon.SaveConfiguration();
                     ActivateDynamicBgmChange?.Invoke(this, configuration.EnableDynamicBgm.Value);
                 }
@@ -132,11 +129,12 @@ public class ConfigWindow : Window, IDisposable
                     KamiCommon.SaveConfiguration();
                     BgmVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
                 }
+                ImGuiComponents.HelpMarker("Only Master volume is applied.");
             })
             .AddAction(() =>
             {
                 ImGui.SetNextItemWidth(200f);
-                if (ImGui.SliderInt("Background music volume", ref configuration.BgmVolume.Value, 0, 100))
+                if (ImGui.SliderInt("Background music volume", ref configuration.BgmVolume.Value, 0, 200))
                 {
                     KamiCommon.SaveConfiguration();
                     BgmVolumeChange?.Invoke(this, configuration.BgmVolume.Value);
@@ -146,7 +144,7 @@ public class ConfigWindow : Window, IDisposable
 
 #if DEBUG
         InfoBox.Instance.AddTitle("Debug")
-            .AddButton("Dead weight", () => AudioService.Instance.PlaySfx(SoundId.DeadWeight))
+            .AddButton("Dead weight", () => AudioService.Instance.PlaySfx(SoundId.DeadWeight1))
             .SameLine().AddButton("D", () => AudioService.Instance.PlaySfx(SoundId.Dirty))
             .SameLine().AddButton("C", () => AudioService.Instance.PlaySfx(SoundId.Cruel))
             .SameLine().AddButton("B", () => AudioService.Instance.PlaySfx(SoundId.Brutal))
@@ -156,9 +154,10 @@ public class ConfigWindow : Window, IDisposable
             .SameLine().AddButton("SSS", () => AudioService.Instance.PlaySfx(SoundId.Sensational))
             .SameLine().AddButton("BGM test", () => Plugin.StartBgm())
             .SameLine().AddButton("Stop BGM", () => Plugin.StopBgm())
-            .AddButton("BGM Rank up", () => Plugin.BgmTransitionNext())
+            .AddButton("BGM Enter combat", () => Plugin.BgmTransitionNext())
+            .SameLine().AddButton("BGM Rank up", () => Plugin.SimulateBgmRankChanges(Score.Model.StyleType.A, Score.Model.StyleType.S))
+            .SameLine().AddButton("BGM Rank down", () => Plugin.SimulateBgmRankChanges(Score.Model.StyleType.S, Score.Model.StyleType.D))
             .SameLine().AddButton("EndCombat", () => Plugin.BgmEndCombat())
-            .SameLine().AddButton("Demotion", () => Plugin.BgmDemotion())
 
             .Draw();
 #endif

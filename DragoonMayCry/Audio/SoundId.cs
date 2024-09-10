@@ -8,7 +8,7 @@ namespace DragoonMayCry.Audio
 {
     public enum SoundId
     {
-        DeadWeight,
+        DeadWeight1,
         DeadWeight2,
         Dirty,
         Cruel,

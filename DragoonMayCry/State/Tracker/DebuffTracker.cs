@@ -34,7 +34,6 @@ namespace DragoonMayCry.State.Tracker
                 {
                     if (!hasDamageDown)
                     {
-                        Service.Log.Debug($"Damage down applied");
                         hasDamageDown = true;
                         OnChange?.Invoke(this, hasDamageDown);
                     }

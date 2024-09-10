@@ -22,7 +22,6 @@ namespace DragoonMayCry.State.Tracker
             if (job != CurrentJob)
             {
                 CurrentJob = job;
-                Service.Log.Debug($"Detected job change to {CurrentJob}");
                 OnChange?.Invoke(this, CurrentJob);
             }
         }

@@ -1,4 +1,5 @@
 using Dalamud.Plugin.Services;
+using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Style;
 using NAudio.Wave;
@@ -28,14 +29,17 @@ namespace DragoonMayCry.Audio
         {
             sfxOutputDevice = new WaveOutEvent();
             bgmOutputDevice = new WaveOutEvent();
+
             sounds = new Dictionary<SoundId, CachedSound>();
+            bgmParts = new Dictionary<BgmId, CachedSound>();
 
             sfxMixer = new(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2))
             {
                 ReadFully = true
             };
 
-            bgmMixer = new(WaveFormat.CreateIeeeFloatWaveFormat(48000, 4))
+            
+            bgmMixer = new(WaveFormat.CreateIeeeFloatWaveFormat(48000, 2))
             {
                 ReadFully = true
             };
@@ -148,6 +152,11 @@ namespace DragoonMayCry.Audio
             {
                 bgmParts[id] = part;
             }
+        }
+
+        public void ClearBgmCache()
+        {
+            bgmParts.Clear();
         }
 
         public void RemoveInput(ISampleProvider sample)

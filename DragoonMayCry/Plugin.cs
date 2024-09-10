@@ -2,20 +2,18 @@ using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using DragoonMayCry.Audio;
-using DragoonMayCry.Audio.FSM;
+using DragoonMayCry.Audio.BGM.FSM;
 using DragoonMayCry.Configuration;
-using DragoonMayCry.Data;
 using DragoonMayCry.Score;
 using DragoonMayCry.Score.Action;
+using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Style;
 using DragoonMayCry.State;
 using DragoonMayCry.UI;
 using KamiLib;
-using KamiLib.ChatCommands;
 using Newtonsoft.Json;
 using System;
 using System.IO;
-using System.Text.Json;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace DragoonMayCry;
@@ -35,7 +33,7 @@ public unsafe class Plugin : IDalamudPlugin
     private readonly StyleRankHandler styleRankHandler;
     private readonly FinalRankCalculator finalRankCalculator;
     private readonly AudioService audioService;
-    private static BuryTheLightFsm buryTheLight;
+    private static BgmFsm buryTheLight;
     public Plugin()
     {
         PluginInterface.Create<Service>();
@@ -45,9 +43,11 @@ public unsafe class Plugin : IDalamudPlugin
 
         Configuration = InitConfig();
         Configuration.Save();
+        this.audioService = AudioService.Instance;
         playerActionTracker = new();
 
         styleRankHandler = new(playerActionTracker);
+        buryTheLight = new BgmFsm(this.audioService, playerState, styleRankHandler, Service.Framework);
         scoreManager = new(styleRankHandler, playerActionTracker);
         scoreProgressBar = new(scoreManager, styleRankHandler, playerActionTracker, playerState);
         finalRankCalculator = new(playerState, styleRankHandler);
@@ -55,11 +55,6 @@ public unsafe class Plugin : IDalamudPlugin
 
         scoreProgressBar.DemotionApplied += styleRankHandler.OnDemotion;
         scoreProgressBar.Promotion += styleRankHandler.OnPromotion;
-
-
-        this.audioService = AudioService.Instance;
-        //buryTheLight = new BuryTheLightFsm(AudioService.Instance, playerState, styleRankHandler, Service.Framework);
-        //buryTheLight.CacheBgm();
 
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
@@ -104,6 +99,11 @@ public unsafe class Plugin : IDalamudPlugin
         Service.CommandManager.RemoveHandler(CommandName);
     }
 
+
+    public static void SimulateBgmRankChanges(StyleType previous, StyleType newStyle)
+    {
+        buryTheLight.OnRankChange(null, new StyleRankHandler.RankChangeData(previous, newStyle, false));
+    }
     public static void BgmTransitionNext()
     {
         buryTheLight.Promotion();

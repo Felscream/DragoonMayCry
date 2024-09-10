@@ -14,7 +14,6 @@ namespace DragoonMayCry.Score.Table
         {
             if (Cache.ContainsKey(ilvl))
             {
-                Service.Log.Debug("Retrieving scoring table from cache");
                 return Cache[ilvl];
             }
             var scoringTable = GenerateScoringTable(ilvl);

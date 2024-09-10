@@ -130,7 +130,6 @@ namespace DragoonMayCry.Score
 
             itemCount = Math.Max(itemCount, 12);
             var iLvl = (int)Math.Round(totalILvl / (float)itemCount, MidpointRounding.ToZero);
-            Service.Log.Debug($"Calculated ilvl {iLvl} with {itemCount} items");
             return iLvl;
         }
     }

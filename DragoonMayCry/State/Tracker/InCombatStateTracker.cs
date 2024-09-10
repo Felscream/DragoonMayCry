@@ -13,12 +13,10 @@ namespace DragoonMayCry.State.Tracker
             CurrentValue = playerState.IsInCombat;
             if (CurrentValue && !LastValue)
             {
-                Service.Log.Debug("Entered combat");
                 OnChange?.Invoke(this, CurrentValue);
             }
             else if (!CurrentValue && LastValue)
             {
-                Service.Log.Debug("Exited combat");
                 OnChange?.Invoke(this, CurrentValue);
             }
 

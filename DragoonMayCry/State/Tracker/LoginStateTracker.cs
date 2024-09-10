@@ -7,12 +7,10 @@ namespace DragoonMayCry.State.Tracker
             CurrentValue = playerState.IsLoggedIn;
             if (CurrentValue && !LastValue)
             {
-                Service.Log.Debug("Player logged in");
                 OnChange?.Invoke(this, CurrentValue);
             }
             else if (!CurrentValue && LastValue)
             {
-                Service.Log.Debug("Player logged out");
                 OnChange?.Invoke(this, CurrentValue);
             }
 
