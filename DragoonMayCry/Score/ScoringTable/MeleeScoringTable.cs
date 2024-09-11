@@ -22,14 +22,14 @@ namespace DragoonMayCry.Score.Table
         private readonly Dictionary<StyleType, ScoringCoefficient>
             meleeScoringCoefficient = new Dictionary<StyleType, ScoringCoefficient>
             {
-                { StyleType.NoStyle, new ScoringCoefficient(4f, 0.05f) },
-                { StyleType.D, new ScoringCoefficient(4.6f, 0.1f) },
-                { StyleType.C, new ScoringCoefficient(5f, 0.26f) },
-                { StyleType.B, new ScoringCoefficient(5f, 0.33f) },
-                { StyleType.A, new ScoringCoefficient(5.4f, 0.4f) },
-                { StyleType.S, new ScoringCoefficient(5f, 0.58f) },
-                { StyleType.SS, new ScoringCoefficient(3.4f, 0.58f) },
-                { StyleType.SSS, new ScoringCoefficient(3f, 0.5f) },
+                { StyleType.NoStyle, new ScoringCoefficient(8f, 0.05f) },
+                { StyleType.D, new ScoringCoefficient(9.2f, 0.1f) },
+                { StyleType.C, new ScoringCoefficient(10f, 0.26f) },
+                { StyleType.B, new ScoringCoefficient(12f, 0.33f) },
+                { StyleType.A, new ScoringCoefficient(13.8f, 0.4f) },
+                { StyleType.S, new ScoringCoefficient(10f, 0.58f) },
+                { StyleType.SS, new ScoringCoefficient(6.8f, 0.58f) },
+                { StyleType.SSS, new ScoringCoefficient(6f, 0.5f) },
             };
         protected override Dictionary<StyleType, StyleScoring> RoleScoringTable => meleeScoring;
         protected override Dictionary<StyleType, ScoringCoefficient> ScoringCoefficient => meleeScoringCoefficient;

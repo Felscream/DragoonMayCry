@@ -2,7 +2,7 @@ using System;
 using DragoonMayCry.Score.Model;
 using FFXIVClientStructs.FFXIV.Common.Math;
 
-namespace DragoonMayCry.Score.Style
+namespace DragoonMayCry.Score.Style.Rank
 {
     public class StyleRank
     {

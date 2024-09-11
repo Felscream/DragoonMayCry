@@ -10,15 +10,21 @@ using KamiLib.Drawing;
 using KamiLib;
 using DragoonMayCry.Audio;
 using Dalamud.Interface.Components;
+using DragoonMayCry.Score.Model;
+using DragoonMayCry.Score.Style.Announcer;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DragoonMayCry.UI;
 
 public class ConfigWindow : Window, IDisposable
 {
     public EventHandler<bool>? ActiveOutsideInstanceChange;
-    public EventHandler<bool>? ActivateDynamicBgmChange;
+    public EventHandler<bool>? ToggleDynamicBgmChange;
     public EventHandler<int>? SfxVolumeChange;
     public EventHandler<int>? BgmVolumeChange;
+    public EventHandler<AnnouncerType> AnnouncerTypeChange;
     private readonly DmcConfigurationOne configuration;
 
     // We give this window a constant ID using ###
@@ -88,8 +94,27 @@ public class ConfigWindow : Window, IDisposable
             })
             .Draw();
 
+        var announcerValues = Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>().ToList();
         InfoBox.Instance.AddTitle("SFX")
             .AddConfigCheckbox("Play sound effects", configuration.PlaySoundEffects)
+            .AddAction(() =>
+            {
+                ImGui.SetNextItemWidth(200);
+                if(ImGui.BeginCombo("Style rank announcer", GetAnnouncerTypeLabel(configuration.Announcer.Value)))
+                {
+                    for(int i = 0; i < announcerValues.Count; i++)
+                    {
+                        if (ImGui.Selectable(GetAnnouncerTypeLabel(announcerValues[i]), configuration.Announcer.Value.Equals(announcerValues[i]))){
+                            configuration.Announcer.Value = announcerValues[i];
+                            KamiCommon.SaveConfiguration();
+                            AnnouncerTypeChange?.Invoke(this, announcerValues[i]);
+                        }
+                    }
+                    ImGui.EndCombo();
+                }
+            })
+            .SameLine()
+            .AddIconButton("play-sfx", Dalamud.Interface.FontAwesomeIcon.PlayCircle, () => Plugin.StyleAnnouncerService.PlayRandomAnnouncerLine())
             .AddConfigCheckbox("Force sound effect on blunders", configuration.ForceSoundEffectsOnBlunder)
             .AddAction(() => { 
                 if(ImGui.Checkbox("Apply game volume on sound effects", ref configuration.ApplyGameVolumeSfx.Value)){
@@ -117,7 +142,7 @@ public class ConfigWindow : Window, IDisposable
                 if (ImGui.Checkbox("Enable dynamic background music", ref configuration.EnableDynamicBgm.Value))
                 {
                     KamiCommon.SaveConfiguration();
-                    ActivateDynamicBgmChange?.Invoke(this, configuration.EnableDynamicBgm.Value);
+                    ToggleDynamicBgmChange?.Invoke(this, configuration.EnableDynamicBgm.Value);
                 }
                 ImGuiComponents.HelpMarker("This will disable the game background music only inside instances. You may have to change your BGM configuration.");
             })
@@ -144,14 +169,14 @@ public class ConfigWindow : Window, IDisposable
 
 #if DEBUG
         InfoBox.Instance.AddTitle("Debug")
-            .AddButton("Dead weight", () => AudioService.Instance.PlaySfx(SoundId.DeadWeight1))
-            .SameLine().AddButton("D", () => AudioService.Instance.PlaySfx(SoundId.Dirty))
-            .SameLine().AddButton("C", () => AudioService.Instance.PlaySfx(SoundId.Cruel))
-            .SameLine().AddButton("B", () => AudioService.Instance.PlaySfx(SoundId.Brutal))
-            .SameLine().AddButton("A", () => AudioService.Instance.PlaySfx(SoundId.Anarchic))
-            .SameLine().AddButton("S", () => AudioService.Instance.PlaySfx(SoundId.Savage))
-            .SameLine().AddButton("SS", () => AudioService.Instance.PlaySfx(SoundId.Sadistic))
-            .SameLine().AddButton("SSS", () => AudioService.Instance.PlaySfx(SoundId.Sensational))
+            .AddButton("Dead weight", () => Plugin.StyleAnnouncerService.PlayBlunder())
+            .SameLine().AddButton("D", () => Plugin.StyleAnnouncerService.PlayForStyle(StyleType.D))
+            .SameLine().AddButton("C", () => Plugin.StyleAnnouncerService.PlayForStyle(StyleType.C))
+            .SameLine().AddButton("B", () => Plugin.StyleAnnouncerService.PlayForStyle(StyleType.B))
+            .SameLine().AddButton("A", () => Plugin.StyleAnnouncerService.PlayForStyle(StyleType.A))
+            .SameLine().AddButton("S", () => Plugin.StyleAnnouncerService.PlayForStyle(StyleType.S))
+            .SameLine().AddButton("SS", () => Plugin.StyleAnnouncerService.PlayForStyle(StyleType.SS))
+            .SameLine().AddButton("SSS", () => Plugin.StyleAnnouncerService.PlayForStyle(StyleType.SSS))
             .SameLine().AddButton("BGM test", () => Plugin.StartBgm())
             .SameLine().AddButton("Stop BGM", () => Plugin.StopBgm())
             .AddButton("BGM Enter combat", () => Plugin.BgmTransitionNext())
@@ -162,5 +187,17 @@ public class ConfigWindow : Window, IDisposable
             .Draw();
 #endif
         }
+    }
+
+    private string GetAnnouncerTypeLabel(AnnouncerType type)
+    {
+        return type switch
+        {
+            AnnouncerType.DmC => "DmC: Devil May Cry",
+            AnnouncerType.DmC5 => "Devil May Cry 5",
+            AnnouncerType.DmC5Balrog => "Devil May Cry 5 / Balrog VA",
+            AnnouncerType.Nico => "Nico",
+            AnnouncerType.Morrison => "Morrison"
+        };
     }
 }

@@ -2,17 +2,20 @@ using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using DragoonMayCry.Audio;
+using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.BGM.FSM;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Score;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
-using DragoonMayCry.Score.Style;
+using DragoonMayCry.Score.Style.Announcer;
+using DragoonMayCry.Score.Style.Rank;
 using DragoonMayCry.State;
 using DragoonMayCry.UI;
 using KamiLib;
 using Newtonsoft.Json;
 using System;
+using System.Diagnostics;
 using System.IO;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -25,36 +28,39 @@ public unsafe class Plugin : IDalamudPlugin
 
     private const string CommandName = "/dmc";
 
-    private readonly ScoreManager scoreManager;
-    private readonly PluginUI pluginUi;
-    private readonly PlayerState playerState;
-    private readonly ScoreProgressBar scoreProgressBar;
-    private readonly PlayerActionTracker playerActionTracker;
-    private readonly StyleRankHandler styleRankHandler;
-    private readonly FinalRankCalculator finalRankCalculator;
-    private readonly AudioService audioService;
-    private static BgmFsm buryTheLight;
+    private static ScoreManager? ScoreManager;
+    private readonly PluginUI PluginUi;
+    private static PlayerState? PlayerState;
+    private static ScoreProgressBar? ScoreProgressBar;
+    private static PlayerActionTracker? PlayerActionTracker;
+    private static StyleRankHandler? StyleRankHandler;
+    private static FinalRankCalculator? FinalRankCalculator;
+    private static AudioService? AudioService;
+    private static DynamicBgmService? BgmService;
+    public static StyleAnnouncerService StyleAnnouncerService;
     public Plugin()
     {
         PluginInterface.Create<Service>();
 
         KamiCommon.Initialize(PluginInterface, "DragoonMayCry", () => Configuration?.Save());
-        playerState = PlayerState.GetInstance();
+        PlayerState = PlayerState.GetInstance();
 
         Configuration = InitConfig();
         Configuration.Save();
-        this.audioService = AudioService.Instance;
-        playerActionTracker = new();
+        AudioService = AudioService.Instance;
 
-        styleRankHandler = new(playerActionTracker);
-        buryTheLight = new BgmFsm(this.audioService, playerState, styleRankHandler, Service.Framework);
-        scoreManager = new(styleRankHandler, playerActionTracker);
-        scoreProgressBar = new(scoreManager, styleRankHandler, playerActionTracker, playerState);
-        finalRankCalculator = new(playerState, styleRankHandler);
-        pluginUi = new(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator, OnActiveOutsideInstanceConfChange);
+        PlayerActionTracker = new();
+        StyleRankHandler = new(PlayerActionTracker);
+        StyleAnnouncerService = new(StyleRankHandler, PlayerActionTracker);
+        BgmService = new DynamicBgmService(StyleRankHandler);
+        ScoreManager = new(StyleRankHandler, PlayerActionTracker);
+        ScoreProgressBar = new(ScoreManager, StyleRankHandler, PlayerActionTracker, PlayerState);
+        FinalRankCalculator = new(PlayerState, StyleRankHandler);
+        PluginUi = new(ScoreProgressBar, StyleRankHandler, ScoreManager, FinalRankCalculator, StyleAnnouncerService);
+        
 
-        scoreProgressBar.DemotionApplied += styleRankHandler.OnDemotion;
-        scoreProgressBar.Promotion += styleRankHandler.OnPromotion;
+        ScoreProgressBar.DemotionApplied += StyleRankHandler.OnDemotion;
+        ScoreProgressBar.Promotion += StyleRankHandler.OnPromotion;
 
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
@@ -62,17 +68,6 @@ public unsafe class Plugin : IDalamudPlugin
         });
 
         AssetsManager.VerifyAndUpdateAssets();
-    }
-
-    public static void StartBgm()
-    {
-        buryTheLight.Start();
-    }
-
-    public static void StopBgm()
-    {
-        buryTheLight.ResetToIntro();
-        AudioService.Instance.StopBgm();
     }
 
     public static bool CanRunDmc()
@@ -87,53 +82,34 @@ public unsafe class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
-
-       // buryTheLight.Dispose();
-        audioService.Dispose();
+        BgmService?.Dispose();
+        AudioService?.Dispose();
         KamiCommon.Dispose();
-        scoreProgressBar.Dispose();
-        playerActionTracker.Dispose();
-        scoreManager.Dispose();
-        playerState.Dispose();
-        pluginUi.Dispose();
+        ScoreProgressBar?.Dispose();
+        PlayerActionTracker?.Dispose();
+        ScoreManager?.Dispose();
+        PlayerState?.Dispose();
+        PluginUi?.Dispose();
         Service.CommandManager.RemoveHandler(CommandName);
     }
 
 
-    public static void SimulateBgmRankChanges(StyleType previous, StyleType newStyle)
-    {
-        buryTheLight.OnRankChange(null, new StyleRankHandler.RankChangeData(previous, newStyle, false));
-    }
-    public static void BgmTransitionNext()
-    {
-        buryTheLight.Promotion();
-    }
-
-    public static void BgmEndCombat()
-    {
-        buryTheLight.LeaveCombat();
-    }
-
-    public static void BgmDemotion()
-    {
-        buryTheLight.Demotion();
-    }
 
     private void OnCommand(string command, string args)
     {
-        pluginUi.ToggleConfigUI();
+        PluginUi?.ToggleConfigUI();
     }
 
-    private void OnActiveOutsideInstanceConfChange(object? sender, bool activeOutsideInstance)
+    public static void OnActiveOutsideInstanceConfChange(object? sender, bool activeOutsideInstance)
     {
-        if (playerState.IsInsideInstance || activeOutsideInstance)
+        if (PlayerState!.IsInsideInstance || activeOutsideInstance)
         {
             return;
         }
-        scoreProgressBar.Reset();
-        scoreManager.Reset();
-        finalRankCalculator.Reset();
-        styleRankHandler.Reset();
+        ScoreProgressBar?.Reset();
+        ScoreManager?.Reset();
+        FinalRankCalculator?.Reset();
+        StyleRankHandler?.Reset();
     }
 
     private static DmcConfigurationOne InitConfig()
@@ -171,5 +147,47 @@ public unsafe class Plugin : IDalamudPlugin
             Service.Log.Warning("Your configuration migration failed, it has been reinitialized");
             return new DmcConfigurationOne();
         }
+    }
+
+    public static void ToggleDynamicBgm(object? sender, bool value)
+    {
+        BgmService?.ToggleDynamicBgmActivation();
+    }
+
+    [Conditional("DEBUG")]
+    public static void StartBgm()
+    {
+        BgmService?.GetFsm().Start();
+    }
+
+    [Conditional("DEBUG")]
+    public static void StopBgm()
+    {
+        BgmService?.GetFsm().ResetToIntro();
+        AudioService.Instance.StopBgm();
+    }
+
+    [Conditional("DEBUG")]
+    public static void SimulateBgmRankChanges(StyleType previous, StyleType newStyle)
+    {
+        BgmService?.GetFsm().OnRankChange(null, new StyleRankHandler.RankChangeData(previous, newStyle, false));
+    }
+
+    [Conditional("DEBUG")]
+    public static void BgmTransitionNext()
+    {
+        BgmService?.GetFsm().Promotion();
+    }
+
+    [Conditional("DEBUG")]
+    public static void BgmEndCombat()
+    {
+        BgmService?.GetFsm().LeaveCombat();
+    }
+
+    [Conditional("DEBUG")]
+    public static void BgmDemotion()
+    {
+        BgmService?.GetFsm().Demotion();
     }
 }

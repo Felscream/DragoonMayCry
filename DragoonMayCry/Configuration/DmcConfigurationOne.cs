@@ -1,8 +1,6 @@
 using Dalamud.Configuration;
-using Dalamud.Plugin;
-using DragoonMayCry.Configuration;
+using DragoonMayCry.Score.Style.Announcer;
 using KamiLib.Configuration;
-using KamiLib.Misc;
 using Newtonsoft.Json;
 using System;
 using System.IO;
@@ -22,6 +20,7 @@ public class DmcConfigurationOne : IPluginConfiguration
     public Setting<bool> ApplyGameVolumeSfx = new(true);
     public Setting<bool> ApplyGameVolumeBgm = new(true);
     public Setting<bool> EnableDynamicBgm = new(false);
+    public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);
 
     public Setting<bool> LockScoreWindow { get; set; } = new(true);
 

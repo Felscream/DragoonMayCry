@@ -7,11 +7,11 @@ using System.Diagnostics;
 using DragoonMayCry.Data;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Util;
-using DragoonMayCry.Score.Style;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using static DragoonMayCry.Score.Style.StyleRankHandler;
+using static DragoonMayCry.Score.Style.Rank.StyleRankHandler;
 using DragoonMayCry.Score.Table;
 using DragoonMayCry.Score.Model;
+using DragoonMayCry.Score.Style.Rank;
 
 namespace DragoonMayCry.Score
 {
@@ -66,7 +66,7 @@ namespace DragoonMayCry.Score
 
             playerActionTracker.OnFlyTextCreation += AddScore;
             playerActionTracker.OnGcdClip += OnGcdClip;
-            playerActionTracker.OnLimitBreak += OnLimitBreakCast;
+            playerActionTracker.UsingLimitBreak += OnLimitBreakCast;
             playerActionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
 
             Service.Framework.Update += UpdateScore;
@@ -162,10 +162,6 @@ namespace DragoonMayCry.Score
         private void OnLimitBreakCast(object? sender, PlayerActionTracker.LimitBreakEvent e)
         {
             isCastingLb = e.IsCasting;
-            if (!isCastingLb)
-            {
-                CurrentScoreRank.Score = CurrentScoreRank.StyleScoring.Threshold;
-            }
         }
 
         private void OnLimitBreakCanceled(object? sender, EventArgs e)

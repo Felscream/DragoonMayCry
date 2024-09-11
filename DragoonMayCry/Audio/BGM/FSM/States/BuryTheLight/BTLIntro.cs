@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
 {
-    public class BTLIntro : FsmState
+    public class BTLIntro : IFsmState
     {
         enum IntroState
         {
@@ -28,9 +28,8 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
-            { BgmId.Intro, BgmFsm.GetPathToAudio("Intro\\intro.ogg") },
-            { BgmId.CombatEnd, BgmFsm.GetPathToAudio("end.ogg") },
-
+            { BgmId.Intro, DynamicBgmFsm.GetPathToAudio("Intro\\intro.ogg") },
+            { BgmId.CombatEnd, DynamicBgmFsm.GetPathToAudio("end.ogg") },
         };
 
         private readonly AudioService audioService;

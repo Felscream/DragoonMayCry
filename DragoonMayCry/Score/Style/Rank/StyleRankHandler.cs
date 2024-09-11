@@ -8,7 +8,7 @@ using DragoonMayCry.Score.Action;
 using DragoonMayCry.State;
 using DragoonMayCry.Score.Model;
 
-namespace DragoonMayCry.Score.Style
+namespace DragoonMayCry.Score.Style.Rank
 {
     public class StyleRankHandler : IResettable
     {
@@ -30,15 +30,15 @@ namespace DragoonMayCry.Score.Style
 
         public EventHandler<RankChangeData>? StyleRankChange;
         public DoubleLinkedNode<StyleType> CurrentStyle { get; private set; }
-        
+
         private static readonly DoubleLinkedList<StyleType> Styles = new DoubleLinkedList<StyleType>(
-            StyleType.NoStyle, 
-            StyleType.D, 
-            StyleType.C, 
-            StyleType.B, 
-            StyleType.A, 
-            StyleType.S, 
-            StyleType.SS, 
+            StyleType.NoStyle,
+            StyleType.D,
+            StyleType.C,
+            StyleType.B,
+            StyleType.A,
+            StyleType.S,
+            StyleType.SS,
             StyleType.SSS);
 
         private readonly AudioService audioService;
@@ -54,7 +54,7 @@ namespace DragoonMayCry.Score.Style
             playerState.RegisterDamageDownHandler(OnDamageDown);
             playerActionTracker.OnGcdDropped += OnGcdDropped;
             playerActionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
-            playerActionTracker.OnLimitBreak += OnLimitBreak;
+            playerActionTracker.UsingLimitBreak += OnLimitBreak;
             playerActionTracker.OnLimitBreakEffect += OnLimitBreakEffect;
             CurrentStyle = Styles.Head!;
         }
@@ -64,24 +64,20 @@ namespace DragoonMayCry.Score.Style
             ReturnToPreviousRank(playSfx);
         }
 
-        public void OnPromotion(object? sender, bool playSfx)
+        public void OnPromotion(object? sender, EventArgs e)
         {
-            GoToNextRank(playSfx);
+            GoToNextRank();
         }
 
         private void OnLimitBreakEffect(object? sender, EventArgs e)
         {
-            GoToNextRank(true, false, true);
+            GoToNextRank();
         }
 
-        private void GoToNextRank(bool playSfx, bool loop = false, bool forceSfx = false)
+        private void GoToNextRank(bool loop = false)
         {
             if (CurrentStyle.Next == null)
             {
-                if (playSfx && forceSfx)
-                {
-                    audioService.PlaySfx(CurrentStyle.Value);
-                }
                 if (Styles.Head != null && loop)
                 {
                     ResetRank();
@@ -90,13 +86,8 @@ namespace DragoonMayCry.Score.Style
             }
             else if (CurrentStyle.Next != null)
             {
-                StyleRankChange?.Invoke(this, new(CurrentStyle.Value, CurrentStyle.Next.Value, false));
                 CurrentStyle = CurrentStyle.Next;
-                if (playSfx)
-                {
-                    audioService.PlaySfx(CurrentStyle.Value);
-                }
-
+                StyleRankChange?.Invoke(this, new(CurrentStyle.Previous!.Value, CurrentStyle.Value, false));
             }
         }
 
@@ -123,7 +114,7 @@ namespace DragoonMayCry.Score.Style
 
         private void ForceRankTo(StyleType type, bool isBlunder)
         {
-            
+
             if (CurrentStyle?.Value == type || isBlunder && CurrentStyle?.Value < type)
             {
                 return;
@@ -144,12 +135,7 @@ namespace DragoonMayCry.Score.Style
                 {
                     CurrentStyle = Styles.Head!;
                 }
-            } while(CurrentStyle.Value != type && CurrentStyle.Value != tempRank.Value);
-
-            if (isBlunder)
-            {
-                audioService.PlaySfx(SoundId.DeadWeight1, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
-            }
+            } while (CurrentStyle.Value != type && CurrentStyle.Value != tempRank.Value);
 
             StyleRankChange?.Invoke(this, new(tempRank.Value, CurrentStyle.Value, isBlunder));
         }
@@ -159,7 +145,6 @@ namespace DragoonMayCry.Score.Style
             if (enteringCombat)
             {
                 ResetRank();
-                audioService.ResetSfxPlayCounter();
             }
         }
 
@@ -169,21 +154,17 @@ namespace DragoonMayCry.Score.Style
             {
                 return;
             }
-            
-            if(CurrentStyle.Value < StyleType.S)
+
+            if (CurrentStyle.Value < StyleType.S)
             {
-                if (CurrentStyle.Value != StyleType.NoStyle)
-                {
-                    audioService.PlaySfx(SoundId.DeadWeight1, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
-                }
                 ReturnToPreviousRank(true);
             }
             else
             {
                 ForceRankTo(StyleType.B, true);
             }
-            
-            
+
+
         }
 
         private void OnLimitBreakCanceled(object? sender, EventArgs args)
@@ -206,6 +187,11 @@ namespace DragoonMayCry.Score.Style
         private void OnLimitBreak(
             object? sender, PlayerActionTracker.LimitBreakEvent e)
         {
+            if (!e.IsCasting)
+            {
+                return;
+            }
+
             if (e.IsTankLb && CurrentStyle.Value < StyleType.S)
             {
                 ForceRankTo(StyleType.A, false);
@@ -214,7 +200,7 @@ namespace DragoonMayCry.Score.Style
 
         private void OnDamageDown(object? sender, bool hasDamageDown)
         {
-            if(!hasDamageDown || playerState.IsDead)
+            if (!hasDamageDown || playerState.IsDead)
             {
                 return;
             }
@@ -225,7 +211,6 @@ namespace DragoonMayCry.Score.Style
         public void Reset()
         {
             ResetRank();
-            audioService.ResetSfxPlayCounter();
         }
     }
 }

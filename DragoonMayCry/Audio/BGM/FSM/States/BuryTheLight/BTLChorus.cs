@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
 {
-    internal class BTLChorus : FsmState
+    internal class BTLChorus : IFsmState
     {
         enum PeakState
         {
@@ -39,14 +39,14 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
-            { BgmId.ChorusIntro1, BgmFsm.GetPathToAudio("CombatChorus\\025.ogg") },
-            { BgmId.ChorusIntro2, BgmFsm.GetPathToAudio("CombatChorus\\094.ogg") },
-            { BgmId.Riff, BgmFsm.GetPathToAudio("CombatChorus\\062.ogg") },
-            { BgmId.Chorus, BgmFsm.GetPathToAudio("CombatChorus\\112.ogg") },
-            { BgmId.Demotion, BgmFsm.GetPathToAudio("CombatChorus\\087.ogg") },
-            { BgmId.ChorusTransition1, BgmFsm.GetPathToAudio("CombatChorus\\transition1.ogg") },
-            { BgmId.ChorusTransition2, BgmFsm.GetPathToAudio("CombatChorus\\transition2.ogg") },
-            { BgmId.ChorusTransition3, BgmFsm.GetPathToAudio("CombatChorus\\transition3.ogg") },
+            { BgmId.ChorusIntro1, DynamicBgmFsm.GetPathToAudio("CombatChorus\\025.ogg") },
+            { BgmId.ChorusIntro2, DynamicBgmFsm.GetPathToAudio("CombatChorus\\094.ogg") },
+            { BgmId.Riff, DynamicBgmFsm.GetPathToAudio("CombatChorus\\062.ogg") },
+            { BgmId.Chorus, DynamicBgmFsm.GetPathToAudio("CombatChorus\\112.ogg") },
+            { BgmId.Demotion, DynamicBgmFsm.GetPathToAudio("CombatChorus\\087.ogg") },
+            { BgmId.ChorusTransition1, DynamicBgmFsm.GetPathToAudio("CombatChorus\\transition1.ogg") },
+            { BgmId.ChorusTransition2, DynamicBgmFsm.GetPathToAudio("CombatChorus\\transition2.ogg") },
+            { BgmId.ChorusTransition3, DynamicBgmFsm.GetPathToAudio("CombatChorus\\transition3.ogg") },
         };
 
         private readonly AudioService audioService;

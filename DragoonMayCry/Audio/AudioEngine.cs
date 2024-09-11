@@ -18,8 +18,8 @@ namespace DragoonMayCry.Audio
 
         private readonly IWavePlayer sfxOutputDevice;
         private readonly IWavePlayer bgmOutputDevice;
-        private readonly Dictionary<SoundId, CachedSound> sounds;
-        private readonly Dictionary<BgmId, CachedSound> bgmParts;
+        private readonly Dictionary<SoundId, CachedSound> announcerSfx;
+        private readonly Dictionary<BgmId, CachedSound> bgmStems;
         private readonly VolumeSampleProvider sfxSampleProvider;
         private readonly MixingSampleProvider sfxMixer;
         private readonly VolumeSampleProvider bgmSampleProvider;
@@ -30,8 +30,8 @@ namespace DragoonMayCry.Audio
             sfxOutputDevice = new WaveOutEvent();
             bgmOutputDevice = new WaveOutEvent();
 
-            sounds = new Dictionary<SoundId, CachedSound>();
-            bgmParts = new Dictionary<BgmId, CachedSound>();
+            announcerSfx = new Dictionary<SoundId, CachedSound>();
+            bgmStems = new Dictionary<BgmId, CachedSound>();
 
             sfxMixer = new(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2))
             {
@@ -59,7 +59,7 @@ namespace DragoonMayCry.Audio
             sfxSampleProvider.Volume = value;
         }
 
-        public void RegisterSfx(Dictionary<SoundId, string> sfx)
+        public void RegisterAnnouncerSfx(Dictionary<SoundId, string> sfx)
         {
             foreach (KeyValuePair<SoundId, string> entry in sfx)
             {
@@ -67,13 +67,13 @@ namespace DragoonMayCry.Audio
                     Service.Log.Error($"Could not find any file at {entry.Value}");
                     continue;
                 }
-                if (!sounds.ContainsKey(entry.Key))
+                if (!announcerSfx.ContainsKey(entry.Key))
                 {
-                    sounds.Add(entry.Key, new(entry.Value));
+                    announcerSfx.Add(entry.Key, new(entry.Value));
                 }
                 else
                 {
-                    sounds[entry.Key] = new(entry.Value);
+                    announcerSfx[entry.Key] = new(entry.Value);
                 }
                 
             }
@@ -84,79 +84,68 @@ namespace DragoonMayCry.Audio
             bgmSampleProvider.Volume = value;
         }
 
-        private ISampleProvider ConvertToRightChannelCount(MixingSampleProvider mixer, ISampleProvider input)
-        {
-            if (input.WaveFormat.Channels == mixer.WaveFormat.Channels)
-            {
-                return input;
-            }
-
-            if (input.WaveFormat.Channels == 1 && mixer.WaveFormat.Channels == 2)
-            {
-                return new MonoToStereoSampleProvider(input);
-            }
-            throw new NotImplementedException("Not yet implemented this channel count conversion");
-        }
-
         private void AddSFXMixerInput(ISampleProvider input)
         {
-            ISampleProvider mixerInput = ConvertToRightChannelCount(sfxMixer, input);
-            sfxMixer.AddMixerInput(mixerInput);
+            sfxMixer.AddMixerInput(input);
         }
 
         private ISampleProvider AddBGMMixerInput(ISampleProvider input, double fadeInDuration)
         {
-            ISampleProvider mixerInput = ConvertToRightChannelCount(bgmMixer, input);
             if(fadeInDuration > 0)
             {
-                var fadingInput = new FadeInOutSampleProvider(mixerInput, true);
+                var fadingInput = new FadeInOutSampleProvider(input, true);
                 fadingInput.BeginFadeIn(fadeInDuration);
                 bgmMixer.AddMixerInput(fadingInput);
                 return fadingInput;
             } 
             
-            bgmMixer.AddMixerInput(mixerInput);
-            return mixerInput;
+            bgmMixer.AddMixerInput(input);
+            return input;
         }
 
         public void PlaySfx(SoundId trigger)
         {
-            if (!sounds.ContainsKey(trigger))
+            if (!announcerSfx.ContainsKey(trigger))
             {
                 return;
             }
-            AddSFXMixerInput(new CachedSoundSampleProvider(sounds[trigger]));
+            AddSFXMixerInput(new CachedSoundSampleProvider(announcerSfx[trigger]));
         }
 
         public ISampleProvider? PlayBgm(BgmId id, double fadeInDuration = 0d)
         {
-            if (!bgmParts.ContainsKey(id))
+            if (!bgmStems.ContainsKey(id))
             {
                 Service.Log.Warning($"No BGM registered for {id}");
                 return null;
             }
             else
             {
-                return AddBGMMixerInput(new CachedSoundSampleProvider(bgmParts[id]), fadeInDuration);
+                return AddBGMMixerInput(new CachedSoundSampleProvider(bgmStems[id]), fadeInDuration);
             }
         }
 
         public void RegisterBgmPart(BgmId id, string path)
         {
             var part = new CachedSound(path);
-            if(!bgmParts.ContainsKey(id))
+            if(!bgmStems.ContainsKey(id))
             {
-                bgmParts.Add(id, part);
+                bgmStems.Add(id, part);
             }
             else
             {
-                bgmParts[id] = part;
+                bgmStems[id] = part;
             }
+        }
+
+        public void ClearSfxCache()
+        {
+            announcerSfx.Clear();
         }
 
         public void ClearBgmCache()
         {
-            bgmParts.Clear();
+            bgmStems.Clear();
         }
 
         public void RemoveInput(ISampleProvider sample)

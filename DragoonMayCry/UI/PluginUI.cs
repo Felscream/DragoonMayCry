@@ -2,7 +2,8 @@ using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using DragoonMayCry.Audio;
 using DragoonMayCry.Score;
-using DragoonMayCry.Score.Style;
+using DragoonMayCry.Score.Style.Announcer;
+using DragoonMayCry.Score.Style.Rank;
 using DragoonMayCry.State;
 using KamiLib;
 using Lumina.Excel.GeneratedSheets;
@@ -23,12 +24,14 @@ namespace DragoonMayCry.UI
         private readonly Stopwatch hideRankUiStopwatch;
         private const float TimeToResetScoreAfterCombat = 10000;
         
-        public PluginUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager, FinalRankCalculator finalRankCalculator, EventHandler<bool> OnActiveOutsideInstanceChange)
+        public PluginUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager, FinalRankCalculator finalRankCalculator, StyleAnnouncerService styleAnnouncerService)
         {
             ConfigWindow = new ConfigWindow(this, Plugin.Configuration!);
-            ConfigWindow.ActiveOutsideInstanceChange += OnActiveOutsideInstanceChange;
+            ConfigWindow.ActiveOutsideInstanceChange += Plugin.OnActiveOutsideInstanceConfChange;
+            ConfigWindow.ToggleDynamicBgmChange += Plugin.ToggleDynamicBgm;
             ConfigWindow.SfxVolumeChange += AudioService.Instance.OnSfxVolumeChange;
             ConfigWindow.BgmVolumeChange += AudioService.Instance.OnBgmVolumeChange;
+            ConfigWindow.AnnouncerTypeChange += styleAnnouncerService.OnAnnouncerTypeChange;
 
             HowItWorksWindow = new HowItWorksWindow();
 

@@ -59,7 +59,7 @@ namespace DragoonMayCry.Score.Action
         public EventHandler? OnCastCanceled;
         public EventHandler<float>? OnFlyTextCreation;
         public EventHandler<float>? OnGcdClip;
-        public EventHandler<LimitBreakEvent>? OnLimitBreak;
+        public EventHandler<LimitBreakEvent>? UsingLimitBreak;
         public EventHandler? OnLimitBreakEffect;
         public EventHandler? OnLimitBreakCanceled;
 
@@ -322,7 +322,7 @@ namespace DragoonMayCry.Score.Action
             limitBreakCast = null;
             if (playerState.IsInCombat)
             {
-                OnLimitBreak?.Invoke(this, new LimitBreakEvent(false, false));
+                UsingLimitBreak?.Invoke(this, new LimitBreakEvent(false, false));
             }
         }
 
@@ -333,6 +333,7 @@ namespace DragoonMayCry.Score.Action
             if (playerState.IsInCombat)
             {
                 OnLimitBreakCanceled?.Invoke(this, EventArgs.Empty);
+                UsingLimitBreak?.Invoke(this, new LimitBreakEvent(false, false));
             }
         }
 
@@ -358,7 +359,7 @@ namespace DragoonMayCry.Score.Action
             limitBreakCast = new LimitBreak(gracePeriod, isTankLb, action?.Name!);
             limitBreakStopwatch.Restart();
             
-            OnLimitBreak?.Invoke(this, new LimitBreakEvent(isTankLb, true));
+            UsingLimitBreak?.Invoke(this, new LimitBreakEvent(isTankLb, true));
         }
 
         private unsafe void DetectClipping()

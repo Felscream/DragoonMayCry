@@ -5,7 +5,7 @@ using DragoonMayCry.Audio.BGM.FSM;
 
 namespace DragoonMayCry.Audio.BGM.FSM.States
 {
-    public interface FsmState
+    public interface IFsmState
     {
         public BgmState ID { get; }
 

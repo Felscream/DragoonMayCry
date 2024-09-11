@@ -1,5 +1,5 @@
 using DragoonMayCry.Score.Model;
-using DragoonMayCry.Score.Style;
+using DragoonMayCry.Score.Style.Rank;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using System;
@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static DragoonMayCry.Score.Style.StyleRankHandler;
+using static DragoonMayCry.Score.Style.Rank.StyleRankHandler;
 
 namespace DragoonMayCry.Score
 {

@@ -13,7 +13,7 @@ using static System.TimeZoneInfo;
 
 namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
 {
-    internal class BTLVerse : FsmState
+    internal class BTLVerse : IFsmState
     {
         // loop between verse and riff
         enum CombatLoopState
@@ -38,16 +38,16 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
-            { BgmId.CombatEnter1, BgmFsm.GetPathToAudio("CombatLoop\\111.ogg") },
-            { BgmId.CombatEnter2, BgmFsm.GetPathToAudio("CombatLoop\\029.ogg") },
-            { BgmId.CombatVerse1, BgmFsm.GetPathToAudio("CombatLoop\\017.ogg") },
-            { BgmId.CombatVerse2, BgmFsm.GetPathToAudio("CombatLoop\\040.ogg") },
-            { BgmId.CombatCoreLoop, BgmFsm.GetPathToAudio("CombatLoop\\coreloop.ogg") },
-            { BgmId.CombatCoreLoopTransition1, BgmFsm.GetPathToAudio("CombatLoop\\029.ogg") },
-            { BgmId.CombatCoreLoopTransition2, BgmFsm.GetPathToAudio("CombatLoop\\064.ogg") },
-            { BgmId.CombatCoreLoopExit1, BgmFsm.GetPathToAudio("CombatLoop\\039.ogg") },
-            { BgmId.CombatCoreLoopExit2, BgmFsm.GetPathToAudio("CombatLoop\\092.ogg") },
-            { BgmId.CombatCoreLoopExit3, BgmFsm.GetPathToAudio("CombatLoop\\093.ogg") },
+            { BgmId.CombatEnter1, DynamicBgmFsm.GetPathToAudio("CombatLoop\\111.ogg") },
+            { BgmId.CombatEnter2, DynamicBgmFsm.GetPathToAudio("CombatLoop\\029.ogg") },
+            { BgmId.CombatVerse1, DynamicBgmFsm.GetPathToAudio("CombatLoop\\017.ogg") },
+            { BgmId.CombatVerse2, DynamicBgmFsm.GetPathToAudio("CombatLoop\\040.ogg") },
+            { BgmId.CombatCoreLoop, DynamicBgmFsm.GetPathToAudio("CombatLoop\\coreloop.ogg") },
+            { BgmId.CombatCoreLoopTransition1, DynamicBgmFsm.GetPathToAudio("CombatLoop\\029.ogg") },
+            { BgmId.CombatCoreLoopTransition2, DynamicBgmFsm.GetPathToAudio("CombatLoop\\064.ogg") },
+            { BgmId.CombatCoreLoopExit1, DynamicBgmFsm.GetPathToAudio("CombatLoop\\039.ogg") },
+            { BgmId.CombatCoreLoopExit2, DynamicBgmFsm.GetPathToAudio("CombatLoop\\092.ogg") },
+            { BgmId.CombatCoreLoopExit3, DynamicBgmFsm.GetPathToAudio("CombatLoop\\093.ogg") },
         };
 
         private LinkedList<BgmId> combatLoop = new LinkedList<BgmId>();
