@@ -5,7 +5,7 @@ using System.Numerics;
 
 namespace DragoonMayCry.UI
 {
-    public class HowItWorksWindow : Window, IDisposable
+    public class HowItWorksWindow : Window
     {
         private readonly Vector4 goldColor = new Vector4(229, 48, 0, 255);
         public HowItWorksWindow(): base("DragoonMayCry - How it works")
@@ -24,8 +24,8 @@ namespace DragoonMayCry.UI
 
             ImGui.TextColored(goldColor, "\nRanking up");
             ImGui.Text("- You fill your style gauge by dealing damage. The value is read from the flying text.");
-            ImGui.Text("- DoTs are not currently tracked. Auto-attacks and DoT's that deal no damage on application will not be added to your score.");
-            ImGui.Text("- The expected damage output is based on your role and iLvL at the start of the encounter. It is calculated using an exponential regression on the nDPS 80th percentile from FFLogs on Dawntrail and Endwalker content, and some legacy ultimates pulls in 7.05.");
+            ImGui.Text("- DoTs are not currently tracked. DoT's that deal no damage on application will not be added to your score.");
+            ImGui.Text("- The expected damage output is based on your role and iLvL at the start of the encounter. It is calculated using an exponential regression on the nDPS 90th percentile from FFLogs on Dawntrail and Endwalker content, and some legacy ultimates pulls in 7.05.");
             ImGui.Text("- Limit breaks are cool.");
 
             ImGui.TextColored(goldColor, "\nDemotions");
@@ -42,7 +42,7 @@ namespace DragoonMayCry.UI
 
             ImGui.TextColored(goldColor, "\nFinal rank");
             ImGui.Text("- A final rank between D and S is attributed at the end of combat by selecting the tier in which you spent the most time in.");
-            ImGui.Text("- Getting demoted to a rank lower than A will substract time spent in S tier.");
+            ImGui.Text("- Every blunder will substract time spent in S tier.");
 
             ImGui.Text("\nI'd appreciate any feedback or bug report to improve the experience. You can find me on the XIVLauncher & Dalamud discord server.");
 
@@ -50,11 +50,6 @@ namespace DragoonMayCry.UI
             ImGui.TextColored(new Vector4(.75f, .75f, .75f, 1), "Listen people, I don't play the role so I have no idea how the experience is using this plugin as a healer. If you've got some ideas to improve it, send them to me :)");
 
            ImGui.TextColored(new Vector4(.75f, .75f, .75f, 1), "\n * Not all debuffs across all content have been identified, and some demotions may be applied wrongfully. Don't hesitate to send feedback if you find a debuff that should be removed or added.");
-
-        }
-
-        public void Dispose()
-        {
 
         }
     }

@@ -11,9 +11,9 @@ using System.Text;
 using System.Threading.Tasks;
 using static System.TimeZoneInfo;
 
-namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
+namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 {
-    internal class BTLVerse : IFsmState
+    internal class DTVerse : IFsmState
     {
         // loop between verse and riff
         enum CombatLoopState
@@ -38,16 +38,16 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
-            { BgmId.CombatEnter1, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\111.ogg") },
-            { BgmId.CombatEnter2, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\029.ogg") },
-            { BgmId.CombatVerse1, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\017.ogg") },
-            { BgmId.CombatVerse2, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\040.ogg") },
-            { BgmId.CombatCoreLoop, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\coreloop.ogg") },
-            { BgmId.CombatCoreLoopTransition1, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\029.ogg") },
-            { BgmId.CombatCoreLoopTransition2, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\064.ogg") },
-            { BgmId.CombatCoreLoopExit1, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\039.ogg") },
-            { BgmId.CombatCoreLoopExit2, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\092.ogg") },
-            { BgmId.CombatCoreLoopExit3, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\093.ogg") },
+            { BgmId.CombatEnter1, DynamicBgmService.GetPathToAudio("CombatLoop\\111.ogg") },
+            { BgmId.CombatEnter2, DynamicBgmService.GetPathToAudio("CombatLoop\\029.ogg") },
+            { BgmId.CombatVerse1, DynamicBgmService.GetPathToAudio("CombatLoop\\017.ogg") },
+            { BgmId.CombatVerse2, DynamicBgmService.GetPathToAudio("CombatLoop\\040.ogg") },
+            { BgmId.CombatCoreLoop, DynamicBgmService.GetPathToAudio("CombatLoop\\coreloop.ogg") },
+            { BgmId.CombatCoreLoopTransition1, DynamicBgmService.GetPathToAudio("CombatLoop\\029.ogg") },
+            { BgmId.CombatCoreLoopTransition2, DynamicBgmService.GetPathToAudio("CombatLoop\\064.ogg") },
+            { BgmId.CombatCoreLoopExit1, DynamicBgmService.GetPathToAudio("CombatLoop\\039.ogg") },
+            { BgmId.CombatCoreLoopExit2, DynamicBgmService.GetPathToAudio("CombatLoop\\092.ogg") },
+            { BgmId.CombatCoreLoopExit3, DynamicBgmService.GetPathToAudio("CombatLoop\\093.ogg") },
         };
 
         private LinkedList<BgmId> combatLoop = new LinkedList<BgmId>();
@@ -59,7 +59,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
         private int transitionTime = 0;
         private readonly Queue<ISampleProvider> samples;
         private readonly Random rand;
-        public BTLVerse(AudioService audioService)
+        public DTVerse(AudioService audioService)
         {
             rand = new Random();
             this.audioService = audioService;

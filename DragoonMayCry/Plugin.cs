@@ -37,7 +37,7 @@ public unsafe class Plugin : IDalamudPlugin
     private static FinalRankCalculator? FinalRankCalculator;
     private static AudioService? AudioService;
     private static DynamicBgmService? BgmService;
-    public static StyleAnnouncerService StyleAnnouncerService;
+    public static StyleAnnouncerService? StyleAnnouncerService;
     public Plugin()
     {
         PluginInterface.Create<Service>();
@@ -56,7 +56,7 @@ public unsafe class Plugin : IDalamudPlugin
         ScoreManager = new(StyleRankHandler, PlayerActionTracker);
         ScoreProgressBar = new(ScoreManager, StyleRankHandler, PlayerActionTracker, PlayerState);
         FinalRankCalculator = new(PlayerState, StyleRankHandler);
-        PluginUi = new(ScoreProgressBar, StyleRankHandler, ScoreManager, FinalRankCalculator, StyleAnnouncerService);
+        PluginUi = new(ScoreProgressBar, StyleRankHandler, ScoreManager, FinalRankCalculator, StyleAnnouncerService, BgmService);
         
 
         ScoreProgressBar.DemotionApplied += StyleRankHandler.OnDemotion;
@@ -149,11 +149,6 @@ public unsafe class Plugin : IDalamudPlugin
         }
     }
 
-    public static void ToggleDynamicBgm(object? sender, bool value)
-    {
-        BgmService?.ToggleDynamicBgmActivation();
-    }
-
     [Conditional("DEBUG")]
     public static void StartBgm()
     {
@@ -176,7 +171,7 @@ public unsafe class Plugin : IDalamudPlugin
     [Conditional("DEBUG")]
     public static void BgmTransitionNext()
     {
-        BgmService?.GetFsm().Promotion();
+        BgmService?.GetFsm().Promote();
     }
 
     [Conditional("DEBUG")]
@@ -188,6 +183,6 @@ public unsafe class Plugin : IDalamudPlugin
     [Conditional("DEBUG")]
     public static void BgmDemotion()
     {
-        BgmService?.GetFsm().Demotion();
+        BgmService?.GetFsm().Demote();
     }
 }

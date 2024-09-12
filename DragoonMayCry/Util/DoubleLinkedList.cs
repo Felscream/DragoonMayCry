@@ -47,6 +47,11 @@ namespace DragoonMayCry.Util
 
         public DoubleLinkedNode<T>? Find(T value)
         {
+            if(value == null)
+            {
+                return null;
+            }
+                
             var node = Head;
             while(node != null)
             {

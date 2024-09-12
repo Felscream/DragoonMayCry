@@ -35,8 +35,6 @@ namespace DragoonMayCry.Audio
         
         // to alternate between dead weight sfx
         private readonly AudioEngine audioEngine;
-        private readonly float sfxCooldown = 1f;
-        private double lastPlayTime = 0f;
         private static AudioService? instance;
         private AudioService()
         {
@@ -53,6 +51,16 @@ namespace DragoonMayCry.Audio
             }
            
             audioEngine.PlaySfx(key);
+        }
+
+        public void PlaySfx(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            {
+                Service.Log.Error($"Could not find audio file: [{path}]");
+                return;
+            }
+            audioEngine.PlaySfx(path);
         }
 
         public void OnSfxVolumeChange(object? sender, int volume)

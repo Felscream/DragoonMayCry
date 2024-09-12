@@ -11,9 +11,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
+namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 {
-    public class BTLIntro : IFsmState
+    public class DTIntro : IFsmState
     {
         enum IntroState
         {
@@ -28,8 +28,8 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
-            { BgmId.Intro, DynamicBgmService.GetPathToAudio("BuryTheLight\\Intro\\intro.ogg") },
-            { BgmId.CombatEnd, DynamicBgmService.GetPathToAudio("BuryTheLight\\end.ogg") },
+            { BgmId.Intro, DynamicBgmService.GetPathToAudio("Intro\\intro.ogg") },
+            { BgmId.CombatEnd, DynamicBgmService.GetPathToAudio("end.ogg") },
         };
 
         private readonly AudioService audioService;
@@ -39,7 +39,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
         private IntroState state = IntroState.OutOfCombat;
         private int nextStateTransitionTime = 0;
 
-        public BTLIntro(AudioService audioService)
+        public DTIntro(AudioService audioService)
         {
             currentTrackStopwatch = new Stopwatch();
 

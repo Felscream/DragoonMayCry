@@ -2,8 +2,11 @@ using Dalamud.Plugin.Services;
 using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Style;
+using Lumina;
+using NAudio.Vorbis;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using NVorbis;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -110,6 +113,22 @@ namespace DragoonMayCry.Audio
                 return;
             }
             AddSFXMixerInput(new CachedSoundSampleProvider(announcerSfx[trigger]));
+        }
+
+        public void PlaySfx(string path)
+        {
+            ISampleProvider sample;
+            try
+            {
+                var sound = new CachedSound(path);
+                sample = new CachedSoundSampleProvider(sound);
+            } catch(Exception e)
+            {
+                Service.Log.Error(e, $"Error while reading file ${path}");
+                return;
+            }
+            
+            sfxMixer.AddMixerInput(sample);
         }
 
         public ISampleProvider? PlayBgm(BgmId id, double fadeInDuration = 0d)

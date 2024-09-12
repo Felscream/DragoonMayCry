@@ -18,30 +18,27 @@ using System.Linq;
 
 namespace DragoonMayCry.UI;
 
-public class ConfigWindow : Window, IDisposable
+public class ConfigWindow : Window
 {
     public EventHandler<bool>? ActiveOutsideInstanceChange;
     public EventHandler<bool>? ToggleDynamicBgmChange;
     public EventHandler<int>? SfxVolumeChange;
     public EventHandler<int>? BgmVolumeChange;
-    public EventHandler<AnnouncerType> AnnouncerTypeChange;
+    
     private readonly DmcConfigurationOne configuration;
+    private readonly JobConfigurationWindow jobConfigurationWindow;
 
     // We give this window a constant ID using ###
     // This allows for labels being dynamic, like "{FPS Counter}fps###XYZ counter window",
     // and the window ID will always be "###XYZ counter window" for ImGui
-    public ConfigWindow(PluginUI pluginUi, DmcConfigurationOne configuration) : base("DragoonMayCry - Configuration")
+    public ConfigWindow(DmcConfigurationOne configuration, JobConfigurationWindow jobConfiguration) : base("DragoonMayCry - Configuration")
     {
 
-        Size = new Vector2(600,400);
+        Size = new Vector2(525,425);
         SizeCondition = ImGuiCond.Appearing;
-
+        jobConfigurationWindow = jobConfiguration;
         this.configuration = configuration;
     }
-
-    public void Dispose() { }
-
-
 
     public override void Draw()
     {
@@ -92,29 +89,12 @@ public class ConfigWindow : Window, IDisposable
                     ActiveOutsideInstanceChange?.Invoke(this, configuration.ActiveOutsideInstance.Value);
                 }
             })
+            .AddButton("Open job configuration", () => jobConfigurationWindow.Toggle())
             .Draw();
 
         var announcerValues = Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>().ToList();
         InfoBox.Instance.AddTitle("SFX")
             .AddConfigCheckbox("Play sound effects", configuration.PlaySoundEffects)
-            .AddAction(() =>
-            {
-                ImGui.SetNextItemWidth(200);
-                if(ImGui.BeginCombo("Style rank announcer", GetAnnouncerTypeLabel(configuration.Announcer.Value)))
-                {
-                    for(int i = 0; i < announcerValues.Count; i++)
-                    {
-                        if (ImGui.Selectable(GetAnnouncerTypeLabel(announcerValues[i]), configuration.Announcer.Value.Equals(announcerValues[i]))){
-                            configuration.Announcer.Value = announcerValues[i];
-                            KamiCommon.SaveConfiguration();
-                            AnnouncerTypeChange?.Invoke(this, announcerValues[i]);
-                        }
-                    }
-                    ImGui.EndCombo();
-                }
-            })
-            .SameLine()
-            .AddIconButton("play-sfx", Dalamud.Interface.FontAwesomeIcon.PlayCircle, () => Plugin.StyleAnnouncerService.PlayRandomAnnouncerLine())
             .AddConfigCheckbox("Force sound effect on blunders", configuration.ForceSoundEffectsOnBlunder)
             .AddAction(() => { 
                 if(ImGui.Checkbox("Apply game volume on sound effects", ref configuration.ApplyGameVolumeSfx.Value)){
@@ -124,8 +104,8 @@ public class ConfigWindow : Window, IDisposable
             })
             .AddAction(() =>
             {
-                ImGui.SetNextItemWidth(200f);
-                if (ImGui.SliderInt("Sound effect volume", ref configuration.SfxVolume.Value, 0, 200))
+                ImGui.SetNextItemWidth(150f);
+                if (ImGui.SliderInt("Sound effect volume", ref configuration.SfxVolume.Value, 0, 300))
                 {
                     KamiCommon.SaveConfiguration();
                     SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
@@ -133,7 +113,7 @@ public class ConfigWindow : Window, IDisposable
             })
             .AddString("Play each unique SFX only once every")
             .SameLine()
-            .AddSliderInt("occurrences", configuration.PlaySfxEveryOccurrences, 1, 20)
+            .AddSliderInt("occurrences", configuration.PlaySfxEveryOccurrences, 1, 20, 100)
             .Draw();
 
         InfoBox.Instance.AddTitle("Dynamic BGM - mega experimental")
@@ -144,7 +124,7 @@ public class ConfigWindow : Window, IDisposable
                     KamiCommon.SaveConfiguration();
                     ToggleDynamicBgmChange?.Invoke(this, configuration.EnableDynamicBgm.Value);
                 }
-                ImGuiComponents.HelpMarker("This will disable the game background music only inside instances. You may have to change your BGM configuration.");
+                ImGuiComponents.HelpMarker("This will disable the game's background music inside instances.");
             })
             .AddAction(() =>
             {
@@ -158,8 +138,8 @@ public class ConfigWindow : Window, IDisposable
             })
             .AddAction(() =>
             {
-                ImGui.SetNextItemWidth(200f);
-                if (ImGui.SliderInt("Background music volume", ref configuration.BgmVolume.Value, 0, 200))
+                ImGui.SetNextItemWidth(150f);
+                if (ImGui.SliderInt("Background music volume", ref configuration.BgmVolume.Value, 0, 300))
                 {
                     KamiCommon.SaveConfiguration();
                     BgmVolumeChange?.Invoke(this, configuration.BgmVolume.Value);
@@ -169,14 +149,14 @@ public class ConfigWindow : Window, IDisposable
 
 #if DEBUG
         InfoBox.Instance.AddTitle("Debug")
-            .AddButton("Dead weight", () => Plugin.StyleAnnouncerService.PlayBlunder())
-            .SameLine().AddButton("D", () => Plugin.StyleAnnouncerService.PlayForStyle(StyleType.D))
-            .SameLine().AddButton("C", () => Plugin.StyleAnnouncerService.PlayForStyle(StyleType.C))
-            .SameLine().AddButton("B", () => Plugin.StyleAnnouncerService.PlayForStyle(StyleType.B))
-            .SameLine().AddButton("A", () => Plugin.StyleAnnouncerService.PlayForStyle(StyleType.A))
-            .SameLine().AddButton("S", () => Plugin.StyleAnnouncerService.PlayForStyle(StyleType.S))
-            .SameLine().AddButton("SS", () => Plugin.StyleAnnouncerService.PlayForStyle(StyleType.SS))
-            .SameLine().AddButton("SSS", () => Plugin.StyleAnnouncerService.PlayForStyle(StyleType.SSS))
+            .AddButton("Dead weight", () => Plugin.StyleAnnouncerService?.PlayBlunder())
+            .SameLine().AddButton("D", () => Plugin.StyleAnnouncerService?.PlayForStyle(StyleType.D))
+            .SameLine().AddButton("C", () => Plugin.StyleAnnouncerService?.PlayForStyle(StyleType.C))
+            .SameLine().AddButton("B", () => Plugin.StyleAnnouncerService?.PlayForStyle(StyleType.B))
+            .SameLine().AddButton("A", () => Plugin.StyleAnnouncerService?.PlayForStyle(StyleType.A))
+            .SameLine().AddButton("S", () => Plugin.StyleAnnouncerService?.PlayForStyle(StyleType.S))
+            .SameLine().AddButton("SS", () => Plugin.StyleAnnouncerService?.PlayForStyle(StyleType.SS))
+            .SameLine().AddButton("SSS", () => Plugin.StyleAnnouncerService?.PlayForStyle(StyleType.SSS))
             .SameLine().AddButton("BGM test", () => Plugin.StartBgm())
             .SameLine().AddButton("Stop BGM", () => Plugin.StopBgm())
             .AddButton("BGM Enter combat", () => Plugin.BgmTransitionNext())
@@ -189,7 +169,7 @@ public class ConfigWindow : Window, IDisposable
         }
     }
 
-    private string GetAnnouncerTypeLabel(AnnouncerType type)
+    private static string GetAnnouncerTypeLabel(AnnouncerType type)
     {
         return type switch
         {
@@ -197,7 +177,8 @@ public class ConfigWindow : Window, IDisposable
             AnnouncerType.DmC5 => "Devil May Cry 5",
             AnnouncerType.DmC5Balrog => "Devil May Cry 5 / Balrog VA",
             AnnouncerType.Nico => "Nico",
-            AnnouncerType.Morrison => "Morrison"
+            AnnouncerType.Morrison => "Morrison",
+            _ => "Unknown"
         };
     }
 }

@@ -20,7 +20,7 @@ namespace DragoonMayCry.State
     public unsafe class PlayerState : IDisposable
     {
         public bool IsInCombat => CheckCondition([ConditionFlag.InCombat]);
-        public bool IsInsideInstance => CheckCondition([ConditionFlag.BoundByDuty]);
+        public bool IsInsideInstance => CheckCondition([ConditionFlag.BoundByDuty, ConditionFlag.BoundByDuty56, ConditionFlag.BoundByDuty95]);
         public bool IsDead => Player != null && Player.IsDead;
         public bool IsLoggedIn => Player != null;
         public IPlayerCharacter? Player => Service.ClientState.LocalPlayer;

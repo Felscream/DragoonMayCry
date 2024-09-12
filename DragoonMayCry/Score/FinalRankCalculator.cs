@@ -68,7 +68,7 @@ namespace DragoonMayCry.Score
                 return;
             }
             saveTimeInTier(rankChange.PreviousRank);
-            if(rankChange.NewRank < rankChange.PreviousRank && rankChange.NewRank < StyleType.A)
+            if(rankChange.IsBlunder)
             {
                 if (timeInEachTier.ContainsKey(StyleType.S))
                 {

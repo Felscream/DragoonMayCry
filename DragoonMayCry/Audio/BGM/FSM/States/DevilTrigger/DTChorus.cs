@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
+namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 {
-    internal class BTLChorus : IFsmState
+    internal class DTChorus : IFsmState
     {
         enum PeakState
         {
@@ -39,14 +39,14 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
-            { BgmId.ChorusIntro1, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\025.ogg") },
-            { BgmId.ChorusIntro2, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\094.ogg") },
-            { BgmId.Riff, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\062.ogg") },
-            { BgmId.Chorus, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\112.ogg") },
-            { BgmId.Demotion, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\087.ogg") },
-            { BgmId.ChorusTransition1, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\transition1.ogg") },
-            { BgmId.ChorusTransition2, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\transition2.ogg") },
-            { BgmId.ChorusTransition3, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\transition3.ogg") },
+            { BgmId.ChorusIntro1, DynamicBgmService.GetPathToAudio("CombatChorus\\025.ogg") },
+            { BgmId.ChorusIntro2, DynamicBgmService.GetPathToAudio("CombatChorus\\094.ogg") },
+            { BgmId.Riff, DynamicBgmService.GetPathToAudio("CombatChorus\\062.ogg") },
+            { BgmId.Chorus, DynamicBgmService.GetPathToAudio("CombatChorus\\112.ogg") },
+            { BgmId.Demotion, DynamicBgmService.GetPathToAudio("CombatChorus\\087.ogg") },
+            { BgmId.ChorusTransition1, DynamicBgmService.GetPathToAudio("CombatChorus\\transition1.ogg") },
+            { BgmId.ChorusTransition2, DynamicBgmService.GetPathToAudio("CombatChorus\\transition2.ogg") },
+            { BgmId.ChorusTransition3, DynamicBgmService.GetPathToAudio("CombatChorus\\transition3.ogg") },
         };
 
         private readonly AudioService audioService;
@@ -71,7 +71,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
         private int nextStateTransitionTime;
         private int elapsedStopwatchTimeBeforeDemotion;
 
-        public BTLChorus(AudioService audioService)
+        public DTChorus(AudioService audioService)
         {
             this.audioService = audioService;
             currentTrackStopwatch = new Stopwatch();

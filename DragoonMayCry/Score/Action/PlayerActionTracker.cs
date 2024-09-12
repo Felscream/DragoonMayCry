@@ -455,7 +455,6 @@ namespace DragoonMayCry.Score.Action
 
             // TODO Some DoTs deal no damage on application,
             // will have to figure out what to do about that
-            Service.Log.Debug(text2.ToString());
             if (actionName == null || text2 == null)
             {
                 return;
