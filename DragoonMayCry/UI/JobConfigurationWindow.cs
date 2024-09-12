@@ -38,7 +38,7 @@ namespace DragoonMayCry.UI
         private Setting<AnnouncerType> selectedAnnouncerPreview = new(AnnouncerType.DmC5);
         public JobConfigurationWindow(DmcConfigurationOne configuration) : base("DragoonMayCry - Job configuration")
         {
-            Size = new System.Numerics.Vector2(1000, 320);
+            Size = new System.Numerics.Vector2(600, 320);
             SizeCondition = ImGuiCond.Appearing;
 
             this.configuration = configuration;
@@ -69,7 +69,7 @@ namespace DragoonMayCry.UI
                 {
                     ImGui.Text(item.entry.Key.ToString());
                     ImGui.Indent();
-                    //ImGui.BeginDisabled(PlayerState.GetInstance().IsInCombat);
+                    ImGui.BeginDisabled(PlayerState.GetInstance().IsInCombat);
                     ImGui.Text("Announcer");
                     ImGui.SameLine();
                     ImGui.SetNextItemWidth(150);
@@ -86,10 +86,11 @@ namespace DragoonMayCry.UI
                         }
                         ImGui.EndCombo();
                     }
-                    //ImGui.EndDisabled();
-                    //ImGui.BeginDisabled(PlayerState.GetInstance().IsInsideInstance);
+                    ImGui.EndDisabled();
+                    ImGui.BeginDisabled(PlayerState.GetInstance().IsInsideInstance);
                     ImGui.Text("Dynamic BGM");
                     ImGui.SameLine();
+                    ImGui.SetNextItemWidth(130);
                     if (ImGui.BeginCombo($"##bgm-{item.entry.Key}", GetBgmLabel(item.entry.Value.Bgm.Value)))
                     {
                         for (int i = 0; i < bgmOptions.Count(); i++)
@@ -102,11 +103,11 @@ namespace DragoonMayCry.UI
                         }
                         ImGui.EndCombo();
                     }
-                    //ImGui.EndDisabled();
+                    ImGui.EndDisabled();
                     ImGui.Unindent();
                 });
 
-                if (item.index % 2 != 0)
+                if (item.index % 2 != 0 || item.index == configuration.JobConfiguration.Count - 1)
                 {
                     row?.EndRow();
                 }

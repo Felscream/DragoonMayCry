@@ -2,6 +2,7 @@ using Dalamud.Game.Config;
 using DragoonMayCry.Audio.BGM.FSM;
 using DragoonMayCry.Audio.BGM.FSM.States;
 using DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight;
+using DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
 using DragoonMayCry.Score.Style.Rank;
@@ -23,6 +24,7 @@ namespace DragoonMayCry.Audio.BGM
         public enum Bgm
         {
             BuryTheLight,
+            DevilTrigger,
         }
         private readonly Dictionary<BgmState, IFsmState> buryTheLightStates;
         private readonly Dictionary<BgmState, IFsmState> devilTriggerStates;
@@ -45,17 +47,33 @@ namespace DragoonMayCry.Audio.BGM
             gameBgmState = Service.GameConfig.System.GetBool("IsSndBgm");
             audioService = AudioService.Instance;
 
-            IFsmState intro = new BTLIntro(audioService);
-            IFsmState combat = new BTLVerse(audioService);
-            IFsmState peak = new BTLChorus(audioService);
+            IFsmState btlIntro = new BTLIntro(audioService);
+            IFsmState btlCombat = new BTLVerse(audioService);
+            IFsmState btlPeak = new BTLChorus(audioService);
             buryTheLightStates = new Dictionary<BgmState, IFsmState>
             {
-                { BgmState.Intro, intro },
-                { BgmState.CombatLoop, combat },
-                { BgmState.CombatPeak, peak },
+                { BgmState.Intro, btlIntro },
+                { BgmState.CombatLoop, btlCombat },
+                { BgmState.CombatPeak, btlPeak },
+            };
+
+            IFsmState dtIntro = new DTIntro(audioService);
+            IFsmState dtCombat = new DTVerse(audioService);
+            IFsmState dtPeak = new DTChorus(audioService);
+            devilTriggerStates = new Dictionary<BgmState, IFsmState>
+            {
+                { BgmState.Intro, dtIntro },
+                { BgmState.CombatLoop, dtCombat },
+                { BgmState.CombatPeak, dtPeak },
             };
 
             bgmStates.Add(Bgm.BuryTheLight, buryTheLightStates);
+            bgmStates.Add(Bgm.DevilTrigger, devilTriggerStates);
+
+#if DEBUG
+            currentBgm = Bgm.DevilTrigger;
+            LoadBgm(currentBgm);
+#endif
         }
 
         public DynamicBgmFsm GetFsm()
@@ -112,7 +130,6 @@ namespace DragoonMayCry.Audio.BGM
             {
                 return;
             }
-
             bgmFsm.LoadBgmStates(bgmStates[currentBgm]);
         }
 

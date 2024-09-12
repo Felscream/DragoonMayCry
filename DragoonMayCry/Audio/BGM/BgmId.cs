@@ -16,6 +16,7 @@ namespace DragoonMayCry.Audio.BGM
         CombatCoreLoop,
         CombatCoreLoopTransition1,
         CombatCoreLoopTransition2,
+        CombatCoreLoopTransition3,
         CombatCoreLoopExit1,
         CombatCoreLoopExit2,
         CombatCoreLoopExit3,

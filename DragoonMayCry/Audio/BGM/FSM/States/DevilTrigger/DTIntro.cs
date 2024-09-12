@@ -24,12 +24,12 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
         public BgmState ID { get { return BgmState.Intro; } }
 
         private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new Dictionary<BgmId, BgmTrackData> {
-            { BgmId.Intro, new BgmTrackData(1600, 51500) },
+            { BgmId.Intro, new BgmTrackData(0, 96000) },
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
-            { BgmId.Intro, DynamicBgmService.GetPathToAudio("Intro\\intro.ogg") },
-            { BgmId.CombatEnd, DynamicBgmService.GetPathToAudio("end.ogg") },
+            { BgmId.Intro, DynamicBgmService.GetPathToAudio("DevilTrigger\\intro.ogg") },
+            { BgmId.CombatEnd, DynamicBgmService.GetPathToAudio("DevilTrigger\\end.ogg") },
         };
 
         private readonly AudioService audioService;
@@ -51,7 +51,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
         {
             state = IntroState.OutOfCombat;
             Service.Log.Debug($"Playing {BgmId.Intro}");
-            var sample = audioService.PlayBgm(BgmId.Intro, 20000);
+            var sample = audioService.PlayBgm(BgmId.Intro, 100);
             if (sample != null)
             {
                 samples.Enqueue(sample);
@@ -123,8 +123,8 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             if (exit == ExitType.EndOfCombat)
             {
                 state = IntroState.OutOfCombat;
-                transitionTime = 1600;
-                nextStateTransitionTime = 8000;
+                transitionTime = 0;
+                nextStateTransitionTime = 4500;
                 currentTrackStopwatch.Restart();
                 audioService.PlayBgm(BgmId.CombatEnd);
             }
