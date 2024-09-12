@@ -47,6 +47,10 @@ namespace DragoonMayCry.Score
 
         private void OnCombat(object? sender, bool enteredCombat)
         {
+            if (!Plugin.CanRunDmc())
+            {
+                return;
+            }
             if (enteredCombat)
             {
                 timeInEachTier = new Dictionary<StyleType, double>();
@@ -63,6 +67,11 @@ namespace DragoonMayCry.Score
 
         private void OnRankChange(object? sender, RankChangeData rankChange)
         {
+            if (!Plugin.CanRunDmc())
+            {
+                return;
+            }
+
             currentTier = rankChange.NewRank;
             if (!tierTimer.IsRunning) {
                 return;

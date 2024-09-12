@@ -5,6 +5,7 @@ using DragoonMayCry.Audio;
 using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.BGM.FSM;
 using DragoonMayCry.Configuration;
+using DragoonMayCry.Data;
 using DragoonMayCry.Score;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
@@ -12,6 +13,7 @@ using DragoonMayCry.Score.Style.Announcer;
 using DragoonMayCry.Score.Style.Rank;
 using DragoonMayCry.State;
 using DragoonMayCry.UI;
+using DragoonMayCry.Util;
 using KamiLib;
 using Newtonsoft.Json;
 using System;
@@ -38,12 +40,14 @@ public unsafe class Plugin : IDalamudPlugin
     private static AudioService? AudioService;
     private static DynamicBgmService? BgmService;
     public static StyleAnnouncerService? StyleAnnouncerService;
+    private static bool IsCombatJob;
     public Plugin()
     {
         PluginInterface.Create<Service>();
 
         KamiCommon.Initialize(PluginInterface, "DragoonMayCry", () => Configuration?.Save());
         PlayerState = PlayerState.GetInstance();
+        PlayerState.RegisterJobChangeHandler(OnJobChange);
 
         Configuration = InitConfig();
         Configuration.Save();
@@ -72,11 +76,10 @@ public unsafe class Plugin : IDalamudPlugin
 
     public static bool CanRunDmc()
     {
-        var playerState = PlayerState.GetInstance();
-        return playerState.IsCombatJob()
-               && playerState.IsInCombat
-               && !playerState.IsInPvp()
-               && (playerState.IsInsideInstance ||
+        return IsCombatJob
+               && PlayerState!.IsInCombat
+               && !PlayerState.IsInPvp()
+               && (PlayerState.IsInsideInstance ||
                    Configuration!.ActiveOutsideInstance);
     }
 
@@ -147,6 +150,11 @@ public unsafe class Plugin : IDalamudPlugin
             Service.Log.Warning("Your configuration migration failed, it has been reinitialized");
             return new DmcConfigurationOne();
         }
+    }
+
+    private void OnJobChange(object? sender, JobIds job)
+    {
+        IsCombatJob = JobHelper.IsCombatJob(job);
     }
 
     [Conditional("DEBUG")]
