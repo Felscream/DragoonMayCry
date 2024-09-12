@@ -18,7 +18,8 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
         enum IntroState
         {
             OutOfCombat,
-            CombatStart
+            CombatStart,
+            EndCombat
         }
         public string Name { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public BgmState ID { get { return BgmState.Intro; } }
@@ -71,7 +72,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
             if (currentTrackStopwatch.Elapsed.TotalMilliseconds > transitionTime)
             {
 
-                if (state != IntroState.OutOfCombat)
+                if (state != IntroState.OutOfCombat )
                 {
                     TransitionToNextState(state);
                 }
@@ -122,7 +123,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
 
             if (exit == ExitType.EndOfCombat)
             {
-                state = IntroState.OutOfCombat;
+                state = IntroState.EndCombat;
                 transitionTime = 1600;
                 nextStateTransitionTime = 8000;
                 currentTrackStopwatch.Restart();

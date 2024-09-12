@@ -18,7 +18,8 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
         enum IntroState
         {
             OutOfCombat,
-            CombatStart
+            CombatStart,
+            EndCombat,
         }
         public string Name { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public BgmState ID { get { return BgmState.Intro; } }
@@ -122,8 +123,8 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
             if (exit == ExitType.EndOfCombat)
             {
-                state = IntroState.OutOfCombat;
-                transitionTime = 0;
+                state = IntroState.EndCombat;
+                transitionTime = 100;
                 nextStateTransitionTime = 4500;
                 currentTrackStopwatch.Restart();
                 audioService.PlayBgm(BgmId.CombatEnd);
