@@ -34,6 +34,7 @@ namespace DragoonMayCry.UI
         public EventHandler<JobAnnouncerType>? JobAnnouncerTypeChange;
         private readonly DmcConfigurationOne configuration;
         private readonly IList<AnnouncerType> announcers = Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>().ToList();
+        private readonly IList<JobConfiguration.BgmConfiguration> bgmOptions = Enum.GetValues(typeof(JobConfiguration.BgmConfiguration)).Cast<JobConfiguration.BgmConfiguration>().ToList();
         private Setting<AnnouncerType> selectedAnnouncerPreview = new(AnnouncerType.DmC5);
         public JobConfigurationWindow(DmcConfigurationOne configuration) : base("DragoonMayCry - Job configuration")
         {
@@ -53,6 +54,8 @@ namespace DragoonMayCry.UI
                 .SameLine().AddIconButton("preview", Dalamud.Interface.FontAwesomeIcon.Play, () => Plugin.StyleAnnouncerService?.PlayRandomAnnouncerLine(selectedAnnouncerPreview.Value))
                 .Draw();
 
+            InfoBox.Instance
+                .AddTitle("Job Configuration");
             var table = InfoBox.Instance.BeginTable();
             InfoBoxTableRow? row = null;
             foreach (var item in configuration.JobConfiguration.Select((entry, index) => new { index, entry}))
@@ -66,11 +69,11 @@ namespace DragoonMayCry.UI
                 {
                     ImGui.Text(item.entry.Key.ToString());
                     ImGui.Indent();
-                    ImGui.BeginDisabled(PlayerState.GetInstance().IsInCombat || PlayerState.GetInstance().IsInsideInstance);
+                    //ImGui.BeginDisabled(PlayerState.GetInstance().IsInCombat);
                     ImGui.Text("Announcer");
                     ImGui.SameLine();
-                    ImGui.SetNextItemWidth(200);
-                    if (ImGui.BeginCombo($"##{item.entry.Key}", GetAnnouncerTypeLabel(item.entry.Value.Announcer.Value)))
+                    ImGui.SetNextItemWidth(150);
+                    if (ImGui.BeginCombo($"##announcer-{item.entry.Key}", GetAnnouncerTypeLabel(item.entry.Value.Announcer.Value)))
                     {
                         for (int i = 0; i < announcers.Count(); i++)
                         {
@@ -83,7 +86,23 @@ namespace DragoonMayCry.UI
                         }
                         ImGui.EndCombo();
                     }
-                    ImGui.EndDisabled();
+                    //ImGui.EndDisabled();
+                    //ImGui.BeginDisabled(PlayerState.GetInstance().IsInsideInstance);
+                    ImGui.Text("Dynamic BGM");
+                    ImGui.SameLine();
+                    if (ImGui.BeginCombo($"##bgm-{item.entry.Key}", GetBgmLabel(item.entry.Value.Bgm.Value)))
+                    {
+                        for (int i = 0; i < bgmOptions.Count(); i++)
+                        {
+                            if (ImGui.Selectable(GetBgmLabel(bgmOptions[i]), item.entry.Value.Bgm.Value.Equals(bgmOptions[i])))
+                            {
+                                configuration.JobConfiguration[item.entry.Key].Bgm.Value = bgmOptions[i];
+                                KamiCommon.SaveConfiguration();
+                            }
+                        }
+                        ImGui.EndCombo();
+                    }
+                    //ImGui.EndDisabled();
                     ImGui.Unindent();
                 });
 
@@ -105,6 +124,18 @@ namespace DragoonMayCry.UI
                 AnnouncerType.DmC5Balrog => "Devil May Cry 5 / Balrog VA",
                 AnnouncerType.Nico => "Nico",
                 AnnouncerType.Morrison => "Morrison",
+                _ => "Unknown"
+            };
+        }
+
+        private static string GetBgmLabel(JobConfiguration.BgmConfiguration bgm)
+        {
+            return bgm switch
+            {
+                JobConfiguration.BgmConfiguration.Off => "Off",
+                JobConfiguration.BgmConfiguration.BuryTheLight => "Bury the Light",
+                JobConfiguration.BgmConfiguration.DevilTrigger => "Devil Trigger",
+                JobConfiguration.BgmConfiguration.Randomize => "Randomize",
                 _ => "Unknown"
             };
         }

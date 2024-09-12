@@ -89,8 +89,6 @@ namespace DragoonMayCry.Score.Action
         private readonly PlayerState playerState;
         private LuminaCache<LuminaAction> luminaActionCache;
 
-        private CombatStopwatch combatStopwatch;
-
         private const float GcdDropThreshold = 0.1f;
         private ushort lastDetectedClip = 0;
         private float currentWastedGcd = 0;
@@ -118,7 +116,6 @@ namespace DragoonMayCry.Score.Action
             actionHistory = new Queue<FlyTextData>();
             luminaActionCache = LuminaCache<LuminaAction>.Instance;
             playerState = PlayerState.GetInstance();
-            combatStopwatch = CombatStopwatch.GetInstance();
             limitBreakStopwatch = new Stopwatch();
             actionManager =
                 (State.ActionManagerLight*)FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();

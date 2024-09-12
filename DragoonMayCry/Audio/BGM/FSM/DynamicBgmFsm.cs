@@ -45,7 +45,6 @@ namespace DragoonMayCry.Audio.BGM.FSM
             this.styleRankHandler.StyleRankChange += OnRankChange;
             playerState = PlayerState.GetInstance();
             playerState.RegisterCombatStateChangeHandler(OnCombatChange);
-            playerState.RegisterInstanceChangeHandler(OnInstanceChange);
             this.framework = Service.Framework;
             this.audioService = AudioService.Instance;
             stateTransitionStopwatch = new Stopwatch();
@@ -79,6 +78,11 @@ namespace DragoonMayCry.Audio.BGM.FSM
             }
 
             currentState?.Update();
+
+            if(playerState.IsInCombat && currentState?.ID == BgmState.Intro && candidateState == null)
+            {
+                currentStateNode = currentStateNode.Next;
+            }
 
             if (stateTransitionStopwatch.IsRunning && stateTransitionStopwatch.Elapsed.TotalMilliseconds > nextTransitionTime)
             {
@@ -116,18 +120,21 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
         public void ResetToIntro()
         {
-            if(currentBgmStates == null)
+            IsActive = false;
+            
+            currentStateNode = bgmStates.Head!;
+            stateTransitionStopwatch.Reset();
+
+            if (currentBgmStates == null)
             {
                 return;
             }
-            IsActive = false;
+            
             foreach (var entry in currentBgmStates)
             {
                 entry.Value.Reset();
             }
             currentState = currentBgmStates[BgmState.Intro];
-            currentStateNode = bgmStates.Head!;
-            stateTransitionStopwatch.Reset();
         }
 
         private void GoToNextState()
@@ -197,34 +204,14 @@ namespace DragoonMayCry.Audio.BGM.FSM
             stateTransitionStopwatch.Restart();
         }
 
-        private void OnInstanceChange(object? sender, bool isInInstance)
-        {
-            ResetToIntro();
-
-            audioService.StopBgm();
-            if (CanPlayDynamicBgm(isInInstance))
-            {
-                Start();
-            }
-        }
-
-        private bool CanPlayDynamicBgm(bool isInInstance)
-        {
-            return playerState.Player != null
-                            && !playerState.IsInPvp()
-                            && isInInstance
-                            && Plugin.Configuration!.EnableDynamicBgm
-                            && SoundFilesLoaded
-                            && playerState.IsCombatJob();
-        }
-
         private void OnCombatChange(object? sender, bool isInCombat)
         {
-            this.isInCombat = isInCombat; 
             if (!IsActive)
             {
                 return;
             }
+            this.isInCombat = isInCombat; 
+            
             if (isInCombat && currentState?.ID == BgmState.Intro)
             {
                 Promote();
@@ -268,14 +255,6 @@ namespace DragoonMayCry.Audio.BGM.FSM
         {
             ResetToIntro();
             audioService.StopBgm();
-        }
-
-        public void Activate()
-        {
-            if (CanPlayDynamicBgm(playerState.IsInsideInstance))
-            {
-                Start();
-            }
         }
     }
 
