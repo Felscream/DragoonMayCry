@@ -76,6 +76,7 @@ public unsafe class Plugin : IDalamudPlugin
 
     public static bool CanRunDmc()
     {
+        // A warning appears if PlayerState#IsCombatJob is used directly
         return IsCombatJob
                && PlayerState!.IsInCombat
                && !PlayerState.IsInPvp()

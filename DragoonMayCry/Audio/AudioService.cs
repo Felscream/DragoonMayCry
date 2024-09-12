@@ -23,11 +23,11 @@ namespace DragoonMayCry.Audio
             } 
         }
 
-        private static readonly List<string> SfxGameSettings = new List<string>
+        private static readonly HashSet<string> SfxGameSettings = new HashSet<string>
         {
             "IsSndSe", "IsSndMaster", "SoundSe", "SoundMaster"
         };
-        private static readonly List<string> BgmGameSettings = new List<string>
+        private static readonly HashSet<string> BgmGameSettings = new HashSet<string>
         {
             "IsSndMaster", "SoundMaster"
         };
@@ -40,6 +40,7 @@ namespace DragoonMayCry.Audio
         {
             audioEngine = new AudioEngine();
             audioEngine.UpdateSfxVolume(GetSfxVolume());
+            audioEngine.UpdateBgmVolume(GetBgmVolume());
             Service.GameConfig.SystemChanged += OnSystemChange;
         }
 
@@ -133,7 +134,9 @@ namespace DragoonMayCry.Audio
             var configOption = e.Option.ToString();
             if (SfxGameSettings.Contains(configOption)){
                 audioEngine.UpdateSfxVolume(GetSfxVolume());
-            } else if (BgmGameSettings.Contains(configOption))
+            }
+            
+            if (BgmGameSettings.Contains(configOption))
             {
                 audioEngine.UpdateBgmVolume(GetBgmVolume());
             }

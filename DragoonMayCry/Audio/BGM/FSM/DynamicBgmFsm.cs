@@ -81,7 +81,12 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
             if(playerState.IsInCombat && currentState?.ID == BgmState.Intro && candidateState == null)
             {
-                currentStateNode = currentStateNode.Next;
+                audioService.StopBgm();
+                currentState.Exit(ExitType.ImmediateExit);
+                currentStateNode = bgmStates.Find(BgmState.CombatLoop)!;
+                currentState = currentBgmStates![currentStateNode.Value];
+                currentState?.Enter(false);
+                
             }
 
             if (stateTransitionStopwatch.IsRunning && stateTransitionStopwatch.Elapsed.TotalMilliseconds > nextTransitionTime)

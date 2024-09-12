@@ -10,6 +10,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
     {
         EndOfCombat,
         Demotion,
-        Promotion
+        Promotion,
+        ImmediateExit
     }
 }

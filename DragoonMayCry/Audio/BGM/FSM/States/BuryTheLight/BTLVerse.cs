@@ -183,10 +183,17 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
 
         public int Exit(ExitType exit)
         {
+            transitionTime = exit == ExitType.EndOfCombat ? 1600 : transitionTimePerId[BgmId.CombatCoreLoopExit1].EffectiveStart;
             var nextTransitionTime = transitionTimePerId[BgmId.CombatCoreLoopExit1].TransitionStart;
             if (currentState == CombatLoopState.Exit)
             {
                 nextTransitionTime = (int)Math.Max(nextTransitionTime - currentTrackStopwatch.ElapsedMilliseconds, 0);
+            } 
+            else if(exit == ExitType.ImmediateExit)
+            {
+                transitionTime = 0;
+                LeaveState();
+                nextTransitionTime = 0;
             }
             else
             {
@@ -203,7 +210,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
                 currentTrackStopwatch.Restart();
             }
             currentState = CombatLoopState.Exit;
-            transitionTime = exit == ExitType.EndOfCombat ? 1600 : transitionTimePerId[BgmId.CombatCoreLoopExit1].EffectiveStart;
+            
 
             return nextTransitionTime;
         }
