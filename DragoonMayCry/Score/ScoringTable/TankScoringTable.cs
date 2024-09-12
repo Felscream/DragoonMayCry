@@ -16,7 +16,7 @@ namespace DragoonMayCry.Score.Table
                 { StyleType.B, new StyleScoring(58000, 8000, 5400, 1) },
                 { StyleType.A, new StyleScoring(100000, 8000, 10000, 0.97f) },
                 { StyleType.S, new StyleScoring(100000, 15000, 10000, 0.85f) },
-                { StyleType.SS, new StyleScoring(70000, 15000, 7000, 0.75f) },
+                { StyleType.SS, new StyleScoring(70000, 15000, 7000, 0.6f) },
                 { StyleType.SSS, new StyleScoring(60000, 13000, 6000, 0.4f) },
             };
 
@@ -43,7 +43,7 @@ namespace DragoonMayCry.Score.Table
 
         protected override float GetDpsAtIlvl(int ilvl)
         {
-            return (float)(45.1f * Math.Exp(0.00813f * ilvl));
+            return (float)(40f * Math.Exp(0.00835f * ilvl));
         }
     }
 }
