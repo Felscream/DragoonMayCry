@@ -34,7 +34,7 @@ namespace DragoonMayCry.Score.Style.Announcer
         private bool isCastingLimitBreak;
 
         private double lastPlayTime = 0f;
-        private IStyleAnnouncer announcer;
+        private IStyleAnnouncer? announcer;
 
         public StyleAnnouncerService(StyleRankHandler styleRankHandler, PlayerActionTracker actionTracker)
         {
@@ -54,12 +54,11 @@ namespace DragoonMayCry.Score.Style.Announcer
             balrogAnnouncer = new DmC5BalrogAnnouncer();
             nicoAnnouncer = new NicoAnnouncer();
             morrisonAnnouncer = new MorrisonAnnouncer();
-            UpdateAnnouncer();
         }
 
         public void PlaySfx(SoundId key, bool force = false)
         {
-            if (!Plugin.Configuration!.PlaySoundEffects)
+            if (!Plugin.Configuration!.PlaySoundEffects || announcer == null)
             {
                 return;
             }
@@ -161,14 +160,6 @@ namespace DragoonMayCry.Score.Style.Announcer
             };
         }
 
-        public void PlayRandomAnnouncerLine()
-        {
-            var lines = announcer.GetAnnouncerFilesById().Keys.ToList();
-            var index = random.Next(lines.Count);
-
-            audioService.PlaySfx(SelectRandomSfx(lines));
-        }
-
         public void PlayRandomAnnouncerLine(AnnouncerType announcerType)
         {
             var styleAnnouncer = GetAnnouncerByType(announcerType);
@@ -179,7 +170,7 @@ namespace DragoonMayCry.Score.Style.Announcer
 
         private void OnAssetsReady(object? sender, bool assetsReady)
         {
-            if(!assetsReady)
+            if(!assetsReady || announcer == null)
             {
                 return;
             }
@@ -190,11 +181,11 @@ namespace DragoonMayCry.Score.Style.Announcer
         private void LoadAnnouncer()
         {
             soundIdsNextAvailability.Clear();
-            audioService.RegisterAnnouncerSfx(announcer.GetAnnouncerFilesById());
+            audioService.RegisterAnnouncerSfx(announcer!.GetAnnouncerFilesById());
         }
 
         private void OnRankChange(object? sender, StyleRankHandler.RankChangeData data) {
-            if (!Plugin.CanRunDmc())
+            if (!Plugin.CanRunDmc() || announcer == null)
             {
                 return;
             }
@@ -235,17 +226,17 @@ namespace DragoonMayCry.Score.Style.Announcer
         [Conditional("DEBUG")]
         public void PlayBlunder()
         {
-            var sfx = SelectRandomSfx(announcer.GetBlunderVariations());
+            var sfx = SelectRandomSfx(dmc5Announcer.GetBlunderVariations());
             PlaySfx(sfx, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
         }
 
         [Conditional("DEBUG")]
         public void PlayForStyle(StyleType type)
         {
-            if (!announcer.GetStyleAnnouncementVariations().ContainsKey(type)){
+            if (!dmc5Announcer.GetStyleAnnouncementVariations().ContainsKey(type)){
                 return;
             }
-            var sfx = SelectRandomSfx(announcer.GetStyleAnnouncementVariations()[type]);
+            var sfx = SelectRandomSfx(dmc5Announcer.GetStyleAnnouncementVariations()[type]);
             PlaySfx(sfx, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
         }
     }
