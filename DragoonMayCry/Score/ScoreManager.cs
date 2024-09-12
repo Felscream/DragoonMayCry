@@ -183,8 +183,8 @@ namespace DragoonMayCry.Score
             var nextStyleScoring = jobScoringTable[data.NewRank];
             if ((int)CurrentScoreRank.Rank < (int)data.NewRank)
             {
-                CurrentScoreRank.Score = (float)Math.Clamp(CurrentScoreRank.Score %
-                                                           nextStyleScoring.Threshold, 0, nextStyleScoring.Threshold * 0.5); ;
+                CurrentScoreRank.Score = (float)Math.Clamp((CurrentScoreRank.Score - CurrentScoreRank.StyleScoring.Threshold) %
+                                                           nextStyleScoring.Threshold, 0, nextStyleScoring.Threshold * 0.3f); ;
             }
             else if (data.IsBlunder)
             {

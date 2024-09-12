@@ -52,7 +52,11 @@ namespace DragoonMayCry.Score.Action
             FlyTextKind.Damage,
             FlyTextKind.DamageCrit,
             FlyTextKind.DamageDh,
-            FlyTextKind.DamageCritDh
+            FlyTextKind.DamageCritDh,
+            FlyTextKind.AutoAttackOrDot,
+            FlyTextKind.AutoAttackOrDotDh,
+            FlyTextKind.AutoAttackOrDotCrit,
+            FlyTextKind.AutoAttackOrDotCritDh,
         };
 
         public EventHandler? OnGcdDropped;
@@ -451,6 +455,7 @@ namespace DragoonMayCry.Score.Action
 
             // TODO Some DoTs deal no damage on application,
             // will have to figure out what to do about that
+            Service.Log.Debug(text2.ToString());
             if (actionName == null || text2 == null)
             {
                 return;
@@ -473,6 +478,14 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
+            if(kind == FlyTextKind.AutoAttackOrDot 
+                || kind == FlyTextKind.AutoAttackOrDotDh 
+                || kind == FlyTextKind.AutoAttackOrDotCrit 
+                || kind == FlyTextKind.AutoAttackOrDotCritDh)
+            {
+                OnFlyTextCreation?.Invoke(this, damage);
+                return;
+            }
             RegisterAndFireFlyText(kind, damage, actionName);
         }
 
