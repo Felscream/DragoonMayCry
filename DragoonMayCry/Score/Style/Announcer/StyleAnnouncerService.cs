@@ -54,6 +54,7 @@ namespace DragoonMayCry.Score.Style.Announcer
             balrogAnnouncer = new DmC5BalrogAnnouncer();
             nicoAnnouncer = new NicoAnnouncer();
             morrisonAnnouncer = new MorrisonAnnouncer();
+            UpdateAnnouncer();
         }
 
         public void PlaySfx(SoundId key, bool force = false)

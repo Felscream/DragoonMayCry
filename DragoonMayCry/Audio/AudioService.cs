@@ -3,6 +3,7 @@ using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.Engine;
 using DragoonMayCry.Score.Model;
 using ImGuiNET;
+using KamiLib.Misc;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
@@ -36,6 +37,7 @@ namespace DragoonMayCry.Audio
         
         // to alternate between dead weight sfx
         private readonly AudioEngine audioEngine;
+        private Dictionary<DynamicBgmService.Bgm, Dictionary<BgmId, CachedSound>> registeredBgms = new();
         private static AudioService? instance;
         private AudioService()
         {
@@ -75,29 +77,39 @@ namespace DragoonMayCry.Audio
             audioEngine.UpdateBgmVolume(GetBgmVolume());
         }
 
-        public bool RegisterBgmParts(Dictionary<BgmId, string> paths)
+        public bool RegisterBgmParts(DynamicBgmService.Bgm key, Dictionary<BgmId, string> paths)
         {
-            foreach (KeyValuePair<BgmId, string> entry in paths)
-            {
-                if (!File.Exists(entry.Value))
-                {
-                    Service.Log.Warning($"File {entry.Value} does not exist");
-                    return false;
-                }
-                audioEngine.RegisterBgmPart(entry.Key, entry.Value);
+            if(registeredBgms.ContainsKey(key)) {
+                return true;
             }
+            Dictionary<BgmId, CachedSound> bgm;
+            try
+            {
+                bgm = audioEngine.RegisterBgm(paths);
+            } catch (FileNotFoundException e)
+            {
+                Service.Log.Error(e, "An error occured while loading BGM");
+                return false;
+            }
+
+            registeredBgms.Add(key, bgm);
             return true;
         }
 
         public void RegisterAnnouncerSfx(Dictionary<SoundId, string> sfx)
         {
-            audioEngine.ClearBgmCache();
+            audioEngine.ClearSfxCache();
             audioEngine.RegisterAnnouncerSfx(sfx);
         }
 
-        public void ClearBgmCache()
+        public bool LoadRegisteredBgm(DynamicBgmService.Bgm key)
         {
-            audioEngine.ClearBgmCache();
+            if(registeredBgms.TryGetValue(key, out var value))
+            {
+                audioEngine.LoadBgm(value);
+                return true;
+            }
+            return false;
         }
 
         private float GetSfxVolume()

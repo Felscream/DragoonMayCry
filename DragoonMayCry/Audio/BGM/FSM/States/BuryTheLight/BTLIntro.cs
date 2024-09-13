@@ -73,7 +73,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
 
                 if (state != IntroState.OutOfCombat )
                 {
-                    TransitionToNextState(state);
+                    TransitionToNextState();
                 }
                 else
                 {
@@ -107,6 +107,12 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
             {
                 return 0;
             }
+            if (exit == ExitType.ImmediateExit)
+            {
+                transitionTime = 0;
+                TransitionToNextState();
+                return 0;
+            }
             // we are already leaving this state, player transitioned rapidly between multiple ranks
             if (state != IntroState.OutOfCombat)
             {
@@ -120,7 +126,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
                 currentTrackStopwatch.Restart();
             }
 
-            if (exit == ExitType.EndOfCombat)
+            if (exit == ExitType.EndOfCombat && state != IntroState.EndCombat)
             {
                 state = IntroState.EndCombat;
                 transitionTime = 1600;
@@ -131,7 +137,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
             return nextStateTransitionTime;
         }
 
-        private void TransitionToNextState(IntroState type)
+        private void TransitionToNextState()
         {
             var sample = (FadeInOutSampleProvider) samples.Dequeue();
             sample.BeginFadeOut(3000);

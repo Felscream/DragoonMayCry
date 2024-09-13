@@ -15,15 +15,10 @@ namespace DragoonMayCry.State.Tracker
                 return;
             }
             CurrentValue = playerState.IsDead;
-            if (CurrentValue && !LastValue)
+            if (CurrentValue != LastValue)
             {
                 OnChange?.Invoke(this, CurrentValue);
             }
-            else if (!CurrentValue && LastValue)
-            {
-                OnChange?.Invoke(this, CurrentValue);
-            }
-
             LastValue = CurrentValue;
         }
     }

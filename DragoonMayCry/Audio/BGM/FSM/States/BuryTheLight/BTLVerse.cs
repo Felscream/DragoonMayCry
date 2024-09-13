@@ -200,7 +200,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
 
                     audioService.PlayBgm(SelectRandom(BgmId.CombatCoreLoopExit1, BgmId.CombatCoreLoopExit2, BgmId.CombatCoreLoopExit3));
                 }
-                else if (exit == ExitType.EndOfCombat)
+                else if (exit == ExitType.EndOfCombat && currentState != CombatLoopState.Exit)
                 {
                     audioService.PlayBgm(BgmId.CombatEnd);
                     nextTransitionTime = 8000;

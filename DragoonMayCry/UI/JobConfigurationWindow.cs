@@ -107,7 +107,7 @@ namespace DragoonMayCry.UI
                     ImGui.Unindent();
                 });
 
-                if (item.index % 2 != 0 || item.index == configuration.JobConfiguration.Count - 1)
+                if (item.index % 3 != 0 || item.index == configuration.JobConfiguration.Count - 1)
                 {
                     row?.EndRow();
                 }
@@ -136,6 +136,7 @@ namespace DragoonMayCry.UI
                 JobConfiguration.BgmConfiguration.Off => "Off",
                 JobConfiguration.BgmConfiguration.BuryTheLight => "Bury the Light",
                 JobConfiguration.BgmConfiguration.DevilTrigger => "Devil Trigger",
+                JobConfiguration.BgmConfiguration.CrimsonCloud => "Crimson Cloud",
                 JobConfiguration.BgmConfiguration.Randomize => "Randomize",
                 _ => "Unknown"
             };

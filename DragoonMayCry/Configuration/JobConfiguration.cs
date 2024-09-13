@@ -15,6 +15,7 @@ namespace DragoonMayCry.Configuration
             Off,
             BuryTheLight,
             DevilTrigger,
+            CrimsonCloud,
             Randomize
         }
         public Setting<AnnouncerType> Announcer = new (AnnouncerType.DmC5);

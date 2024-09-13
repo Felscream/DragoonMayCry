@@ -262,7 +262,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
         public int Exit(ExitType exit)
         {
             nextStateTransitionTime = 0;
-            if (exit == ExitType.EndOfCombat)
+            if (exit == ExitType.EndOfCombat && currentState != PeakState.LeavingStateOutOfCombat)
             {
                 transitionTime = 1600;
                 nextPosibleStateTransitionTime = 8000;

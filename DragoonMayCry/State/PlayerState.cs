@@ -65,17 +65,17 @@ namespace DragoonMayCry.State
 
         public void Update(IFramework framework)
         {
+            onEnteringInstanceStateTracker.Update(this);
+            loginStateTracker.Update(this);
+            jobChangeTracker.Update(this);
+
             if (!CanUpdateStates())
             {
                 return;
             }
             onDeathStateTracker.Update(this);
             inCombatStateTracker.Update(this);
-            onEnteringInstanceStateTracker.Update(this);
-            loginStateTracker.Update(this);
-            jobChangeTracker.Update(this);
             debuffTracker.Update(this);
-            
         }
 
         private bool CanUpdateStates()

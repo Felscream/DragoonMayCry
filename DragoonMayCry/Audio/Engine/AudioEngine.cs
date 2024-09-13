@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using static Dalamud.Interface.Utility.Raii.ImRaii;
 
 namespace DragoonMayCry.Audio.Engine
 {
@@ -22,11 +23,11 @@ namespace DragoonMayCry.Audio.Engine
         private readonly IWavePlayer sfxOutputDevice;
         private readonly IWavePlayer bgmOutputDevice;
         private readonly Dictionary<SoundId, CachedSound> announcerSfx;
-        private readonly Dictionary<BgmId, CachedSound> bgmStems;
         private readonly VolumeSampleProvider sfxSampleProvider;
         private readonly MixingSampleProvider sfxMixer;
         private readonly VolumeSampleProvider bgmSampleProvider;
         private readonly MixingSampleProvider bgmMixer;
+        private Dictionary<BgmId, CachedSound> bgmStems;
 
         public AudioEngine()
         {
@@ -146,27 +147,40 @@ namespace DragoonMayCry.Audio.Engine
             }
         }
 
-        public void RegisterBgmPart(BgmId id, string path)
+        public Dictionary<BgmId, CachedSound> RegisterBgm(Dictionary<BgmId, string> paths)
         {
-            var part = new CachedSound(path);
-            if (!bgmStems.ContainsKey(id))
+            Dictionary<BgmId, CachedSound> bgm = new();
+            foreach (KeyValuePair<BgmId, string> entry in paths)
             {
-                bgmStems.Add(id, part);
+                Service.Log.Warning($"Registering {entry.Value} as {entry.Key}");
+                if (!File.Exists(entry.Value))
+                {
+                    throw new FileNotFoundException($"File {entry.Value} does not exist");
+                }
+
+                var part = new CachedSound(entry.Value);
+                if (!bgm.ContainsKey(entry.Key))
+                {
+                    bgm.Add(entry.Key, part);
+                }
+                else
+                {
+                    bgm[entry.Key] = part;
+                }
             }
-            else
-            {
-                bgmStems[id] = part;
-            }
+
+            bgmStems = bgm;
+            return bgm;
+        }
+
+        public void LoadBgm(Dictionary<BgmId, CachedSound> toLoad)
+        {
+            bgmStems = toLoad;
         }
 
         public void ClearSfxCache()
         {
             announcerSfx.Clear();
-        }
-
-        public void ClearBgmCache()
-        {
-            bgmStems.Clear();
         }
 
         public void RemoveInput(ISampleProvider sample)

@@ -18,6 +18,8 @@ namespace DragoonMayCry.Audio.BGM.FSM
 {
     public class DynamicBgmFsm : IDisposable
     {
+        public delegate void LoadNewBgm();
+        public LoadNewBgm loadNewBgm;
         public bool IsActive { get; private set; }
 
         private readonly PlayerState playerState;
@@ -36,7 +38,8 @@ namespace DragoonMayCry.Audio.BGM.FSM
         private DoubleLinkedList<BgmState> bgmStates;
         private DoubleLinkedNode<BgmState> currentStateNode;
         private bool isInCombat = false;
-        public bool SoundFilesLoaded { get; private set; } = false;
+        private bool withBgmRandomization = false;
+        
         
         private Dictionary<BgmState, IFsmState>? currentBgmStates;
         public DynamicBgmFsm(StyleRankHandler styleRankHandler)
@@ -99,24 +102,6 @@ namespace DragoonMayCry.Audio.BGM.FSM
             }
         }
 
-        private void CacheBgm()
-        {
-            if(currentBgmStates == null)
-            {
-                return;
-            }
-            int loadedStates = 0;
-            foreach (var state in currentBgmStates.Values)
-            {
-                var registered = audioService.RegisterBgmParts(state.GetBgmPaths());
-                if (registered)
-                {
-                    loadedStates++;
-                }
-            }
-            SoundFilesLoaded = loadedStates == currentBgmStates.Count;
-        }
-
         public void Dispose()
         {
             audioService.StopBgm();
@@ -168,7 +153,13 @@ namespace DragoonMayCry.Audio.BGM.FSM
                 currentStateNode = bgmStates.Find(candidateState.ID)!;
             }
             var fromVerse = currentState?.ID == BgmState.CombatPeak && candidateState.ID == BgmState.CombatLoop;
+
+            
             currentState = candidateState;
+            if (candidateState.ID == BgmState.Intro)
+            {
+                loadNewBgm?.Invoke();
+            }
             currentState.Enter(fromVerse);
             candidateState = null;
         }
@@ -187,7 +178,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
         public void LeaveCombat()
         {
-            if(currentState == null)
+            if(currentState == null || candidateState?.ID == BgmState.Intro)
             {
                 return;
             }
@@ -251,9 +242,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
         public void LoadBgmStates(Dictionary<BgmState, IFsmState> states)
         {
-            SoundFilesLoaded = false;
             currentBgmStates = states;
-            CacheBgm();
         }
 
         public void Deactivate()

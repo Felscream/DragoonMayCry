@@ -51,7 +51,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
         public void Enter(bool fromVerse)
         {
             state = IntroState.OutOfCombat;
-            var sample = audioService.PlayBgm(BgmId.Intro, 500);
+            var sample = audioService.PlayBgm(BgmId.Intro, 4500);
             if (sample != null)
             {
                 samples.Enqueue(sample);
@@ -73,7 +73,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
                 if (state != IntroState.OutOfCombat)
                 {
-                    TransitionToNextState(state);
+                    TransitionToNextState();
                 }
                 else
                 {
@@ -107,6 +107,13 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             {
                 return 0;
             }
+            if (exit == ExitType.ImmediateExit)
+            {
+                transitionTime = 0;
+                TransitionToNextState();
+                return 0;
+            }
+
             // we are already leaving this state, player transitioned rapidly between multiple ranks
             if (state != IntroState.OutOfCombat)
             {
@@ -120,7 +127,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
                 currentTrackStopwatch.Restart();
             }
 
-            if (exit == ExitType.EndOfCombat)
+            if (exit == ExitType.EndOfCombat && state != IntroState.EndCombat)
             {
                 state = IntroState.EndCombat;
                 transitionTime = 100;
@@ -131,7 +138,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             return nextStateTransitionTime;
         }
 
-        private void TransitionToNextState(IntroState type)
+        private void TransitionToNextState()
         {
             if (samples.TryDequeue(out var sample))
             {
