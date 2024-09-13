@@ -62,7 +62,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
         private LinkedListNode<BgmId>? currentTrack;
 
         private PeakState currentState;
-        private PeakState stateBeforeDemotion;
         // indicates when we can change tracks in this state
         private int transitionTime = 0;
         // indicates when it is appropriate to transition to a new FSM state
@@ -280,7 +279,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
                 elapsedStopwatchTimeBeforeDemotion += (int)currentTrackStopwatch.Elapsed.TotalMilliseconds;
                 transitionTime = nextPosibleStateTransitionTime - elapsedStopwatchTimeBeforeDemotion;
                 nextStateTransitionTime = transitionTime + transitionTimePerId[BgmId.Demotion].TransitionStart;
-                stateBeforeDemotion = currentState;
                 currentState = PeakState.LeavingStateDemotion;
             }
             currentTrackStopwatch.Restart();

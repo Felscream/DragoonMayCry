@@ -1,9 +1,8 @@
-
 using NAudio.Wave;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DragoonMayCry.Audio
+namespace DragoonMayCry.Audio.Engine
 {
     class CachedSound
     {

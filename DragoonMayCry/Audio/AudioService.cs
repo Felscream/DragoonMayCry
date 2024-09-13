@@ -1,5 +1,6 @@
 using Dalamud.Game.Config;
 using DragoonMayCry.Audio.BGM;
+using DragoonMayCry.Audio.Engine;
 using DragoonMayCry.Score.Model;
 using ImGuiNET;
 using NAudio.Wave;

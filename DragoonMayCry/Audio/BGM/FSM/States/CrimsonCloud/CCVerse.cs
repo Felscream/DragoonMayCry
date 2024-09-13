@@ -14,7 +14,7 @@ using static System.TimeZoneInfo;
 
 namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 {
-    internal class DTVerse : IFsmState
+    internal class CCVerse : IFsmState
     {
         // loop between verse and riff
         enum CombatLoopState
@@ -26,29 +26,33 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
         public BgmState ID { get { return BgmState.CombatLoop; } }
 
         private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new Dictionary<BgmId, BgmTrackData> {
-            { BgmId.CombatEnter1, new BgmTrackData(0, 3000) },
+            { BgmId.CombatEnter1, new BgmTrackData(0, 2500) },
             { BgmId.CombatEnter2, new BgmTrackData(0, 10500) },
-            { BgmId.CombatVerse1, new BgmTrackData(0, 22500) },
-            { BgmId.CombatVerse2, new BgmTrackData(0, 22500) },
-            { BgmId.CombatCoreLoopTransition1, new BgmTrackData(0, 25500) },
-            { BgmId.CombatCoreLoopTransition2, new BgmTrackData(0, 24000) },
-            { BgmId.CombatCoreLoopTransition3, new BgmTrackData(0, 24000) },
-            { BgmId.CombatCoreLoopExit1, new BgmTrackData(1, 1550) },
-            { BgmId.CombatCoreLoopExit2, new BgmTrackData(1, 1550) },
-            { BgmId.CombatCoreLoopExit3, new BgmTrackData(1, 1550) },
+            { BgmId.CombatEnter3, new BgmTrackData(0, 2600) },
+            { BgmId.CombatVerse1, new BgmTrackData(0, 20650) },
+            { BgmId.CombatVerse2, new BgmTrackData(0, 20650) },
+            { BgmId.CombatVerse3, new BgmTrackData(0, 20600) },
+            { BgmId.CombatVerse4, new BgmTrackData(0, 20600) },
+            { BgmId.CombatCoreLoopTransition1, new BgmTrackData(0, 19355) },
+            { BgmId.CombatCoreLoopTransition2, new BgmTrackData(1300, 21900) },
+            { BgmId.CombatCoreLoopTransition3, new BgmTrackData(0, 10300) },
+            { BgmId.CombatCoreLoopExit1, new BgmTrackData(1, 1000) },
+            { BgmId.CombatCoreLoopExit2, new BgmTrackData(1, 2555) },
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
-            { BgmId.CombatEnter1, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\028.ogg") },
-            { BgmId.CombatEnter2, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\101.ogg") },
-            { BgmId.CombatVerse1, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\116.ogg") },
-            { BgmId.CombatVerse2, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\021.ogg") },
-            { BgmId.CombatCoreLoopTransition1, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\109.ogg") },
-            { BgmId.CombatCoreLoopTransition2, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\106.ogg") },
-            { BgmId.CombatCoreLoopTransition3, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\066.ogg") },
-            { BgmId.CombatCoreLoopExit1, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\070.ogg") },
-            { BgmId.CombatCoreLoopExit2, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\075.ogg") },
-            { BgmId.CombatCoreLoopExit3, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\085.ogg") },
+            { BgmId.CombatEnter1, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\004.ogg") },
+            { BgmId.CombatEnter2, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\069.ogg") },
+            { BgmId.CombatEnter3, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\036.ogg") },
+            { BgmId.CombatVerse1, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\110.ogg") },
+            { BgmId.CombatVerse2, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\056.ogg") },
+            { BgmId.CombatVerse3, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\007.ogg") },
+            { BgmId.CombatVerse4, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\074.ogg") },
+            { BgmId.CombatCoreLoopTransition1, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\052.ogg") },
+            { BgmId.CombatCoreLoopTransition2, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\060.ogg") },
+            { BgmId.CombatCoreLoopTransition3, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\108.ogg") },
+            { BgmId.CombatCoreLoopExit1, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\038.ogg") },
+            { BgmId.CombatCoreLoopExit2, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\045.ogg") },
         };
 
         private LinkedList<BgmId> combatLoop = new LinkedList<BgmId>();
@@ -60,7 +64,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
         private int transitionTime = 0;
         private readonly Queue<ISampleProvider> samples;
         private readonly Random rand;
-        public DTVerse(AudioService audioService)
+        public CCVerse(AudioService audioService)
         {
             rand = new Random();
             this.audioService = audioService;
@@ -69,6 +73,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
             combatIntro.AddLast(BgmId.CombatEnter1);
             combatIntro.AddLast(BgmId.CombatEnter2);
+            combatIntro.AddLast(BgmId.CombatEnter3);
         }
 
         public void Enter(bool fromVerse)
@@ -198,7 +203,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             {
                 if (exit == ExitType.Promotion)
                 {
-                    audioService.PlayBgm(SelectRandom(BgmId.CombatCoreLoopExit1, BgmId.CombatCoreLoopExit2, BgmId.CombatCoreLoopExit3), 1);
+                    audioService.PlayBgm(SelectRandom(BgmId.CombatCoreLoopExit1, BgmId.CombatCoreLoopExit2), 1);
                 }
                 else if (exit == ExitType.EndOfCombat)
                 {
@@ -253,14 +258,16 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
         private LinkedList<BgmId> GenerateCombatLoop()
         {
             var verseQueue = RandomizeQueue(BgmId.CombatVerse1, BgmId.CombatVerse2);
+            var verse2Queue = RandomizeQueue(BgmId.CombatVerse3, BgmId.CombatVerse4);
+            var verse3Queue = RandomizeQueue(BgmId.CombatCoreLoopTransition1, BgmId.CombatCoreLoopTransition2);
             var loop = new LinkedList<BgmId>();
-            loop.AddLast(BgmId.CombatCoreLoopTransition1);
             loop.AddLast(verseQueue.Dequeue());
-            loop.AddLast(BgmId.CombatCoreLoopTransition2);
+            loop.AddLast(verse2Queue.Dequeue());
+            loop.AddLast(verse3Queue.Dequeue());
             loop.AddLast(BgmId.CombatCoreLoopTransition3);
-            loop.AddLast(BgmId.CombatCoreLoopTransition1);
             loop.AddLast(verseQueue.Dequeue());
-            loop.AddLast(BgmId.CombatCoreLoopTransition2);
+            loop.AddLast(verse2Queue.Dequeue());
+            loop.AddLast(verse3Queue.Dequeue());
             loop.AddLast(BgmId.CombatCoreLoopTransition3);
             return loop;
         }

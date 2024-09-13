@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 {
-    internal class DTChorus : IFsmState
+    internal class CCChorus : IFsmState
     {
         enum PeakState
         {
@@ -19,32 +19,32 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
         public BgmState ID { get { return BgmState.CombatPeak; } }
         private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new Dictionary<BgmId, BgmTrackData> {
-            { BgmId.ChorusIntro1, new BgmTrackData(0, 12000) },
-            { BgmId.ChorusIntro2, new BgmTrackData(0, 12000) },
-            { BgmId.Riff, new BgmTrackData(0, 24000) },
-            { BgmId.ChorusTransition1, new BgmTrackData(0, 24000) },
-            { BgmId.ChorusTransition2, new BgmTrackData(0, 24000) },
-            { BgmId.ChorusTransition3, new BgmTrackData(0, 24000) },
-            { BgmId.Demotion, new BgmTrackData(0, 1500) },
+            { BgmId.ChorusIntro1, new BgmTrackData(0, 20605) },
+            { BgmId.ChorusIntro2, new BgmTrackData(0, 10300) },
+            { BgmId.Riff, new BgmTrackData(0, 19350) },
+            { BgmId.ChorusTransition1, new BgmTrackData(0, 20650) },
+            { BgmId.ChorusTransition2, new BgmTrackData(0, 11600) },
+            { BgmId.ChorusTransition3, new BgmTrackData(0, 2600) },
+            { BgmId.Demotion, new BgmTrackData(0, 10300) },
         };
 
         private readonly Dictionary<BgmId, int> possibleTransitionTimesToNewState = new Dictionary<BgmId, int> {
-            { BgmId.ChorusIntro1, 13500 },
-            { BgmId.ChorusIntro2, 13500 },
-            { BgmId.Riff, 25500 },
-            { BgmId.ChorusTransition1, 25500 },
-            { BgmId.ChorusTransition2,  25500 },
-            { BgmId.ChorusTransition3,  25500 },
+            { BgmId.ChorusIntro1, 20605 },
+            { BgmId.ChorusIntro2, 10300 },
+            { BgmId.Riff, 20600 },
+            { BgmId.ChorusTransition1, 21900 },
+            { BgmId.ChorusTransition2,  11600 },
+            { BgmId.ChorusTransition3,  2600 },
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
-            { BgmId.ChorusIntro1, DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\058.ogg") },
-            { BgmId.ChorusIntro2, DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\061.ogg") },
-            { BgmId.Riff, DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\003.ogg") },
-            { BgmId.Demotion, DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\030.ogg") },
-            { BgmId.ChorusTransition1, DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\098.ogg") },
-            { BgmId.ChorusTransition2, DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\072.ogg") },
-            { BgmId.ChorusTransition3, DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\041.ogg") },
+            { BgmId.ChorusIntro1, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Chorus\\086.ogg") },
+            { BgmId.ChorusIntro2, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Chorus\\080.ogg") },
+            { BgmId.Riff, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Chorus\\103.ogg") },
+            { BgmId.ChorusTransition1, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Chorus\\059.ogg") },
+            { BgmId.ChorusTransition2, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Chorus\\031.ogg") },
+            { BgmId.ChorusTransition3, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Chorus\\082.ogg") },
+            { BgmId.Demotion, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Chorus\\016.ogg") },
         };
 
         private readonly AudioService audioService;
@@ -52,7 +52,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
         private readonly Stopwatch currentTrackStopwatch;
         private readonly Queue<ISampleProvider> samples;
         private readonly Random random = new Random();
-        private LinkedList<BgmId>? completeSequence;
+        private readonly LinkedList<BgmId> completeSequence;
         private LinkedListNode<BgmId>? currentTrack;
 
         private PeakState currentState;
@@ -64,16 +64,16 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
         private int nextStateTransitionTime;
         private int elapsedStopwatchTimeBeforeDemotion;
 
-        public DTChorus(AudioService audioService)
+        public CCChorus(AudioService audioService)
         {
             this.audioService = audioService;
             currentTrackStopwatch = new Stopwatch();
             samples = new Queue<ISampleProvider>();
+            completeSequence = GenerateVerseLoop();
         }
 
         public void Enter(bool fromVerse)
         {
-            completeSequence = GenerateVerseLoop();
             currentTrack = completeSequence.First!;
             currentState = PeakState.Loop;
             var sample = audioService.PlayBgm(currentTrack.Value, 1);
@@ -195,39 +195,14 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
         private LinkedList<BgmId> GenerateVerseLoop()
         {
-            var chorusIntro = RandomizeQueue(BgmId.ChorusIntro1, BgmId.ChorusIntro2);
-            var chorus = RandomizeQueue(BgmId.ChorusTransition1, BgmId.ChorusTransition2);
             var loop = new LinkedList<BgmId>();
-            loop.AddLast(chorusIntro.Dequeue());
+            loop.AddLast(BgmId.ChorusIntro1);
+            loop.AddLast(BgmId.ChorusIntro2);
             loop.AddLast(BgmId.Riff);
-            loop.AddLast(chorus.Dequeue());
-            loop.AddLast(BgmId.ChorusTransition3);
-            loop.AddLast(chorusIntro.Dequeue());
-            loop.AddLast(BgmId.Riff);
-            loop.AddLast(chorus.Dequeue());
+            loop.AddLast(BgmId.ChorusTransition1);
+            loop.AddLast(BgmId.ChorusTransition2);
             loop.AddLast(BgmId.ChorusTransition3);
             return loop;
-        }
-
-        private Queue<BgmId> RandomizeQueue(params BgmId[] bgmIds)
-        {
-            var k = random.Next(2);
-            var queue = new Queue<BgmId>();
-            if (k < 1)
-            {
-                for (int i = 0; i < bgmIds.Length; i++)
-                {
-                    queue.Enqueue(bgmIds[i]);
-                }
-            }
-            else
-            {
-                for (int i = bgmIds.Length - 1; i >= 0; i--)
-                {
-                    queue.Enqueue(bgmIds[i]);
-                }
-            }
-            return queue;
         }
 
         public int Exit(ExitType exit)
@@ -236,8 +211,8 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             if (exit == ExitType.EndOfCombat)
             {
                 transitionTime = 1;
-                nextPosibleStateTransitionTime = 4500;
-                nextStateTransitionTime = 4500;
+                nextPosibleStateTransitionTime = 5200;
+                nextStateTransitionTime = 5200;
                 audioService.PlayBgm(BgmId.CombatEnd, 1);
                 currentState = PeakState.LeavingStateOutOfCombat;
             }

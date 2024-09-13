@@ -25,9 +25,11 @@ namespace DragoonMayCry.Audio.BGM
         {
             BuryTheLight,
             DevilTrigger,
+            CrimsonCloud
         }
         private readonly Dictionary<BgmState, IFsmState> buryTheLightStates;
         private readonly Dictionary<BgmState, IFsmState> devilTriggerStates;
+        private readonly Dictionary<BgmState, IFsmState> crimsonCloudStates;
         private readonly Dictionary<Bgm, Dictionary<BgmState, IFsmState>> bgmStates = new();
         private readonly DynamicBgmFsm bgmFsm;
         private readonly PlayerState playerState;
@@ -67,11 +69,21 @@ namespace DragoonMayCry.Audio.BGM
                 { BgmState.CombatPeak, dtPeak },
             };
 
+            IFsmState ccIntro = new CCIntro(audioService);
+            IFsmState ccCombat = new CCVerse(audioService);
+            IFsmState ccPeak = new CCChorus(audioService);
+            crimsonCloudStates = new Dictionary<BgmState, IFsmState>
+            {
+                { BgmState.Intro, ccIntro },
+                { BgmState.CombatLoop, ccCombat },
+                { BgmState.CombatPeak, ccPeak },
+            };
+
             bgmStates.Add(Bgm.BuryTheLight, buryTheLightStates);
             bgmStates.Add(Bgm.DevilTrigger, devilTriggerStates);
-
+            bgmStates.Add(Bgm.CrimsonCloud, crimsonCloudStates);
 #if DEBUG
-            currentBgm = Bgm.DevilTrigger;
+            currentBgm = Bgm.CrimsonCloud;
             LoadBgm(currentBgm);
 #endif
         }

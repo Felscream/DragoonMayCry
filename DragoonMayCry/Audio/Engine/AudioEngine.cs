@@ -14,7 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
-namespace DragoonMayCry.Audio
+namespace DragoonMayCry.Audio.Engine
 {
     internal class AudioEngine : IDisposable
     {
@@ -41,7 +41,7 @@ namespace DragoonMayCry.Audio
                 ReadFully = true
             };
 
-            
+
             bgmMixer = new(WaveFormat.CreateIeeeFloatWaveFormat(48000, 2))
             {
                 ReadFully = true
@@ -64,9 +64,10 @@ namespace DragoonMayCry.Audio
 
         public void RegisterAnnouncerSfx(Dictionary<SoundId, string> sfx)
         {
-            foreach (KeyValuePair<SoundId, string> entry in sfx)
+            foreach (var entry in sfx)
             {
-                if(!File.Exists(entry.Value)) {
+                if (!File.Exists(entry.Value))
+                {
                     Service.Log.Error($"Could not find any file at {entry.Value}");
                     continue;
                 }
@@ -78,7 +79,7 @@ namespace DragoonMayCry.Audio
                 {
                     announcerSfx[entry.Key] = new(entry.Value);
                 }
-                
+
             }
         }
 
@@ -94,14 +95,14 @@ namespace DragoonMayCry.Audio
 
         private ISampleProvider AddBGMMixerInput(ISampleProvider input, double fadeInDuration)
         {
-            if(fadeInDuration > 0)
+            if (fadeInDuration > 0)
             {
                 var fadingInput = new FadeInOutSampleProvider(input, true);
                 fadingInput.BeginFadeIn(fadeInDuration);
                 bgmMixer.AddMixerInput(fadingInput);
                 return fadingInput;
-            } 
-            
+            }
+
             bgmMixer.AddMixerInput(input);
             return input;
         }
@@ -122,12 +123,13 @@ namespace DragoonMayCry.Audio
             {
                 var sound = new CachedSound(path);
                 sample = new CachedSoundSampleProvider(sound);
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
                 Service.Log.Error(e, $"Error while reading file ${path}");
                 return;
             }
-            
+
             sfxMixer.AddMixerInput(sample);
         }
 
@@ -147,7 +149,7 @@ namespace DragoonMayCry.Audio
         public void RegisterBgmPart(BgmId id, string path)
         {
             var part = new CachedSound(path);
-            if(!bgmStems.ContainsKey(id))
+            if (!bgmStems.ContainsKey(id))
             {
                 bgmStems.Add(id, part);
             }
@@ -169,7 +171,7 @@ namespace DragoonMayCry.Audio
 
         public void RemoveInput(ISampleProvider sample)
         {
-            if(sample == null)
+            if (sample == null)
             {
                 return;
             }
