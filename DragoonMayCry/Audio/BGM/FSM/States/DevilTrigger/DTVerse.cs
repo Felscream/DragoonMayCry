@@ -108,7 +108,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
                 if (currentState != CombatLoopState.Exit)
                 {
                     PlayNextPart();
-                    currentTrackStopwatch.Restart();
                 }
                 else
                 {
@@ -120,29 +119,14 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
         private void PlayNextPart()
         {
-            // transition to loop state if we reached the end of intro
-            if (currentState == CombatLoopState.Intro)
+            if (currentTrack!.Next == null)
             {
-                if (currentTrack!.Next == null)
-                {
-                    currentTrack = combatLoop.First!;
-                    currentState = CombatLoopState.CoreLoop;
-                }
-                else
-                {
-                    currentTrack = currentTrack.Next;
-                }
+                currentTrack = combatLoop.First!;
+                currentState = CombatLoopState.CoreLoop;
             }
-            else if (currentState == CombatLoopState.CoreLoop)
+            else
             {
-                if (currentTrack!.Next != null)
-                {
-                    currentTrack = currentTrack.Next;
-                }
-                else
-                {
-                    currentTrack = combatLoop.First!;
-                }
+                currentTrack = currentTrack.Next;
             }
 
             PlayBgmPart();
@@ -152,15 +136,14 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
         private void PlayBgmPart()
         {
-            if (samples.Count > 4)
-            {
-                samples.Dequeue();
-            }
-
             var sample = audioService.PlayBgm(currentTrack!.Value, 1);
             if (sample != null)
             {
                 samples.Enqueue(sample);
+            }
+            if (samples.Count > 4)
+            {
+                samples.Dequeue();
             }
         }
 

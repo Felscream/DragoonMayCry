@@ -51,7 +51,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
         private readonly Stopwatch currentTrackStopwatch;
         private readonly Queue<ISampleProvider> samples;
-        private readonly Random random = new Random();
         private readonly LinkedList<BgmId> completeSequence;
         private LinkedListNode<BgmId>? currentTrack;
 

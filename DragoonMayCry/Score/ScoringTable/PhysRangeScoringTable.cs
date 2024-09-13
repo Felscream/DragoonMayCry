@@ -28,8 +28,8 @@ namespace DragoonMayCry.Score.Table
                 { StyleType.C, new ScoringCoefficient(7.4f, 0.26f) },
                 { StyleType.B, new ScoringCoefficient(8f, 0.33f) },
                 { StyleType.A, new ScoringCoefficient(11.8f, 0.38f) },
-                { StyleType.S, new ScoringCoefficient(5f, 0.42f) },
-                { StyleType.SS, new ScoringCoefficient(3.4f, 0.5f) },
+                { StyleType.S, new ScoringCoefficient(5.5f, 0.42f) },
+                { StyleType.SS, new ScoringCoefficient(4.5f, 0.5f) },
                 { StyleType.SSS, new ScoringCoefficient(3f, 0.56f) },
             };
 

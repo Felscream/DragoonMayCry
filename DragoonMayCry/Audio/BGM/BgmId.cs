@@ -32,6 +32,6 @@ namespace DragoonMayCry.Audio.BGM
         Riff,
         CombatEnd,
         Demotion,
-
+        None,
     }
 }

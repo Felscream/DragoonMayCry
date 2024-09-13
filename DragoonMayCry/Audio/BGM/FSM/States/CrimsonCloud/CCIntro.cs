@@ -133,8 +133,13 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
         private void TransitionToNextState(IntroState type)
         {
-            var sample = (FadeInOutSampleProvider) samples.Dequeue();
-            sample.BeginFadeOut(3000);
+            if (samples.TryDequeue(out var sample))
+            {
+                if (sample is FadeInOutSampleProvider)
+                {
+                    ((FadeInOutSampleProvider)sample).BeginFadeOut(1500);
+                }
+            }
 
             currentTrackStopwatch.Reset();
         }
