@@ -51,7 +51,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
         public void Enter(bool fromVerse)
         {
             state = IntroState.OutOfCombat;
-            Service.Log.Debug($"Playing {BgmId.Intro}");
             var sample = audioService.PlayBgm(BgmId.Intro, 100);
             if (sample != null)
             {

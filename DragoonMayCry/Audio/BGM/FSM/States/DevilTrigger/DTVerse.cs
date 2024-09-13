@@ -3,6 +3,7 @@ using DragoonMayCry.Audio.BGM.FSM;
 using DragoonMayCry.Audio.BGM.FSM.States;
 using Lumina.Data.Parsing;
 using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -33,9 +34,9 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             { BgmId.CombatCoreLoopTransition1, new BgmTrackData(0, 25500) },
             { BgmId.CombatCoreLoopTransition2, new BgmTrackData(0, 24000) },
             { BgmId.CombatCoreLoopTransition3, new BgmTrackData(0, 24000) },
-            { BgmId.CombatCoreLoopExit1, new BgmTrackData(1540, 1550) },
-            { BgmId.CombatCoreLoopExit2, new BgmTrackData(1540, 1550) },
-            { BgmId.CombatCoreLoopExit3, new BgmTrackData(1540, 1550) },
+            { BgmId.CombatCoreLoopExit1, new BgmTrackData(1, 1550) },
+            { BgmId.CombatCoreLoopExit2, new BgmTrackData(1, 1550) },
+            { BgmId.CombatCoreLoopExit3, new BgmTrackData(1, 1550) },
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
@@ -79,20 +80,19 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             if (fromVerse)
             {
                 currentTrack = combatLoop.First!;
-                sample = audioService.PlayBgm(currentTrack.Value);
+                sample = audioService.PlayBgm(currentTrack.Value, 1);
                 currentState = CombatLoopState.CoreLoop;
             }
             else
             {
                 currentTrack = combatIntro.First!;
-                sample = audioService.PlayBgm(currentTrack.Value);
+                sample = audioService.PlayBgm(currentTrack.Value, 1);
                 currentState = CombatLoopState.Intro;
             }
             if (sample != null)
             {
                 samples.Enqueue(sample);
             }
-            Service.Log.Debug($"Playing {currentTrack.Value}");
             transitionTime = ComputeNextTransitionTiming();
             currentTrackStopwatch.Restart();
         }
@@ -146,7 +146,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
                 }
             }
 
-            Service.Log.Debug($"Playing {currentTrack!.Value}");
             PlayBgmPart();
             transitionTime = ComputeNextTransitionTiming();
             currentTrackStopwatch.Restart();
@@ -159,7 +158,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
                 samples.Dequeue();
             }
 
-            var sample = audioService.PlayBgm(currentTrack!.Value);
+            var sample = audioService.PlayBgm(currentTrack!.Value, 1);
             if (sample != null)
             {
                 samples.Enqueue(sample);
@@ -173,9 +172,17 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
         private void LeaveState()
         {
-            while (samples.Count > 0)
+            
+            while (samples.Count > 1)
             {
                 audioService.RemoveBgmPart(samples.Dequeue());
+            }
+            if (samples.TryDequeue(out var sample))
+            {
+                if (sample is FadeInOutSampleProvider)
+                {
+                    ((FadeInOutSampleProvider)sample).BeginFadeOut(500);
+                }
             }
             currentState = CombatLoopState.CoreLoop;
             currentTrackStopwatch.Reset();
@@ -192,7 +199,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             {
                 if (exit == ExitType.Promotion)
                 {
-                    audioService.PlayBgm(SelectRandom(BgmId.CombatCoreLoopExit1, BgmId.CombatCoreLoopExit2, BgmId.CombatCoreLoopExit3));
+                    audioService.PlayBgm(SelectRandom(BgmId.CombatCoreLoopExit1, BgmId.CombatCoreLoopExit2, BgmId.CombatCoreLoopExit3), 1);
                 }
                 else if (exit == ExitType.EndOfCombat)
                 {
@@ -202,7 +209,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
                 currentTrackStopwatch.Restart();
             }
             currentState = CombatLoopState.Exit;
-            transitionTime = exit == ExitType.EndOfCombat ? 1600 : transitionTimePerId[BgmId.CombatCoreLoopExit1].EffectiveStart;
+            transitionTime = exit == ExitType.EndOfCombat ? 1 : transitionTimePerId[BgmId.CombatCoreLoopExit1].EffectiveStart;
 
             return nextTransitionTime;
         }

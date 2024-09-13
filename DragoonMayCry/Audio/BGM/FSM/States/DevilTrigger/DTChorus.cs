@@ -1,5 +1,6 @@
 using NAudio.Codecs;
 using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -76,7 +77,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             completeSequence = GenerateVerseLoop();
             currentTrack = completeSequence.First!;
             currentState = PeakState.Loop;
-            var sample = audioService.PlayBgm(currentTrack.Value);
+            var sample = audioService.PlayBgm(currentTrack.Value, 1);
             if (sample != null)
             {
                 samples.Enqueue(sample);
@@ -125,7 +126,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             {
                 audioService.RemoveBgmPart(samples.Dequeue());
             }
-            var sample = audioService.PlayBgm(BgmId.Demotion);
+            var sample = audioService.PlayBgm(BgmId.Demotion, 1);
             if (sample != null)
             {
                 samples.Enqueue(sample);
@@ -135,24 +136,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             currentTrackStopwatch.Restart();
         }
 
-        private Queue<BgmId> GenerateTransitionOrder()
-        {
-            var random = new Random();
-            var val = random.Next(2);
-            var res = new Queue<BgmId>();
-            if (val < 1)
-            {
-                res.Enqueue(BgmId.ChorusTransition1);
-                res.Enqueue(BgmId.ChorusTransition2);
-            }
-            else
-            {
-                res.Enqueue(BgmId.ChorusTransition2);
-                res.Enqueue(BgmId.ChorusTransition1);
-            }
-            return res;
-        }
-
         private int ComputeNextTransitionTiming()
         {
             return transitionTimePerId[currentTrack!.Value].TransitionStart;
@@ -160,10 +143,18 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
         private void LeaveStateOutOfCombat()
         {
-            while (samples.Count > 0)
+            while (samples.Count > 1)
             {
                 audioService.RemoveBgmPart(samples.Dequeue());
             }
+            if(samples.TryDequeue(out var sample))
+            {
+                if(sample is FadeInOutSampleProvider)
+                {
+                    ((FadeInOutSampleProvider)sample).BeginFadeOut(500);
+                }
+            }
+            
             currentTrackStopwatch.Reset();
 
         }
@@ -187,7 +178,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
                 samples.Dequeue();
             }
 
-            var sample = audioService.PlayBgm(currentTrack!.Value);
+            var sample = audioService.PlayBgm(currentTrack!.Value, 1);
             if (sample != null)
             {
                 samples.Enqueue(sample);
@@ -245,10 +236,10 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             nextStateTransitionTime = 0;
             if (exit == ExitType.EndOfCombat)
             {
-                transitionTime = 1600;
+                transitionTime = 1;
                 nextPosibleStateTransitionTime = 4500;
                 nextStateTransitionTime = 4500;
-                audioService.PlayBgm(BgmId.CombatEnd);
+                audioService.PlayBgm(BgmId.CombatEnd, 1);
                 currentState = PeakState.LeavingStateOutOfCombat;
             }
             else if (currentState == PeakState.LeavingStateDemotion)

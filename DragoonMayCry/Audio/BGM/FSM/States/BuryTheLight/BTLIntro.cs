@@ -51,7 +51,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
         public void Enter(bool fromVerse)
         {
             state = IntroState.OutOfCombat;
-            Service.Log.Debug($"Playing {BgmId.Intro}");
             var sample = audioService.PlayBgm(BgmId.Intro, 20000);
             if (sample != null)
             {

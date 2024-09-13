@@ -92,7 +92,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
             {
                 samples.Enqueue(sample);
             }
-            Service.Log.Debug($"Playing {currentTrack.Value}");
             transitionTime = ComputeNextTransitionTiming();
             currentTrackStopwatch.Restart();
         }
@@ -146,7 +145,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
                 }
             }
 
-            Service.Log.Debug($"Playing {currentTrack!.Value}");
             PlayBgmPart();
             transitionTime = ComputeNextTransitionTiming();
             currentTrackStopwatch.Restart();
