@@ -126,7 +126,7 @@ namespace DragoonMayCry.Audio
                                    (Service.GameConfig.System.GetUInt(
                                         "SoundMaster") / 100f)
                                  : 1;
-            return Math.Clamp(gameVolume * (Plugin.Configuration!.SfxVolume.Value / 100f), 0, 1);
+            return gameVolume * (Plugin.Configuration!.SfxVolume.Value / 100f);
         }
 
         private float GetBgmVolume()
@@ -139,7 +139,7 @@ namespace DragoonMayCry.Audio
             var gameVolume = Plugin.Configuration!.ApplyGameVolumeBgm.Value
                                  ? (Service.GameConfig.System.GetUInt("SoundMaster") / 100f)
                                  : 1;
-            return Math.Clamp(gameVolume * (Plugin.Configuration!.BgmVolume.Value / 100f), 0, 1);
+            return gameVolume * (Plugin.Configuration!.BgmVolume.Value / 100f);
         }
 
         private void OnSystemChange(object? sender, ConfigChangeEvent e)
