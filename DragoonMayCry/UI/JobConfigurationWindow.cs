@@ -107,7 +107,7 @@ namespace DragoonMayCry.UI
                     ImGui.Unindent();
                 });
 
-                if (item.index % 3 != 0 || item.index == configuration.JobConfiguration.Count - 1)
+                if (item.index % 2 != 0 || item.index == configuration.JobConfiguration.Count - 1)
                 {
                     row?.EndRow();
                 }

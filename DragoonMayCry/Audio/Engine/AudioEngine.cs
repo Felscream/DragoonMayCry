@@ -152,7 +152,6 @@ namespace DragoonMayCry.Audio.Engine
             Dictionary<BgmId, CachedSound> bgm = new();
             foreach (KeyValuePair<BgmId, string> entry in paths)
             {
-                Service.Log.Warning($"Registering {entry.Value} as {entry.Key}");
                 if (!File.Exists(entry.Value))
                 {
                     throw new FileNotFoundException($"File {entry.Value} does not exist");

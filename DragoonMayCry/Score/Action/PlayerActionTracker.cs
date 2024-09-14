@@ -393,7 +393,7 @@ namespace DragoonMayCry.Score.Action
         {
             // do not track dropped GCDs if the LB is being cast
             // or the player died between 2 GCDs
-            if (limitBreakCast != null || playerState.IsDead)
+            if (playerState.IsDead)
             {
                 return;
             }
@@ -404,7 +404,7 @@ namespace DragoonMayCry.Score.Action
                 if (!isGcdDropped && currentWastedGcd > GcdDropThreshold)
                 {
                     isGcdDropped = true;
-                    if (!playerState.IsIncapacitated() && playerState.CanTargetEnemy())
+                    if (!playerState.IsIncapacitated() && playerState.CanTargetEnemy() && limitBreakCast == null)
                     {
                         OnGcdDropped?.Invoke(this, EventArgs.Empty);
                     }

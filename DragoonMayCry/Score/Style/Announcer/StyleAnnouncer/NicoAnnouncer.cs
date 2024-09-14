@@ -18,6 +18,10 @@ namespace DragoonMayCry.Score.Style.Announcer.StyleAnnouncer
                 { SoundId.DeadWeight3, StyleAnnouncerService.GetPathToAnnouncerAudio("Nico/dude.ogg") },
                 { SoundId.DeadWeight4, StyleAnnouncerService.GetPathToAnnouncerAudio("Nico/for_real.ogg") },
                 { SoundId.DeadWeight5, StyleAnnouncerService.GetPathToAnnouncerAudio("Nico/ew.ogg") },
+                { SoundId.Dismal1, StyleAnnouncerService.GetPathToAnnouncerAudio("DmC5/dismal.ogg") },
+                { SoundId.Dismal2, StyleAnnouncerService.GetPathToAnnouncerAudio("DmC5/dismal2.ogg") },
+                { SoundId.Crazy1, StyleAnnouncerService.GetPathToAnnouncerAudio("DmC5/crazy.ogg") },
+                { SoundId.Crazy2, StyleAnnouncerService.GetPathToAnnouncerAudio("DmC5/crazy2.ogg") },
                 { SoundId.Badass1, StyleAnnouncerService.GetPathToAnnouncerAudio("Nico/baller.ogg") },
                 { SoundId.Badass2, StyleAnnouncerService.GetPathToAnnouncerAudio("Nico/not_bad.ogg") },
                 { SoundId.Apocalyptic1, StyleAnnouncerService.GetPathToAnnouncerAudio("Nico/yeah.ogg") },
@@ -33,6 +37,8 @@ namespace DragoonMayCry.Score.Style.Announcer.StyleAnnouncer
         private readonly List<SoundId> blunderVariations = new List<SoundId> { SoundId.DeadWeight1, SoundId.DeadWeight2, SoundId.DeadWeight3, SoundId.DeadWeight4, SoundId.DeadWeight5 };
 
         private readonly Dictionary<StyleType, IList<SoundId>> styleAnnouncementVariation = new Dictionary<StyleType, IList<SoundId>> {
+            { StyleType.D, new List<SoundId>{ SoundId.Dismal1, SoundId.Dismal2 } },
+            { StyleType.C, new List<SoundId>{ SoundId.Crazy1, SoundId.Crazy2 } },
             { StyleType.B, new List<SoundId>{ SoundId.Badass1, SoundId.Badass2 } },
             { StyleType.A, new List<SoundId>{ SoundId.Apocalyptic1, SoundId.Apocalyptic2 } },
             { StyleType.S, new List<SoundId>{ SoundId.Savage1, SoundId.Savage2 } },

@@ -47,10 +47,13 @@ namespace DragoonMayCry.Score
 
         private void OnCombat(object? sender, bool enteredCombat)
         {
-            if (!Plugin.CanRunDmc())
+            if(playerState.IsInPvp()
+               || (!playerState.IsInsideInstance && !Plugin.Configuration!.ActiveOutsideInstance)
+               || !playerState.IsCombatJob())
             {
                 return;
             }
+
             if (enteredCombat)
             {
                 timeInEachTier = new Dictionary<StyleType, double>();

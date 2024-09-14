@@ -19,7 +19,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
     public class DynamicBgmFsm : IDisposable
     {
         public delegate void LoadNewBgm();
-        public LoadNewBgm loadNewBgm;
+        public LoadNewBgm? loadNewBgm;
         public bool IsActive { get; private set; }
 
         private readonly PlayerState playerState;
@@ -37,8 +37,6 @@ namespace DragoonMayCry.Audio.BGM.FSM
         private int nextTransitionTime = -1;
         private DoubleLinkedList<BgmState> bgmStates;
         private DoubleLinkedNode<BgmState> currentStateNode;
-        private bool isInCombat = false;
-        private bool withBgmRandomization = false;
         
         
         private Dictionary<BgmState, IFsmState>? currentBgmStates;
@@ -48,16 +46,15 @@ namespace DragoonMayCry.Audio.BGM.FSM
             this.styleRankHandler.StyleRankChange += OnRankChange;
             playerState = PlayerState.GetInstance();
             playerState.RegisterCombatStateChangeHandler(OnCombatChange);
-            this.framework = Service.Framework;
-            this.audioService = AudioService.Instance;
+            framework = Service.Framework;
+            audioService = AudioService.Instance;
             stateTransitionStopwatch = new Stopwatch();
 
             bgmStates = new DoubleLinkedList<BgmState>(BgmState.Intro, BgmState.CombatLoop, BgmState.CombatPeak);
             
-            
             currentStateNode = bgmStates.Head!;
 
-            this.framework.Update += Update;
+            framework.Update += Update;
         }
 
         public void Start()
@@ -96,7 +93,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
             {
                 GoToNextState();
             }
-            else if (isInCombat && currentState?.ID == BgmState.Intro && candidateState == null)
+            else if (playerState.IsInCombat && currentState?.ID == BgmState.Intro && candidateState == null)
             {
                 Promote();
             }
@@ -206,7 +203,6 @@ namespace DragoonMayCry.Audio.BGM.FSM
             {
                 return;
             }
-            this.isInCombat = isInCombat; 
             
             if (isInCombat && currentState?.ID == BgmState.Intro)
             {

@@ -6,14 +6,17 @@ using DragoonMayCry.Score.Style.Announcer.StyleAnnouncer;
 using DragoonMayCry.Score.Style.Rank;
 using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Common.Lua;
 using ImGuiNET;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.XPath;
 using static DragoonMayCry.UI.JobConfigurationWindow;
 
 namespace DragoonMayCry.Score.Style.Announcer
@@ -48,6 +51,7 @@ namespace DragoonMayCry.Score.Style.Announcer
             rankHandler = styleRankHandler;
             rankHandler.StyleRankChange += OnRankChange;
             actionTracker.UsingLimitBreak += OnLimitBreak;
+            actionTracker.OnLimitBreakEffect += OnLimitBreakEffect;
 
             dmcAnnouncer = new DmCAnnouncer();
             dmc5Announcer = new DmC5Announcer();
@@ -64,11 +68,7 @@ namespace DragoonMayCry.Score.Style.Announcer
                 return;
             }
 
-            var effectiveKey = key;
-            if (announcer.GetBlunderVariations().Contains(key))
-            {
-                effectiveKey = SoundId.DeadWeight1;
-            }
+            var effectiveKey = GetAnnouncementGroup(key);
 
             if (!force && !CanPlaySfx(effectiveKey))
             {
@@ -88,6 +88,20 @@ namespace DragoonMayCry.Score.Style.Announcer
             if (!soundIdsNextAvailability.ContainsKey(effectiveKey) || force || soundIdsNextAvailability[effectiveKey] <= 0)
             {
                 soundIdsNextAvailability[effectiveKey] = Plugin.Configuration!.PlaySfxEveryOccurrences.Value - 1;
+            }
+        }
+
+        private void OnLimitBreakEffect(object? sender, EventArgs e)
+        {
+            if (!Plugin.CanRunDmc() || announcer == null)
+            {
+                return;
+            }
+            var currentRank = rankHandler.CurrentStyle.Value;
+            var sfxByStyle = announcer.GetStyleAnnouncementVariations();
+            if (sfxByStyle.TryGetValue(currentRank, out var value))
+            {
+                audioService.PlaySfx(SelectRandomSfx(value));
             }
         }
 
@@ -209,7 +223,7 @@ namespace DragoonMayCry.Score.Style.Announcer
             var sfxByStyle = announcer.GetStyleAnnouncementVariations();
             if (sfxByStyle.ContainsKey(newRank))
             {
-                PlaySfx(SelectRandomSfx(announcer.GetStyleAnnouncementVariations()[newRank]));
+                PlaySfx(SelectRandomSfx(sfxByStyle[newRank]));
             }
         }
 
@@ -239,6 +253,42 @@ namespace DragoonMayCry.Score.Style.Announcer
             }
             var sfx = SelectRandomSfx(dmc5Announcer.GetStyleAnnouncementVariations()[type]);
             PlaySfx(sfx, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
+        }
+
+        private static SoundId GetAnnouncementGroup(SoundId id)
+        {
+            switch (id)
+            {
+                case SoundId.DeadWeight1:
+                case SoundId.DeadWeight2:
+                case SoundId.DeadWeight3:
+                case SoundId.DeadWeight4:
+                case SoundId.DeadWeight5:
+                    return SoundId.DeadWeight1;
+                case SoundId.Dismal2:
+                case SoundId.Dismal1:
+                    return SoundId.Dismal1;
+                case SoundId.Crazy1:
+                case SoundId.Crazy2:
+                    return SoundId.Crazy1;
+                case SoundId.Badass1:
+                case SoundId.Badass2:
+                    return SoundId.Badass1;
+                case SoundId.Apocalyptic1:
+                case SoundId.Apocalyptic2:
+                    return SoundId.Apocalyptic1;
+                case SoundId.Savage1:
+                case SoundId.Savage2:
+                    return SoundId.Savage1;
+                case SoundId.SickSkills1:
+                case SoundId.SickSkills2:
+                    return SoundId.SickSkills1;
+                case SoundId.SmokinSexyStyle1:
+                case SoundId.SmokinSexyStyle2:
+                    return SoundId.SmokinSexyStyle1;
+                default:
+                    return id;
+            }
         }
     }
 }

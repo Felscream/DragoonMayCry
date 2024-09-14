@@ -173,9 +173,13 @@ namespace DragoonMayCry.Audio.BGM
 
             if(configuration == JobConfiguration.BgmConfiguration.Randomize)
             {
-                CacheAllBgm();
                 bgmFsm.loadNewBgm = LoadRandomBgm;
-                LoadRandomBgm();
+                Task.Run(() =>
+                {
+                    CacheAllBgm();
+                    LoadRandomBgm();
+                });
+                
                 return;
             }
 
@@ -232,10 +236,13 @@ namespace DragoonMayCry.Audio.BGM
             {
                 return;
             }
-            CacheBgm(bgm);
-            currentBgm = bgm;
+            Task.Run(() =>
+            {
+                CacheBgm(bgm);
+                currentBgm = bgm;
 
-            PlayDynamicBgm();
+                PlayDynamicBgm();
+            });
         }
 
         private void PlayDynamicBgm()

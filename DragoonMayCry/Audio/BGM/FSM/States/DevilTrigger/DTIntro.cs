@@ -21,7 +21,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             CombatStart,
             EndCombat,
         }
-        public string Name { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public BgmState ID { get { return BgmState.Intro; } }
 
         private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new Dictionary<BgmId, BgmTrackData> {
