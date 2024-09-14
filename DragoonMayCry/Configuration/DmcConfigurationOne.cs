@@ -20,7 +20,7 @@ public class DmcConfigurationOne : IPluginConfiguration
     public Setting<bool> ForceSoundEffectsOnBlunder = new(false);
     public Setting<int> PlaySfxEveryOccurrences = new(3);
     public Setting<bool> ApplyGameVolumeSfx = new(true);
-    public Setting<bool> ApplyGameVolumeBgm = new(true);
+    public Setting<bool> ApplyGameVolumeBgm = new(false);
     public Setting<bool> EnableDynamicBgm = new(false);
     public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);
     public readonly Dictionary<JobIds, JobConfiguration> JobConfiguration = new Dictionary<JobIds, JobConfiguration>
