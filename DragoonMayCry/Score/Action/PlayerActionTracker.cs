@@ -397,7 +397,7 @@ namespace DragoonMayCry.Score.Action
             {
                 return;
             }
-            if (!actionManager->isGCDRecastActive && !actionManager->isQueued)
+            if (!actionManager->isGCDRecastActive && !actionManager->isQueued && !actionManager->isCasting)
             {
                 if (actionManager->animationLock > 0) return;
                 currentWastedGcd += ImGui.GetIO().DeltaTime;
