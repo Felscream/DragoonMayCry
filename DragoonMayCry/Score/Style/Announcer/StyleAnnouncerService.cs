@@ -47,6 +47,7 @@ namespace DragoonMayCry.Score.Style.Announcer
             playerState = PlayerState.GetInstance();
             playerState.RegisterCombatStateChangeHandler(OnCombat);
             playerState.RegisterJobChangeHandler(OnJobChange);
+            playerState.RegisterLoginStateChangeHandler(OnLogin);
 
             rankHandler = styleRankHandler;
             rankHandler.StyleRankChange += OnRankChange;
@@ -58,7 +59,6 @@ namespace DragoonMayCry.Score.Style.Announcer
             balrogAnnouncer = new DmC5BalrogAnnouncer();
             nicoAnnouncer = new NicoAnnouncer();
             morrisonAnnouncer = new MorrisonAnnouncer();
-            UpdateAnnouncer();
         }
 
         public void PlaySfx(SoundId key, bool force = false)
@@ -113,6 +113,14 @@ namespace DragoonMayCry.Score.Style.Announcer
         private void OnJobChange(object? sender, JobIds job)
         {
             UpdateAnnouncer();
+        }
+
+        private void OnLogin(object? sender, bool loggedIn)
+        {
+            if (loggedIn)
+            {
+                UpdateAnnouncer();
+            }
         }
 
         private bool CanPlaySfx(SoundId type)
