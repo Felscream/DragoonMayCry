@@ -1,3 +1,4 @@
+using Dalamud.Plugin.Services;
 using DragoonMayCry.Audio;
 using DragoonMayCry.Data;
 using DragoonMayCry.Score.Action;
@@ -13,6 +14,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,6 +38,7 @@ namespace DragoonMayCry.Score.Style.Announcer
         private readonly PlayerState playerState;
         private bool isCastingLimitBreak;
 
+        private bool initialized;
         private double lastPlayTime = 0f;
         private IStyleAnnouncer? announcer;
 
@@ -59,11 +62,14 @@ namespace DragoonMayCry.Score.Style.Announcer
             balrogAnnouncer = new DmC5BalrogAnnouncer();
             nicoAnnouncer = new NicoAnnouncer();
             morrisonAnnouncer = new MorrisonAnnouncer();
+
+            // to update the announcer if the user activates the plugin after character selection
+            Service.Framework.Update += Initialize;
         }
 
         public void PlaySfx(SoundId key, bool force = false)
         {
-            if (!Plugin.Configuration!.PlaySoundEffects || announcer == null)
+            if (!Plugin.Configuration!.PlaySoundEffects || announcer == null || !AssetsManager.IsReady)
             {
                 return;
             }
@@ -88,6 +94,16 @@ namespace DragoonMayCry.Score.Style.Announcer
             if (!soundIdsNextAvailability.ContainsKey(effectiveKey) || force || soundIdsNextAvailability[effectiveKey] <= 0)
             {
                 soundIdsNextAvailability[effectiveKey] = Plugin.Configuration!.PlaySfxEveryOccurrences.Value - 1;
+            }
+        }
+
+        private void Initialize(IFramework framework)
+        {
+            if(!initialized && playerState.Player != null && AssetsManager.IsReady)
+            {
+                initialized = true;
+                UpdateAnnouncer();
+                Service.Framework.Update -= Initialize;
             }
         }
 
@@ -160,14 +176,22 @@ namespace DragoonMayCry.Score.Style.Announcer
 
         private void UpdateAnnouncer()
         {
-            announcer = GetCurrentJobAnnouncer();
-            LoadAnnouncer();
+            if (AssetsManager.IsReady)
+            {
+                Service.Log.Debug("Loading Announcer");
+                announcer = GetCurrentJobAnnouncer();
+                LoadAnnouncer();
+            }
+            
         }
 
         private void UdpateAnnouncer(AnnouncerType type)
         {
-            announcer = GetAnnouncerByType(type);
-            LoadAnnouncer();
+            if (AssetsManager.IsReady)
+            {
+                announcer = GetAnnouncerByType(type);
+                LoadAnnouncer();
+            }
         }
 
         private IStyleAnnouncer GetAnnouncerByType(AnnouncerType type)
@@ -227,7 +251,7 @@ namespace DragoonMayCry.Score.Style.Announcer
             {
                 return;
             }
-
+            
             var sfxByStyle = announcer.GetStyleAnnouncementVariations();
             if (sfxByStyle.ContainsKey(newRank))
             {

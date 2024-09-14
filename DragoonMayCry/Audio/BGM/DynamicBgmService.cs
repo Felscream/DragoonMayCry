@@ -41,7 +41,7 @@ namespace DragoonMayCry.Audio.BGM
         private readonly AudioService audioService;
         private bool gameBgmState;
         private Bgm currentBgm = Bgm.None;
-        private JobIds currentJob;
+        private JobIds currentJob = JobIds.OTHER;
         private bool soundFilesLoaded;
         private Random random = new Random();
 
@@ -128,7 +128,7 @@ namespace DragoonMayCry.Audio.BGM
                 return;
             }
             DisableGameBgm();
-            PrepareBgm();
+            PrepareBgm(currentJob);
         }
 
         private bool CanPlayDynamicBgm(bool isInInstance)
@@ -153,24 +153,28 @@ namespace DragoonMayCry.Audio.BGM
             }
             bgmFsm.Deactivate();
             DisableGameBgm();
-            PrepareBgm();
+            PrepareBgm(GetCurrentJob());
         }
 
-        private void PrepareBgm()
+        private JobIds GetCurrentJob()
         {
-            var currentJob = playerState.GetCurrentJob();
+            return currentJob != JobIds.OTHER ? currentJob : playerState.GetCurrentJob();
+        }
+
+        private void PrepareBgm(JobIds job)
+        {
             bgmFsm.Deactivate();
-            if (!Plugin.Configuration!.JobConfiguration.ContainsKey(currentJob))
+            if (!Plugin.Configuration!.JobConfiguration.ContainsKey(job))
             {
                 return;
             }
-            JobConfiguration.BgmConfiguration configuration = Plugin.Configuration!.JobConfiguration[currentJob].Bgm.Value;
+            JobConfiguration.BgmConfiguration configuration = Plugin.Configuration!.JobConfiguration[job].Bgm.Value;
             
             if(configuration == JobConfiguration.BgmConfiguration.Off)
             {
                 return;
             }
-
+            
             if(configuration == JobConfiguration.BgmConfiguration.Randomize)
             {
                 bgmFsm.loadNewBgm = LoadRandomBgm;
@@ -200,7 +204,7 @@ namespace DragoonMayCry.Audio.BGM
 
         private void LoadRandomBgm()
         {
-            bgmFsm.Deactivate();
+            bgmFsm.ResetToIntro();
             if (randomBgmList.Count == 0)
             {
                 return;
@@ -250,11 +254,11 @@ namespace DragoonMayCry.Audio.BGM
             soundFilesLoaded = audioService.LoadRegisteredBgm(currentBgm);
             bgmFsm.LoadBgmStates(bgmStates[currentBgm]);
 
-            if (CanPlayDynamicBgm(playerState.IsInsideInstance) && soundFilesLoaded)
+            if (soundFilesLoaded)
             {
                 bgmFsm.Start();
             }
-            else if (!soundFilesLoaded)
+            else
             {
                 Service.Log.Warning($"Could not start {currentBgm}, files are not ready");
             }
@@ -309,7 +313,7 @@ namespace DragoonMayCry.Audio.BGM
             if (CanPlayDynamicBgm(playerState.IsInsideInstance))
             {
                 DisableGameBgm();
-                PrepareBgm();
+                PrepareBgm(GetCurrentJob());
             }
             else if (!playerState.IsInsideInstance)
             {

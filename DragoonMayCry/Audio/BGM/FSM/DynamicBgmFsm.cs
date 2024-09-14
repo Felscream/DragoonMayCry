@@ -216,11 +216,11 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
         public void OnRankChange(object? sender, StyleRankHandler.RankChangeData rankChangeData)
         {
-            if (rankChangeData.NewRank >= Score.Model.StyleType.S && currentState?.ID == BgmState.CombatLoop)
+            if (rankChangeData.NewRank >= Score.Model.StyleType.S && currentState?.ID == BgmState.CombatLoop && candidateState?.ID != BgmState.CombatPeak)
             {
                 Promote();
             }
-            else if (rankChangeData.NewRank < Score.Model.StyleType.S && currentState?.ID == BgmState.CombatPeak)
+            else if (rankChangeData.NewRank < Score.Model.StyleType.S && currentState?.ID == BgmState.CombatPeak && candidateState?.ID != BgmState.CombatLoop)
             {
                 Demote();
             } else if(rankChangeData.NewRank >= Score.Model.StyleType.S && currentState?.ID == BgmState.CombatPeak && candidateState?.ID == BgmState.CombatLoop)
