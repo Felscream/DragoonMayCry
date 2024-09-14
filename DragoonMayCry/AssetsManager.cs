@@ -56,7 +56,7 @@ namespace DragoonMayCry
             {
                 areFilesValid = AreLocalFilesValid() && TargetAssetVersion == CurrentDownloadedAssetVersion();
             }
-            areFilesValid = true;
+            
             if (areFilesValid)
             {
                 status = Status.Done;
