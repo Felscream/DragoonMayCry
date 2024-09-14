@@ -5,14 +5,8 @@ namespace DragoonMayCry.State.Tracker
         public override void Update(PlayerState playerState)
         {
             CurrentValue = playerState.IsLoggedIn;
-            if (CurrentValue && !LastValue)
+            if (CurrentValue != LastValue)
             {
-                Service.Log.Debug("Player logged in");
-                OnChange?.Invoke(this, CurrentValue);
-            }
-            else if (!CurrentValue && LastValue)
-            {
-                Service.Log.Debug("Player logged out");
                 OnChange?.Invoke(this, CurrentValue);
             }
 

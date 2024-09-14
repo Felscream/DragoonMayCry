@@ -27,10 +27,10 @@ namespace DragoonMayCry
         public static EventHandler<bool>? AssetsReady;
         public static bool IsReady = false;
         public static Status status = Status.Ready;
-        private const string TargetAssetVersion = "0.7.6";
-        private const string TargetSha1 = "9aceef37f0ba7d8a2db37c7e8e4304d35252cf0b";
-        private const long RequiredDiskSpaceCompressed = 2_150_400;
-        private const long RequiredDiskSpaceExtracted = 2_367_488;
+        private const string TargetAssetVersion = "0.12.0";
+        private const string TargetSha1 = "fe381bb7cfdcb5012d55e4acfd0944e762ce7295";
+        private const long RequiredDiskSpaceCompressed = 42_303_488;
+        private const long RequiredDiskSpaceExtracted = 42_938_368;
 
         public static void VerifyAndUpdateAssets()
         {
@@ -56,7 +56,7 @@ namespace DragoonMayCry
             {
                 areFilesValid = AreLocalFilesValid() && TargetAssetVersion == CurrentDownloadedAssetVersion();
             }
-
+            
             if (areFilesValid)
             {
                 status = Status.Done;

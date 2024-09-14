@@ -1,16 +1,20 @@
-using System;
+using Dalamud.Game.Config;
+using DragoonMayCry.Audio.BGM;
+using DragoonMayCry.Audio.Engine;
+using DragoonMayCry.Score.Model;
 using ImGuiNET;
+using KamiLib.Misc;
+using NAudio.Wave;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
-using Dalamud.Plugin.Ipc.Exceptions;
-using DragoonMayCry.Score.Model;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace DragoonMayCry.Audio
 {
-    public class AudioService
+    public class AudioService : IDisposable
     {
         public static AudioService Instance { get {
                 if(instance == null)
@@ -21,139 +25,153 @@ namespace DragoonMayCry.Audio
             } 
         }
 
-        private static readonly Dictionary<SoundId, string> DmcAnnouncer =
-            new Dictionary<SoundId, string>
-            {
-                { SoundId.DeadWeight, GetPathToAnnouncerAudio("dead_weight.wav") },
-                { SoundId.Dirty, GetPathToAnnouncerAudio("DmC/dirty.wav") },
-                { SoundId.Cruel, GetPathToAnnouncerAudio("DmC/cruel.wav") },
-                { SoundId.Brutal, GetPathToAnnouncerAudio("DmC/brutal.wav") },
-                { SoundId.Anarchic, GetPathToAnnouncerAudio("DmC/anarchic.wav") },
-                { SoundId.Savage, GetPathToAnnouncerAudio("DmC/savage.wav") },
-                { SoundId.Sadistic, GetPathToAnnouncerAudio("DmC/sadistic.wav") },
-                { SoundId.Sensational, GetPathToAnnouncerAudio("DmC/sensational.wav") }
-            };
+        private static readonly HashSet<string> SfxGameSettings = new HashSet<string>
+        {
+            "IsSndSe", "IsSndMaster", "SoundSe", "SoundMaster"
+        };
+        private static readonly HashSet<string> BgmGameSettings = new HashSet<string>
+        {
+            "IsSndMaster", "SoundMaster"
+        };
 
-        private readonly Dictionary<SoundId, int> soundIdsNextAvailability;
+        
+        // to alternate between dead weight sfx
         private readonly AudioEngine audioEngine;
-        private readonly float sfxCooldown = 1f;
-        private double lastPlayTime = 0f;
+        private Dictionary<DynamicBgmService.Bgm, Dictionary<BgmId, CachedSound>> registeredBgms = new();
         private static AudioService? instance;
         private AudioService()
         {
-            soundIdsNextAvailability = new();
             audioEngine = new AudioEngine();
             audioEngine.UpdateSfxVolume(GetSfxVolume());
-            AssetsManager.AssetsReady += OnAssetsReady;
+            audioEngine.UpdateBgmVolume(GetBgmVolume());
+            Service.GameConfig.SystemChanged += OnSystemChange;
         }
 
-        public void PlaySfx(SoundId key, bool force = false)
+        public void PlaySfx(SoundId key)
         {
-            if (!Plugin.Configuration!.PlaySoundEffects || !DmcAnnouncer.ContainsKey(key))
+            if (!Plugin.Configuration!.PlaySoundEffects)
             {
                 return;
             }
-            
-            if (!force && !CanPlaySfx(key))
-            {
-                if (!soundIdsNextAvailability.ContainsKey(key))
-                {
-                    soundIdsNextAvailability.Add(key, 0);
-                }
-                else
-                {
-                    soundIdsNextAvailability[key]--;
-                }
-                return;
-            }
-
+           
             audioEngine.PlaySfx(key);
-            lastPlayTime = ImGui.GetTime();
-            if (!soundIdsNextAvailability.ContainsKey(key) || force || soundIdsNextAvailability[key] <= 0)
-            {
-                soundIdsNextAvailability[key] = Plugin.Configuration!.PlaySfxEveryOccurrences.Value - 1;
-            }
         }
 
-        public void PlaySfx(StyleType type, bool force = false)
+        public void PlaySfx(string path)
         {
-            PlaySfx(StyleTypeToSoundId(type), force);
-        }
-
-        public void ResetSfxPlayCounter()
-        {
-            foreach (var entry in soundIdsNextAvailability)
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
             {
-                soundIdsNextAvailability[entry.Key] = 0;
+                Service.Log.Error($"Could not find audio file: [{path}]");
+                return;
             }
+            audioEngine.PlaySfx(path);
         }
 
-        public void OnVolumeChange(object? sender, int volume)
+        public void OnSfxVolumeChange(object? sender, int volume)
         {
             audioEngine.UpdateSfxVolume(GetSfxVolume());
         }
 
-        private void OnAssetsReady(object? sender, bool ready)
+        public void OnBgmVolumeChange(object? sender, int volume)
         {
-            Service.Log.Debug("Assets loaded");
-            if(!ready)
+            audioEngine.UpdateBgmVolume(GetBgmVolume());
+        }
+
+        public bool RegisterBgmParts(DynamicBgmService.Bgm key, Dictionary<BgmId, string> paths)
+        {
+            if(registeredBgms.ContainsKey(key)) {
+                return true;
+            }
+            Dictionary<BgmId, CachedSound> bgm;
+            try
             {
-                return;
+                bgm = audioEngine.RegisterBgm(paths);
+            } catch (FileNotFoundException e)
+            {
+                Service.Log.Error(e, "An error occured while loading BGM");
+                return false;
             }
 
-            audioEngine.RegisterSfx(DmcAnnouncer);
+            registeredBgms.Add(key, bgm);
+            return true;
         }
 
-        private bool CanPlaySfx(SoundId type)
+        public void RegisterAnnouncerSfx(Dictionary<SoundId, string> sfx)
         {
-            double lastPlayTimeDiff = ImGui.GetTime() - lastPlayTime;
-            return lastPlayTimeDiff > sfxCooldown
-                && (!soundIdsNextAvailability.ContainsKey(type) ||
-                   soundIdsNextAvailability[type] <= 0);
+            audioEngine.ClearSfxCache();
+            audioEngine.RegisterAnnouncerSfx(sfx);
         }
 
-        private static string GetPathToAnnouncerAudio(string name)
+        public bool LoadRegisteredBgm(DynamicBgmService.Bgm key)
         {
-            return Path.Combine(AssetsManager.GetAssetsDirectory(), $"Audio\\Announcer\\{name}");
+            if(registeredBgms.TryGetValue(key, out var value))
+            {
+                audioEngine.LoadBgm(value);
+                return true;
+            }
+            return false;
         }
 
         private float GetSfxVolume()
         {
-            if (Plugin.Configuration!.ApplyGameVolume && (Service.GameConfig.System.GetBool("IsSndSe") ||
+            if (Plugin.Configuration!.ApplyGameVolumeSfx && (Service.GameConfig.System.GetBool("IsSndSe") ||
                             Service.GameConfig.System.GetBool("IsSndMaster")))
             {
                 return 0;
             }
 
-            var gameVolume = Plugin.Configuration!.ApplyGameVolume
+            var gameVolume = Plugin.Configuration!.ApplyGameVolumeSfx
                                  ? Service.GameConfig.System
                                           .GetUInt("SoundSe") / 100f *
                                    (Service.GameConfig.System.GetUInt(
                                         "SoundMaster") / 100f)
                                  : 1;
-            return gameVolume * (Plugin.Configuration!.SfxVolume.Value / 100f);
+            return Math.Clamp(gameVolume * (Plugin.Configuration!.SfxVolume.Value / 100f), 0, 1);
         }
 
-        private SoundId StyleTypeToSoundId(StyleType type)
+        private float GetBgmVolume()
         {
-            return type switch
+            if (Plugin.Configuration!.ApplyGameVolumeBgm.Value && (Service.GameConfig.System.GetBool("IsSndMaster")))
             {
-                StyleType.D => SoundId.Dirty,
-                StyleType.C => SoundId.Cruel,
-                StyleType.B => SoundId.Brutal,
-                StyleType.A => SoundId.Anarchic,
-                StyleType.S => SoundId.Savage,
-                StyleType.SS => SoundId.Sadistic,
-                StyleType.SSS => SoundId.Sensational,
-                _ => SoundId.Unknown
-            };
+                return 0;
+            }
+
+            var gameVolume = Plugin.Configuration!.ApplyGameVolumeBgm.Value
+                                 ? (Service.GameConfig.System.GetUInt("SoundMaster") / 100f)
+                                 : 1;
+            return Math.Clamp(gameVolume * (Plugin.Configuration!.BgmVolume.Value / 100f), 0, 1);
         }
 
-#if DEBUG   
-        public void PlaySfx(SoundId id)
+        private void OnSystemChange(object? sender, ConfigChangeEvent e)
         {
-            audioEngine.PlaySfx(id);
+            var configOption = e.Option.ToString();
+            if (SfxGameSettings.Contains(configOption)){
+                audioEngine.UpdateSfxVolume(GetSfxVolume());
+            }
+            
+            if (BgmGameSettings.Contains(configOption))
+            {
+                audioEngine.UpdateBgmVolume(GetBgmVolume());
+            }
         }
-#endif
+
+        public ISampleProvider? PlayBgm(BgmId id, double fadingDuration = 0)
+        {
+            return audioEngine.PlayBgm(id, fadingDuration);
+        }
+
+        public void RemoveBgmPart(ISampleProvider sample)
+        {
+            audioEngine.RemoveInput(sample);
+        }
+
+        public void StopBgm()
+        {
+            audioEngine.RemoveAllBgm();
+        }
+        public void Dispose()
+        {
+            audioEngine.Dispose();
+        }
     }
 }

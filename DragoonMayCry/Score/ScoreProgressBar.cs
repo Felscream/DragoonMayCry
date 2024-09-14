@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
-using DragoonMayCry.Score.Style;
+using DragoonMayCry.Score.Style.Rank;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using ImGuiNET;
@@ -22,7 +22,7 @@ namespace DragoonMayCry.Score
         public EventHandler<float>? DemotionStart;
         public EventHandler<bool>? DemotionApplied;
         public EventHandler? DemotionCanceled;
-        public EventHandler<bool>? Promotion;
+        public EventHandler? Promotion;
 
         private const float TimeBetweenRankChanges = 1f;
         private const float PromotionSafeguardDuration = 3f;
@@ -46,7 +46,7 @@ namespace DragoonMayCry.Score
             this.styleRankHandler = styleRankHandler;
             this.styleRankHandler.StyleRankChange += OnRankChange;
             this.playerActionTracker = playerActionTracker;
-            this.playerActionTracker.OnLimitBreak += OnLimitBreakCast;
+            this.playerActionTracker.UsingLimitBreak += OnLimitBreakCast;
             this.playerActionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
 
             this.playerState = playerState;
@@ -79,13 +79,13 @@ namespace DragoonMayCry.Score
                 {
                     if (currentScoreRank.Rank != StyleType.SS && currentScoreRank.Rank != StyleType.SSS)
                     {
-                        Promotion?.Invoke(this, false);
+                        Promotion?.Invoke(this, EventArgs.Empty);
                     }
                     return;
                 }
                 if(GetTimeSinceLastPromotion() > TimeBetweenRankChanges)
                 {
-                    Promotion?.Invoke(this, true);
+                    Promotion?.Invoke(this, EventArgs.Empty);
                 }
             }
             else 
@@ -172,7 +172,11 @@ namespace DragoonMayCry.Score
 
         private void OnLimitBreakCast(object? sender, PlayerActionTracker.LimitBreakEvent e)
         {
-            this.isCastingLb = e.IsCasting;
+            isCastingLb = e.IsCasting;
+            if (!isCastingLb)
+            {
+                return;
+            }
             if (demotionApplicationStopwatch.IsRunning)
             {
                 CancelDemotion();
@@ -209,7 +213,6 @@ namespace DragoonMayCry.Score
         private void OnStyleScoringChange(object? sender, StyleScoring styleScoring)
         {
             demotionThreshold = styleScoring.DemotionThreshold / styleScoring.Threshold;
-            Service.Log.Debug($"new demotion threshold ratio {demotionThreshold}");
         }
 
         public void Reset()

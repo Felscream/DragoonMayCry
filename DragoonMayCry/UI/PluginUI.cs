@@ -1,8 +1,10 @@
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using DragoonMayCry.Audio;
+using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Score;
-using DragoonMayCry.Score.Style;
+using DragoonMayCry.Score.Style.Announcer;
+using DragoonMayCry.Score.Style.Rank;
 using DragoonMayCry.State;
 using KamiLib;
 using Lumina.Excel.GeneratedSheets;
@@ -16,6 +18,7 @@ namespace DragoonMayCry.UI
         private readonly WindowSystem windowSystem = new("DragoonMayCry");
         private ConfigWindow ConfigWindow { get; init; }
         private HowItWorksWindow HowItWorksWindow { get; init; }
+        private JobConfigurationWindow JobConfigurationWindow { get; init; }
 
         private readonly StyleRankUI styleRankUi;
         private readonly IDalamudPluginInterface pluginInterface;
@@ -23,16 +26,22 @@ namespace DragoonMayCry.UI
         private readonly Stopwatch hideRankUiStopwatch;
         private const float TimeToResetScoreAfterCombat = 10000;
         
-        public PluginUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager, FinalRankCalculator finalRankCalculator, EventHandler<bool> OnActiveOutsideInstanceChange)
+        public PluginUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager, FinalRankCalculator finalRankCalculator, StyleAnnouncerService styleAnnouncerService, DynamicBgmService dynamicBgmService)
         {
-            ConfigWindow = new ConfigWindow(this, Plugin.Configuration!);
-            ConfigWindow.ActiveOutsideInstanceChange += OnActiveOutsideInstanceChange;
-            ConfigWindow.SfxVolumeChange += AudioService.Instance.OnVolumeChange;
+            JobConfigurationWindow = new(Plugin.Configuration!);
+            JobConfigurationWindow.JobAnnouncerTypeChange += styleAnnouncerService.OnAnnouncerTypeChange;
+
+            ConfigWindow = new ConfigWindow(Plugin.Configuration!, JobConfigurationWindow);
+            ConfigWindow.ActiveOutsideInstanceChange += Plugin.OnActiveOutsideInstanceConfChange;
+            ConfigWindow.ToggleDynamicBgmChange += dynamicBgmService.ToggleDynamicBgm;
+            ConfigWindow.SfxVolumeChange += AudioService.Instance.OnSfxVolumeChange;
+            ConfigWindow.BgmVolumeChange += AudioService.Instance.OnBgmVolumeChange;
 
             HowItWorksWindow = new HowItWorksWindow();
 
             styleRankUi = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator);
 
+            KamiCommon.WindowManager.AddWindow(JobConfigurationWindow);
             KamiCommon.WindowManager.AddWindow(ConfigWindow);
             KamiCommon.WindowManager.AddWindow(HowItWorksWindow);
 
@@ -52,12 +61,9 @@ namespace DragoonMayCry.UI
         {
             pluginInterface.UiBuilder.Draw -= DrawUI;
             pluginInterface.UiBuilder.OpenMainUi -= ToggleConfigUI;
-           pluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUI;
+            pluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUI;
 
             windowSystem.RemoveAllWindows();
-
-            ConfigWindow.Dispose();
-            HowItWorksWindow.Dispose();
         }
 
         private void DrawUI()

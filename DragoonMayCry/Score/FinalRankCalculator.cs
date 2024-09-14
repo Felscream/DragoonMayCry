@@ -1,5 +1,5 @@
 using DragoonMayCry.Score.Model;
-using DragoonMayCry.Score.Style;
+using DragoonMayCry.Score.Style.Rank;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using System;
@@ -8,13 +8,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static DragoonMayCry.Score.Style.StyleRankHandler;
+using static DragoonMayCry.Score.Style.Rank.StyleRankHandler;
 
 namespace DragoonMayCry.Score
 {
     public class FinalRankCalculator : IResettable
     {
-        public EventHandler<StyleType> FinalRankCalculated;
+        public EventHandler<StyleType>? FinalRankCalculated;
         private readonly PlayerState playerState;
         private Dictionary<StyleType, double> timeInEachTier;
         private Stopwatch tierTimer;
@@ -47,6 +47,13 @@ namespace DragoonMayCry.Score
 
         private void OnCombat(object? sender, bool enteredCombat)
         {
+            if(playerState.IsInPvp()
+               || (!playerState.IsInsideInstance && !Plugin.Configuration!.ActiveOutsideInstance)
+               || !playerState.IsCombatJob())
+            {
+                return;
+            }
+
             if (enteredCombat)
             {
                 timeInEachTier = new Dictionary<StyleType, double>();
@@ -63,12 +70,17 @@ namespace DragoonMayCry.Score
 
         private void OnRankChange(object? sender, RankChangeData rankChange)
         {
+            if (!Plugin.CanRunDmc())
+            {
+                return;
+            }
+
             currentTier = rankChange.NewRank;
             if (!tierTimer.IsRunning) {
                 return;
             }
             saveTimeInTier(rankChange.PreviousRank);
-            if(rankChange.NewRank < rankChange.PreviousRank && rankChange.NewRank < StyleType.A)
+            if(rankChange.IsBlunder)
             {
                 if (timeInEachTier.ContainsKey(StyleType.S))
                 {

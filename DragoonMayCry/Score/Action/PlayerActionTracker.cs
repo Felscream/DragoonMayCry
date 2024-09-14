@@ -52,14 +52,18 @@ namespace DragoonMayCry.Score.Action
             FlyTextKind.Damage,
             FlyTextKind.DamageCrit,
             FlyTextKind.DamageDh,
-            FlyTextKind.DamageCritDh
+            FlyTextKind.DamageCritDh,
+            FlyTextKind.AutoAttackOrDot,
+            FlyTextKind.AutoAttackOrDotDh,
+            FlyTextKind.AutoAttackOrDotCrit,
+            FlyTextKind.AutoAttackOrDotCritDh,
         };
 
         public EventHandler? OnGcdDropped;
         public EventHandler? OnCastCanceled;
         public EventHandler<float>? OnFlyTextCreation;
         public EventHandler<float>? OnGcdClip;
-        public EventHandler<LimitBreakEvent>? OnLimitBreak;
+        public EventHandler<LimitBreakEvent>? UsingLimitBreak;
         public EventHandler? OnLimitBreakEffect;
         public EventHandler? OnLimitBreakCanceled;
 
@@ -84,8 +88,6 @@ namespace DragoonMayCry.Score.Action
         private readonly State.ActionManagerLight* actionManager;
         private readonly PlayerState playerState;
         private LuminaCache<LuminaAction> luminaActionCache;
-
-        private CombatStopwatch combatStopwatch;
 
         private const float GcdDropThreshold = 0.1f;
         private ushort lastDetectedClip = 0;
@@ -114,7 +116,6 @@ namespace DragoonMayCry.Score.Action
             actionHistory = new Queue<FlyTextData>();
             luminaActionCache = LuminaCache<LuminaAction>.Instance;
             playerState = PlayerState.GetInstance();
-            combatStopwatch = CombatStopwatch.GetInstance();
             limitBreakStopwatch = new Stopwatch();
             actionManager =
                 (State.ActionManagerLight*)FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
@@ -322,7 +323,7 @@ namespace DragoonMayCry.Score.Action
             limitBreakCast = null;
             if (playerState.IsInCombat)
             {
-                OnLimitBreak?.Invoke(this, new LimitBreakEvent(false, false));
+                UsingLimitBreak?.Invoke(this, new LimitBreakEvent(false, false));
             }
         }
 
@@ -333,6 +334,7 @@ namespace DragoonMayCry.Score.Action
             if (playerState.IsInCombat)
             {
                 OnLimitBreakCanceled?.Invoke(this, EventArgs.Empty);
+                UsingLimitBreak?.Invoke(this, new LimitBreakEvent(false, false));
             }
         }
 
@@ -358,7 +360,7 @@ namespace DragoonMayCry.Score.Action
             limitBreakCast = new LimitBreak(gracePeriod, isTankLb, action?.Name!);
             limitBreakStopwatch.Restart();
             
-            OnLimitBreak?.Invoke(this, new LimitBreakEvent(isTankLb, true));
+            UsingLimitBreak?.Invoke(this, new LimitBreakEvent(isTankLb, true));
         }
 
         private unsafe void DetectClipping()
@@ -376,7 +378,6 @@ namespace DragoonMayCry.Score.Action
                 Service.Log.Debug($"GCD Clip: {animationLock} s");
                 if (limitBreakCast == null)
                 {
-                    Service.Log.Debug($"Sending clipping event");
                     OnGcdClip?.Invoke(this, animationLock);
                 }
                 else if(!limitBreakCast.IsTankLb)
@@ -392,7 +393,7 @@ namespace DragoonMayCry.Score.Action
         {
             // do not track dropped GCDs if the LB is being cast
             // or the player died between 2 GCDs
-            if (limitBreakCast != null || playerState.IsDead)
+            if (playerState.IsDead)
             {
                 return;
             }
@@ -403,7 +404,7 @@ namespace DragoonMayCry.Score.Action
                 if (!isGcdDropped && currentWastedGcd > GcdDropThreshold)
                 {
                     isGcdDropped = true;
-                    if (!playerState.IsIncapacitated() && playerState.CanTargetEnemy())
+                    if (!playerState.IsIncapacitated() && playerState.CanTargetEnemy() && limitBreakCast == null)
                     {
                         OnGcdDropped?.Invoke(this, EventArgs.Empty);
                     }
@@ -473,6 +474,14 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
+            if(kind == FlyTextKind.AutoAttackOrDot 
+                || kind == FlyTextKind.AutoAttackOrDotDh 
+                || kind == FlyTextKind.AutoAttackOrDotCrit 
+                || kind == FlyTextKind.AutoAttackOrDotCritDh)
+            {
+                OnFlyTextCreation?.Invoke(this, damage);
+                return;
+            }
             RegisterAndFireFlyText(kind, damage, actionName);
         }
 

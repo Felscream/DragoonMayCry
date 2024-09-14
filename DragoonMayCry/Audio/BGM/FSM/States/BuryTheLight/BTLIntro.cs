@@ -1,0 +1,152 @@
+using DragoonMayCry.Audio.BGM;
+using DragoonMayCry.Audio.BGM.FSM;
+using DragoonMayCry.Audio.BGM.FSM.States;
+using Lumina.Data.Parsing;
+using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
+{
+    public class BTLIntro : IFsmState
+    {
+        enum IntroState
+        {
+            OutOfCombat,
+            CombatStart,
+            EndCombat
+        }
+        public BgmState ID { get { return BgmState.Intro; } }
+
+        private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new Dictionary<BgmId, BgmTrackData> {
+            { BgmId.Intro, new BgmTrackData(1600, 51500) },
+        };
+
+        private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
+            { BgmId.Intro, DynamicBgmService.GetPathToAudio("BuryTheLight\\intro.ogg") },
+            { BgmId.CombatEnd, DynamicBgmService.GetPathToAudio("BuryTheLight\\end.ogg") },
+        };
+
+        private readonly AudioService audioService;
+        private readonly Stopwatch currentTrackStopwatch;
+        private int transitionTime = 0;
+        private readonly Queue<ISampleProvider> samples;
+        private IntroState state = IntroState.OutOfCombat;
+        private int nextStateTransitionTime = 0;
+
+        public BTLIntro(AudioService audioService)
+        {
+            currentTrackStopwatch = new Stopwatch();
+
+            this.audioService = audioService;
+            samples = new Queue<ISampleProvider>();
+        }
+
+        public void Enter(bool fromVerse)
+        {
+            state = IntroState.OutOfCombat;
+            var sample = audioService.PlayBgm(BgmId.Intro, 20000);
+            if (sample != null)
+            {
+                samples.Enqueue(sample);
+            }
+
+            transitionTime = transitionTimePerId[BgmId.Intro].TransitionStart;
+            currentTrackStopwatch.Restart();
+        }
+
+        public void Update()
+        {
+            if (!currentTrackStopwatch.IsRunning)
+            {
+                return;
+            }
+
+            if (currentTrackStopwatch.Elapsed.TotalMilliseconds > transitionTime)
+            {
+
+                if (state != IntroState.OutOfCombat )
+                {
+                    TransitionToNextState();
+                }
+                else
+                {
+                    var sample = audioService.PlayBgm(BgmId.Intro);
+                    if (sample != null)
+                    {
+                        samples.Enqueue(sample);
+                    }
+                    currentTrackStopwatch.Restart();
+                }
+            }
+        }
+
+        public void Reset()
+        {
+            while (samples.Count > 0)
+            {
+                audioService.RemoveBgmPart(samples.Dequeue());
+            }
+            currentTrackStopwatch.Reset();
+        }
+
+        public Dictionary<BgmId, string> GetBgmPaths()
+        {
+            return bgmPaths;
+        }
+
+        public int Exit(ExitType exit)
+        {
+            if (!currentTrackStopwatch.IsRunning)
+            {
+                return 0;
+            }
+            if (exit == ExitType.ImmediateExit)
+            {
+                transitionTime = 0;
+                TransitionToNextState();
+                return 0;
+            }
+            // we are already leaving this state, player transitioned rapidly between multiple ranks
+            if (state != IntroState.OutOfCombat)
+            {
+                nextStateTransitionTime = (int)Math.Max(nextStateTransitionTime - currentTrackStopwatch.Elapsed.TotalMilliseconds, 0);
+            }
+            else if (exit == ExitType.Promotion)
+            {
+                state = IntroState.CombatStart;
+                nextStateTransitionTime = 0;
+                transitionTime = 1600;
+                currentTrackStopwatch.Restart();
+            }
+
+            if (exit == ExitType.EndOfCombat && state != IntroState.EndCombat)
+            {
+                state = IntroState.EndCombat;
+                transitionTime = 1600;
+                nextStateTransitionTime = 8000;
+                currentTrackStopwatch.Restart();
+                audioService.PlayBgm(BgmId.CombatEnd);
+            }
+            return nextStateTransitionTime;
+        }
+
+        private void TransitionToNextState()
+        {
+            var sample = (FadeInOutSampleProvider) samples.Dequeue();
+            sample.BeginFadeOut(3000);
+
+            currentTrackStopwatch.Reset();
+        }
+
+        public bool CancelExit()
+        {
+            return false;
+        }
+    }
+}

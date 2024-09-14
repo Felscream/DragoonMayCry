@@ -20,7 +20,7 @@ namespace DragoonMayCry.State
     public unsafe class PlayerState : IDisposable
     {
         public bool IsInCombat => CheckCondition([ConditionFlag.InCombat]);
-        public bool IsInsideInstance => CheckCondition([ConditionFlag.BoundByDuty]);
+        public bool IsInsideInstance => CheckCondition([ConditionFlag.BoundByDuty, ConditionFlag.BoundByDuty56, ConditionFlag.BoundByDuty95]);
         public bool IsDead => Player != null && Player.IsDead;
         public bool IsLoggedIn => Player != null;
         public IPlayerCharacter? Player => Service.ClientState.LocalPlayer;
@@ -65,17 +65,17 @@ namespace DragoonMayCry.State
 
         public void Update(IFramework framework)
         {
+            onEnteringInstanceStateTracker.Update(this);
+            loginStateTracker.Update(this);
+            jobChangeTracker.Update(this);
+
             if (!CanUpdateStates())
             {
                 return;
             }
             onDeathStateTracker.Update(this);
             inCombatStateTracker.Update(this);
-            onEnteringInstanceStateTracker.Update(this);
-            loginStateTracker.Update(this);
-            jobChangeTracker.Update(this);
             debuffTracker.Update(this);
-            
         }
 
         private bool CanUpdateStates()

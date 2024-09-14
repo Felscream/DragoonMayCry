@@ -11,18 +11,11 @@ namespace DragoonMayCry.State.Tracker
         public override void Update(PlayerState playerState)
         {
             CurrentValue = playerState.IsInsideInstance;
-            if (CurrentValue && !LastValue)
+            if (CurrentValue != LastValue)
             {
-                Service.Log.Debug("Player entered instance");
                 OnChange?.Invoke(this, CurrentValue);
                 
             }
-            else if (!CurrentValue && LastValue)
-            {
-                Service.Log.Debug("Player left instance");
-                OnChange?.Invoke(this, CurrentValue);
-            }
-
             LastValue = CurrentValue;
         }
     }
