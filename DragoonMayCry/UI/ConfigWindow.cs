@@ -95,7 +95,7 @@ public class ConfigWindow : Window
         var announcerValues = Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>().ToList();
         InfoBox.Instance.AddTitle("Announcer")
 
-            .AddConfigCheckbox("Activate announcer", configuration.PlaySoundEffects)
+            .AddConfigCheckbox("Enable announcer", configuration.PlaySoundEffects)
             .AddConfigCheckbox("Force announcer on blunders", configuration.ForceSoundEffectsOnBlunder)
             .AddAction(() => { 
                 if(ImGui.Checkbox("Apply game volume on announcer", ref configuration.ApplyGameVolumeSfx.Value)){
