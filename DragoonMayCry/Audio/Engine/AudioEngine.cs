@@ -31,8 +31,8 @@ namespace DragoonMayCry.Audio.Engine
 
         public AudioEngine()
         {
-            sfxOutputDevice = new WaveOutEvent();
-            bgmOutputDevice = new WaveOutEvent();
+            sfxOutputDevice = new WasapiOut();
+            bgmOutputDevice = new WasapiOut();
 
             announcerSfx = new Dictionary<SoundId, CachedSound>();
             bgmStems = new Dictionary<BgmId, CachedSound>();

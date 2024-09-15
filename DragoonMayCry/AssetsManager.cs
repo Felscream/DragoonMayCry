@@ -14,9 +14,9 @@ namespace DragoonMayCry
 {
     public static class AssetsManager
     {
-        public enum Status
+        public enum AssetsStatus
         {
-            Ready,
+            Uninitialized,
             Updating,
             Done,
             FailedFileIntegrity,
@@ -25,8 +25,9 @@ namespace DragoonMayCry
         }
 
         public static EventHandler<bool>? AssetsReady;
-        public static bool IsReady = false;
-        public static Status status = Status.Ready;
+        public static bool IsReady { get; private set; }
+        public static AssetsStatus Status { get; private set; } = AssetsStatus.Uninitialized;
+
         private const string TargetAssetVersion = "0.12.0.0";
         private const string TargetSha1 = "fe381bb7cfdcb5012d55e4acfd0944e762ce7295";
         private const long RequiredDiskSpaceCompressed = 42_303_488;
@@ -45,12 +46,12 @@ namespace DragoonMayCry
 
         public static void FetchAudioFiles()
         {
-            if(status == Status.Updating ) {
+            if(Status == AssetsStatus.Updating ) {
                 return;
             }
 
-            string configDir = Plugin.PluginInterface.GetPluginConfigDirectory(); ;
-            string localAssetDir = GetAssetsDirectory();
+            var configDir = Plugin.PluginInterface.GetPluginConfigDirectory(); ;
+            var localAssetDir = GetAssetsDirectory();
             var areFilesValid = false;
             if (Directory.Exists(localAssetDir))
             {
@@ -59,13 +60,13 @@ namespace DragoonMayCry
             
             if (areFilesValid)
             {
-                status = Status.Done;
+                Status = AssetsStatus.Done;
                 SendAssetsReadyEvent();
                 return;
             }
 
             LogAndNotify("Downloading assets", NotificationType.Info);
-            status = Status.Updating;
+            Status = AssetsStatus.Updating;
             // Clear folder if it exists
             if (Directory.Exists(localAssetDir))
             {
@@ -73,14 +74,14 @@ namespace DragoonMayCry
             }
 
             Uri assetsUri = new Uri($"https://github.com/Felscream/DragoonMayCry/releases/download/v{TargetAssetVersion}/assets.zip");
-            string downloadLocation = $"{configDir}/assets-{TargetAssetVersion}.zip";
+            var downloadLocation = $"{configDir}/assets-{TargetAssetVersion}.zip";
             var requiredSpace = RequiredDiskSpaceExtracted + RequiredDiskSpaceCompressed;
-            long freeDiskSpace = new DriveInfo(configDir).AvailableFreeSpace;
+            var freeDiskSpace = new DriveInfo(configDir).AvailableFreeSpace;
 
             if(freeDiskSpace < requiredSpace)
             {
                 LogAndNotify("Not enough free disk space to extract assets", NotificationType.Error);
-                status = Status.FailedInsufficientDiskSpace;
+                Status = AssetsStatus.FailedInsufficientDiskSpace;
                 return;
             }
 
@@ -90,7 +91,7 @@ namespace DragoonMayCry
             if (!response.IsSuccessStatusCode)
             {
                 LogAndNotify($"Unable to download assets: {response.StatusCode} - {response.Content}", NotificationType.Error);
-                status = Status.FailedDownloading;
+                Status = AssetsStatus.FailedDownloading;
                 return;
             }
 
@@ -104,15 +105,15 @@ namespace DragoonMayCry
             ZipFile.ExtractToDirectory(downloadLocation, localAssetDir);
             File.Delete(downloadLocation);
 
-            LogAndNotify("Asset extraction complete", NotificationType.Success);
+            LogAndNotify("Assets extraction complete", NotificationType.Success);
             // Validate the downloaded assets
             if (!AreLocalFilesValid())
             {
                 LogAndNotify("File integrity check failed", NotificationType.Error);
-                status = Status.FailedFileIntegrity;
+                Status = AssetsStatus.FailedFileIntegrity;
                 return;
             }
-            status = Status.Done;
+            Status = AssetsStatus.Done;
             SendAssetsReadyEvent();
         }
        
@@ -161,7 +162,7 @@ namespace DragoonMayCry
 
         public static string GetAssetsDirectory()
         {
-            string configDir = Plugin.PluginInterface.GetPluginConfigDirectory();
+            var configDir = Plugin.PluginInterface.GetPluginConfigDirectory();
             return $"{configDir}/assets";
         }
 
@@ -195,12 +196,12 @@ namespace DragoonMayCry
 
         private static string? CurrentDownloadedAssetVersion()
         {
-            string assetsDir = GetAssetsDirectory();
-            string manifestFile = $"{assetsDir}/manifest.json";
+            var assetsDir = GetAssetsDirectory();
+            var manifestFile = $"{assetsDir}/manifest.json";
 
             if (!File.Exists(manifestFile)) return null;
 
-            string jsonData = File.ReadAllText(manifestFile);
+            var jsonData = File.ReadAllText(manifestFile);
             AssetsManifest? manifest = JsonConvert.DeserializeObject<AssetsManifest>(jsonData);
 
             return manifest?.Version;

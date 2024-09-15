@@ -42,14 +42,14 @@ public class ConfigWindow : Window
 
     public override void Draw()
     {
-        switch (AssetsManager.status)
+        switch (AssetsManager.Status)
         {
-            case AssetsManager.Status.Updating:
+            case AssetsManager.AssetsStatus.Updating:
                 ImGui.Text($"Downloading additional assets...");
                 break;
-            case AssetsManager.Status.FailedDownloading:
-            case AssetsManager.Status.FailedInsufficientDiskSpace:
-            case AssetsManager.Status.FailedFileIntegrity:
+            case AssetsManager.AssetsStatus.FailedDownloading:
+            case AssetsManager.AssetsStatus.FailedInsufficientDiskSpace:
+            case AssetsManager.AssetsStatus.FailedFileIntegrity:
                 DrawError();
                 break;
         }
@@ -58,11 +58,11 @@ public class ConfigWindow : Window
 
     private void DrawError()
     {
-        var errorMessage = AssetsManager.status switch
+        var errorMessage = AssetsManager.Status switch
         {
-            AssetsManager.Status.FailedInsufficientDiskSpace => "Not enough disk space for additional assets",
-            AssetsManager.Status.FailedDownloading => "Could not retrieve additional assets",
-            AssetsManager.Status.FailedFileIntegrity => "File integrity check failed, redownload them",
+            AssetsManager.AssetsStatus.FailedInsufficientDiskSpace => "Not enough disk space for additional assets",
+            AssetsManager.AssetsStatus.FailedDownloading => "Could not retrieve additional assets",
+            AssetsManager.AssetsStatus.FailedFileIntegrity => "File integrity check failed, redownload them",
             _ => "An unexpected error occured",
         };
 
@@ -77,7 +77,7 @@ public class ConfigWindow : Window
     private void DrawConfigMenu()
     {
 
-        if (AssetsManager.status == AssetsManager.Status.Done)
+        if (AssetsManager.Status == AssetsManager.AssetsStatus.Done)
         {
             InfoBox.Instance.AddTitle("General")
             .AddConfigCheckbox("Lock rank window", configuration.LockScoreWindow)
@@ -93,11 +93,12 @@ public class ConfigWindow : Window
             .Draw();
 
         var announcerValues = Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>().ToList();
-        InfoBox.Instance.AddTitle("SFX")
-            .AddConfigCheckbox("Play sound effects", configuration.PlaySoundEffects)
-            .AddConfigCheckbox("Force sound effect on blunders", configuration.ForceSoundEffectsOnBlunder)
+        InfoBox.Instance.AddTitle("Announcer")
+
+            .AddConfigCheckbox("Activate announcer", configuration.PlaySoundEffects)
+            .AddConfigCheckbox("Force announcer on blunders", configuration.ForceSoundEffectsOnBlunder)
             .AddAction(() => { 
-                if(ImGui.Checkbox("Apply game volume on sound effects", ref configuration.ApplyGameVolumeSfx.Value)){
+                if(ImGui.Checkbox("Apply game volume on announcer", ref configuration.ApplyGameVolumeSfx.Value)){
                     KamiCommon.SaveConfiguration();
                     SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
                 }
@@ -105,13 +106,13 @@ public class ConfigWindow : Window
             .AddAction(() =>
             {
                 ImGui.SetNextItemWidth(150f);
-                if (ImGui.SliderInt("Sound effect volume", ref configuration.SfxVolume.Value, 0, 300))
+                if (ImGui.SliderInt("Announcer volume", ref configuration.SfxVolume.Value, 0, 300))
                 {
                     KamiCommon.SaveConfiguration();
                     SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
                 }
             })
-            .AddString("Play each unique SFX only once every")
+            .AddString("Play each unique line only once every")
             .SameLine()
             .AddSliderInt("occurrences", configuration.PlaySfxEveryOccurrences, 1, 20, 100)
             .Draw();
