@@ -1,4 +1,4 @@
-using DragoonMayCry.Score.Style.Announcer;
+using DragoonMayCry.Audio.StyleAnnouncer;
 using KamiLib.Configuration;
 using System;
 using System.Collections.Generic;
@@ -18,7 +18,8 @@ namespace DragoonMayCry.Configuration
             CrimsonCloud,
             Randomize
         }
+        public Setting<bool> EnableDmc = new (true);
         public Setting<AnnouncerType> Announcer = new (AnnouncerType.DmC5);
-        public Setting<BgmConfiguration> Bgm = new Setting<BgmConfiguration>(BgmConfiguration.Off);
+        public Setting<BgmConfiguration> Bgm = new (BgmConfiguration.Off);
     }
 }

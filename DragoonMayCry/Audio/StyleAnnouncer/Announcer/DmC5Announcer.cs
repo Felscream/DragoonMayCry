@@ -1,4 +1,3 @@
-using DragoonMayCry.Audio;
 using DragoonMayCry.Score.Model;
 using System;
 using System.Collections.Generic;
@@ -7,7 +6,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DragoonMayCry.Score.Style.Announcer.StyleAnnouncer
+namespace DragoonMayCry.Audio.StyleAnnouncer.Announcer
 {
     internal class DmC5Announcer : IStyleAnnouncer
     {

@@ -1,5 +1,4 @@
 using DragoonMayCry.Score.Model;
-using DragoonMayCry.Score.Style.Rank;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using System;
@@ -8,9 +7,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static DragoonMayCry.Score.Style.Rank.StyleRankHandler;
+using static DragoonMayCry.Score.Rank.StyleRankHandler;
 
-namespace DragoonMayCry.Score
+namespace DragoonMayCry.Score.Rank
 {
     public class FinalRankCalculator : IResettable
     {
@@ -19,7 +18,8 @@ namespace DragoonMayCry.Score
         private Dictionary<StyleType, double> timeInEachTier;
         private Stopwatch tierTimer;
         private StyleType currentTier = StyleType.NoStyle;
-        public FinalRankCalculator(PlayerState playerState, StyleRankHandler styleRankHandler) {
+        public FinalRankCalculator(PlayerState playerState, StyleRankHandler styleRankHandler)
+        {
             timeInEachTier = new Dictionary<StyleType, double>();
             tierTimer = new Stopwatch();
             styleRankHandler.StyleRankChange += OnRankChange;
@@ -29,13 +29,13 @@ namespace DragoonMayCry.Score
 
         private StyleType DetermineFinalRank()
         {
-            StyleType finalRank = StyleType.D;
+            var finalRank = StyleType.D;
             double maxTime = 0;
-       
-            foreach(KeyValuePair<StyleType, double> entry in timeInEachTier)
+
+            foreach (var entry in timeInEachTier)
             {
-                var timeInTier = entry.Value ;
-                if(timeInTier > maxTime)
+                var timeInTier = entry.Value;
+                if (timeInTier > maxTime)
                 {
                     maxTime = timeInTier;
                     finalRank = entry.Key;
@@ -47,8 +47,8 @@ namespace DragoonMayCry.Score
 
         private void OnCombat(object? sender, bool enteredCombat)
         {
-            if(playerState.IsInPvp()
-               || (!playerState.IsInsideInstance && !Plugin.Configuration!.ActiveOutsideInstance)
+            if (playerState.IsInPvp()
+               || !playerState.IsInsideInstance && !Plugin.Configuration!.ActiveOutsideInstance
                || !playerState.IsCombatJob())
             {
                 return;
@@ -59,7 +59,7 @@ namespace DragoonMayCry.Score
                 timeInEachTier = new Dictionary<StyleType, double>();
                 tierTimer.Start();
             }
-            else if(tierTimer.IsRunning)
+            else if (tierTimer.IsRunning)
             {
                 saveTimeInTier(currentTier);
                 tierTimer.Reset();
@@ -76,11 +76,12 @@ namespace DragoonMayCry.Score
             }
 
             currentTier = rankChange.NewRank;
-            if (!tierTimer.IsRunning) {
+            if (!tierTimer.IsRunning)
+            {
                 return;
             }
             saveTimeInTier(rankChange.PreviousRank);
-            if(rankChange.IsBlunder)
+            if (rankChange.IsBlunder)
             {
                 if (timeInEachTier.ContainsKey(StyleType.S))
                 {
@@ -91,7 +92,7 @@ namespace DragoonMayCry.Score
                     timeInEachTier.Add(StyleType.S, -10d);
                 }
             }
-            
+
             if (!timeInEachTier.ContainsKey(currentTier))
             {
                 timeInEachTier.Add(currentTier, 0);
@@ -101,10 +102,11 @@ namespace DragoonMayCry.Score
 
         private void saveTimeInTier(StyleType tier)
         {
-            if(tier == StyleType.NoStyle)
+            if (tier == StyleType.NoStyle)
             {
                 tier = StyleType.D;
-            } else if (tier == StyleType.S || tier == StyleType.SS || tier == StyleType.SSS)
+            }
+            else if (tier == StyleType.S || tier == StyleType.SS || tier == StyleType.SSS)
             {
                 tier = StyleType.S;
             }

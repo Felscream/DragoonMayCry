@@ -1,20 +1,14 @@
-using Dalamud.Interface.Windowing;
-using DragoonMayCry.Configuration;
-using ImGuiNET;
-using System;
-using System.Numerics;
-using DragoonMayCry.Score.Style;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using DragoonMayCry.State;
-using KamiLib.Drawing;
-using KamiLib;
-using DragoonMayCry.Audio;
 using Dalamud.Interface.Components;
+using Dalamud.Interface.Windowing;
+using DragoonMayCry.Audio.StyleAnnouncer;
+using DragoonMayCry.Configuration;
 using DragoonMayCry.Score.Model;
-using DragoonMayCry.Score.Style.Announcer;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using System.Collections.Generic;
+using ImGuiNET;
+using KamiLib;
+using KamiLib.Drawing;
+using System;
 using System.Linq;
+using System.Numerics;
 
 namespace DragoonMayCry.UI;
 

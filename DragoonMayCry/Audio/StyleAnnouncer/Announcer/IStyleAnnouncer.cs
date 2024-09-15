@@ -1,4 +1,3 @@
-using DragoonMayCry.Audio;
 using DragoonMayCry.Score.Model;
 using System;
 using System.Collections.Generic;
@@ -6,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DragoonMayCry.Score.Style.Announcer.StyleAnnouncer
+namespace DragoonMayCry.Audio.StyleAnnouncer.Announcer
 {
     public interface IStyleAnnouncer
     {

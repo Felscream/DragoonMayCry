@@ -8,10 +8,10 @@ using DragoonMayCry.Data;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Util;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using static DragoonMayCry.Score.Style.Rank.StyleRankHandler;
+using static DragoonMayCry.Score.Rank.StyleRankHandler;
 using DragoonMayCry.Score.Table;
 using DragoonMayCry.Score.Model;
-using DragoonMayCry.Score.Style.Rank;
+using DragoonMayCry.Score.Rank;
 
 namespace DragoonMayCry.Score
 {

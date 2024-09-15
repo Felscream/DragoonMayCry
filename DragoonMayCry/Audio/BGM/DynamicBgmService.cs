@@ -5,7 +5,7 @@ using DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight;
 using DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
-using DragoonMayCry.Score.Style.Rank;
+using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Common.Lua;
 using NAudio.Wave;
@@ -319,6 +319,18 @@ namespace DragoonMayCry.Audio.BGM
             {
                 ResetGameBgm();
             }
+        }
+        public static string GetBgmLabel(JobConfiguration.BgmConfiguration bgm)
+        {
+            return bgm switch
+            {
+                JobConfiguration.BgmConfiguration.Off => "Off",
+                JobConfiguration.BgmConfiguration.BuryTheLight => "Bury the Light",
+                JobConfiguration.BgmConfiguration.DevilTrigger => "Devil Trigger",
+                JobConfiguration.BgmConfiguration.CrimsonCloud => "Crimson Cloud",
+                JobConfiguration.BgmConfiguration.Randomize => "Randomize",
+                _ => "Unknown"
+            };
         }
     }
 }

@@ -1,6 +1,6 @@
 using Dalamud.Configuration;
+using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Data;
-using DragoonMayCry.Score.Style.Announcer;
 using KamiLib.Configuration;
 using Newtonsoft.Json;
 using System;
