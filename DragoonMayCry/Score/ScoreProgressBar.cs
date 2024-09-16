@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
-using DragoonMayCry.Score.Style.Rank;
+using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using ImGuiNET;

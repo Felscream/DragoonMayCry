@@ -63,12 +63,11 @@ namespace DragoonMayCry.State
             return Instance;
         }
 
-        public void Update(IFramework framework)
+        private void Update(IFramework framework)
         {
             onEnteringInstanceStateTracker.Update(this);
             loginStateTracker.Update(this);
             jobChangeTracker.Update(this);
-
             if (!CanUpdateStates())
             {
                 return;

@@ -4,13 +4,13 @@ using Dalamud.Plugin;
 using DragoonMayCry.Audio;
 using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.BGM.FSM;
+using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
 using DragoonMayCry.Score;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
-using DragoonMayCry.Score.Style.Announcer;
-using DragoonMayCry.Score.Style.Rank;
+using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
 using DragoonMayCry.UI;
 using DragoonMayCry.Util;
@@ -40,7 +40,7 @@ public unsafe class Plugin : IDalamudPlugin
     private static AudioService? AudioService;
     private static DynamicBgmService? BgmService;
     public static StyleAnnouncerService? StyleAnnouncerService;
-    private static bool IsCombatJob;
+    private static JobIds CurrentJob = JobIds.OTHER;
     public Plugin()
     {
         PluginInterface.Create<Service>();
@@ -77,11 +77,18 @@ public unsafe class Plugin : IDalamudPlugin
     public static bool CanRunDmc()
     {
         // A warning appears if PlayerState#IsCombatJob is used directly
-        return IsCombatJob
-               && PlayerState!.IsInCombat
-               && !PlayerState.IsInPvp()
-               && (PlayerState.IsInsideInstance ||
-                   Configuration!.ActiveOutsideInstance);
+        return JobHelper.IsCombatJob(CurrentJob)
+                && PlayerState!.IsInCombat
+                && !PlayerState.IsInPvp()
+                && IsEnabledForCurrentJob()
+                && (PlayerState.IsInsideInstance 
+                    || Configuration!.ActiveOutsideInstance);
+    }
+
+    public static bool IsEnabledForCurrentJob()
+    {
+        return Configuration!.JobConfiguration.ContainsKey(CurrentJob)
+                && Configuration.JobConfiguration[CurrentJob].EnableDmc;
     }
 
     public void Dispose()
@@ -155,7 +162,7 @@ public unsafe class Plugin : IDalamudPlugin
 
     private void OnJobChange(object? sender, JobIds job)
     {
-        IsCombatJob = JobHelper.IsCombatJob(job);
+        CurrentJob = job;
     }
 
     [Conditional("DEBUG")]

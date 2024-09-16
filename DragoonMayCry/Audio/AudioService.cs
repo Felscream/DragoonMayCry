@@ -1,6 +1,7 @@
 using Dalamud.Game.Config;
 using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.Engine;
+using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Score.Model;
 using ImGuiNET;
 using KamiLib.Misc;

@@ -8,7 +8,7 @@ using DragoonMayCry.Score.Action;
 using DragoonMayCry.State;
 using DragoonMayCry.Score.Model;
 
-namespace DragoonMayCry.Score.Style.Rank
+namespace DragoonMayCry.Score.Rank
 {
     public class StyleRankHandler : IResettable
     {

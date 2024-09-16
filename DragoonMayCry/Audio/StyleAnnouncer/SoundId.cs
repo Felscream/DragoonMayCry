@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DragoonMayCry.Audio
+namespace DragoonMayCry.Audio.StyleAnnouncer
 {
     public enum SoundId
     {

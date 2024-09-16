@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DragoonMayCry.Score.Style.Announcer
+namespace DragoonMayCry.Audio.StyleAnnouncer
 {
     public enum AnnouncerType
     {

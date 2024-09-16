@@ -1,19 +1,10 @@
-using Dalamud.Plugin.Services;
 using DragoonMayCry.Audio.BGM;
-using DragoonMayCry.Score.Model;
-using DragoonMayCry.Score.Style;
-using Lumina;
-using NAudio.Vorbis;
+using DragoonMayCry.Audio.StyleAnnouncer;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
-using NVorbis;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading;
-using static Dalamud.Interface.Utility.Raii.ImRaii;
 
 namespace DragoonMayCry.Audio.Engine
 {

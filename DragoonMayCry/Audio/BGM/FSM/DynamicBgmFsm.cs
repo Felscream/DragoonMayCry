@@ -2,7 +2,7 @@ using Dalamud.Plugin.Services;
 using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.BGM.FSM.States;
 using DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight;
-using DragoonMayCry.Score.Style.Rank;
+using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using System;

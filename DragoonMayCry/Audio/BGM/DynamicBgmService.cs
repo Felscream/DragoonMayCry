@@ -5,7 +5,7 @@ using DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight;
 using DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
-using DragoonMayCry.Score.Style.Rank;
+using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Common.Lua;
 using NAudio.Wave;
@@ -119,16 +119,37 @@ namespace DragoonMayCry.Audio.BGM
         {
             var insideInstance = playerState.IsInsideInstance;
             currentJob = job;
-            bgmFsm.Deactivate();
+
             if (!CanPlayDynamicBgm(insideInstance))
             {
-                bgmFsm.Deactivate();
-                audioService.StopBgm();
-                ResetGameBgm();
+                if (insideInstance && bgmFsm.IsActive)
+                {
+                    bgmFsm.Deactivate();
+                    ResetGameBgm();
+                }
                 return;
             }
             DisableGameBgm();
             PrepareBgm(currentJob);
+        }
+
+        public void OnJobEnableChange(object? sender, JobIds job)
+        {
+            if(job != currentJob)
+            {
+                return;
+            }
+            var isInsideInstance = playerState.IsInsideInstance;
+            if (CanPlayDynamicBgm(isInsideInstance) && !bgmFsm.IsActive)
+            {
+                gameBgmState = Service.GameConfig.System.GetBool("IsSndBgm");
+                DisableGameBgm();
+                PrepareBgm(currentJob);
+            } else if (isInsideInstance && bgmFsm.IsActive)
+            {
+                bgmFsm.Deactivate();
+                ResetGameBgm();
+            }
         }
 
         private bool CanPlayDynamicBgm(bool isInInstance)
@@ -137,7 +158,8 @@ namespace DragoonMayCry.Audio.BGM
                             && !playerState.IsInPvp()
                             && isInInstance
                             && Plugin.Configuration!.EnableDynamicBgm
-                            && Plugin.Configuration!.JobConfiguration.ContainsKey(currentJob)
+                            && Plugin.Configuration.JobConfiguration.ContainsKey(currentJob)
+                            && Plugin.Configuration.JobConfiguration[currentJob].EnableDmc
                             && Plugin.Configuration.JobConfiguration[currentJob].Bgm.Value != JobConfiguration.BgmConfiguration.Off;
         }
 
@@ -319,6 +341,18 @@ namespace DragoonMayCry.Audio.BGM
             {
                 ResetGameBgm();
             }
+        }
+        public static string GetBgmLabel(JobConfiguration.BgmConfiguration bgm)
+        {
+            return bgm switch
+            {
+                JobConfiguration.BgmConfiguration.Off => "Off",
+                JobConfiguration.BgmConfiguration.BuryTheLight => "Bury the Light",
+                JobConfiguration.BgmConfiguration.DevilTrigger => "Devil Trigger",
+                JobConfiguration.BgmConfiguration.CrimsonCloud => "Crimson Cloud",
+                JobConfiguration.BgmConfiguration.Randomize => "Randomize",
+                _ => "Unknown"
+            };
         }
     }
 }
