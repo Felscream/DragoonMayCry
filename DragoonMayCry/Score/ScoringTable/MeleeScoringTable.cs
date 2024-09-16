@@ -38,7 +38,7 @@ namespace DragoonMayCry.Score.Table
 
         protected override float GetDpsAtIlvl(int ilvl)
         {
-            return (float)(109f * Math.Exp(0.00752f * ilvl));
+            return (float)(76.7f * Math.Exp(0.00799f * ilvl));
         }
     }
 }
