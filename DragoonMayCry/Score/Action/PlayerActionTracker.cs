@@ -60,7 +60,6 @@ namespace DragoonMayCry.Score.Action
         };
 
         public EventHandler? OnGcdDropped;
-        public EventHandler? OnCastCanceled;
         public EventHandler<float>? OnFlyTextCreation;
         public EventHandler<float>? OnGcdClip;
         public EventHandler<LimitBreakEvent>? UsingLimitBreak;
@@ -236,8 +235,8 @@ namespace DragoonMayCry.Score.Action
             if (limitBreakCast != null)
             {
                 CancelLimitBreak();
+                return;
             }
-            // send a cast cancel event
         }
 
         private void OnCast(uint sourceId, nint ptr)

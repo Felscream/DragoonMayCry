@@ -17,16 +17,19 @@ using System.Threading.Tasks;
 
 namespace DragoonMayCry.UI
 {
-    internal class JobSelection : ISelectable, IDrawable
+    internal class SelectedJobConfiguration : ISelectable, IDrawable
     {
         public delegate void JobAnnouncerChange(JobIds job, AnnouncerType announcer);
-        public delegate void JobBgmChange(JobIds job, JobConfiguration.BgmConfiguration bgm);
+        public delegate void DmcToggleChange(JobIds job);
+        public delegate void ApplyToAll(bool enabled, AnnouncerType announcer, JobConfiguration.BgmConfiguration bgm);
         public JobAnnouncerChange jobAnnouncerChange;
+        public DmcToggleChange dmcToggleChange;
+        public ApplyToAll applyToAll;
         private readonly JobIds job;
         private readonly JobConfiguration configuration;
         private readonly IList<AnnouncerType> announcers;
         private readonly IList<JobConfiguration.BgmConfiguration> bgms;
-        public JobSelection(JobIds job, JobConfiguration configuration, IList<AnnouncerType> announcers, IList<JobConfiguration.BgmConfiguration> bgms)
+        public SelectedJobConfiguration(JobIds job, JobConfiguration configuration, IList<AnnouncerType> announcers, IList<JobConfiguration.BgmConfiguration> bgms)
         {
             this.job = job;
             this.configuration = configuration;
@@ -50,13 +53,20 @@ namespace DragoonMayCry.UI
         void IDrawable.Draw()
         {
             InfoBox.Instance.AddTitle(job.ToString())
-                .AddConfigCheckbox("Enable DragoonMayCry", configuration.EnableDmc)
-                .AddString("Announcer")
-                .SameLine()
+                .AddAction(()=> {
+                    var enabled = configuration.EnableDmc.Value;
+                    if(ImGui.Checkbox("Enable DragoonMayCry", ref enabled))
+                    {
+                        configuration.EnableDmc.Value = enabled;
+                        KamiCommon.SaveConfiguration();
+                        dmcToggleChange?.Invoke(job);
+                    }
+                })
                 .BeginDisabled(PlayerState.GetInstance().IsInCombat)
                 .AddAction(() =>
                 {
-                    if (ImGui.BeginCombo($"##announcer-{job}", StyleAnnouncerService.GetAnnouncerTypeLabel(configuration.Announcer.Value)))
+                    ImGui.SetNextItemWidth(200f);
+                    if (ImGui.BeginCombo($"Announcer##announcer-{job}", StyleAnnouncerService.GetAnnouncerTypeLabel(configuration.Announcer.Value)))
                     {
                         for (int i = 0; i < announcers.Count(); i++)
                         {
@@ -72,10 +82,12 @@ namespace DragoonMayCry.UI
                 })
                 
                 .EndDisabled()
-                .AddString("Dynamic BGM")
-                .SameLine()
                 .BeginDisabled(PlayerState.GetInstance().IsInsideInstance)
-                .AddConfigCombo(bgms, configuration.Bgm, DynamicBgmService.GetBgmLabel, "", 150f)
+                .AddConfigCombo(bgms, configuration.Bgm, DynamicBgmService.GetBgmLabel, $"Dynamic BGM##bgm-{job}", 200f)
+                .AddButton("Apply to all jobs", () =>
+                {
+                    applyToAll?.Invoke(configuration.EnableDmc.Value, configuration.Announcer.Value, configuration.Bgm.Value);
+                })
                 .EndDisabled()
                 .Draw();
         }

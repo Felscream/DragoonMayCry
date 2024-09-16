@@ -30,6 +30,7 @@ namespace DragoonMayCry.UI
         {
             JobConfigurationWindow = new(Plugin.Configuration!);
             JobConfigurationWindow.JobAnnouncerTypeChange += styleAnnouncerService.OnAnnouncerTypeChange;
+            JobConfigurationWindow.EnabledForJobChange += dynamicBgmService.OnJobEnableChange;
 
             ConfigWindow = new ConfigWindow(Plugin.Configuration!, JobConfigurationWindow);
             ConfigWindow.ActiveOutsideInstanceChange += Plugin.OnActiveOutsideInstanceConfChange;
@@ -94,6 +95,11 @@ namespace DragoonMayCry.UI
 
         private void OnCombatChange(object send, bool enteringCombat)
         {
+            if(!Plugin.CanRunDmc())
+            {
+                hideRankUiStopwatch.Reset();
+                return;
+            }
             if (!enteringCombat)
             {
                 hideRankUiStopwatch.Restart();

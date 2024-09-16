@@ -49,7 +49,8 @@ namespace DragoonMayCry.Score.Rank
         {
             if (playerState.IsInPvp()
                || !playerState.IsInsideInstance && !Plugin.Configuration!.ActiveOutsideInstance
-               || !playerState.IsCombatJob())
+               || !playerState.IsCombatJob()
+               || !Plugin.IsEnabledForCurrentJob())
             {
                 return;
             }

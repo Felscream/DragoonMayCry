@@ -36,21 +36,26 @@ namespace DragoonMayCry.UI
         }
 
         public EventHandler<JobAnnouncerType>? JobAnnouncerTypeChange;
+        public EventHandler<JobIds> EnabledForJobChange;
         private readonly DmcConfigurationOne configuration;
         private readonly IList<AnnouncerType> announcers = Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>().ToList();
         private readonly IList<JobConfiguration.BgmConfiguration> bgmOptions = Enum.GetValues(typeof(JobConfiguration.BgmConfiguration)).Cast<JobConfiguration.BgmConfiguration>().ToList();
         private Setting<AnnouncerType> selectedAnnouncerPreview = new(AnnouncerType.DmC5);
         private ISelectable selected;
         private IList<ISelectable> selectableJobConfiguration = new List<ISelectable>();
-        public JobConfigurationWindow(DmcConfigurationOne configuration) : base("DragoonMayCry - Job configuration##DmCJobConfiguration", ImGuiWindowFlags.NoScrollbar)
+        public JobConfigurationWindow(DmcConfigurationOne configuration) : base("DragoonMayCry - Job configuration##DmCJobConfiguration", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
         {
-            Size = new System.Numerics.Vector2(600, 320);
+            Size = new Vector2(550, 250);
             SizeCondition = ImGuiCond.Appearing;
 
             this.configuration = configuration;
             foreach(KeyValuePair<JobIds, JobConfiguration> entry in configuration.JobConfiguration)
             {
-                selectableJobConfiguration.Add(new JobSelection(entry.Key, entry.Value, announcers, bgmOptions));
+                var jobSelection = new SelectedJobConfiguration(entry.Key, entry.Value, announcers, bgmOptions);
+                jobSelection.jobAnnouncerChange = JobAnnouncerChange;
+                jobSelection.dmcToggleChange = DmcEnabledForJobChange;
+                jobSelection.applyToAll = ApplyToAll;
+                selectableJobConfiguration.Add(jobSelection);
             }
             selected = selectableJobConfiguration[0];
         }
@@ -75,13 +80,13 @@ namespace DragoonMayCry.UI
                 ImGui.TableSetupColumn("##LeftColumn", ImGuiTableColumnFlags.WidthFixed, topLeftSideHeight);
                 ImGui.TableNextColumn();
                 var regionSize = ImGui.GetContentRegionAvail();
-                if (ImGui.BeginChild("##SelectableJobs", regionSize with { Y = topLeftSideHeight }, false, ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoScrollbar))
+                if (ImGui.BeginChild("##SelectableJobs", regionSize with { Y = topLeftSideHeight }, false, ImGuiWindowFlags.NoDecoration))
                 {
                     DrawSelectables();
                 }
                 ImGui.EndChild();
                 ImGui.TableNextColumn();
-                if (ImGui.BeginChild("##SelecteJob", Vector2.Zero, false, ImGuiWindowFlags.NoDecoration))
+                if (ImGui.BeginChild("##SelectedJob", Vector2.Zero, false, ImGuiWindowFlags.NoDecoration))
                 {
                     selected.Contents.Draw();
                 }
@@ -93,9 +98,30 @@ namespace DragoonMayCry.UI
             
         }
 
+        private void ApplyToAll(bool enabled, AnnouncerType announcer, JobConfiguration.BgmConfiguration bgm)
+        {
+            foreach(KeyValuePair<JobIds, JobConfiguration> entry in configuration.JobConfiguration)
+            {
+                entry.Value.EnableDmc = new(enabled);
+                entry.Value.Announcer = new(announcer);
+                entry.Value.Bgm = new(bgm);
+            }
+            KamiCommon.SaveConfiguration();
+        }
+
+        private void JobAnnouncerChange(JobIds job, AnnouncerType announcer)
+        {
+            JobAnnouncerTypeChange?.Invoke(this, new(announcer, job));
+        }
+
+        private void DmcEnabledForJobChange(JobIds job)
+        {
+            EnabledForJobChange?.Invoke(this, job);
+        }
+
         private void DrawSelectables()
         {
-            if (ImGui.BeginListBox(""))
+            if (ImGui.BeginListBox("", new Vector2(-1, -1)))
             {
                 foreach (var item in selectableJobConfiguration)
                 {

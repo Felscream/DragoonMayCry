@@ -119,16 +119,37 @@ namespace DragoonMayCry.Audio.BGM
         {
             var insideInstance = playerState.IsInsideInstance;
             currentJob = job;
-            bgmFsm.Deactivate();
+
             if (!CanPlayDynamicBgm(insideInstance))
             {
-                bgmFsm.Deactivate();
-                audioService.StopBgm();
-                ResetGameBgm();
+                if (insideInstance && bgmFsm.IsActive)
+                {
+                    bgmFsm.Deactivate();
+                    ResetGameBgm();
+                }
                 return;
             }
             DisableGameBgm();
             PrepareBgm(currentJob);
+        }
+
+        public void OnJobEnableChange(object? sender, JobIds job)
+        {
+            if(job != currentJob)
+            {
+                return;
+            }
+            var isInsideInstance = playerState.IsInsideInstance;
+            if (CanPlayDynamicBgm(isInsideInstance) && !bgmFsm.IsActive)
+            {
+                gameBgmState = Service.GameConfig.System.GetBool("IsSndBgm");
+                DisableGameBgm();
+                PrepareBgm(currentJob);
+            } else if (isInsideInstance && bgmFsm.IsActive)
+            {
+                bgmFsm.Deactivate();
+                ResetGameBgm();
+            }
         }
 
         private bool CanPlayDynamicBgm(bool isInInstance)
@@ -137,7 +158,8 @@ namespace DragoonMayCry.Audio.BGM
                             && !playerState.IsInPvp()
                             && isInInstance
                             && Plugin.Configuration!.EnableDynamicBgm
-                            && Plugin.Configuration!.JobConfiguration.ContainsKey(currentJob)
+                            && Plugin.Configuration.JobConfiguration.ContainsKey(currentJob)
+                            && Plugin.Configuration.JobConfiguration[currentJob].EnableDmc
                             && Plugin.Configuration.JobConfiguration[currentJob].Bgm.Value != JobConfiguration.BgmConfiguration.Off;
         }
 
