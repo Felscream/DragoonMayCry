@@ -50,7 +50,7 @@ namespace DragoonMayCry.State
             onDeathStateTracker = new();
             onEnteringInstanceStateTracker = new();
             loginStateTracker = new();
-            jobChangeTracker = new(Service.ClientState);
+            jobChangeTracker = new();
             debuffTracker = new();
             pvpStateTracker = new();
             Service.Framework.Update += Update;
@@ -229,7 +229,6 @@ namespace DragoonMayCry.State
 
         public void Dispose()
         {
-            jobChangeTracker.Dispose();
             Service.Framework.Update -= Update;
         }
     }
