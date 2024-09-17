@@ -170,11 +170,9 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
         {
             if (AssetsManager.IsReady)
             {
-                Service.Log.Debug("Loading Announcer");
                 announcer = GetCurrentJobAnnouncer();
                 LoadAnnouncer();
             }
-
         }
 
         private void UdpateAnnouncer(AnnouncerType type)

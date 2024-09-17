@@ -143,7 +143,7 @@ namespace DragoonMayCry.Score
         {
             return this.Progress < demotionThreshold
                    && !playerState.IsIncapacitated()
-                   && styleRankHandler.CurrentStyle.Value != StyleType.NoStyle
+                   && styleRankHandler.CurrentStyle.Value > StyleType.D
                    && !demotionApplicationStopwatch.IsRunning
                    && GetTimeSinceLastPromotion() > PromotionSafeguardDuration
                    && playerState.CanTargetEnemy();

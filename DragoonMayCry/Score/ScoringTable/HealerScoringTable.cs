@@ -23,7 +23,7 @@ namespace DragoonMayCry.Score.Table
         private readonly Dictionary<StyleType, ScoringCoefficient>
             scoringCoefficient = new Dictionary<StyleType, ScoringCoefficient>
             {
-                { StyleType.NoStyle, new ScoringCoefficient(6f, 0.05f) },
+                { StyleType.NoStyle, new ScoringCoefficient(3f, 0.05f) },
                 { StyleType.D, new ScoringCoefficient(6.6f, 0.1f) },
                 { StyleType.C, new ScoringCoefficient(7.4f, 0.26f) },
                 { StyleType.B, new ScoringCoefficient(8f, 0.33f) },

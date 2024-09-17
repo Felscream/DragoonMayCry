@@ -6,6 +6,7 @@ using DragoonMayCry.Data;
 using DragoonMayCry.State.Tracker;
 using DragoonMayCry.Util;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using System;
 using System.Collections.Generic;
@@ -41,6 +42,7 @@ namespace DragoonMayCry.State
         private readonly LoginStateTracker loginStateTracker;
         private readonly JobChangeTracker jobChangeTracker;
         private readonly DebuffTracker debuffTracker;
+        private readonly PvpStateTracker pvpStateTracker;
         private static PlayerState? Instance;
         private PlayerState()
         {
@@ -48,8 +50,9 @@ namespace DragoonMayCry.State
             onDeathStateTracker = new();
             onEnteringInstanceStateTracker = new();
             loginStateTracker = new();
-            jobChangeTracker = new();
+            jobChangeTracker = new(Service.ClientState);
             debuffTracker = new();
+            pvpStateTracker = new();
             Service.Framework.Update += Update;
         }
 
@@ -68,10 +71,12 @@ namespace DragoonMayCry.State
             onEnteringInstanceStateTracker.Update(this);
             loginStateTracker.Update(this);
             jobChangeTracker.Update(this);
+            pvpStateTracker.Update(this);
             if (!CanUpdateStates())
             {
                 return;
             }
+
             onDeathStateTracker.Update(this);
             inCombatStateTracker.Update(this);
             debuffTracker.Update(this);
@@ -123,14 +128,14 @@ namespace DragoonMayCry.State
             debuffTracker.OnChange += onDamageDown;
         }
 
+        public void RegisterPvpStateChangeHandler(EventHandler<bool> onPvpStateChange)
+        {
+            pvpStateTracker.OnChange += onPvpStateChange;
+        }
+
         public JobIds GetCurrentJob()
         {
-            if (Player == null)
-            {
-                return JobIds.OTHER;
-            }
-
-            return JobHelper.IdToJob(Player.ClassJob.Id);
+            return jobChangeTracker.CurrentJob;
         }
 
         public bool IsTank()
@@ -224,6 +229,7 @@ namespace DragoonMayCry.State
 
         public void Dispose()
         {
+            jobChangeTracker.Dispose();
             Service.Framework.Update -= Update;
         }
     }

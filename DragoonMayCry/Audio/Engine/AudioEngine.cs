@@ -191,6 +191,8 @@ namespace DragoonMayCry.Audio.Engine
         {
             sfxMixer.RemoveAllMixerInputs();
             bgmMixer.RemoveAllMixerInputs();
+            sfxOutputDevice.Dispose();
+            bgmOutputDevice.Dispose ();
         }
     }
 }

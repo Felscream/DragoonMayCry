@@ -73,9 +73,6 @@ namespace DragoonMayCry.Score
                 var itemEquipSlotCategory = item.EquipSlotCategory.Value;
                 if (itemEquipSlotCategory == null || itemEquipSlotCategory.SoulCrystal == 1)
                 {
-#if DEBUG
-                    Service.Log.Debug($"Ignoring item {item.Name} equipped on slot {itemEquipSlotCategory} with ilvl {item.LevelItem?.Value!.RowId}");
-#endif
                     continue;
                 }
 
@@ -95,9 +92,7 @@ namespace DragoonMayCry.Score
                                              (uint)iLvlSyncForContentLvl!);
                     }
                 }
-#if DEBUG
-                Service.Log.Debug($"Processing {item.Name} with iLvl {itemLevel}");
-#endif
+
                 totalILvl += itemLevel;
                 itemCount++;
                 if (itemEquipSlotCategory.Head == -1)

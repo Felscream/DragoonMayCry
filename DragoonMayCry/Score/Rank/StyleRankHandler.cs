@@ -41,13 +41,11 @@ namespace DragoonMayCry.Score.Rank
             StyleType.SS,
             StyleType.SSS);
 
-        private readonly AudioService audioService;
         private readonly PlayerState playerState;
 
         public StyleRankHandler(PlayerActionTracker playerActionTracker)
         {
             ResetRank();
-            audioService = AudioService.Instance;
             playerState = PlayerState.GetInstance();
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             playerState.RegisterDeathStateChangeHandler(OnDeath);
@@ -93,7 +91,7 @@ namespace DragoonMayCry.Score.Rank
 
         private void ReturnToPreviousRank(bool droppedGcd)
         {
-            if (CurrentStyle.Previous == null)
+            if (CurrentStyle.Previous == null || CurrentStyle.Previous.Value == StyleType.NoStyle)
             {
                 if (droppedGcd)
                 {
@@ -101,9 +99,8 @@ namespace DragoonMayCry.Score.Rank
                 }
                 return;
             }
-
-            StyleRankChange?.Invoke(this, new(CurrentStyle.Value, CurrentStyle.Previous.Value, droppedGcd));
             CurrentStyle = CurrentStyle.Previous;
+            StyleRankChange?.Invoke(this, new(CurrentStyle.Next!.Value, CurrentStyle.Value, droppedGcd));
         }
 
         private void ResetRank()

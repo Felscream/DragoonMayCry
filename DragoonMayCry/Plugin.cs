@@ -14,12 +14,14 @@ using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
 using DragoonMayCry.UI;
 using DragoonMayCry.Util;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using KamiLib;
 using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.IO;
 using JsonSerializer = System.Text.Json.JsonSerializer;
+using PlayerState = DragoonMayCry.State.PlayerState;
 
 namespace DragoonMayCry;
 
@@ -78,10 +80,10 @@ public unsafe class Plugin : IDalamudPlugin
     {
         // A warning appears if PlayerState#IsCombatJob is used directly
         return JobHelper.IsCombatJob(CurrentJob)
-                && PlayerState!.IsInCombat
-                && !PlayerState.IsInPvp()
-                && IsEnabledForCurrentJob()
-                && (PlayerState.IsInsideInstance 
+        && PlayerState!.IsInCombat
+        && !PlayerState.IsInPvp()
+        && IsEnabledForCurrentJob()
+        && (PlayerState.IsInsideInstance 
                     || Configuration!.ActiveOutsideInstance);
     }
 

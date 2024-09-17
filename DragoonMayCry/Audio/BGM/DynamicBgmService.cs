@@ -52,6 +52,7 @@ namespace DragoonMayCry.Audio.BGM
             playerState = PlayerState.GetInstance();
             playerState.RegisterInstanceChangeHandler(OnInstanceChange);
             playerState.RegisterJobChangeHandler(OnJobChange);
+            playerState.RegisterPvpStateChangeHandler(OnPvpStateChange);
             
             gameBgmState = Service.GameConfig.System.GetBool("IsSndBgm");
             audioService = AudioService.Instance;
@@ -119,7 +120,22 @@ namespace DragoonMayCry.Audio.BGM
         {
             var insideInstance = playerState.IsInsideInstance;
             currentJob = job;
+            if (!CanPlayDynamicBgm(insideInstance))
+            {
+                if (insideInstance && bgmFsm.IsActive)
+                {
+                    bgmFsm.Deactivate();
+                    ResetGameBgm();
+                }
+                return;
+            }
+            DisableGameBgm();
+            PrepareBgm(currentJob);
+        }
 
+        private void OnPvpStateChange(object? sender, bool inPvp)
+        {
+            var insideInstance = playerState.IsInsideInstance;
             if (!CanPlayDynamicBgm(insideInstance))
             {
                 if (insideInstance && bgmFsm.IsActive)
