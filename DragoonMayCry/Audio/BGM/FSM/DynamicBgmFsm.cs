@@ -241,7 +241,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
             currentBgmStates = states;
         }
 
-        public void Deactivate()
+        public void Disable()
         {
             ResetToIntro();
             audioService.StopBgm();
