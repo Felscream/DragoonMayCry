@@ -345,15 +345,16 @@ namespace DragoonMayCry.Audio.BGM
 
         public void ToggleDynamicBgm(object? sender, bool dynamicBgmEnabled)
         {
-            bgmFsm.Deactivate();
+           
             var currentJob = playerState.GetCurrentJob();
             if (CanPlayDynamicBgm(playerState.IsInsideInstance, currentJob))
             {
                 DisableGameBgm();
                 PrepareBgm(currentJob);
             }
-            else if (!playerState.IsInsideInstance)
+            else if(bgmFsm.IsActive)
             {
+                bgmFsm.Deactivate();
                 ResetGameBgm();
             }
         }
