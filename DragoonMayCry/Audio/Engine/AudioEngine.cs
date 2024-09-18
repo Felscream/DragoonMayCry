@@ -22,8 +22,8 @@ namespace DragoonMayCry.Audio.Engine
 
         public AudioEngine()
         {
-            sfxOutputDevice = new WasapiOut();
-            bgmOutputDevice = new WasapiOut();
+            sfxOutputDevice = new DirectSoundOut();
+            bgmOutputDevice = new DirectSoundOut();
 
             announcerSfx = new Dictionary<SoundId, CachedSound>();
             bgmStems = new Dictionary<BgmId, CachedSound>();
@@ -141,7 +141,7 @@ namespace DragoonMayCry.Audio.Engine
         public Dictionary<BgmId, CachedSound> RegisterBgm(Dictionary<BgmId, string> paths)
         {
             Dictionary<BgmId, CachedSound> bgm = new();
-            foreach (KeyValuePair<BgmId, string> entry in paths)
+            foreach (var entry in paths)
             {
                 if (!File.Exists(entry.Value))
                 {
@@ -192,7 +192,7 @@ namespace DragoonMayCry.Audio.Engine
             sfxMixer.RemoveAllMixerInputs();
             bgmMixer.RemoveAllMixerInputs();
             sfxOutputDevice.Dispose();
-            bgmOutputDevice.Dispose ();
+            bgmOutputDevice.Dispose();
         }
     }
 }

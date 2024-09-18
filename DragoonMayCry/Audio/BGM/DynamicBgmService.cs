@@ -7,16 +7,11 @@ using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
 using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
-using FFXIVClientStructs.FFXIV.Common.Lua;
-using NAudio.Wave;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using static FFXIVClientStructs.FFXIV.Client.System.String.Utf8String.Delegates;
 
 namespace DragoonMayCry.Audio.BGM
 {
@@ -30,7 +25,7 @@ namespace DragoonMayCry.Audio.BGM
             None
         }
 
-        
+
         private readonly Dictionary<BgmState, IFsmState> buryTheLightStates;
         private readonly Dictionary<BgmState, IFsmState> devilTriggerStates;
         private readonly Dictionary<BgmState, IFsmState> crimsonCloudStates;
@@ -42,7 +37,7 @@ namespace DragoonMayCry.Audio.BGM
         private bool gameBgmState;
         private Bgm currentBgm = Bgm.None;
         private bool soundFilesLoaded;
-        private Random random = new Random();
+        private readonly Random random = new();
 
         public DynamicBgmService(StyleRankHandler styleRankHandler)
         {
@@ -52,7 +47,7 @@ namespace DragoonMayCry.Audio.BGM
             playerState.RegisterInstanceChangeHandler(OnInstanceChange);
             playerState.RegisterJobChangeHandler(OnJobChange);
             playerState.RegisterPvpStateChangeHandler(OnPvpStateChange);
-            
+
             gameBgmState = Service.GameConfig.System.GetBool("IsSndBgm");
             audioService = AudioService.Instance;
 
@@ -103,11 +98,11 @@ namespace DragoonMayCry.Audio.BGM
 
         private void OnInstanceChange(object? sender, bool insideInstance)
         {
-            if(!insideInstance && bgmFsm.IsActive)
+            if (!insideInstance && bgmFsm.IsActive)
             {
                 bgmFsm.Disable();
                 ResetGameBgm();
-            } 
+            }
             else
             {
                 gameBgmState = Service.GameConfig.System.GetBool("IsSndBgm");
@@ -136,6 +131,15 @@ namespace DragoonMayCry.Audio.BGM
 
         private void OnPvpStateChange(object? sender, bool inPvp)
         {
+            if (inPvp)
+            {
+                bgmFsm.Disable();
+                ResetGameBgm();
+                return;
+            }
+
+            // when entering an instance from wolve's den pier,
+            // the PvP flag is removed after other events (instance change / job change)
             var insideInstance = playerState.IsInsideInstance;
             var currentJob = playerState.GetCurrentJob();
             if (!CanPlayDynamicBgm(insideInstance, currentJob))
@@ -174,7 +178,7 @@ namespace DragoonMayCry.Audio.BGM
 
         private bool ShouldDisableFsm()
         {
-            return playerState.IsInsideInstance && bgmFsm.IsActive;
+            return bgmFsm.IsActive;
         }
 
         private bool CanPlayDynamicBgm(bool isInInstance, JobIds job)
@@ -200,7 +204,6 @@ namespace DragoonMayCry.Audio.BGM
             {
                 return;
             }
-            bgmFsm.Disable();
             DisableGameBgm();
             PrepareBgm(currentJob);
         }
@@ -212,14 +215,14 @@ namespace DragoonMayCry.Audio.BGM
             {
                 return;
             }
-            JobConfiguration.BgmConfiguration configuration = Plugin.Configuration!.JobConfiguration[job].Bgm.Value;
-            
-            if(configuration == JobConfiguration.BgmConfiguration.Off)
+            var configuration = Plugin.Configuration!.JobConfiguration[job].Bgm.Value;
+
+            if (configuration == JobConfiguration.BgmConfiguration.Off)
             {
                 return;
             }
-            
-            if(configuration == JobConfiguration.BgmConfiguration.Randomize)
+
+            if (configuration == JobConfiguration.BgmConfiguration.Randomize)
             {
                 bgmFsm.loadNewBgm = LoadRandomBgm;
                 Task.Run(() =>
@@ -227,15 +230,15 @@ namespace DragoonMayCry.Audio.BGM
                     CacheAllBgm();
                     LoadRandomBgm();
                 });
-                
+
                 return;
             }
 
-            if(bgmFsm.loadNewBgm != null)
+            if (bgmFsm.loadNewBgm != null)
             {
                 bgmFsm.loadNewBgm -= LoadRandomBgm;
             }
-                 
+
             var selectedBgm = configuration switch
             {
                 JobConfiguration.BgmConfiguration.BuryTheLight => Bgm.BuryTheLight,
@@ -261,7 +264,7 @@ namespace DragoonMayCry.Audio.BGM
             {
                 return;
             }
-            
+
             currentBgm = selectedBgm;
 
             PlayDynamicBgm();
@@ -326,7 +329,7 @@ namespace DragoonMayCry.Audio.BGM
 
         private void CacheAllBgm()
         {
-            foreach(KeyValuePair<Bgm, Dictionary<BgmState, IFsmState>> entry in bgmStates)
+            foreach (var entry in bgmStates)
             {
                 var bgmParts = entry.Value.SelectMany(entry => entry.Value.GetBgmPaths()).ToDictionary();
                 try
@@ -336,12 +339,13 @@ namespace DragoonMayCry.Audio.BGM
                     {
                         randomBgmList.Add(entry.Key);
                     }
-                    
-                } catch(Exception e)
+
+                }
+                catch (Exception e)
                 {
                     Service.Log.Error(e, $"Error while loading [{entry.Key}] with other BGMs");
                 }
-                
+
             }
         }
 
@@ -352,14 +356,14 @@ namespace DragoonMayCry.Audio.BGM
 
         public void ToggleDynamicBgm(object? sender, bool dynamicBgmEnabled)
         {
-           
+
             var currentJob = playerState.GetCurrentJob();
             if (CanPlayDynamicBgm(playerState.IsInsideInstance, currentJob))
             {
                 DisableGameBgm();
                 PrepareBgm(currentJob);
             }
-            else if(bgmFsm.IsActive)
+            else if (bgmFsm.IsActive)
             {
                 bgmFsm.Disable();
                 ResetGameBgm();
