@@ -1,5 +1,6 @@
 using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.StyleAnnouncer;
+using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using System;
@@ -11,19 +12,21 @@ namespace DragoonMayCry.Audio.Engine
     internal class AudioEngine : IDisposable
     {
 
-        private readonly IWavePlayer sfxOutputDevice;
-        private readonly IWavePlayer bgmOutputDevice;
+        private WasapiOut sfxOutputDevice;
+        private WasapiOut bgmOutputDevice;
         private readonly Dictionary<SoundId, CachedSound> announcerSfx;
         private readonly VolumeSampleProvider sfxSampleProvider;
         private readonly MixingSampleProvider sfxMixer;
         private readonly VolumeSampleProvider bgmSampleProvider;
         private readonly MixingSampleProvider bgmMixer;
+        private readonly MMDeviceEnumerator deviceEnumerator;
+        private readonly DeviceNotificationClient notificationClient;
         private Dictionary<BgmId, CachedSound> bgmStems;
 
         public AudioEngine()
         {
-            sfxOutputDevice = new DirectSoundOut();
-            bgmOutputDevice = new DirectSoundOut();
+            sfxOutputDevice = new WasapiOut();
+            bgmOutputDevice = new WasapiOut();
 
             announcerSfx = new Dictionary<SoundId, CachedSound>();
             bgmStems = new Dictionary<BgmId, CachedSound>();
@@ -47,6 +50,23 @@ namespace DragoonMayCry.Audio.Engine
 
             sfxOutputDevice.Play();
             bgmOutputDevice.Play();
+
+            deviceEnumerator = new MMDeviceEnumerator();
+            notificationClient = new DeviceNotificationClient();
+            notificationClient.OnDefaultOutputDeviceChanged += OnDefaultDeviceChanged;
+            deviceEnumerator.RegisterEndpointNotificationCallback(notificationClient);
+        }
+
+        private void OnDefaultDeviceChanged()
+        {
+            bgmOutputDevice.Stop();
+            sfxOutputDevice.Stop();
+            bgmOutputDevice = new WasapiOut();
+            sfxOutputDevice = new WasapiOut();
+            bgmOutputDevice.Init(bgmSampleProvider);
+            sfxOutputDevice.Init(sfxSampleProvider);
+            bgmOutputDevice.Play();
+            sfxOutputDevice.Play();
         }
 
         public void UpdateSfxVolume(float value)
@@ -189,10 +209,42 @@ namespace DragoonMayCry.Audio.Engine
 
         public void Dispose()
         {
+            deviceEnumerator.UnregisterEndpointNotificationCallback(notificationClient);
+            deviceEnumerator.Dispose();
             sfxMixer.RemoveAllMixerInputs();
             bgmMixer.RemoveAllMixerInputs();
             sfxOutputDevice.Dispose();
             bgmOutputDevice.Dispose();
+        }
+
+        class DeviceNotificationClient : NAudio.CoreAudioApi.Interfaces.IMMNotificationClient
+        {
+            public delegate void DefaultDeviceChanged();
+            public DefaultDeviceChanged? OnDefaultOutputDeviceChanged;
+            public void OnDeviceStateChanged(string deviceId, DeviceState newState)
+            {
+                return;
+            }
+
+            public void OnDeviceAdded(string pwstrDeviceId)
+            {
+                return;
+            }
+
+            public void OnDeviceRemoved(string deviceId)
+            {
+                return;
+            }
+
+            public void OnDefaultDeviceChanged(DataFlow flow, Role role, string defaultDeviceId)
+            {
+                OnDefaultOutputDeviceChanged?.Invoke();
+            }
+
+            public void OnPropertyValueChanged(string pwstrDeviceId, PropertyKey key)
+            {
+                return;
+            }
         }
     }
 }
