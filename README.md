@@ -1,4 +1,7 @@
 # DragoonMayCry
+[![Download count](https://img.shields.io/endpoint?url=https://qzysathwfhebdai6xgauhz4q7m0mzmrf.lambda-url.us-east-1.on.aws/DragoonMayCry)](https://github.com/Felscream/DragoonMayCry)
+[![Availability](https://img.shields.io/badge/availability-testing-orange)](https://github.com/Felscream/DragoonMayCry)
+
 ![image](https://raw.githubusercontent.com/Felscream/DragoonMayCry/master/images/banner.png)
 
 DragoonMayCry is a plugin for Dalamud.
