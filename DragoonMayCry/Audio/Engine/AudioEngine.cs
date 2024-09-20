@@ -22,7 +22,7 @@ namespace DragoonMayCry.Audio.Engine
         private readonly MMDeviceEnumerator deviceEnumerator;
         private readonly DeviceNotificationClient notificationClient;
         private Dictionary<BgmId, CachedSound> bgmStems;
-        private ISampleProvider lastSample;
+        private ISampleProvider lastBgmSampleApplied;
 
         public AudioEngine()
         {
@@ -56,6 +56,8 @@ namespace DragoonMayCry.Audio.Engine
             notificationClient = new DeviceNotificationClient();
             notificationClient.OnDefaultOutputDeviceChanged += OnDefaultDeviceChanged;
             deviceEnumerator.RegisterEndpointNotificationCallback(notificationClient);
+
+            lastBgmSampleApplied = bgmSampleProvider;
         }
 
         private void OnDefaultDeviceChanged()
@@ -64,7 +66,7 @@ namespace DragoonMayCry.Audio.Engine
             sfxOutputDevice.Stop();
             bgmOutputDevice = new WasapiOut(AudioClientShareMode.Shared, 20);
             sfxOutputDevice = new WasapiOut();
-            bgmOutputDevice.Init(bgmSampleProvider);
+            bgmOutputDevice.Init(lastBgmSampleApplied);
             sfxOutputDevice.Init(sfxSampleProvider);
             bgmOutputDevice.Play();
             sfxOutputDevice.Play();
@@ -117,7 +119,6 @@ namespace DragoonMayCry.Audio.Engine
             }
 
             bgmMixer.AddMixerInput(input);
-            lastSample = input;
             return input;
         }
 
@@ -196,12 +197,13 @@ namespace DragoonMayCry.Audio.Engine
 
         public void ApplyDeathEffect()
         {
+            var deathEffect = new DeathEffect(bgmSampleProvider, 500, 200, 0.40f);
             bgmOutputDevice.Stop();
             bgmOutputDevice.Dispose();
-            var deathEffect = new DeathEffect(bgmSampleProvider, 500, 200, 0.40f);
             bgmOutputDevice = new WasapiOut(AudioClientShareMode.Shared, 20);
             bgmOutputDevice.Init(deathEffect);
             bgmOutputDevice.Play();
+            lastBgmSampleApplied = deathEffect;
         }
 
         [Conditional("DEBUG")]
@@ -213,6 +215,7 @@ namespace DragoonMayCry.Audio.Engine
             bgmOutputDevice = new WasapiOut(AudioClientShareMode.Shared, 20);
             bgmOutputDevice.Init(deathEffect);
             bgmOutputDevice.Play();
+            lastBgmSampleApplied = deathEffect;
         }
 
         public void RemoveDeathEffect()
@@ -222,6 +225,7 @@ namespace DragoonMayCry.Audio.Engine
             bgmOutputDevice = new WasapiOut(AudioClientShareMode.Shared, 20);
             bgmOutputDevice.Init(bgmSampleProvider);
             bgmOutputDevice.Play();
+            lastBgmSampleApplied = bgmSampleProvider;
         }
 
         public void RemoveInput(ISampleProvider sample)

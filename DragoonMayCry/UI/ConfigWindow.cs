@@ -98,7 +98,6 @@ public class ConfigWindow : Window
                 .AddAction(() =>
                 {
                     var cursorPos = ImGui.GetCursorPos();
-                    var cursorPosition = ImGui.GetCursorPos();
                     if (ImGui.Checkbox("##AnnouncerGameVolume", ref configuration.ApplyGameVolumeSfx.Value))
                     {
                         KamiCommon.SaveConfiguration();
