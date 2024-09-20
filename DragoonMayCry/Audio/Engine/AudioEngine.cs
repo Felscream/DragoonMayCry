@@ -209,9 +209,9 @@ namespace DragoonMayCry.Audio.Engine
         [Conditional("DEBUG")]
         public void ApplyDecay(float value)
         {
+            var deathEffect = new DeathEffect(bgmSampleProvider, 500, 200, value);
             bgmOutputDevice.Stop();
             bgmOutputDevice.Dispose();
-            var deathEffect = new DeathEffect(bgmSampleProvider, 500, 200, value);
             bgmOutputDevice = new WasapiOut(AudioClientShareMode.Shared, 20);
             bgmOutputDevice.Init(deathEffect);
             bgmOutputDevice.Play();

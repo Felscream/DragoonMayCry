@@ -1,15 +1,8 @@
-using DragoonMayCry.Audio.BGM;
-using DragoonMayCry.Audio.BGM.FSM;
-using DragoonMayCry.Audio.BGM.FSM.States;
-using Lumina.Data.Parsing;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
 {
@@ -23,11 +16,13 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
         }
         public BgmState ID { get { return BgmState.Intro; } }
 
-        private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new Dictionary<BgmId, BgmTrackData> {
+        private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new()
+        {
             { BgmId.Intro, new BgmTrackData(1600, 51500) },
         };
 
-        private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
+        private readonly Dictionary<BgmId, string> bgmPaths = new()
+        {
             { BgmId.Intro, DynamicBgmService.GetPathToAudio("BuryTheLight\\intro.ogg") },
             { BgmId.CombatEnd, DynamicBgmService.GetPathToAudio("BuryTheLight\\end.ogg") },
         };
@@ -70,7 +65,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
             if (currentTrackStopwatch.Elapsed.TotalMilliseconds > transitionTime)
             {
 
-                if (state != IntroState.OutOfCombat )
+                if (state != IntroState.OutOfCombat)
                 {
                     TransitionToNextState();
                 }
@@ -138,8 +133,13 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
 
         private void TransitionToNextState()
         {
-            var sample = (FadeInOutSampleProvider) samples.Dequeue();
-            sample.BeginFadeOut(3000);
+            if (samples.TryDequeue(out var sample))
+            {
+                if (sample is FadeInOutSampleProvider)
+                {
+                    ((FadeInOutSampleProvider)sample).BeginFadeOut(3000);
+                }
+            }
 
             currentTrackStopwatch.Reset();
         }
