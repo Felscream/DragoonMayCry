@@ -5,13 +5,13 @@ using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace DragoonMayCry.Audio.Engine
 {
     internal class AudioEngine : IDisposable
     {
-
         private WasapiOut sfxOutputDevice;
         private WasapiOut bgmOutputDevice;
         private readonly Dictionary<SoundId, CachedSound> announcerSfx;
@@ -22,11 +22,12 @@ namespace DragoonMayCry.Audio.Engine
         private readonly MMDeviceEnumerator deviceEnumerator;
         private readonly DeviceNotificationClient notificationClient;
         private Dictionary<BgmId, CachedSound> bgmStems;
+        private ISampleProvider lastSample;
 
         public AudioEngine()
         {
             sfxOutputDevice = new WasapiOut();
-            bgmOutputDevice = new WasapiOut();
+            bgmOutputDevice = new WasapiOut(AudioClientShareMode.Shared, 20);
 
             announcerSfx = new Dictionary<SoundId, CachedSound>();
             bgmStems = new Dictionary<BgmId, CachedSound>();
@@ -61,7 +62,7 @@ namespace DragoonMayCry.Audio.Engine
         {
             bgmOutputDevice.Stop();
             sfxOutputDevice.Stop();
-            bgmOutputDevice = new WasapiOut();
+            bgmOutputDevice = new WasapiOut(AudioClientShareMode.Shared, 20);
             sfxOutputDevice = new WasapiOut();
             bgmOutputDevice.Init(bgmSampleProvider);
             sfxOutputDevice.Init(sfxSampleProvider);
@@ -116,6 +117,7 @@ namespace DragoonMayCry.Audio.Engine
             }
 
             bgmMixer.AddMixerInput(input);
+            lastSample = input;
             return input;
         }
 
@@ -152,10 +154,9 @@ namespace DragoonMayCry.Audio.Engine
                 Service.Log.Warning($"No BGM registered for {id}");
                 return null;
             }
-            else
-            {
-                return AddBGMMixerInput(new CachedSoundSampleProvider(bgmStems[id]), fadeInDuration);
-            }
+            ISampleProvider sample = new CachedSoundSampleProvider(bgmStems[id]);
+
+            return AddBGMMixerInput(sample, fadeInDuration);
         }
 
         public Dictionary<BgmId, CachedSound> RegisterBgm(Dictionary<BgmId, string> paths)
@@ -191,6 +192,36 @@ namespace DragoonMayCry.Audio.Engine
         public void ClearSfxCache()
         {
             announcerSfx.Clear();
+        }
+
+        public void ApplyMuffledEffect()
+        {
+            bgmOutputDevice.Stop();
+            bgmOutputDevice.Dispose();
+            var lowPass = new DeathEffect(bgmSampleProvider, bgmMixer.WaveFormat.SampleRate, 500, 300, 0.4f);
+            bgmOutputDevice = new WasapiOut(AudioClientShareMode.Shared, 20);
+            bgmOutputDevice.Init(lowPass);
+            bgmOutputDevice.Play();
+        }
+
+        [Conditional("DEBUG")]
+        public void ApplyDecay(float value)
+        {
+            bgmOutputDevice.Stop();
+            bgmOutputDevice.Dispose();
+            var lowPass = new DeathEffect(bgmSampleProvider, bgmMixer.WaveFormat.SampleRate, 500, 300, value);
+            bgmOutputDevice = new WasapiOut(AudioClientShareMode.Shared, 20);
+            bgmOutputDevice.Init(lowPass);
+            bgmOutputDevice.Play();
+        }
+
+        public void RemoveMuffledEffect()
+        {
+            bgmOutputDevice.Stop();
+            bgmOutputDevice.Dispose();
+            bgmOutputDevice = new WasapiOut(AudioClientShareMode.Shared, 20);
+            bgmOutputDevice.Init(bgmSampleProvider);
+            bgmOutputDevice.Play();
         }
 
         public void RemoveInput(ISampleProvider sample)
