@@ -47,6 +47,7 @@ namespace DragoonMayCry.Audio.BGM
             playerState.RegisterInstanceChangeHandler(OnInstanceChange);
             playerState.RegisterJobChangeHandler(OnJobChange);
             playerState.RegisterPvpStateChangeHandler(OnPvpStateChange);
+            playerState.RegisterDeathStateChangeHandler(OnDeath);
 
             gameBgmState = Service.GameConfig.System.GetBool("IsSndBgm");
             audioService = AudioService.Instance;
@@ -98,6 +99,7 @@ namespace DragoonMayCry.Audio.BGM
 
         private void OnInstanceChange(object? sender, bool insideInstance)
         {
+            audioService.RemoveDeathEffect();
             if (!insideInstance && bgmFsm.IsActive)
             {
                 bgmFsm.Disable();
@@ -346,6 +348,18 @@ namespace DragoonMayCry.Audio.BGM
                     Service.Log.Error(e, $"Error while loading [{entry.Key}] with other BGMs");
                 }
 
+            }
+        }
+
+        private void OnDeath(Object? sender, bool isDead)
+        {
+            if (isDead && bgmFsm.IsActive)
+            {
+                audioService.ApplyDeathEffect();
+            }
+            else
+            {
+                audioService.RemoveDeathEffect();
             }
         }
 
