@@ -38,6 +38,7 @@ namespace DragoonMayCry.Audio
         private readonly AudioEngine audioEngine;
         private readonly Dictionary<DynamicBgmService.Bgm, Dictionary<BgmId, CachedSound>> registeredBgms = new();
         private static AudioService? instance;
+        private bool deathEffectApplied;
         private AudioService()
         {
             audioEngine = new AudioEngine();
@@ -176,20 +177,29 @@ namespace DragoonMayCry.Audio
             audioEngine.Dispose();
         }
 
-        public void ApplyMuffledEffect()
+        public void ApplyDeathEffect()
         {
-            audioEngine.ApplyMuffledEffect();
+            if (!deathEffectApplied && Plugin.Configuration!.EnableMuffledEffectOnDeath)
+            {
+                audioEngine.ApplyDeathEffect();
+                deathEffectApplied = true;
+            }
         }
 
-        public void RemoveMuffledEffect()
+        public void RemoveDeathEffect()
         {
-            audioEngine.RemoveMuffledEffect();
+            if (deathEffectApplied)
+            {
+                audioEngine.RemoveDeathEffect();
+                deathEffectApplied = false;
+            }
         }
 
         [Conditional("DEBUG")]
         public void ApplyDecay(float decay)
         {
             audioEngine.ApplyDecay(decay);
+            deathEffectApplied = true;
         }
     }
 }

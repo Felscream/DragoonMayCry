@@ -99,6 +99,7 @@ namespace DragoonMayCry.Audio.BGM
 
         private void OnInstanceChange(object? sender, bool insideInstance)
         {
+            audioService.RemoveDeathEffect();
             if (!insideInstance && bgmFsm.IsActive)
             {
                 bgmFsm.Disable();
@@ -352,13 +353,13 @@ namespace DragoonMayCry.Audio.BGM
 
         private void OnDeath(Object? sender, bool isDead)
         {
-            if (isDead && Plugin.Configuration!.EnableMuffledEffectOnDeath)
+            if (isDead && bgmFsm.IsActive)
             {
-                audioService.ApplyMuffledEffect();
+                audioService.ApplyDeathEffect();
             }
             else
             {
-                audioService.RemoveMuffledEffect();
+                audioService.RemoveDeathEffect();
             }
         }
 

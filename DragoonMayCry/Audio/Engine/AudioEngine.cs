@@ -194,13 +194,13 @@ namespace DragoonMayCry.Audio.Engine
             announcerSfx.Clear();
         }
 
-        public void ApplyMuffledEffect()
+        public void ApplyDeathEffect()
         {
             bgmOutputDevice.Stop();
             bgmOutputDevice.Dispose();
-            var lowPass = new DeathEffect(bgmSampleProvider, bgmMixer.WaveFormat.SampleRate, 500, 300, 0.4f);
+            var deathEffect = new DeathEffect(bgmSampleProvider, 500, 200, 0.40f);
             bgmOutputDevice = new WasapiOut(AudioClientShareMode.Shared, 20);
-            bgmOutputDevice.Init(lowPass);
+            bgmOutputDevice.Init(deathEffect);
             bgmOutputDevice.Play();
         }
 
@@ -209,13 +209,13 @@ namespace DragoonMayCry.Audio.Engine
         {
             bgmOutputDevice.Stop();
             bgmOutputDevice.Dispose();
-            var lowPass = new DeathEffect(bgmSampleProvider, bgmMixer.WaveFormat.SampleRate, 500, 300, value);
+            var deathEffect = new DeathEffect(bgmSampleProvider, 500, 200, value);
             bgmOutputDevice = new WasapiOut(AudioClientShareMode.Shared, 20);
-            bgmOutputDevice.Init(lowPass);
+            bgmOutputDevice.Init(deathEffect);
             bgmOutputDevice.Play();
         }
 
-        public void RemoveMuffledEffect()
+        public void RemoveDeathEffect()
         {
             bgmOutputDevice.Stop();
             bgmOutputDevice.Dispose();

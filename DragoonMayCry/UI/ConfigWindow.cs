@@ -1,4 +1,5 @@
 using Dalamud.Interface.Components;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using DragoonMayCry.Audio;
 using DragoonMayCry.Audio.StyleAnnouncer;
@@ -96,16 +97,19 @@ public class ConfigWindow : Window
                 .AddConfigCheckbox("Force announcer on blunders", configuration.ForceSoundEffectsOnBlunder)
                 .AddAction(() =>
                 {
-                    if (ImGui.Checkbox("Apply game volume on announcer", ref configuration.ApplyGameVolumeSfx.Value))
+                    var cursorPos = ImGui.GetCursorPos();
+                    var cursorPosition = ImGui.GetCursorPos();
+                    if (ImGui.Checkbox("##AnnouncerGameVolume", ref configuration.ApplyGameVolumeSfx.Value))
                     {
                         KamiCommon.SaveConfiguration();
                         SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
                     }
+                    AddLabel("Apply game volume on announcer", cursorPos);
                 })
                 .AddAction(() =>
                 {
                     ImGui.SetNextItemWidth(150f);
-                    if (ImGui.SliderInt("Announcer volume", ref configuration.SfxVolume.Value, 0, 300))
+                    if (ImGui.SliderInt("Announcer volume", ref configuration.SfxVolume.Value, 0, 400))
                     {
                         KamiCommon.SaveConfiguration();
                         SfxVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
@@ -119,28 +123,31 @@ public class ConfigWindow : Window
             InfoBox.Instance.AddTitle("Dynamic BGM - mega experimental")
                 .AddAction(() =>
                 {
-                    if (ImGui.Checkbox("Enable dynamic background music", ref configuration.EnableDynamicBgm.Value))
+                    var cursorPosition = ImGui.GetCursorPos();
+                    if (ImGui.Checkbox("##EnableDynBgm", ref configuration.EnableDynamicBgm.Value))
                     {
                         KamiCommon.SaveConfiguration();
                         ToggleDynamicBgmChange?.Invoke(this, configuration.EnableDynamicBgm.Value);
                     }
+                    AddLabel("Enable dynamic BGM", cursorPosition);
                     ImGuiComponents.HelpMarker("This will disable the game's background music inside instances.");
                 })
                 .AddConfigCheckbox("Enable muffled effect on death", configuration.EnableMuffledEffectOnDeath)
                 .AddAction(() =>
                 {
-                    if (ImGui.Checkbox("Apply game volume on dynamic background music", ref configuration.ApplyGameVolumeBgm.Value))
+                    var cursorPosition = ImGui.GetCursorPos();
+                    if (ImGui.Checkbox("##BgmGameVolume", ref configuration.ApplyGameVolumeBgm.Value))
                     {
-
                         KamiCommon.SaveConfiguration();
                         BgmVolumeChange?.Invoke(this, configuration.SfxVolume.Value);
                     }
+                    AddLabel("Apply game volume on dynamic background music", cursorPosition);
                     ImGuiComponents.HelpMarker("Only Master volume is applied.");
                 })
                 .AddAction(() =>
                 {
                     ImGui.SetNextItemWidth(150f);
-                    if (ImGui.SliderInt("Background music volume", ref configuration.BgmVolume.Value, 0, 300))
+                    if (ImGui.SliderInt("Background music volume", ref configuration.BgmVolume.Value, 0, 400))
                     {
                         KamiCommon.SaveConfiguration();
                         BgmVolumeChange?.Invoke(this, configuration.BgmVolume.Value);
@@ -164,13 +171,22 @@ public class ConfigWindow : Window
                 .SameLine().AddButton("BGM Rank up", () => Plugin.SimulateBgmRankChanges(Score.Model.StyleType.A, Score.Model.StyleType.S))
                 .SameLine().AddButton("BGM Rank down", () => Plugin.SimulateBgmRankChanges(Score.Model.StyleType.S, Score.Model.StyleType.D))
                 .SameLine().AddButton("EndCombat", () => Plugin.BgmEndCombat())
-                .AddButton("Muffle", () => AudioService.Instance.ApplyMuffledEffect())
-                .SameLine().AddButton("Remove muffled", () => AudioService.Instance.RemoveMuffledEffect())
+                .AddButton("Muffle", () => AudioService.Instance.ApplyDeathEffect())
+                .SameLine().AddButton("Remove muffled", () => AudioService.Instance.RemoveDeathEffect())
                 .AddSliderInt("Decay", decay, 0, 70)
                 .AddButton("Apply decay", () => AudioService.Instance.ApplyDecay(decay.Value / 100f))
                 .Draw();
 #endif
         }
+    }
+
+    private static void AddLabel(String label, Vector2 cursorPosition)
+    {
+        var spacing = ImGui.GetStyle().ItemSpacing;
+        cursorPosition += spacing;
+        ImGui.SetCursorPos(cursorPosition with { X = cursorPosition.X + 27.0f * ImGuiHelpers.GlobalScale });
+
+        ImGui.TextUnformatted(label);
     }
 
     private static string GetAnnouncerTypeLabel(AnnouncerType type)

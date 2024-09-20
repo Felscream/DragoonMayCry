@@ -3,8 +3,7 @@ using NAudio.Wave;
 
 namespace DragoonMayCry.Audio.Engine
 {
-    // It's a mix of low pass filter , reverb and chorus all in one
-    // TODO add chorus
+    // It's a mix of low pass filter and reverb
     internal class DeathEffect : ISampleProvider
     {
         private readonly ISampleProvider source;
@@ -17,15 +16,17 @@ namespace DragoonMayCry.Audio.Engine
 
         private int reverbBufferPosition;
 
-        public DeathEffect(ISampleProvider sampleProvider, float sampleRate, float cutoffFrequency, int reverbDelayTime, float decayFactor)
+        public DeathEffect(ISampleProvider sampleProvider, float cutoffFrequency, int reverbDelayTime, float decayFactor)
         {
             source = sampleProvider;
-            lowPassFilter = BiQuadFilter.LowPassFilter(sampleRate, cutoffFrequency, 1f);
+
+            lowPassFilter = BiQuadFilter.LowPassFilter(sampleProvider.WaveFormat.SampleRate, cutoffFrequency, 1f);
             decay = decayFactor;
-            var reverbSamples = (int)(sampleProvider.WaveFormat.SampleRate * (reverbDelayTime / 1000.0f));
+            var reverbSamples = (int)(sampleProvider.WaveFormat.SampleRate * (reverbDelayTime / 1000.0f) * sampleProvider.WaveFormat.Channels);
 
             reverbDelayBuffer = new float[reverbSamples];
         }
+
         public WaveFormat WaveFormat { get { return source.WaveFormat; } }
 
         public int Read(float[] buffer, int offset, int count)
@@ -34,18 +35,13 @@ namespace DragoonMayCry.Audio.Engine
             for (var i = 0; i < read; i++)
             {
                 var drySample = buffer[offset + i];
-                var wetSample = reverbDelayBuffer[reverbBufferPosition];
-                var fedSample = lowPassFilter.Transform(drySample) + wetSample * decay;
+                var wetSample = reverbDelayBuffer[reverbBufferPosition] * decay;
 
+                var fedSample = lowPassFilter.Transform(drySample + wetSample) * 0.9f;
                 buffer[offset + i] = fedSample;
 
-
                 reverbDelayBuffer[reverbBufferPosition] = fedSample;
-                if (reverbBufferPosition >= reverbDelayBuffer.Length)
-                {
-                    reverbBufferPosition = 0;
-                }
-
+                reverbBufferPosition = (reverbBufferPosition + 1) % reverbDelayBuffer.Length;
             }
             return read;
         }
