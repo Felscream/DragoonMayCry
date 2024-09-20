@@ -139,6 +139,10 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
                 {
                     ((FadeInOutSampleProvider)sample).BeginFadeOut(3000);
                 }
+                else
+                {
+                    audioService.RemoveBgmPart(sample);
+                }
             }
 
             currentTrackStopwatch.Reset();

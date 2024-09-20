@@ -141,6 +141,10 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
                 {
                     ((FadeInOutSampleProvider)sample).BeginFadeOut(3000);
                 }
+                else
+                {
+                    audioService.RemoveBgmPart(sample);
+                }
             }
 
             currentTrackStopwatch.Reset();

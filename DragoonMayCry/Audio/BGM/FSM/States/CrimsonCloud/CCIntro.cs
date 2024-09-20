@@ -1,15 +1,8 @@
-using DragoonMayCry.Audio.BGM;
-using DragoonMayCry.Audio.BGM.FSM;
-using DragoonMayCry.Audio.BGM.FSM.States;
-using Lumina.Data.Parsing;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 {
@@ -23,11 +16,13 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
         }
         public BgmState ID { get { return BgmState.Intro; } }
 
-        private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new Dictionary<BgmId, BgmTrackData> {
+        private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new()
+        {
             { BgmId.Intro, new BgmTrackData(0, 85500) },
         };
 
-        private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
+        private readonly Dictionary<BgmId, string> bgmPaths = new()
+        {
             { BgmId.Intro, DynamicBgmService.GetPathToAudio("CrimsonCloud\\intro.ogg") },
             { BgmId.CombatEnd, DynamicBgmService.GetPathToAudio("CrimsonCloud\\end.ogg") },
         };
@@ -144,6 +139,10 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
                 if (sample is FadeInOutSampleProvider)
                 {
                     ((FadeInOutSampleProvider)sample).BeginFadeOut(1500);
+                }
+                else
+                {
+                    audioService.RemoveBgmPart(sample);
                 }
             }
 
