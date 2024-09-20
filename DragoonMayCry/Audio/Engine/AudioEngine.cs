@@ -197,7 +197,7 @@ namespace DragoonMayCry.Audio.Engine
 
         public void ApplyDeathEffect()
         {
-            var deathEffect = new DeathEffect(bgmSampleProvider, 500, 200, 0.40f);
+            var deathEffect = new DeathEffect(bgmSampleProvider, 500, 200, 0.35f);
             bgmOutputDevice.Stop();
             bgmOutputDevice.Dispose();
             bgmOutputDevice = new WasapiOut(AudioClientShareMode.Shared, 20);

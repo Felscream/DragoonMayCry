@@ -37,8 +37,8 @@ namespace DragoonMayCry.Audio.Engine
                 var drySample = buffer[offset + i];
                 var wetSample = reverbDelayBuffer[reverbBufferPosition] * decay;
 
-                var fedSample = lowPassFilter.Transform(drySample + wetSample) * 0.9f;
-                buffer[offset + i] = fedSample;
+                var fedSample = lowPassFilter.Transform(drySample + wetSample);
+                buffer[offset + i] = fedSample * 1.25f;
 
                 reverbDelayBuffer[reverbBufferPosition] = fedSample;
                 reverbBufferPosition = (reverbBufferPosition + 1) % reverbDelayBuffer.Length;
