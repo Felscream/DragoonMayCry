@@ -9,7 +9,9 @@ namespace DragoonMayCry.State.Tracker
                 return;
             }
 
-            CurrentValue = playerState.IsDead;
+            // using playerState.Player.IsDead triggers death
+            // too early from the player's PoV
+            CurrentValue = playerState.Player.CurrentHp == 0;
             if (CurrentValue != LastValue)
             {
                 Service.Log.Debug("Player died");

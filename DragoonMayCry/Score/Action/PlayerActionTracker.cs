@@ -46,9 +46,9 @@ namespace DragoonMayCry.Score.Action
             }
         }
 
-        
 
-        private HashSet<FlyTextKind> validTextKind = new HashSet<FlyTextKind>() {
+
+        private readonly HashSet<FlyTextKind> validTextKind = new() {
             FlyTextKind.Damage,
             FlyTextKind.DamageCrit,
             FlyTextKind.DamageDh,
@@ -71,22 +71,22 @@ namespace DragoonMayCry.Score.Action
             uint sourceId, nint sourceCharacter, nint pos,
             nint effectHeader, nint effectArray, nint effectTrail);
 
-        private Hook<OnActionUsedDelegate>? onActionUsedHook;
+        private readonly Hook<OnActionUsedDelegate>? onActionUsedHook;
 
         private delegate void OnActorControlDelegate(
             uint entityId, uint id, uint unk1, uint type, uint unk2, uint unk3,
             uint unk4, uint unk5, ulong targetId, byte unk6);
 
-        private Hook<OnActorControlDelegate>? onActorControlHook;
+        private readonly Hook<OnActorControlDelegate>? onActorControlHook;
 
         private delegate void OnCastDelegate(
             uint sourceId, nint sourceCharacter);
 
-        private Hook<OnCastDelegate>? onCastHook;
+        private readonly Hook<OnCastDelegate>? onCastHook;
 
         private readonly State.ActionManagerLight* actionManager;
         private readonly PlayerState playerState;
-        private LuminaCache<LuminaAction> luminaActionCache;
+        private readonly LuminaCache<LuminaAction> luminaActionCache;
 
         private const float GcdDropThreshold = 0.1f;
         private ushort lastDetectedClip = 0;
@@ -94,14 +94,14 @@ namespace DragoonMayCry.Score.Action
 
         private bool isGcdDropped;
 
-        private Stopwatch limitBreakStopwatch;
+        private readonly Stopwatch limitBreakStopwatch;
         private LimitBreak? limitBreakCast;
         private const int maxActionHistorySize = 6;
-        private Queue<FlyTextData> actionHistory;
+        private readonly Queue<FlyTextData> actionHistory;
 
         // added 0.1f to all duration
-        private Dictionary<uint, float> tankLimitBreakDelays =
-            new Dictionary<uint, float>
+        private readonly Dictionary<uint, float> tankLimitBreakDelays =
+            new()
             {
                 { 197, 2.1f },   // LB1
                 { 198, 4.1f },   // LB2
@@ -122,10 +122,10 @@ namespace DragoonMayCry.Score.Action
             try
             {
                 onActionUsedHook = Service.Hook.HookFromSignature<OnActionUsedDelegate>("40 ?? 56 57 41 ?? 41 ?? 41 ?? 48 ?? ?? ?? ?? ?? ?? ?? 48", OnActionUsed);
-                
+
 
                 onActorControlHook = Service.Hook.HookFromSignature<OnActorControlDelegate>("E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64", OnActorControl);
-                
+
 
                 onCastHook = Service.Hook.HookFromSignature<OnCastDelegate>("40 56 41 56 48 81 EC ?? ?? ?? ?? 48 8B F2", OnCast);
             }
@@ -140,13 +140,13 @@ namespace DragoonMayCry.Score.Action
 
             Service.Framework.Update += Update;
             playerState.RegisterCombatStateChangeHandler(OnCombat);
-            playerState.RegisterDeathStateChangeHandler(OnDeath!);
+            playerState.RegisterDeathStateChangeHandler(OnDeath);
         }
 
         public void Dispose()
         {
             Service.Framework.Update -= Update;
-                
+
             onActionUsedHook?.Disable();
             onActionUsedHook?.Dispose();
 
@@ -177,13 +177,13 @@ namespace DragoonMayCry.Score.Action
             }
 
             var actionId = Marshal.ReadInt32(effectHeader, 0x8);
-           
+
             var type = TypeForActionId((uint)actionId);
             if (type == PlayerActionType.Other || type == PlayerActionType.AutoAttack)
             {
                 return;
             }
-            
+
             if (type == PlayerActionType.LimitBreak)
             {
                 StartLimitBreakUse((uint)actionId);
@@ -256,7 +256,7 @@ namespace DragoonMayCry.Score.Action
 
             int value = Marshal.ReadInt16(ptr);
             var actionId = value < 0 ? (uint)(value + 65536) : (uint)value;
-            var type = TypeForActionId((uint)actionId);
+            var type = TypeForActionId(actionId);
 
             if (type == PlayerActionType.LimitBreak)
             {
@@ -345,7 +345,7 @@ namespace DragoonMayCry.Score.Action
             }
 
             var isTankLb = playerState.IsTank();
-            if(isTankLb && !tankLimitBreakDelays.ContainsKey(actionId))
+            if (isTankLb && !tankLimitBreakDelays.ContainsKey(actionId))
             {
                 return;
             }
@@ -358,15 +358,15 @@ namespace DragoonMayCry.Score.Action
             var action = luminaActionCache?.GetRow(actionId);
             limitBreakCast = new LimitBreak(gracePeriod, isTankLb, action?.Name!);
             limitBreakStopwatch.Restart();
-            
+
             UsingLimitBreak?.Invoke(this, new LimitBreakEvent(isTankLb, true));
         }
 
         private unsafe void DetectClipping()
         {
             var animationLock = actionManager->animationLock;
-            if (lastDetectedClip == actionManager->currentSequence 
-                || actionManager->isGCDRecastActive 
+            if (lastDetectedClip == actionManager->currentSequence
+                || actionManager->isGCDRecastActive
                 || animationLock <= 0)
             {
                 return;
@@ -379,7 +379,7 @@ namespace DragoonMayCry.Score.Action
                 {
                     OnGcdClip?.Invoke(this, animationLock);
                 }
-                else if(!limitBreakCast.IsTankLb)
+                else if (!limitBreakCast.IsTankLb)
                 {
                     limitBreakCast.GracePeriod += animationLock - 2.9f;
                 }
@@ -407,7 +407,7 @@ namespace DragoonMayCry.Score.Action
                     {
                         OnGcdDropped?.Invoke(this, EventArgs.Empty);
                     }
-                    
+
                 }
             }
             else if (currentWastedGcd > 0)
@@ -418,13 +418,14 @@ namespace DragoonMayCry.Score.Action
             }
         }
 
-        private void OnDeath(object sender, bool isDead)
+        private void OnDeath(object? sender, bool isDead)
         {
             if (limitBreakCast != null)
             {
                 limitBreakStopwatch.Reset();
                 limitBreakCast = null;
                 OnLimitBreakCanceled?.Invoke(this, EventArgs.Empty);
+                UsingLimitBreak?.Invoke(this, new LimitBreakEvent(false, false));
             }
         }
 
@@ -473,9 +474,9 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-            if(kind == FlyTextKind.AutoAttackOrDot 
-                || kind == FlyTextKind.AutoAttackOrDotDh 
-                || kind == FlyTextKind.AutoAttackOrDotCrit 
+            if (kind == FlyTextKind.AutoAttackOrDot
+                || kind == FlyTextKind.AutoAttackOrDotDh
+                || kind == FlyTextKind.AutoAttackOrDotCrit
                 || kind == FlyTextKind.AutoAttackOrDotCritDh)
             {
                 OnFlyTextCreation?.Invoke(this, damage);

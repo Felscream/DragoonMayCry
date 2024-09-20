@@ -1,12 +1,9 @@
 
-using System;
-using DragoonMayCry.Audio;
-using DragoonMayCry.Util;
-using System.IO;
-using DragoonMayCry.Data;
 using DragoonMayCry.Score.Action;
-using DragoonMayCry.State;
 using DragoonMayCry.Score.Model;
+using DragoonMayCry.State;
+using DragoonMayCry.Util;
+using System;
 
 namespace DragoonMayCry.Score.Rank
 {
@@ -31,7 +28,7 @@ namespace DragoonMayCry.Score.Rank
         public EventHandler<RankChangeData>? StyleRankChange;
         public DoubleLinkedNode<StyleType> CurrentStyle { get; private set; }
 
-        private static readonly DoubleLinkedList<StyleType> Styles = new DoubleLinkedList<StyleType>(
+        private static readonly DoubleLinkedList<StyleType> Styles = new(
             StyleType.NoStyle,
             StyleType.D,
             StyleType.C,
@@ -175,7 +172,7 @@ namespace DragoonMayCry.Score.Rank
 
         private void OnDeath(object? sender, bool isDead)
         {
-            if (isDead)
+            if (isDead && Plugin.CanHandleEvents())
             {
                 ForceRankTo(StyleType.D, true);
             }

@@ -3,7 +3,6 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using DragoonMayCry.Audio;
 using DragoonMayCry.Audio.BGM;
-using DragoonMayCry.Audio.BGM.FSM;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
@@ -11,10 +10,8 @@ using DragoonMayCry.Score;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Rank;
-using DragoonMayCry.State;
 using DragoonMayCry.UI;
 using DragoonMayCry.Util;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using KamiLib;
 using Newtonsoft.Json;
 using System;
@@ -63,7 +60,7 @@ public unsafe class Plugin : IDalamudPlugin
         ScoreProgressBar = new(ScoreManager, StyleRankHandler, PlayerActionTracker, PlayerState);
         FinalRankCalculator = new(PlayerState, StyleRankHandler);
         PluginUi = new(ScoreProgressBar, StyleRankHandler, ScoreManager, FinalRankCalculator, StyleAnnouncerService, BgmService);
-        
+
 
         ScoreProgressBar.DemotionApplied += StyleRankHandler.OnDemotion;
         ScoreProgressBar.Promotion += StyleRankHandler.OnPromotion;
@@ -83,7 +80,16 @@ public unsafe class Plugin : IDalamudPlugin
         && PlayerState!.IsInCombat
         && !PlayerState.IsInPvp()
         && IsEnabledForCurrentJob()
-        && (PlayerState.IsInsideInstance 
+        && (PlayerState.IsInsideInstance
+                    || Configuration!.ActiveOutsideInstance);
+    }
+
+    public static bool CanHandleEvents()
+    {
+        return JobHelper.IsCombatJob(CurrentJob)
+                && !PlayerState!.IsInPvp()
+                && IsEnabledForCurrentJob()
+                && (PlayerState.IsInsideInstance
                     || Configuration!.ActiveOutsideInstance);
     }
 
