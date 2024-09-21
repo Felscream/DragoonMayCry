@@ -17,10 +17,11 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
         }
 
         public BgmState ID { get { return BgmState.CombatPeak; } }
-        private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new Dictionary<BgmId, BgmTrackData> {
+        private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new()
+        {
             { BgmId.ChorusIntro1, new BgmTrackData(0, 25600) },
             { BgmId.ChorusIntro2, new BgmTrackData(0, 51200) },
-            { BgmId.Riff, new BgmTrackData(0, 27200) },
+            { BgmId.Riff, new BgmTrackData(0, 25600) },
             { BgmId.Chorus, new BgmTrackData(0, 27200) },
             { BgmId.ChorusTransition1, new BgmTrackData(0, 1600) },
             { BgmId.ChorusTransition2, new BgmTrackData(0, 1600) },
@@ -28,7 +29,8 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
             { BgmId.Demotion, new BgmTrackData(0, 25600) },
         };
 
-        private readonly Dictionary<BgmId, int> possibleTransitionTimesToNewState = new Dictionary<BgmId, int> {
+        private readonly Dictionary<BgmId, int> possibleTransitionTimesToNewState = new()
+        {
             { BgmId.ChorusIntro1, 27200  },
             { BgmId.ChorusIntro2, 52800 },
             { BgmId.Riff, 27200 },
@@ -38,7 +40,8 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
             { BgmId.ChorusTransition3,  3220 },
         };
 
-        private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
+        private readonly Dictionary<BgmId, string> bgmPaths = new()
+        {
             { BgmId.ChorusIntro1, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\025.ogg") },
             { BgmId.ChorusIntro2, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\094.ogg") },
             { BgmId.Riff, DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\062.ogg") },
