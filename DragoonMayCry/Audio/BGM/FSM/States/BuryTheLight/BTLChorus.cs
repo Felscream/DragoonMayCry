@@ -1,3 +1,4 @@
+using DragoonMayCry.Audio.Engine;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
@@ -302,9 +303,17 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
 
         public void Reset()
         {
-            while (samples.Count > 0)
+            while (samples.TryDequeue(out var sample))
             {
-                audioService.RemoveBgmPart(samples.Dequeue());
+                if (sample is ExposedFadeInOutSampleProvider provider)
+                {
+                    if (provider.fadeState == ExposedFadeInOutSampleProvider.FadeState.FullVolume)
+                    {
+                        provider.BeginFadeOut(1500);
+                        continue;
+                    }
+                }
+                audioService.RemoveBgmPart(sample);
             }
             currentTrackStopwatch.Reset();
             currentState = PeakState.VerseIntro;

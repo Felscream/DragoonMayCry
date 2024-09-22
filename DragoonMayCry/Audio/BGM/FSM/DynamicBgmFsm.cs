@@ -75,7 +75,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
             if (playerState.IsInCombat && currentState?.ID == BgmState.Intro && candidateState == null)
             {
-                audioService.StopBgm();
+                audioService.FadeOutBgm(1600);
                 currentState.Exit(ExitType.ImmediateExit);
                 currentStateNode = bgmStates.Find(BgmState.CombatLoop)!;
                 currentState = currentBgmStates![currentStateNode.Value];
@@ -101,6 +101,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
         public void ResetToIntro()
         {
+            audioService.FadeOutBgm(3000);
             IsActive = false;
 
             currentStateNode = bgmStates.Head!;
@@ -126,11 +127,6 @@ namespace DragoonMayCry.Audio.BGM.FSM
                 return;
             }
 
-            if (currentState?.ID == BgmState.Intro && candidateState.ID == BgmState.CombatLoop)
-            {
-                // clear the intro here cause it's whack
-                currentBgmStates?[BgmState.Intro].Reset();
-            }
             if (candidateState.ID == BgmState.Intro)
             {
                 currentStateNode = bgmStates.Head!;
@@ -239,7 +235,6 @@ namespace DragoonMayCry.Audio.BGM.FSM
         public void Disable()
         {
             ResetToIntro();
-            audioService.StopBgm();
         }
     }
 

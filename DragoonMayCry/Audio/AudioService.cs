@@ -172,6 +172,12 @@ namespace DragoonMayCry.Audio
         {
             audioEngine.RemoveAllBgm();
         }
+
+        public void FadeOutBgm(float fadeOutDuration = 0)
+        {
+            audioEngine.FadeOutBgm(fadeOutDuration);
+        }
+
         public void Dispose()
         {
             audioEngine.Dispose();

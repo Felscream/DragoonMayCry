@@ -1,5 +1,5 @@
+using DragoonMayCry.Audio.Engine;
 using NAudio.Wave;
-using NAudio.Wave.SampleProviders;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -83,22 +83,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
         public void Reset()
         {
-            while (samples.Count > 1)
-            {
-                audioService.RemoveBgmPart(samples.Dequeue());
-            }
-            if (samples.TryDequeue(out var sample))
-            {
-                if (sample is FadeInOutSampleProvider)
-                {
-                    ((FadeInOutSampleProvider)sample).BeginFadeOut(3000);
-                }
-            }
-            else if (sample != null)
-            {
-                audioService.RemoveBgmPart(sample);
-            }
-            currentTrackStopwatch.Reset();
+            TransitionToNextState();
         }
 
         public Dictionary<BgmId, string> GetBgmPaths()
@@ -129,8 +114,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             {
                 state = IntroState.CombatStart;
                 nextStateTransitionTime = 0;
-                transitionTime = 1600;
-                currentTrackStopwatch.Restart();
+                TransitionToNextState();
             }
 
             if (exit == ExitType.EndOfCombat && state != IntroState.EndCombat)
@@ -146,16 +130,17 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
         private void TransitionToNextState()
         {
-            if (samples.TryDequeue(out var sample))
+            while (samples.TryDequeue(out var sample))
             {
-                if (sample is FadeInOutSampleProvider)
+                if (sample is ExposedFadeInOutSampleProvider provider)
                 {
-                    ((FadeInOutSampleProvider)sample).BeginFadeOut(3000);
+                    if (provider.fadeState == ExposedFadeInOutSampleProvider.FadeState.FullVolume)
+                    {
+                        provider.BeginFadeOut(1500);
+                        continue;
+                    }
                 }
-                else
-                {
-                    audioService.RemoveBgmPart(sample);
-                }
+                audioService.RemoveBgmPart(sample);
             }
 
             currentTrackStopwatch.Reset();

@@ -1,7 +1,5 @@
-using NAudio.Codecs;
+using DragoonMayCry.Audio.Engine;
 using NAudio.Wave;
-using NAudio.Wave.SampleProviders;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -18,7 +16,8 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
         }
 
         public BgmState ID { get { return BgmState.CombatPeak; } }
-        private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new Dictionary<BgmId, BgmTrackData> {
+        private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new()
+        {
             { BgmId.ChorusIntro1, new BgmTrackData(0, 20605) },
             { BgmId.ChorusIntro2, new BgmTrackData(0, 10300) },
             { BgmId.Riff, new BgmTrackData(0, 19350) },
@@ -28,7 +27,8 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             { BgmId.Demotion, new BgmTrackData(0, 10300) },
         };
 
-        private readonly Dictionary<BgmId, int> possibleTransitionTimesToNewState = new Dictionary<BgmId, int> {
+        private readonly Dictionary<BgmId, int> possibleTransitionTimesToNewState = new()
+        {
             { BgmId.ChorusIntro1, 20605 },
             { BgmId.ChorusIntro2, 10300 },
             { BgmId.Riff, 20600 },
@@ -37,7 +37,8 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             { BgmId.ChorusTransition3,  2600 },
         };
 
-        private readonly Dictionary<BgmId, string> bgmPaths = new Dictionary<BgmId, string> {
+        private readonly Dictionary<BgmId, string> bgmPaths = new()
+        {
             { BgmId.ChorusIntro1, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Chorus\\086.ogg") },
             { BgmId.ChorusIntro2, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Chorus\\080.ogg") },
             { BgmId.Riff, DynamicBgmService.GetPathToAudio("CrimsonCloud\\Chorus\\103.ogg") },
@@ -75,7 +76,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
         {
             currentTrack = completeSequence.First!;
             currentState = PeakState.Loop;
-            var sample = audioService.PlayBgm(currentTrack.Value, 1);
+            var sample = audioService.PlayBgm(currentTrack.Value);
             if (sample != null)
             {
                 samples.Enqueue(sample);
@@ -124,7 +125,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             {
                 audioService.RemoveBgmPart(samples.Dequeue());
             }
-            var sample = audioService.PlayBgm(BgmId.Demotion, 1);
+            var sample = audioService.PlayBgm(BgmId.Demotion);
             if (sample != null)
             {
                 samples.Enqueue(sample);
@@ -145,14 +146,14 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             {
                 audioService.RemoveBgmPart(samples.Dequeue());
             }
-            if(samples.TryDequeue(out var sample))
+            if (samples.TryDequeue(out var sample))
             {
-                if(sample is FadeInOutSampleProvider)
+                if (sample is ExposedFadeInOutSampleProvider)
                 {
-                    ((FadeInOutSampleProvider)sample).BeginFadeOut(500);
+                    ((ExposedFadeInOutSampleProvider)sample).BeginFadeOut(500);
                 }
             }
-            
+
             currentTrackStopwatch.Reset();
 
         }
@@ -176,7 +177,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
                 samples.Dequeue();
             }
 
-            var sample = audioService.PlayBgm(currentTrack!.Value, 1);
+            var sample = audioService.PlayBgm(currentTrack!.Value);
             if (sample != null)
             {
                 samples.Enqueue(sample);
@@ -212,7 +213,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
                 transitionTime = 1;
                 nextPosibleStateTransitionTime = 5200;
                 nextStateTransitionTime = 5200;
-                audioService.PlayBgm(BgmId.CombatEnd, 1);
+                audioService.PlayBgm(BgmId.CombatEnd);
                 currentState = PeakState.LeavingStateOutOfCombat;
             }
             else if (currentState == PeakState.LeavingStateDemotion)
@@ -238,9 +239,17 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
         public void Reset()
         {
-            while (samples.Count > 0)
+            while (samples.TryDequeue(out var sample))
             {
-                audioService.RemoveBgmPart(samples.Dequeue());
+                if (sample is ExposedFadeInOutSampleProvider provider)
+                {
+                    if (provider.fadeState == ExposedFadeInOutSampleProvider.FadeState.FullVolume)
+                    {
+                        provider.BeginFadeOut(1500);
+                        continue;
+                    }
+                }
+                audioService.RemoveBgmPart(sample);
             }
             currentTrackStopwatch.Reset();
             currentState = PeakState.Loop;

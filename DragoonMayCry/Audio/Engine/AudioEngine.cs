@@ -94,7 +94,6 @@ namespace DragoonMayCry.Audio.Engine
                 {
                     announcerSfx[entry.Key] = new(entry.Value);
                 }
-
             }
         }
 
@@ -108,18 +107,16 @@ namespace DragoonMayCry.Audio.Engine
             sfxMixer.AddMixerInput(input);
         }
 
-        private ISampleProvider AddBGMMixerInput(ISampleProvider input, double fadeInDuration)
+        private ExposedFadeInOutSampleProvider AddBGMMixerInput(ISampleProvider input, double fadeInDuration)
         {
+            var fadingInput = new ExposedFadeInOutSampleProvider(input);
             if (fadeInDuration > 0)
             {
-                var fadingInput = new FadeInOutSampleProvider(input, true);
                 fadingInput.BeginFadeIn(fadeInDuration);
-                bgmMixer.AddMixerInput(fadingInput);
-                return fadingInput;
             }
 
-            bgmMixer.AddMixerInput(input);
-            return input;
+            bgmMixer.AddMixerInput(fadingInput);
+            return fadingInput;
         }
 
         public void PlaySfx(SoundId trigger)
@@ -240,6 +237,35 @@ namespace DragoonMayCry.Audio.Engine
         public void RemoveAllBgm()
         {
             bgmMixer.RemoveAllMixerInputs();
+        }
+
+        public void FadeOutBgm(float fadeOutDuration)
+        {
+            if (fadeOutDuration == 0)
+            {
+                RemoveAllBgm();
+                return;
+            }
+            var inputs = new List<ISampleProvider>(bgmMixer.MixerInputs);
+            foreach (var input in inputs)
+            {
+                if (input is ExposedFadeInOutSampleProvider)
+                {
+                    var fadingInput = (ExposedFadeInOutSampleProvider)input;
+                    if (fadingInput.fadeState == ExposedFadeInOutSampleProvider.FadeState.FullVolume)
+                    {
+                        fadingInput.BeginFadeOut(fadeOutDuration);
+                    }
+                    else if (fadingInput.fadeState != ExposedFadeInOutSampleProvider.FadeState.FadingOut)
+                    {
+                        bgmMixer.RemoveMixerInput(fadingInput);
+                    }
+                }
+                else
+                {
+                    bgmMixer.RemoveMixerInput(input);
+                }
+            }
         }
 
         public void Dispose()
