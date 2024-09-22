@@ -1,17 +1,15 @@
 using Dalamud.Plugin.Services;
-using DragoonMayCry.State;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
 using DragoonMayCry.Data;
 using DragoonMayCry.Score.Action;
-using DragoonMayCry.Util;
-using FFXIVClientStructs.FFXIV.Client.Game;
-using static DragoonMayCry.Score.Rank.StyleRankHandler;
-using DragoonMayCry.Score.Table;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Rank;
+using DragoonMayCry.Score.Table;
+using DragoonMayCry.State;
+using DragoonMayCry.Util;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using static DragoonMayCry.Score.Rank.StyleRankHandler;
 
 namespace DragoonMayCry.Score
 {
@@ -32,7 +30,7 @@ namespace DragoonMayCry.Score
             }
         }
 
-        
+
 
         public EventHandler<double>? OnScoring;
         public EventHandler<StyleScoring>? StyleScoringChange;
@@ -102,9 +100,9 @@ namespace DragoonMayCry.Score
             if (isCastingLb)
             {
                 CurrentScoreRank.Score =
-                    Math.Clamp(CurrentScoreRank.Score 
+                    Math.Clamp(CurrentScoreRank.Score
                     + (float)(framework.UpdateDelta.TotalSeconds * CurrentScoreRank.StyleScoring.ReductionPerSecond * 100),
-                    0, 
+                    0,
                     CurrentScoreRank.StyleScoring.Threshold * 1.5f);
             }
             else
@@ -117,7 +115,7 @@ namespace DragoonMayCry.Score
                     scoreReduction *= 1.5f;
                 }
                 CurrentScoreRank.Score -= scoreReduction;
-                
+
             }
             CurrentScoreRank.Score = Math.Clamp(
                 CurrentScoreRank.Score, 0, CurrentScoreRank.StyleScoring.Threshold * 1.2f);
@@ -139,7 +137,7 @@ namespace DragoonMayCry.Score
             OnScoring?.Invoke(this, points);
         }
 
-        private bool CanDisableGcdClippingRestrictions() => pointsReductionStopwatch.IsRunning 
+        private bool CanDisableGcdClippingRestrictions() => pointsReductionStopwatch.IsRunning
             && pointsReductionStopwatch.ElapsedMilliseconds > PointsReductionDuration;
 
         private void OnInstanceChange(object send, bool value)
@@ -149,7 +147,7 @@ namespace DragoonMayCry.Score
 
         private void OnCombatChange(object send, bool enteringCombat)
         {
-            if(enteringCombat)
+            if (enteringCombat)
             {
                 jobScoringTable = GetJobScoringTable();
                 ResetScore();
@@ -226,7 +224,7 @@ namespace DragoonMayCry.Score
 
         private Dictionary<StyleType, StyleScoring> GetJobScoringTable()
         {
-            int ilvl = itemLevelCalculator.CalculateCurrentItemLevel();
+            var ilvl = itemLevelCalculator.CalculateCurrentItemLevel();
             var currentJob = playerState.GetCurrentJob();
             return scoringTableFactory.GetScoringTable(ilvl, currentJob);
         }

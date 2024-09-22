@@ -117,13 +117,12 @@ namespace DragoonMayCry.Audio.BGM
         {
             var insideInstance = playerState.IsInsideInstance;
             var currentJob = playerState.GetCurrentJob();
-
+            bgmFsm.Disable();
             if (!CanPlayDynamicBgm(insideInstance, currentJob))
             {
                 if (ShouldDisableFsm())
                 {
                     ResetGameBgm();
-                    bgmFsm.Disable();
                 }
                 return;
             }

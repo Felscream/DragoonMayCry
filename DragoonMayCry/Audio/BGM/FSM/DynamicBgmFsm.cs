@@ -102,21 +102,20 @@ namespace DragoonMayCry.Audio.BGM.FSM
         public void ResetToIntro()
         {
             IsActive = false;
-
-            currentStateNode = bgmStates.Head!;
             stateTransitionStopwatch.Reset();
+            currentStateNode = bgmStates.Head!;
+            candidateState = null;
 
-            if (currentBgmStates == null)
+            if (currentBgmStates != null)
             {
-                return;
+                currentState = currentBgmStates[BgmState.Intro];
+                foreach (var entry in currentBgmStates)
+                {
+                    entry.Value.Reset();
+                }
             }
 
-            foreach (var entry in currentBgmStates)
-            {
-                entry.Value.Reset();
-            }
             audioService.FadeOutBgm(3000);
-            currentState = currentBgmStates[BgmState.Intro];
         }
 
         private void GoToNextState()
