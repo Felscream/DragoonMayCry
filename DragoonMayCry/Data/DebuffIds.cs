@@ -53,9 +53,11 @@ namespace DragoonMayCry.Data
             639, 960, 1049, 1133, 1599, 3522
         };
 
-        public static HashSet<uint> StopIds = new()
+        public static HashSet<uint> StopAndStunsIds = new()
         {
-            2653, 900
+            900,
+            2653,
+            2953, // stun in tower of babil
         };
 
         public static bool IsIncapacitatingDebuff(uint debuffId)
@@ -66,7 +68,7 @@ namespace DragoonMayCry.Data
                 || OutOfTheActionIds.Contains(debuffId)
                 || ForcedMarchIds.Contains(debuffId)
                 || PyreticIds.Contains(debuffId)
-                || StopIds.Contains(debuffId);
+                || StopAndStunsIds.Contains(debuffId);
         }
     }
 }

@@ -1,12 +1,10 @@
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.SubKinds;
-using Dalamud.Game.ClientState.Statuses;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Data;
 using DragoonMayCry.State.Tracker;
 using DragoonMayCry.Util;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using System;
 using System.Collections.Generic;
@@ -31,10 +29,10 @@ namespace DragoonMayCry.State
         private bool CheckCondition(ConditionFlag[] conditionFlags) => conditionFlags.Any(x => Condition[x]);
 
         private readonly ConditionFlag[] unableToAct = new ConditionFlag[] { ConditionFlag.Transformed, ConditionFlag.Swimming,
-            ConditionFlag.Diving, ConditionFlag.WatchingCutscene, 
+            ConditionFlag.Diving, ConditionFlag.WatchingCutscene,
             ConditionFlag.OccupiedInCutSceneEvent, ConditionFlag.WatchingCutscene78 };
 
-        
+
 
         private readonly InCombatStateTracker inCombatStateTracker;
         private readonly OnDeathStateTracker onDeathStateTracker;
@@ -84,13 +82,13 @@ namespace DragoonMayCry.State
 
         private bool CanUpdateStates()
         {
-            if(!IsInsideInstance 
-                && Plugin.Configuration != null && !Plugin.Configuration.ActiveOutsideInstance 
+            if (!IsInsideInstance
+                && (Plugin.Configuration == null || !Plugin.Configuration.ActiveOutsideInstance)
                 || IsInPvp())
             {
                 return false;
             }
-            return IsCombatJob();
+            return IsCombatJob() && Plugin.IsEnabledForCurrentJob();
         }
 
         public bool IsInPvp()
@@ -150,7 +148,7 @@ namespace DragoonMayCry.State
 
         public bool IsIncapacitated()
         {
-            if(Player == null)
+            if (Player == null)
             {
                 return true;
             }
@@ -160,8 +158,8 @@ namespace DragoonMayCry.State
                 return true;
             }
 
-            StatusList statuses = Player.StatusList;
-            for(int i = 0; i < statuses.Length; i++)
+            var statuses = Player.StatusList;
+            for (var i = 0; i < statuses.Length; i++)
             {
                 var status = statuses[i];
                 if (status == null)
@@ -182,14 +180,14 @@ namespace DragoonMayCry.State
             if (player == null)
                 return false;
 
-            var targets = Service.ObjectTable.Where(o => 
+            var targets = Service.ObjectTable.Where(o =>
                 ObjectKind.BattleNpc.Equals(o.ObjectKind)
                 && o != Player
                 && CanAttack(o)
              ).ToList();
 
             var enemyList = GetEnemyListObjectIds();
-            for(int i = 0; i < targets.Count; i++)
+            for (var i = 0; i < targets.Count; i++)
             {
                 if (enemyList.Contains(targets[i].EntityId))
                 {

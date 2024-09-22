@@ -389,7 +389,7 @@ namespace DragoonMayCry.Audio.BGM
 
         public void OnMuffledOnDeathChange(object? sender, bool muffledOnDeath)
         {
-            if (muffledOnDeath && playerState.IsDead)
+            if (muffledOnDeath && bgmFsm.IsActive && playerState.IsDead)
             {
                 audioService.ApplyDeathEffect();
             }
