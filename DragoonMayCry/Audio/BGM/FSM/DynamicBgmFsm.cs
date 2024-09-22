@@ -101,7 +101,6 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
         public void ResetToIntro()
         {
-            audioService.FadeOutBgm(3000);
             IsActive = false;
 
             currentStateNode = bgmStates.Head!;
@@ -116,6 +115,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
             {
                 entry.Value.Reset();
             }
+            audioService.FadeOutBgm(3000);
             currentState = currentBgmStates[BgmState.Intro];
         }
 
