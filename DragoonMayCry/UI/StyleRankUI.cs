@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Numerics;
-using System.Reflection;
 using Dalamud.Interface.Animation;
 using Dalamud.Interface.Animation.EasingFunctions;
 using Dalamud.Interface.Textures.TextureWraps;
@@ -13,6 +8,11 @@ using DragoonMayCry.State;
 using DragoonMayCry.UI.Model;
 using DragoonMayCry.Util;
 using ImGuiNET;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Numerics;
+using System.Reflection;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = FFXIVClientStructs.FFXIV.Common.Math.Vector4;
 
@@ -21,7 +21,7 @@ namespace DragoonMayCry.UI
     public sealed class StyleRankUI
     {
         private readonly Dictionary<StyleType, StyleUi> styleUis =
-            new Dictionary<StyleType, StyleUi>
+            new()
             {
                 { StyleType.D, new("DragoonMayCry.Assets.D.png", new(223, 152, 30)) },
                 { StyleType.C , new ("DragoonMayCry.Assets.C.png", new Vector3(95, 160, 213)) },
@@ -37,8 +37,8 @@ namespace DragoonMayCry.UI
         private readonly StyleRankHandler styleRankHandler;
         private readonly PlayerState playerState;
         private readonly FinalRankCalculator finalRankCalculator;
-        
-        private readonly Vector2 rankPosition = new (8, 8);
+
+        private readonly Vector2 rankPosition = new(8, 8);
         private readonly Vector2 rankSize = new(130, 130);
         private readonly Vector2 rankTransitionStartPosition = new(83, 83);
         private StyleType currentStyle = StyleType.NoStyle;
@@ -50,7 +50,7 @@ namespace DragoonMayCry.UI
         private readonly Easing finalRankTransition;
         private readonly Stopwatch shakeStopwatch;
         private readonly Stopwatch demotionStopwatch;
-        
+
         private readonly float shakeDuration = 300;
         private readonly float shakeIntensity = 6f;
         private readonly string gaugeDefault = "DragoonMayCry.Assets.GaugeDefault.png";
@@ -65,7 +65,7 @@ namespace DragoonMayCry.UI
             this.finalRankCalculator.FinalRankCalculated += OnFinalRankCalculated!;
             this.playerState = PlayerState.GetInstance();
             this.playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
-            
+
             this.styleRankHandler.StyleRankChange += OnRankChange!;
 
             rankTransition = new OutCubic(new(1500000));
@@ -181,12 +181,12 @@ namespace DragoonMayCry.UI
                 {
                     ImGui.Image(rankIcon.ImGuiHandle, rankSize);
                 }
-                if(Service.TextureProvider
+                if (Service.TextureProvider
                           .GetFromManifestResource(Assembly.GetExecutingAssembly(),
                                                    gaugeDefault)
                           .TryGetWrap(out var gauge, out var _))
                 {
-                    DrawProgressGauge(gauge, progress, new(255,255,255));
+                    DrawProgressGauge(gauge, progress, new(255, 255, 255));
                 }
             }
         }
@@ -217,12 +217,12 @@ namespace DragoonMayCry.UI
 
         private void DrawCurrentRank(IDalamudTextureWrap rankIcon)
         {
-            Easing currentAnimation = isInCombat ? rankTransition : finalRankTransition;
+            var currentAnimation = isInCombat ? rankTransition : finalRankTransition;
             var pos = ComputeRankPosition(currentAnimation);
             var animationTransitionValue = GetAnimationTransitionValue(currentAnimation);
             var size = rankSize * (float)animationTransitionValue;
 
-            
+
             var textureUv0 = Vector2.Zero;
             var textureUv1 = Vector2.One;
             var alpha = 1f;
@@ -232,7 +232,7 @@ namespace DragoonMayCry.UI
                     demotionStopwatch.ElapsedMilliseconds / 1000f,
                     demotionDuration / 1000f);
             }
-            var color = new System.Numerics.Vector4(1,1,1,alpha);
+            var color = new System.Numerics.Vector4(1, 1, 1, alpha);
 
             ImGui.SetCursorPos(pos);
             ImGui.Image(rankIcon.ImGuiHandle, size, textureUv0, textureUv1, color);
@@ -325,11 +325,11 @@ namespace DragoonMayCry.UI
             var normalizedColor = rankColor / 255;
             var color = normalizedColor;
             if (!CanRetrieveStyleDisplay(previousStyle))
-            { 
+            {
                 return new(color, 1);
             }
 
-            StyleUi style = styleUis[previousStyle];
+            var style = styleUis[previousStyle];
 
             if (rankTransition.IsRunning)
             {
@@ -362,7 +362,7 @@ namespace DragoonMayCry.UI
             rankTransition.Reset();
             shakeStopwatch.Reset();
             demotionStopwatch.Reset();
-            if(enteringCombat)
+            if (enteringCombat)
             {
                 finalRankTransition.Reset();
             }

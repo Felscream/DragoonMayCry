@@ -4,9 +4,6 @@ using DragoonMayCry.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static DragoonMayCry.Score.Rank.StyleRankHandler;
 
 namespace DragoonMayCry.Score.Rank
@@ -16,7 +13,7 @@ namespace DragoonMayCry.Score.Rank
         public EventHandler<StyleType>? FinalRankCalculated;
         private readonly PlayerState playerState;
         private Dictionary<StyleType, double> timeInEachTier;
-        private Stopwatch tierTimer;
+        private readonly Stopwatch tierTimer;
         private StyleType currentTier = StyleType.NoStyle;
         public FinalRankCalculator(PlayerState playerState, StyleRankHandler styleRankHandler)
         {
@@ -47,10 +44,7 @@ namespace DragoonMayCry.Score.Rank
 
         private void OnCombat(object? sender, bool enteredCombat)
         {
-            if (playerState.IsInPvp()
-               || !playerState.IsInsideInstance && !Plugin.Configuration!.ActiveOutsideInstance
-               || !playerState.IsCombatJob()
-               || !Plugin.IsEnabledForCurrentJob())
+            if (!CanDisplayFinalRank())
             {
                 return;
             }
@@ -69,9 +63,18 @@ namespace DragoonMayCry.Score.Rank
             }
         }
 
+        public bool CanDisplayFinalRank()
+        {
+            return JobHelper.IsCombatJob(playerState.GetCurrentJob())
+            && !playerState.IsInPvp()
+            && Plugin.IsEnabledForCurrentJob()
+            && (playerState.IsInsideInstance
+                    || Plugin.Configuration!.ActiveOutsideInstance);
+        }
+
         private void OnRankChange(object? sender, RankChangeData rankChange)
         {
-            if (!Plugin.CanRunDmc())
+            if (!CanDisplayFinalRank())
             {
                 return;
             }

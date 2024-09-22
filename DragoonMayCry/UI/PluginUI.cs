@@ -20,6 +20,7 @@ namespace DragoonMayCry.UI
         private JobConfigurationWindow JobConfigurationWindow { get; init; }
 
         private readonly StyleRankUI styleRankUi;
+        private readonly FinalRankCalculator finalRankCalculator;
         private readonly IDalamudPluginInterface pluginInterface;
         private readonly PlayerState playerState;
         private readonly Stopwatch hideRankUiStopwatch;
@@ -27,6 +28,7 @@ namespace DragoonMayCry.UI
 
         public PluginUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager, FinalRankCalculator finalRankCalculator, StyleAnnouncerService styleAnnouncerService, DynamicBgmService dynamicBgmService)
         {
+            this.finalRankCalculator = finalRankCalculator;
             JobConfigurationWindow = new(Plugin.Configuration!);
             JobConfigurationWindow.JobAnnouncerTypeChange += styleAnnouncerService.OnAnnouncerTypeChange;
             JobConfigurationWindow.EnabledForJobChange += dynamicBgmService.OnJobEnableChange;
@@ -95,7 +97,7 @@ namespace DragoonMayCry.UI
 
         private void OnCombatChange(object send, bool enteringCombat)
         {
-            if (!Plugin.CanRunDmc())
+            if (!finalRankCalculator.CanDisplayFinalRank())
             {
                 hideRankUiStopwatch.Reset();
                 return;
