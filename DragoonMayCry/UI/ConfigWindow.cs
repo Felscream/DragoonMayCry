@@ -21,6 +21,7 @@ public class ConfigWindow : Window
     public EventHandler<bool>? ToggleDynamicBgmChange;
     public EventHandler<int>? SfxVolumeChange;
     public EventHandler<int>? BgmVolumeChange;
+    public EventHandler<bool>? MuffledOnDeathChange;
 
     private readonly DmcConfigurationOne configuration;
     private readonly JobConfigurationWindow jobConfigurationWindow;
@@ -131,7 +132,16 @@ public class ConfigWindow : Window
                     AddLabel("Enable dynamic BGM", cursorPosition);
                     ImGuiComponents.HelpMarker("This will disable the game's background music inside instances.");
                 })
-                .AddConfigCheckbox("Enable muffled effect on death", configuration.EnableMuffledEffectOnDeath)
+                .AddAction(() =>
+                {
+                    var cursorPosition = ImGui.GetCursorPos();
+                    if (ImGui.Checkbox("##EnableMuffledOnDeath", ref configuration.EnableMuffledEffectOnDeath.Value))
+                    {
+                        KamiCommon.SaveConfiguration();
+                        MuffledOnDeathChange?.Invoke(this, configuration.EnableMuffledEffectOnDeath.Value);
+                    }
+                    AddLabel("Enable muffled effect on death", cursorPosition);
+                })
                 .AddAction(() =>
                 {
                     var cursorPosition = ImGui.GetCursorPos();

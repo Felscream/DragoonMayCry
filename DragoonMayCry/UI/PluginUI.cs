@@ -7,7 +7,6 @@ using DragoonMayCry.Score;
 using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
 using KamiLib;
-using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Diagnostics;
 
@@ -25,7 +24,7 @@ namespace DragoonMayCry.UI
         private readonly PlayerState playerState;
         private readonly Stopwatch hideRankUiStopwatch;
         private const float TimeToResetScoreAfterCombat = 10000;
-        
+
         public PluginUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager, FinalRankCalculator finalRankCalculator, StyleAnnouncerService styleAnnouncerService, DynamicBgmService dynamicBgmService)
         {
             JobConfigurationWindow = new(Plugin.Configuration!);
@@ -35,6 +34,7 @@ namespace DragoonMayCry.UI
             ConfigWindow = new ConfigWindow(Plugin.Configuration!, JobConfigurationWindow);
             ConfigWindow.ActiveOutsideInstanceChange += Plugin.OnActiveOutsideInstanceConfChange;
             ConfigWindow.ToggleDynamicBgmChange += dynamicBgmService.ToggleDynamicBgm;
+            ConfigWindow.MuffledOnDeathChange += dynamicBgmService.OnMuffledOnDeathChange;
             ConfigWindow.SfxVolumeChange += AudioService.Instance.OnSfxVolumeChange;
             ConfigWindow.BgmVolumeChange += AudioService.Instance.OnBgmVolumeChange;
 
@@ -80,7 +80,7 @@ namespace DragoonMayCry.UI
             {
                 styleRankUi.Draw();
             }
-            
+
         }
 
         private bool CanDrawStyleRank()
@@ -95,7 +95,7 @@ namespace DragoonMayCry.UI
 
         private void OnCombatChange(object send, bool enteringCombat)
         {
-            if(!Plugin.CanRunDmc())
+            if (!Plugin.CanRunDmc())
             {
                 hideRankUiStopwatch.Reset();
                 return;
@@ -112,7 +112,7 @@ namespace DragoonMayCry.UI
 
         public void ToggleConfigUI()
         {
-            if(KamiCommon.WindowManager.GetWindowOfType<ConfigWindow>() is { } window)
+            if (KamiCommon.WindowManager.GetWindowOfType<ConfigWindow>() is { } window)
             {
                 window.IsOpen = !window.IsOpen;
             }

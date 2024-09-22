@@ -22,7 +22,7 @@ public class DmcConfigurationOne : IPluginConfiguration
     public Setting<bool> ApplyGameVolumeSfx = new(true);
     public Setting<bool> ApplyGameVolumeBgm = new(false);
     public Setting<bool> EnableDynamicBgm = new(false);
-    public Setting<bool> EnableMuffledEffectOnDeath = new(true);
+    public Setting<bool> EnableMuffledEffectOnDeath = new(false);
     public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);
     public readonly Dictionary<JobIds, JobConfiguration> JobConfiguration = new()
     {

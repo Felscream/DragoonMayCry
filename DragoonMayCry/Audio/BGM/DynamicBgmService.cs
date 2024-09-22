@@ -117,11 +117,11 @@ namespace DragoonMayCry.Audio.BGM
         {
             var insideInstance = playerState.IsInsideInstance;
             var currentJob = playerState.GetCurrentJob();
-            bgmFsm.Disable();
             if (!CanPlayDynamicBgm(insideInstance, currentJob))
             {
                 if (ShouldDisableFsm())
                 {
+                    bgmFsm.Disable();
                     ResetGameBgm();
                 }
                 return;
@@ -369,19 +369,36 @@ namespace DragoonMayCry.Audio.BGM
 
         public void ToggleDynamicBgm(object? sender, bool dynamicBgmEnabled)
         {
-
             var currentJob = playerState.GetCurrentJob();
             if (CanPlayDynamicBgm(playerState.IsInsideInstance, currentJob))
             {
                 DisableGameBgm();
                 PrepareBgm(currentJob);
+                if (playerState.IsDead)
+                {
+                    audioService.ApplyDeathEffect();
+                }
             }
             else if (bgmFsm.IsActive)
             {
                 bgmFsm.Disable();
                 ResetGameBgm();
+                audioService.RemoveDeathEffect();
             }
         }
+
+        public void OnMuffledOnDeathChange(object? sender, bool muffledOnDeath)
+        {
+            if (muffledOnDeath && playerState.IsDead)
+            {
+                audioService.ApplyDeathEffect();
+            }
+            else
+            {
+                audioService.RemoveDeathEffect();
+            }
+        }
+
         public static string GetBgmLabel(JobConfiguration.BgmConfiguration bgm)
         {
             return bgm switch
