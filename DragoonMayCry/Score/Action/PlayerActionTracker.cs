@@ -4,6 +4,7 @@ using Dalamud.Hooking;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using ImGuiNET;
 using KamiLib.Caching;
 using System;
@@ -84,6 +85,9 @@ namespace DragoonMayCry.Score.Action
 
         private readonly Hook<OnCastDelegate>? onCastHook;
 
+        public delegate void AddToScreenLogWithLogMessageId(BattleChara* target, BattleChara* dealer, int a3, char a4, int castID, int a6, int a7, int a8);
+        readonly Hook<AddToScreenLogWithLogMessageId>? addToScreenLogWithLogMessageId = null;
+
         private readonly State.ActionManagerLight* actionManager;
         private readonly PlayerState playerState;
         private readonly LuminaCache<LuminaAction> luminaActionCache;
@@ -98,6 +102,7 @@ namespace DragoonMayCry.Score.Action
         private LimitBreak? limitBreakCast;
         private const int maxActionHistorySize = 6;
         private readonly Queue<FlyTextData> actionHistory;
+        private readonly HashSet<int> ValidHitTypes = new() { 448, 451, 510, 511 };
 
         // added 0.1f to all duration
         private readonly Dictionary<uint, float> tankLimitBreakDelays =
@@ -128,6 +133,7 @@ namespace DragoonMayCry.Score.Action
 
 
                 onCastHook = Service.Hook.HookFromSignature<OnCastDelegate>("40 56 41 56 48 81 EC ?? ?? ?? ?? 48 8B F2", OnCast);
+                addToScreenLogWithLogMessageId = Service.Hook.HookFromSignature<AddToScreenLogWithLogMessageId>("E8 ?? ?? ?? ?? 8B 8C 24 ?? ?? ?? ?? 85 C9", OnLogMessage);
             }
             catch (Exception e)
             {
@@ -137,6 +143,7 @@ namespace DragoonMayCry.Score.Action
             onActionUsedHook?.Enable();
             onActorControlHook?.Enable();
             onCastHook?.Enable();
+            addToScreenLogWithLogMessageId?.Enable();
 
             Service.Framework.Update += Update;
             playerState.RegisterCombatStateChangeHandler(OnCombat);
@@ -155,6 +162,32 @@ namespace DragoonMayCry.Score.Action
 
             onCastHook?.Disable();
             onCastHook?.Dispose();
+
+            addToScreenLogWithLogMessageId?.Disable();
+            addToScreenLogWithLogMessageId?.Dispose();
+        }
+
+        private void OnLogMessage(BattleChara* target, BattleChara* dealer, int hitType, char a4, int castID, int damage, int a7, int a8)
+        {
+            addToScreenLogWithLogMessageId?.Original(target, dealer, hitType, a4, castID, damage, a7, a8);
+
+            if (dealer == null || target == null || playerState.Player == null || !Plugin.CanRunDmc())
+            {
+                return;
+            }
+
+            if (dealer->EntityId != playerState.Player.EntityId)
+            {
+                return;
+            }
+
+            if (damage < 1 || !ValidHitTypes.Contains(hitType))
+            {
+                return;
+            }
+            Service.Log.Debug("=================");
+            Service.Log.Debug($"a3 {hitType} a4 {a4} castId {castID} a6 {damage} a7 {a7} a8 {a8}");
+            Service.Log.Debug("=================");
         }
 
         private void OnActionUsed(

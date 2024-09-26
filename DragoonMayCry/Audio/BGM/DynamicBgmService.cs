@@ -173,6 +173,7 @@ namespace DragoonMayCry.Audio.BGM
             else if (ShouldDisableFsm())
             {
                 bgmFsm.Disable();
+                audioService.RemoveDeathEffect();
                 ResetGameBgm();
             }
         }
@@ -304,6 +305,10 @@ namespace DragoonMayCry.Audio.BGM
 
             if (soundFilesLoaded)
             {
+                if (playerState.IsDead)
+                {
+                    audioService.ApplyDeathEffect();
+                }
                 bgmFsm.Start();
             }
             else
@@ -350,7 +355,7 @@ namespace DragoonMayCry.Audio.BGM
             }
         }
 
-        private void OnDeath(Object? sender, bool isDead)
+        private void OnDeath(object? sender, bool isDead)
         {
             if (isDead && bgmFsm.IsActive)
             {
