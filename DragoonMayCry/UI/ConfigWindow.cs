@@ -33,7 +33,7 @@ public class ConfigWindow : Window
     public ConfigWindow(DmcConfigurationOne configuration, JobConfigurationWindow jobConfiguration) : base("DragoonMayCry - Configuration")
     {
 
-        Size = new Vector2(525, 425);
+        Size = new Vector2(525, 450);
         SizeCondition = ImGuiCond.Appearing;
         jobConfigurationWindow = jobConfiguration;
         this.configuration = configuration;

@@ -12,6 +12,7 @@ namespace DragoonMayCry.Data
         public static HashSet<uint> SustainedDamageIds = new()
         {
             2935, // found on Valigarmanda, M1S, P9S, P10S
+            3288,
             3692, // P10S poison
             4149, // M3S
         };
@@ -57,6 +58,7 @@ namespace DragoonMayCry.Data
         {
             900,
             2653,
+            2656,
             2953, // stun in tower of babil
         };
 

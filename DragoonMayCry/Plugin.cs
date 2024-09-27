@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 using PlayerState = DragoonMayCry.State.PlayerState;
 
@@ -26,6 +27,7 @@ public unsafe class Plugin : IDalamudPlugin
 {
     [PluginService] public static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     public static DmcConfigurationOne? Configuration { get; private set; }
+    public static bool MultiHitLoaded { get; private set; }
 
     private const string CommandName = "/dmc";
 
@@ -59,7 +61,7 @@ public unsafe class Plugin : IDalamudPlugin
         ScoreManager = new(StyleRankHandler, PlayerActionTracker);
         ScoreProgressBar = new(ScoreManager, StyleRankHandler, PlayerActionTracker, PlayerState);
         FinalRankCalculator = new(PlayerState, StyleRankHandler);
-        PluginUi = new(ScoreProgressBar, StyleRankHandler, ScoreManager, FinalRankCalculator, StyleAnnouncerService, BgmService);
+        PluginUi = new(ScoreProgressBar, StyleRankHandler, ScoreManager, FinalRankCalculator, StyleAnnouncerService, BgmService, PlayerActionTracker);
 
 
         ScoreProgressBar.DemotionApplied += StyleRankHandler.OnDemotion;
@@ -82,6 +84,11 @@ public unsafe class Plugin : IDalamudPlugin
         && IsEnabledForCurrentJob()
         && (PlayerState.IsInsideInstance
                     || Configuration!.ActiveOutsideInstance);
+    }
+
+    public static bool IsMultiHitLoaded()
+    {
+        return PluginInterface.InstalledPlugins.FirstOrDefault(plugin => plugin.IsLoaded && plugin.InternalName == "MultiHit") != null;
     }
 
     public static bool CanHandleEvents()
