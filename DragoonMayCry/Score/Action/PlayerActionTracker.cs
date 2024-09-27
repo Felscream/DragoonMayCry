@@ -36,13 +36,13 @@ namespace DragoonMayCry.Score.Action
         {
             public float GracePeriod { get; set; }
             public bool IsTankLb { get; set; }
-            public String Name { get; set; }
+            public uint ActionId { get; set; }
 
-            public LimitBreak(float gracePeriod, bool isTankLb, string name)
+            public LimitBreak(float gracePeriod, bool isTankLb, uint id)
             {
                 GracePeriod = gracePeriod;
                 IsTankLb = isTankLb;
-                Name = name;
+                ActionId = id;
 
             }
         }
@@ -54,18 +54,15 @@ namespace DragoonMayCry.Score.Action
             FlyTextKind.DamageCrit,
             FlyTextKind.DamageDh,
             FlyTextKind.DamageCritDh,
-            FlyTextKind.AutoAttackOrDot,
-            FlyTextKind.AutoAttackOrDotDh,
-            FlyTextKind.AutoAttackOrDotCrit,
-            FlyTextKind.AutoAttackOrDotCritDh,
         };
 
         public EventHandler? OnGcdDropped;
-        public EventHandler<float>? OnFlyTextCreation;
+        public EventHandler<float>? DamageActionUsed;
         public EventHandler<float>? OnGcdClip;
         public EventHandler<LimitBreakEvent>? UsingLimitBreak;
         public EventHandler? OnLimitBreakEffect;
         public EventHandler? OnLimitBreakCanceled;
+        public EventHandler? ActionFlyTextCreated;
 
 
         private delegate void OnActionUsedDelegate(
@@ -100,9 +97,9 @@ namespace DragoonMayCry.Score.Action
 
         private readonly Stopwatch limitBreakStopwatch;
         private LimitBreak? limitBreakCast;
-        private const int maxActionHistorySize = 6;
-        private readonly Queue<FlyTextData> actionHistory;
-        private readonly HashSet<int> ValidHitTypes = new() { 448, 451, 510, 511 };
+        private const int MaxActionHistorySize = 6;
+        private readonly Queue<UsedAction> actionHistory;
+        private readonly HashSet<FlyTextKind> validHitTypes = new() { FlyTextKind.Damage, FlyTextKind.DamageDh, FlyTextKind.DamageCrit, FlyTextKind.DamageCritDh };
 
         // added 0.1f to all duration
         private readonly Dictionary<uint, float> tankLimitBreakDelays =
@@ -117,7 +114,7 @@ namespace DragoonMayCry.Score.Action
             };
         public PlayerActionTracker()
         {
-            actionHistory = new Queue<FlyTextData>();
+            actionHistory = new Queue<UsedAction>();
             luminaActionCache = LuminaCache<LuminaAction>.Instance;
             playerState = PlayerState.GetInstance();
             limitBreakStopwatch = new Stopwatch();
@@ -171,23 +168,28 @@ namespace DragoonMayCry.Score.Action
         {
             addToScreenLogWithLogMessageId?.Original(target, dealer, hitType, a4, castID, damage, a7, a8);
 
-            if (dealer == null || target == null || playerState.Player == null || !Plugin.CanRunDmc())
+            if (!Plugin.CanRunDmc() || dealer == null || target == null || playerState.Player == null)
             {
                 return;
             }
 
-            if (dealer->EntityId != playerState.Player.EntityId)
+            if (dealer->GetGameObjectId() != playerState.Player.GameObjectId)
             {
                 return;
             }
 
-            if (damage < 1 || !ValidHitTypes.Contains(hitType))
+            if (limitBreakCast != null && limitBreakCast.ActionId == (uint)castID)
+            {
+                OnLimitBreakEffect?.Invoke(this, EventArgs.Empty);
+                return;
+            }
+
+            var kind = GetHitType(hitType);
+            if (!validHitTypes.Contains(kind) || dealer->Character.GetGameObjectId().ObjectId == target->Character.GetGameObjectId().ObjectId)
             {
                 return;
             }
-            Service.Log.Debug("=================");
-            Service.Log.Debug($"a3 {hitType} a4 {a4} castId {castID} a6 {damage} a7 {a7} a8 {a8}");
-            Service.Log.Debug("=================");
+            RegisterAndFireUsedAction(kind, damage, (uint)castID);
         }
 
         private void OnActionUsed(
@@ -212,15 +214,25 @@ namespace DragoonMayCry.Score.Action
             var actionId = Marshal.ReadInt32(effectHeader, 0x8);
 
             var type = TypeForActionId((uint)actionId);
-            if (type == PlayerActionType.Other || type == PlayerActionType.AutoAttack)
-            {
-                return;
-            }
 
             if (type == PlayerActionType.LimitBreak)
             {
                 StartLimitBreakUse((uint)actionId);
             }
+        }
+
+        private FlyTextKind GetHitType(int hitType)
+        {
+            return hitType switch
+            {
+                448 => FlyTextKind.DamageDh,
+                451 => FlyTextKind.DamageCritDh,
+                510 => FlyTextKind.Damage,
+                511 => FlyTextKind.DamageCrit,
+                519 => FlyTextKind.Healing,
+                526 => FlyTextKind.Buff,
+                _ => FlyTextKind.AutoAttackOrDot
+            };
         }
 
         private PlayerActionType TypeForActionId(uint actionId)
@@ -250,6 +262,7 @@ namespace DragoonMayCry.Score.Action
             onActorControlHook?.Original(entityId, type, buffID, direct,
                                           actionId, sourceId, arg4, arg5,
                                           targetId, a10);
+
             if (!Plugin.CanRunDmc())
             {
                 return;
@@ -268,7 +281,6 @@ namespace DragoonMayCry.Score.Action
             if (limitBreakCast != null)
             {
                 CancelLimitBreak();
-                return;
             }
         }
 
@@ -389,7 +401,7 @@ namespace DragoonMayCry.Score.Action
             var gracePeriod = isTankLb ? tankLimitBreakDelays[actionId] : castTime + 3f;
 
             var action = luminaActionCache?.GetRow(actionId);
-            limitBreakCast = new LimitBreak(gracePeriod, isTankLb, action?.Name!);
+            limitBreakCast = new LimitBreak(gracePeriod, isTankLb, actionId);
             limitBreakStopwatch.Restart();
 
             UsingLimitBreak?.Invoke(this, new LimitBreakEvent(isTankLb, true));
@@ -475,7 +487,7 @@ namespace DragoonMayCry.Score.Action
             ref bool handled)
         {
 
-            if (!Plugin.CanRunDmc() || color == 4278190218) //color for damage taken will break if users are able to change it
+            if (!Plugin.CanRunDmc() || !Plugin.IsMultiHitLoaded() || color == 4278190218)
             {
                 return;
             }
@@ -483,8 +495,6 @@ namespace DragoonMayCry.Score.Action
             var damage = val1;
             var actionName = text1.ToString();
 
-            // TODO Some DoTs deal no damage on application,
-            // will have to figure out what to do about that
             if (actionName == null || text2 == null)
             {
                 return;
@@ -495,77 +505,61 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-
-            if (actionName.StartsWith('+'))
-            {
-                actionName = actionName[2..];
-            }
-
-            if (!validTextKind.Contains(kind)
-                && (limitBreakCast == null || limitBreakCast.Name != actionName))
+            if (!validTextKind.Contains(kind))
             {
                 return;
             }
-
-            if (kind == FlyTextKind.AutoAttackOrDot
-                || kind == FlyTextKind.AutoAttackOrDotDh
-                || kind == FlyTextKind.AutoAttackOrDotCrit
-                || kind == FlyTextKind.AutoAttackOrDotCritDh)
-            {
-                OnFlyTextCreation?.Invoke(this, damage);
-                return;
-            }
-            RegisterAndFireFlyText(kind, damage, actionName);
+            ActionFlyTextCreated?.Invoke(this, EventArgs.Empty);
         }
 
-        private void RegisterAndFireFlyText(FlyTextKind kind, int damage, string actionName)
+        private void RegisterAndFireUsedAction(FlyTextKind kind, int damage, uint actionId)
         {
-            var newFlyText = new FlyTextData(actionName, damage, kind);
-            if (actionHistory.Contains(newFlyText))
+            var usedAction = new UsedAction(actionId, damage, kind);
+            if (actionHistory.Contains(usedAction))
             {
                 return;
             }
 
-            if (actionHistory.Count >= maxActionHistorySize)
+            if (actionHistory.Count >= MaxActionHistorySize)
             {
                 actionHistory.Dequeue();
             }
-            actionHistory.Enqueue(newFlyText);
+            actionHistory.Enqueue(usedAction);
 
-            if (limitBreakCast != null && actionName == limitBreakCast.Name)
+            if (limitBreakCast != null && actionId == limitBreakCast.ActionId)
             {
                 OnLimitBreakEffect?.Invoke(this, EventArgs.Empty);
             }
             else
             {
-                OnFlyTextCreation?.Invoke(this, damage);
+                DamageActionUsed?.Invoke(this, damage);
             }
         }
 
-        private class FlyTextData
+        private class UsedAction
         {
-            public string Name { get; private set; }
+            public uint ActionId { get; private set; }
             public int Damage { get; private set; }
             public FlyTextKind Kind { get; private set; }
 
-            public FlyTextData(string name, int damage, FlyTextKind kind)
+            public UsedAction(uint actionId, int damage, FlyTextKind kind)
             {
-                Name = name;
+                ActionId = actionId;
                 Damage = damage;
                 Kind = kind;
             }
 
             public override bool Equals(object? obj)
             {
-                return obj is FlyTextData text &&
-                       Name == text.Name &&
+                return obj is UsedAction text &&
+                       ActionId == text.ActionId &&
                        Damage == text.Damage &&
                        Kind == text.Kind;
             }
 
             public override int GetHashCode()
             {
-                return HashCode.Combine(Name, Damage, Kind);
+                return HashCode.Combine(ActionId, Damage, Kind);
             }
         }
     }

@@ -62,7 +62,7 @@ namespace DragoonMayCry.Score
             this.rankHandler = styleRankHandler;
             this.rankHandler.StyleRankChange += OnRankChange!;
 
-            playerActionTracker.OnFlyTextCreation += AddScore;
+            playerActionTracker.DamageActionUsed += AddScore;
             playerActionTracker.OnGcdClip += OnGcdClip;
             playerActionTracker.UsingLimitBreak += OnLimitBreakCast;
             playerActionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
@@ -134,6 +134,7 @@ namespace DragoonMayCry.Score
                 CurrentScoreRank.Score = Math.Min(
                     CurrentScoreRank.Score, CurrentScoreRank.StyleScoring.Threshold);
             }
+
             OnScoring?.Invoke(this, points);
         }
 

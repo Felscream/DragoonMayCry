@@ -4,6 +4,7 @@ using DragoonMayCry.Audio;
 using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Score;
+using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
 using KamiLib;
@@ -26,7 +27,13 @@ namespace DragoonMayCry.UI
         private readonly Stopwatch hideRankUiStopwatch;
         private const float TimeToResetScoreAfterCombat = 10000;
 
-        public PluginUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager, FinalRankCalculator finalRankCalculator, StyleAnnouncerService styleAnnouncerService, DynamicBgmService dynamicBgmService)
+        public PluginUI(ScoreProgressBar scoreProgressBar,
+            StyleRankHandler styleRankHandler,
+            ScoreManager scoreManager,
+            FinalRankCalculator finalRankCalculator,
+            StyleAnnouncerService styleAnnouncerService,
+            DynamicBgmService dynamicBgmService,
+            PlayerActionTracker playerActionTracker)
         {
             this.finalRankCalculator = finalRankCalculator;
             JobConfigurationWindow = new(Plugin.Configuration!);
@@ -42,7 +49,7 @@ namespace DragoonMayCry.UI
 
             HowItWorksWindow = new HowItWorksWindow();
 
-            styleRankUi = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator);
+            styleRankUi = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator, playerActionTracker);
 
             KamiCommon.WindowManager.AddWindow(JobConfigurationWindow);
             KamiCommon.WindowManager.AddWindow(ConfigWindow);

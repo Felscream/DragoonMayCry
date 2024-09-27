@@ -2,6 +2,7 @@ using Dalamud.Interface.Animation;
 using Dalamud.Interface.Animation.EasingFunctions;
 using Dalamud.Interface.Textures.TextureWraps;
 using DragoonMayCry.Score;
+using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
@@ -37,6 +38,7 @@ namespace DragoonMayCry.UI
         private readonly StyleRankHandler styleRankHandler;
         private readonly PlayerState playerState;
         private readonly FinalRankCalculator finalRankCalculator;
+        private readonly PlayerActionTracker playerActionTracker;
 
         private readonly Vector2 rankPosition = new(8, 8);
         private readonly Vector2 rankSize = new(130, 130);
@@ -55,7 +57,7 @@ namespace DragoonMayCry.UI
         private readonly float shakeIntensity = 6f;
         private readonly string gaugeDefault = "DragoonMayCry.Assets.GaugeDefault.png";
 
-        public StyleRankUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager, FinalRankCalculator finalRankCalculator)
+        public StyleRankUI(ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager, FinalRankCalculator finalRankCalculator, PlayerActionTracker playerActionTracker)
         {
             this.scoreProgressBar = scoreProgressBar;
             this.styleRankHandler = styleRankHandler;
@@ -65,6 +67,8 @@ namespace DragoonMayCry.UI
             this.finalRankCalculator.FinalRankCalculated += OnFinalRankCalculated!;
             this.playerState = PlayerState.GetInstance();
             this.playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
+            this.playerActionTracker = playerActionTracker;
+            this.playerActionTracker.ActionFlyTextCreated += OnActionFlyTextCreated!;
 
             this.styleRankHandler.StyleRankChange += OnRankChange!;
 
@@ -369,6 +373,15 @@ namespace DragoonMayCry.UI
         }
 
         private void OnScoring(object sender, double points)
+        {
+            if (Plugin.IsMultiHitLoaded())
+            {
+                return;
+            }
+            Shake();
+        }
+
+        private void OnActionFlyTextCreated(object sender, EventArgs e)
         {
             Shake();
         }
