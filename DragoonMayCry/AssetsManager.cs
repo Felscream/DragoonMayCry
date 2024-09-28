@@ -27,7 +27,8 @@ namespace DragoonMayCry
         public static AssetsStatus Status { get; private set; } = AssetsStatus.Uninitialized;
 
         private const string TargetAssetVersion = "0.13.0.0";
-        private const string TargetSha1 = "a22008a70e628ab481a3be7938339a3595dc25e2";
+        private const string TargetSha1 = "8f70168688b988efef9fbbad7454989cf67042dd";
+
         private const long RequiredDiskSpaceCompressed = 52_596_736;
         private const long RequiredDiskSpaceExtracted = 53_350_400;
 
