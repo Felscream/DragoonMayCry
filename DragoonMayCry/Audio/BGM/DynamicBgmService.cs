@@ -22,6 +22,7 @@ namespace DragoonMayCry.Audio.BGM
             BuryTheLight,
             DevilTrigger,
             CrimsonCloud,
+            Subhuman,
             None
         }
 
@@ -30,10 +31,11 @@ namespace DragoonMayCry.Audio.BGM
         private readonly Dictionary<BgmState, IFsmState> devilTriggerStates;
         private readonly Dictionary<BgmState, IFsmState> crimsonCloudStates;
         private readonly Dictionary<Bgm, Dictionary<BgmState, IFsmState>> bgmStates = new();
-        private readonly List<Bgm> randomBgmList = new();
         private readonly DynamicBgmFsm bgmFsm;
         private readonly PlayerState playerState;
         private readonly AudioService audioService;
+
+        private Queue<Bgm> randomBgmQueue = new();
         private bool gameBgmState;
         private Bgm currentBgm = Bgm.None;
         private bool soundFilesLoaded;
@@ -229,7 +231,8 @@ namespace DragoonMayCry.Audio.BGM
                 bgmFsm.loadNewBgm = LoadRandomBgm;
                 Task.Run(() =>
                 {
-                    CacheAllBgm();
+                    var loadedBgm = CacheAllBgm();
+                    randomBgmQueue = GenerateRandomBgmQueue(loadedBgm);
                     LoadRandomBgm();
                 });
 
@@ -251,17 +254,30 @@ namespace DragoonMayCry.Audio.BGM
             LoadBgm(selectedBgm);
         }
 
+        private Queue<Bgm> GenerateRandomBgmQueue(List<Bgm> loadedBgm)
+        {
+            var bgmTemp = new List<Bgm>(loadedBgm);
+            var randomQueue = new Queue<Bgm>();
+            var random = new Random();
+            while (bgmTemp.Count > 0)
+            {
+                var index = random.Next(0, bgmTemp.Count);
+                randomQueue.Enqueue(bgmTemp[index]);
+                bgmTemp.RemoveAt(index);
+            }
+            return randomQueue;
+        }
+
         private void LoadRandomBgm()
         {
             bgmFsm.ResetToIntro();
-            if (randomBgmList.Count == 0)
+            if (randomBgmQueue.Count == 0)
             {
                 return;
             }
-            var selectionPool = new List<Bgm>(randomBgmList);
-            selectionPool.Remove(currentBgm);
-            var rand = random.Next(selectionPool.Count);
-            var selectedBgm = selectionPool[rand];
+
+            var selectedBgm = randomBgmQueue.Dequeue();
+            randomBgmQueue.Enqueue(selectedBgm);
             if (!bgmStates.ContainsKey(selectedBgm) || !AssetsManager.IsReady)
             {
                 return;
@@ -333,8 +349,9 @@ namespace DragoonMayCry.Audio.BGM
             audioService.RegisterBgmParts(bgm, bgmParts);
         }
 
-        private void CacheAllBgm()
+        private List<Bgm> CacheAllBgm()
         {
+            var bgmList = new List<Bgm>();
             foreach (var entry in bgmStates)
             {
                 var bgmParts = entry.Value.SelectMany(entry => entry.Value.GetBgmPaths()).ToDictionary();
@@ -343,16 +360,15 @@ namespace DragoonMayCry.Audio.BGM
                     var registered = audioService.RegisterBgmParts(entry.Key, bgmParts);
                     if (registered)
                     {
-                        randomBgmList.Add(entry.Key);
+                        bgmList.Add(entry.Key);
                     }
-
                 }
                 catch (Exception e)
                 {
                     Service.Log.Error(e, $"Error while loading [{entry.Key}] with other BGMs");
                 }
-
             }
+            return bgmList;
         }
 
         private void OnDeath(object? sender, bool isDead)
