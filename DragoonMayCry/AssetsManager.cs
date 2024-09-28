@@ -1,13 +1,11 @@
 using Dalamud.Interface.ImGuiNotification;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DragoonMayCry
@@ -28,17 +26,18 @@ namespace DragoonMayCry
         public static bool IsReady { get; private set; }
         public static AssetsStatus Status { get; private set; } = AssetsStatus.Uninitialized;
 
-        private const string TargetAssetVersion = "0.12.0.0";
-        private const string TargetSha1 = "fe381bb7cfdcb5012d55e4acfd0944e762ce7295";
-        private const long RequiredDiskSpaceCompressed = 42_303_488;
-        private const long RequiredDiskSpaceExtracted = 42_938_368;
+        private const string TargetAssetVersion = "0.13.0.0";
+        private const string TargetSha1 = "a22008a70e628ab481a3be7938339a3595dc25e2";
+        private const long RequiredDiskSpaceCompressed = 52_596_736;
+        private const long RequiredDiskSpaceExtracted = 53_350_400;
 
         public static void VerifyAndUpdateAssets()
         {
             try
             {
                 Task.Run(() => { FetchAudioFiles(); });
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 Service.Log.Error(ex, "An excepion occured while fetching audio files");
             }
@@ -46,7 +45,8 @@ namespace DragoonMayCry
 
         public static void FetchAudioFiles()
         {
-            if(Status == AssetsStatus.Updating ) {
+            if (Status == AssetsStatus.Updating)
+            {
                 return;
             }
 
@@ -57,7 +57,7 @@ namespace DragoonMayCry
             {
                 areFilesValid = AreLocalFilesValid() && TargetAssetVersion == CurrentDownloadedAssetVersion();
             }
-            
+
             if (areFilesValid)
             {
                 Status = AssetsStatus.Done;
@@ -73,12 +73,12 @@ namespace DragoonMayCry
                 Directory.Delete(localAssetDir, true);
             }
 
-            Uri assetsUri = new Uri($"https://github.com/Felscream/DragoonMayCry/releases/download/v{TargetAssetVersion}/assets.zip");
+            var assetsUri = new Uri($"https://github.com/Felscream/DragoonMayCry/releases/download/v{TargetAssetVersion}/assets.zip");
             var downloadLocation = $"{configDir}/assets-{TargetAssetVersion}.zip";
             var requiredSpace = RequiredDiskSpaceExtracted + RequiredDiskSpaceCompressed;
             var freeDiskSpace = new DriveInfo(configDir).AvailableFreeSpace;
 
-            if(freeDiskSpace < requiredSpace)
+            if (freeDiskSpace < requiredSpace)
             {
                 LogAndNotify("Not enough free disk space to extract assets", NotificationType.Error);
                 Status = AssetsStatus.FailedInsufficientDiskSpace;
@@ -86,7 +86,7 @@ namespace DragoonMayCry
             }
 
             HttpClient httpClient = new();
-            HttpResponseMessage response = httpClient.GetAsync(assetsUri).Result;
+            var response = httpClient.GetAsync(assetsUri).Result;
 
             if (!response.IsSuccessStatusCode)
             {
@@ -116,7 +116,7 @@ namespace DragoonMayCry
             Status = AssetsStatus.Done;
             SendAssetsReadyEvent();
         }
-       
+
         private static void SendAssetsReadyEvent()
         {
             IsReady = true;
@@ -128,7 +128,7 @@ namespace DragoonMayCry
             var assetDirectory = GetAssetsDirectory();
             var localAssetsSha1 = GetAssetsSha1(assetDirectory);
 #if DEBUG
-            if(localAssetsSha1 != TargetSha1)
+            if (localAssetsSha1 != TargetSha1)
             {
                 Service.Log.Warning($"Update assets sha1 before commiting, current sha1 {localAssetsSha1} vs target {TargetSha1}");
             }
@@ -138,23 +138,23 @@ namespace DragoonMayCry
 
         private static String GetAssetsSha1(string folder)
         {
-            using(SHA1 sha1 = SHA1.Create())
+            using (var sha1 = SHA1.Create())
             {
                 var files = Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories)
                     .OrderBy(f => f)
                     .ToList();
 
-                using (MemoryStream ms = new MemoryStream())
+                using (var ms = new MemoryStream())
                 {
                     foreach (var file in files)
                     {
-                        byte[] content = File.ReadAllBytes(file);
-                        byte[] hash = sha1.ComputeHash(content);
+                        var content = File.ReadAllBytes(file);
+                        var hash = sha1.ComputeHash(content);
 
                         ms.Write(hash, 0, hash.Length);
                     }
 
-                    byte[] folderHash = sha1.ComputeHash(ms.ToArray());
+                    var folderHash = sha1.ComputeHash(ms.ToArray());
                     return BitConverter.ToString(folderHash).Replace("-", "").ToLowerInvariant();
                 }
             }
@@ -202,13 +202,13 @@ namespace DragoonMayCry
             if (!File.Exists(manifestFile)) return null;
 
             var jsonData = File.ReadAllText(manifestFile);
-            AssetsManifest? manifest = JsonConvert.DeserializeObject<AssetsManifest>(jsonData);
+            var manifest = JsonConvert.DeserializeObject<AssetsManifest>(jsonData);
 
             return manifest?.Version;
         }
     }
 
-    
+
 
     class AssetsManifest
     {
