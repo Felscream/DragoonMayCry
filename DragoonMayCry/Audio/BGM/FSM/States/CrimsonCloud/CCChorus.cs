@@ -3,7 +3,7 @@ using NAudio.Wave;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
+namespace DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud
 {
     internal class CCChorus : IFsmState
     {

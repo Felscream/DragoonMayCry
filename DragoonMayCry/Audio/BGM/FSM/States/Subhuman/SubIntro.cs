@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
+namespace DragoonMayCry.Audio.BGM.FSM.States.Subhuman
 {
     public class SubIntro : IFsmState
     {
@@ -136,7 +136,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
                 {
                     if (provider.fadeState == ExposedFadeInOutSampleProvider.FadeState.FullVolume)
                     {
-                        provider.BeginFadeOut(1500);
+                        provider.BeginFadeOut(2400);
                         continue;
                     }
                 }

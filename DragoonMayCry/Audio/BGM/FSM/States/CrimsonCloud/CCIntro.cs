@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
+namespace DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud
 {
     public class CCIntro : IFsmState
     {

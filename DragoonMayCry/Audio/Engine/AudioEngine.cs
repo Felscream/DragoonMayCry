@@ -114,7 +114,7 @@ namespace DragoonMayCry.Audio.Engine
             {
                 fadingInput.BeginFadeIn(fadeInDuration);
             }
-            if (fadeOutDelay > 0)
+            if (fadeOutDuration > 0)
             {
                 fadingInput.BeginFadeOut(fadeOutDuration, fadeOutDelay);
             }
