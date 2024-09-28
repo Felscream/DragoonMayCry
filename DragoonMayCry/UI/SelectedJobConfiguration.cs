@@ -3,7 +3,6 @@ using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
 using DragoonMayCry.State;
-using DragoonMayCry.Util;
 using ImGuiNET;
 using KamiLib;
 using KamiLib.Drawing;
@@ -12,8 +11,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DragoonMayCry.UI
 {
@@ -34,14 +31,26 @@ namespace DragoonMayCry.UI
             this.job = job;
             this.configuration = configuration;
             this.announcers = announcers;
-            this.bgms = bgms;
+            this.bgms = [.. bgms.OrderBy(bgm =>
+            {
+                if (bgm == JobConfiguration.BgmConfiguration.Off)
+                {
+                    return 0;
+                }
+                if (bgm == JobConfiguration.BgmConfiguration.Randomize)
+                {
+                    return 6;
+                }
+                return (int)bgm;
+            })];
         }
 
         IDrawable ISelectable.Contents => this;
 
         string ISelectable.ID => job.ToString();
 
-        private Vector4 GetJobSelectionItemColor() {
+        private Vector4 GetJobSelectionItemColor()
+        {
             if (!configuration.EnableDmc)
             {
                 return Colors.Grey;
@@ -53,9 +62,10 @@ namespace DragoonMayCry.UI
         void IDrawable.Draw()
         {
             InfoBox.Instance.AddTitle(job.ToString())
-                .AddAction(()=> {
+                .AddAction(() =>
+                {
                     var enabled = configuration.EnableDmc.Value;
-                    if(ImGui.Checkbox("Enable DragoonMayCry", ref enabled))
+                    if (ImGui.Checkbox("Enable DragoonMayCry", ref enabled))
                     {
                         configuration.EnableDmc.Value = enabled;
                         KamiCommon.SaveConfiguration();
@@ -68,7 +78,7 @@ namespace DragoonMayCry.UI
                     ImGui.SetNextItemWidth(200f);
                     if (ImGui.BeginCombo($"Announcer##announcer-{job}", StyleAnnouncerService.GetAnnouncerTypeLabel(configuration.Announcer.Value)))
                     {
-                        for (int i = 0; i < announcers.Count(); i++)
+                        for (var i = 0; i < announcers.Count(); i++)
                         {
                             if (ImGui.Selectable(StyleAnnouncerService.GetAnnouncerTypeLabel(announcers[i]), configuration.Announcer.Value.Equals(announcers[i])))
                             {
@@ -80,7 +90,7 @@ namespace DragoonMayCry.UI
                         ImGui.EndCombo();
                     }
                 })
-                
+
                 .EndDisabled()
                 .BeginDisabled(PlayerState.GetInstance().IsInsideInstance)
                 .AddConfigCombo(bgms, configuration.Bgm, DynamicBgmService.GetBgmLabel, $"Dynamic BGM##bgm-{job}", 200f)

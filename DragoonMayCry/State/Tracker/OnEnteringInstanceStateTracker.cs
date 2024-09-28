@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace DragoonMayCry.State.Tracker
 {
     internal class OnEnteringInstanceStateTracker : StateTracker<bool>
@@ -14,7 +8,6 @@ namespace DragoonMayCry.State.Tracker
             if (CurrentValue != LastValue)
             {
                 OnChange?.Invoke(this, CurrentValue);
-                
             }
             LastValue = CurrentValue;
         }

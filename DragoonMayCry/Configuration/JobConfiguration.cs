@@ -7,12 +7,12 @@ namespace DragoonMayCry.Configuration
     {
         public enum BgmConfiguration
         {
-            Off,
-            BuryTheLight,
-            DevilTrigger,
-            CrimsonCloud,
-            Subhuman,
-            Randomize
+            Off = 0,
+            BuryTheLight = 1,
+            DevilTrigger = 2,
+            CrimsonCloud = 3,
+            Subhuman = 5,
+            Randomize = 4
         }
         public Setting<bool> EnableDmc = new(true);
         public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);

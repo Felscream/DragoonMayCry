@@ -33,16 +33,20 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
         private readonly Dictionary<BgmId, string> bgmPaths = new()
         {
-            { BgmId.CombatEnter1, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\028.ogg") },
-            { BgmId.CombatEnter2, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\101.ogg") },
-            { BgmId.CombatVerse1, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\116.ogg") },
-            { BgmId.CombatVerse2, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\021.ogg") },
-            { BgmId.CombatCoreLoopTransition1, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\109.ogg") },
-            { BgmId.CombatCoreLoopTransition2, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\106.ogg") },
-            { BgmId.CombatCoreLoopTransition3, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\066.ogg") },
-            { BgmId.CombatCoreLoopExit1, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\070.ogg") },
-            { BgmId.CombatCoreLoopExit2, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\075.ogg") },
-            { BgmId.CombatCoreLoopExit3, DynamicBgmService.GetPathToAudio("DevilTrigger\\Verse\\085.ogg") },
+            { BgmId.CombatEnter1, DynamicBgmService.GetPathToAudio("Subhuman\\Verse\\014.ogg") },
+            { BgmId.CombatEnter2, DynamicBgmService.GetPathToAudio("Subhuman\\Verse\\097.ogg") },
+            { BgmId.CombatEnter3, DynamicBgmService.GetPathToAudio("Subhuman\\Verse\\022.ogg") },
+            { BgmId.CombatVerse1, DynamicBgmService.GetPathToAudio("Subhuman\\Verse\\018.ogg") },
+            { BgmId.CombatVerse2, DynamicBgmService.GetPathToAudio("Subhuman\\Verse\\015.ogg") },
+            { BgmId.CombatVerse3, DynamicBgmService.GetPathToAudio("Subhuman\\Verse\\115.ogg") },
+            { BgmId.CombatVerse4, DynamicBgmService.GetPathToAudio("Subhuman\\Verse\\002.ogg") },
+            { BgmId.CombatCoreLoopTransition1, DynamicBgmService.GetPathToAudio("Subhuman\\Verse\\071.ogg") },
+            { BgmId.CombatCoreLoopTransition2, DynamicBgmService.GetPathToAudio("Subhuman\\Verse\\099.ogg") },
+            { BgmId.CombatCoreLoopTransition3, DynamicBgmService.GetPathToAudio("Subhuman\\Verse\\020.ogg") },
+            { BgmId.CombatCoreLoopTransition4, DynamicBgmService.GetPathToAudio("Subhuman\\Verse\\067.ogg") },
+            { BgmId.CombatCoreLoopExit1, DynamicBgmService.GetPathToAudio("Subhuman\\Verse\\053.ogg") },
+            { BgmId.CombatCoreLoopExit2, DynamicBgmService.GetPathToAudio("Subhuman\\Verse\\065.ogg") },
+            { BgmId.CombatCoreLoopExit3, DynamicBgmService.GetPathToAudio("Subhuman\\Verse\\001.ogg") },
         };
 
         private LinkedList<BgmId> combatLoop = new();

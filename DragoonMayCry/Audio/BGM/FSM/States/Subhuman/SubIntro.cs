@@ -18,7 +18,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
         private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new()
         {
-            { BgmId.Intro, new BgmTrackData(0, 101950) },
+            { BgmId.Intro, new BgmTrackData(0, 61950) },
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new()

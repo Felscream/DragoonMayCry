@@ -40,7 +40,7 @@ namespace DragoonMayCry.Audio.BGM
         private bool gameBgmState;
         private Bgm currentBgm = Bgm.None;
         private bool soundFilesLoaded;
-        private readonly Random random = new();
+        private uint currentTerritory;
 
         public DynamicBgmService(StyleRankHandler styleRankHandler)
         {
@@ -113,6 +113,7 @@ namespace DragoonMayCry.Audio.BGM
 
         private void OnInstanceChange(object? sender, bool insideInstance)
         {
+            currentTerritory = playerState.GetCurrentTerritoryId();
             audioService.RemoveDeathEffect();
             if (!insideInstance && bgmFsm.IsActive)
             {
@@ -205,8 +206,8 @@ namespace DragoonMayCry.Audio.BGM
                     && Plugin.Configuration!.EnableDynamicBgm
                     && Plugin.Configuration.JobConfiguration.ContainsKey(job)
                     && Plugin.Configuration.JobConfiguration[job].EnableDmc
-                    && Plugin.Configuration.JobConfiguration[job].Bgm.Value != JobConfiguration.BgmConfiguration.Off
-                    && !TerritoryIds.NoBgmInstances.Contains(Service.ClientState.TerritoryType);
+                    && Plugin.Configuration.JobConfiguration[job].Bgm.Value != JobConfiguration.BgmConfiguration.Off;
+            //&& !TerritoryIds.NoBgmInstances.Contains(currentTerritory);
         }
 
         private void OnAssetsAvailable(object? sender, bool loaded)
@@ -442,6 +443,7 @@ namespace DragoonMayCry.Audio.BGM
                 JobConfiguration.BgmConfiguration.BuryTheLight => "Bury the Light",
                 JobConfiguration.BgmConfiguration.DevilTrigger => "Devil Trigger",
                 JobConfiguration.BgmConfiguration.CrimsonCloud => "Crimson Cloud",
+                JobConfiguration.BgmConfiguration.Subhuman => "Subhuman",
                 JobConfiguration.BgmConfiguration.Randomize => "Randomize",
                 _ => "Unknown"
             };

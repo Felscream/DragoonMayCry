@@ -1,24 +1,17 @@
-using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
-using DragoonMayCry.State;
-using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ImGuiNET;
 using KamiLib;
 using KamiLib.Configuration;
 using KamiLib.Drawing;
 using KamiLib.Interfaces;
-using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
-using PlayerState = DragoonMayCry.State.PlayerState;
 
 namespace DragoonMayCry.UI
 {
@@ -40,16 +33,16 @@ namespace DragoonMayCry.UI
         private readonly DmcConfigurationOne configuration;
         private readonly IList<AnnouncerType> announcers = Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>().ToList();
         private readonly IList<JobConfiguration.BgmConfiguration> bgmOptions = Enum.GetValues(typeof(JobConfiguration.BgmConfiguration)).Cast<JobConfiguration.BgmConfiguration>().ToList();
-        private Setting<AnnouncerType> selectedAnnouncerPreview = new(AnnouncerType.DmC5);
+        private readonly Setting<AnnouncerType> selectedAnnouncerPreview = new(AnnouncerType.DmC5);
         private ISelectable selected;
-        private IList<ISelectable> selectableJobConfiguration = new List<ISelectable>();
+        private readonly IList<ISelectable> selectableJobConfiguration = new List<ISelectable>();
         public JobConfigurationWindow(DmcConfigurationOne configuration) : base("DragoonMayCry - Job configuration##DmCJobConfiguration", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
         {
             Size = new Vector2(550, 250);
             SizeCondition = ImGuiCond.Appearing;
 
             this.configuration = configuration;
-            foreach(KeyValuePair<JobIds, JobConfiguration> entry in configuration.JobConfiguration)
+            foreach (var entry in configuration.JobConfiguration)
             {
                 var jobSelection = new SelectedJobConfiguration(entry.Key, entry.Value, announcers, bgmOptions);
                 jobSelection.jobAnnouncerChange = JobAnnouncerChange;
@@ -60,7 +53,7 @@ namespace DragoonMayCry.UI
             selected = selectableJobConfiguration[0];
         }
 
-        
+
 
         public override void Draw()
         {
@@ -94,13 +87,13 @@ namespace DragoonMayCry.UI
 
                 ImGui.EndTable();
             }
-            
-            
+
+
         }
 
         private void ApplyToAll(bool enabled, AnnouncerType announcer, JobConfiguration.BgmConfiguration bgm)
         {
-            foreach(KeyValuePair<JobIds, JobConfiguration> entry in configuration.JobConfiguration)
+            foreach (var entry in configuration.JobConfiguration)
             {
                 entry.Value.EnableDmc = new(enabled);
                 entry.Value.Announcer = new(announcer);
@@ -146,7 +139,7 @@ namespace DragoonMayCry.UI
             }
         }
 
-        
+
 
         public void Dispose()
         {
