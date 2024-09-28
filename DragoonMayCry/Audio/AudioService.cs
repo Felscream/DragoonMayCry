@@ -158,9 +158,9 @@ namespace DragoonMayCry.Audio
             }
         }
 
-        public ISampleProvider? PlayBgm(BgmId id, double fadingDuration = 0)
+        public ISampleProvider? PlayBgm(BgmId id, double fadingDuration = 0, double fadeOutDelay = 0, double fadeOutDuration = 0)
         {
-            return audioEngine.PlayBgm(id, fadingDuration);
+            return audioEngine.PlayBgm(id, fadingDuration, fadeOutDelay, fadeOutDuration);
         }
 
         public void RemoveBgmPart(ISampleProvider sample)

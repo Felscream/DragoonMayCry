@@ -206,8 +206,8 @@ namespace DragoonMayCry.Audio.BGM
                     && Plugin.Configuration!.EnableDynamicBgm
                     && Plugin.Configuration.JobConfiguration.ContainsKey(job)
                     && Plugin.Configuration.JobConfiguration[job].EnableDmc
-                    && Plugin.Configuration.JobConfiguration[job].Bgm.Value != JobConfiguration.BgmConfiguration.Off;
-            //&& !TerritoryIds.NoBgmInstances.Contains(currentTerritory);
+                    && Plugin.Configuration.JobConfiguration[job].Bgm.Value != JobConfiguration.BgmConfiguration.Off
+                    && !TerritoryIds.NoBgmInstances.Contains(currentTerritory);
         }
 
         private void OnAssetsAvailable(object? sender, bool loaded)
@@ -238,6 +238,11 @@ namespace DragoonMayCry.Audio.BGM
             if (configuration == JobConfiguration.BgmConfiguration.Off)
             {
                 return;
+            }
+
+            if (playerState.IsDead)
+            {
+                audioService.ApplyDeathEffect();
             }
 
             if (configuration == JobConfiguration.BgmConfiguration.Randomize)
@@ -336,10 +341,6 @@ namespace DragoonMayCry.Audio.BGM
 
             if (soundFilesLoaded)
             {
-                if (playerState.IsDead)
-                {
-                    audioService.ApplyDeathEffect();
-                }
                 bgmFsm.Start();
             }
             else

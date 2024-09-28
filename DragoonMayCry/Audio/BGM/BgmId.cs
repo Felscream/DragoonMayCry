@@ -24,6 +24,8 @@ namespace DragoonMayCry.Audio.BGM
         ChorusTransition2,
         ChorusTransition3,
         Chorus,
+        Chorus2,
+        Chorus3,
         Riff,
         CombatEnd,
         Demotion,

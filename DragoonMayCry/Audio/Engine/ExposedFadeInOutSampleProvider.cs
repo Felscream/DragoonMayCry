@@ -22,6 +22,8 @@ namespace DragoonMayCry.Audio.Engine
         private int fadeSamplePosition;
 
         private int fadeSampleCount;
+        private long fadeOutDelaySamples;
+        private long fadeOutDelayPosition;
 
         public FadeState fadeState { get; private set; }
 
@@ -70,13 +72,19 @@ namespace DragoonMayCry.Audio.Engine
         // Parameters:
         //   fadeDurationInMilliseconds:
         //     Duration of fade in milliseconds
-        public void BeginFadeOut(double fadeDurationInMilliseconds)
+        public void BeginFadeOut(double fadeDurationInMilliseconds, double fadeAfterMilliseconds = 0)
         {
             lock (lockObject)
             {
                 fadeSamplePosition = 0;
                 fadeSampleCount = (int)(fadeDurationInMilliseconds * source.WaveFormat.SampleRate / 1000.0);
-                fadeState = FadeState.FadingOut;
+                fadeOutDelaySamples = (int)(fadeAfterMilliseconds * source.WaveFormat.SampleRate / 1000.0);
+                fadeOutDelayPosition = 0;
+                if (fadeOutDelaySamples == 0)
+                {
+                    fadeState = FadeState.FadingOut;
+                }
+
             }
         }
 
@@ -101,6 +109,16 @@ namespace DragoonMayCry.Audio.Engine
             var num = source.Read(buffer, offset, count);
             lock (lockObject)
             {
+                if (fadeOutDelaySamples > 0)
+                {
+                    fadeOutDelayPosition += num / WaveFormat.Channels;
+                    if (fadeOutDelayPosition >= fadeOutDelaySamples)
+                    {
+                        fadeOutDelaySamples = 0;
+                        fadeState = FadeState.FadingOut;
+                    }
+                }
+
                 if (fadeState == FadeState.FadingIn)
                 {
                     FadeIn(buffer, offset, num);

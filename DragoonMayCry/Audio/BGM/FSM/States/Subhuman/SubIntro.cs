@@ -120,10 +120,10 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             if (exit == ExitType.EndOfCombat && state != IntroState.EndCombat)
             {
                 state = IntroState.EndCombat;
-                transitionTime = 100;
-                nextStateTransitionTime = 4500;
+                transitionTime = 1300;
+                nextStateTransitionTime = 6000;
                 currentTrackStopwatch.Restart();
-                audioService.PlayBgm(BgmId.CombatEnd);
+                audioService.PlayBgm(BgmId.CombatEnd, 0, 9000, 6000);
             }
             return nextStateTransitionTime;
         }

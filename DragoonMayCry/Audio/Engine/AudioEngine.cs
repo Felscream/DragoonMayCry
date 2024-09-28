@@ -107,12 +107,16 @@ namespace DragoonMayCry.Audio.Engine
             sfxMixer.AddMixerInput(input);
         }
 
-        private ExposedFadeInOutSampleProvider AddBGMMixerInput(ISampleProvider input, double fadeInDuration)
+        private ExposedFadeInOutSampleProvider AddBGMMixerInput(ISampleProvider input, double fadeInDuration, double fadeOutDelay, double fadeOutDuration)
         {
             var fadingInput = new ExposedFadeInOutSampleProvider(input);
             if (fadeInDuration > 0)
             {
                 fadingInput.BeginFadeIn(fadeInDuration);
+            }
+            if (fadeOutDelay > 0)
+            {
+                fadingInput.BeginFadeOut(fadeOutDuration, fadeOutDelay);
             }
 
             bgmMixer.AddMixerInput(fadingInput);
@@ -145,7 +149,7 @@ namespace DragoonMayCry.Audio.Engine
             sfxMixer.AddMixerInput(sample);
         }
 
-        public ISampleProvider? PlayBgm(BgmId id, double fadeInDuration = 0d)
+        public ISampleProvider? PlayBgm(BgmId id, double fadeInDuration = 0d, double fadeOutDelay = 0, double fadeOutDuration = 0)
         {
             if (!bgmStems.ContainsKey(id))
             {
@@ -154,7 +158,7 @@ namespace DragoonMayCry.Audio.Engine
             }
             ISampleProvider sample = new CachedSoundSampleProvider(bgmStems[id]);
 
-            return AddBGMMixerInput(sample, fadeInDuration);
+            return AddBGMMixerInput(sample, fadeInDuration, fadeOutDelay, fadeOutDuration);
         }
 
         public Dictionary<BgmId, CachedSound> RegisterBgm(Dictionary<BgmId, string> paths)

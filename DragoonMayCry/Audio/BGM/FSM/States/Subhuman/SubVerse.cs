@@ -19,16 +19,20 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
         private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new()
         {
-            { BgmId.CombatEnter1, new BgmTrackData(0, 3000) },
-            { BgmId.CombatEnter2, new BgmTrackData(0, 10500) },
-            { BgmId.CombatVerse1, new BgmTrackData(0, 22500) },
-            { BgmId.CombatVerse2, new BgmTrackData(0, 22500) },
-            { BgmId.CombatCoreLoopTransition1, new BgmTrackData(0, 25500) },
-            { BgmId.CombatCoreLoopTransition2, new BgmTrackData(0, 24000) },
-            { BgmId.CombatCoreLoopTransition3, new BgmTrackData(0, 24000) },
-            { BgmId.CombatCoreLoopExit1, new BgmTrackData(1, 1550) },
-            { BgmId.CombatCoreLoopExit2, new BgmTrackData(1, 1550) },
-            { BgmId.CombatCoreLoopExit3, new BgmTrackData(1, 1550) },
+            { BgmId.CombatEnter1, new BgmTrackData(0, 1300) },
+            { BgmId.CombatEnter2, new BgmTrackData(0, 20650) },
+            { BgmId.CombatEnter3, new BgmTrackData(0, 5100) },
+            { BgmId.CombatVerse1, new BgmTrackData(0, 20650) },
+            { BgmId.CombatVerse2, new BgmTrackData(0, 20650) },
+            { BgmId.CombatVerse3, new BgmTrackData(0, 20650) },
+            { BgmId.CombatVerse4, new BgmTrackData(0, 20650) },
+            { BgmId.CombatCoreLoopTransition1, new BgmTrackData(0, 20650) },
+            { BgmId.CombatCoreLoopTransition2, new BgmTrackData(0, 20650) },
+            { BgmId.CombatCoreLoopTransition3, new BgmTrackData(0, 20650) },
+            { BgmId.CombatCoreLoopTransition4, new BgmTrackData(0, 20650) },
+            { BgmId.CombatCoreLoopExit1, new BgmTrackData(1259, 2650) },
+            { BgmId.CombatCoreLoopExit2, new BgmTrackData(1259, 2550) },
+            { BgmId.CombatCoreLoopExit3, new BgmTrackData(1259, 2600) },
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new()
@@ -67,6 +71,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
             combatIntro.AddLast(BgmId.CombatEnter1);
             combatIntro.AddLast(BgmId.CombatEnter2);
+            combatIntro.AddLast(BgmId.CombatEnter3);
         }
 
         public void Enter(bool fromVerse)
@@ -173,6 +178,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
         public int Exit(ExitType exit)
         {
             var nextTransitionTime = transitionTimePerId[BgmId.CombatCoreLoopExit1].TransitionStart;
+            var selectedTransition = BgmId.CombatCoreLoopExit1;
             if (currentState == CombatLoopState.Exit)
             {
                 nextTransitionTime = (int)Math.Max(nextTransitionTime - currentTrackStopwatch.ElapsedMilliseconds, 0);
@@ -181,17 +187,19 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             {
                 if (exit == ExitType.Promotion)
                 {
-                    audioService.PlayBgm(SelectRandom(BgmId.CombatCoreLoopExit1, BgmId.CombatCoreLoopExit2, BgmId.CombatCoreLoopExit3));
+                    selectedTransition = SelectRandom(BgmId.CombatCoreLoopExit1, BgmId.CombatCoreLoopExit2, BgmId.CombatCoreLoopExit3);
+                    audioService.PlayBgm(selectedTransition);
+                    nextTransitionTime = transitionTimePerId[selectedTransition].TransitionStart;
                 }
                 else if (exit == ExitType.EndOfCombat && currentState != CombatLoopState.Exit)
                 {
-                    audioService.PlayBgm(BgmId.CombatEnd);
-                    nextTransitionTime = 4500;
+                    audioService.PlayBgm(BgmId.CombatEnd, 0, 9000, 6000);
+                    nextTransitionTime = 6000;
                 }
                 currentTrackStopwatch.Restart();
             }
             currentState = CombatLoopState.Exit;
-            transitionTime = exit == ExitType.EndOfCombat ? 1 : transitionTimePerId[BgmId.CombatCoreLoopExit1].EffectiveStart;
+            transitionTime = exit == ExitType.EndOfCombat ? 1400 : transitionTimePerId[selectedTransition].EffectiveStart;
 
             return nextTransitionTime;
         }
@@ -214,37 +222,34 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
         private Queue<BgmId> RandomizeQueue(params BgmId[] bgmIds)
         {
-            var k = rand.Next(2);
+
+            var list = new List<BgmId>(bgmIds);
             var queue = new Queue<BgmId>();
-            if (k < 1)
+            while (list.Count > 0)
             {
-                for (var i = 0; i < bgmIds.Length; i++)
-                {
-                    queue.Enqueue(bgmIds[i]);
-                }
-            }
-            else
-            {
-                for (var i = bgmIds.Length - 1; i >= 0; i--)
-                {
-                    queue.Enqueue(bgmIds[i]);
-                }
+                var k = rand.Next(list.Count);
+                queue.Enqueue(list[k]);
+                list.RemoveAt(k);
             }
             return queue;
         }
 
+
+
         private LinkedList<BgmId> GenerateCombatLoop()
         {
             var verseQueue = RandomizeQueue(BgmId.CombatVerse1, BgmId.CombatVerse2);
+            var verseQueue2 = RandomizeQueue(BgmId.CombatVerse3, BgmId.CombatVerse4);
+            var transitionQueue = RandomizeQueue(BgmId.CombatCoreLoopTransition1, BgmId.CombatCoreLoopTransition2, BgmId.CombatCoreLoopTransition3);
             var loop = new LinkedList<BgmId>();
-            loop.AddLast(BgmId.CombatCoreLoopTransition1);
             loop.AddLast(verseQueue.Dequeue());
-            loop.AddLast(BgmId.CombatCoreLoopTransition2);
-            loop.AddLast(BgmId.CombatCoreLoopTransition3);
-            loop.AddLast(BgmId.CombatCoreLoopTransition1);
+            loop.AddLast(verseQueue2.Dequeue());
+            loop.AddLast(transitionQueue.Dequeue());
+            loop.AddLast(BgmId.CombatCoreLoopTransition4);
             loop.AddLast(verseQueue.Dequeue());
-            loop.AddLast(BgmId.CombatCoreLoopTransition2);
-            loop.AddLast(BgmId.CombatCoreLoopTransition3);
+            loop.AddLast(verseQueue2.Dequeue());
+            loop.AddLast(transitionQueue.Dequeue());
+            loop.AddLast(BgmId.CombatCoreLoopTransition4);
             return loop;
         }
 
