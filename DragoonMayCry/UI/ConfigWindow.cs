@@ -69,7 +69,7 @@ public class ConfigWindow : Window
         ImGui.Text(errorMessage);
         if (ImGui.Button("Download assets"))
         {
-            AssetsManager.FetchAudioFiles();
+            AssetsManager.VerifyAndUpdateAssets();
         }
     }
 
