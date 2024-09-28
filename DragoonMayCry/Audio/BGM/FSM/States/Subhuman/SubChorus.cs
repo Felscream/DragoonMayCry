@@ -39,9 +39,9 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.Subhuman
             { BgmId.Chorus2, 23250 },
             { BgmId.Chorus3, 23250 },
             { BgmId.Chorus, 20650 },
-            { BgmId.ChorusTransition1, 2650 },
-            { BgmId.ChorusTransition2,  2550 },
-            { BgmId.ChorusTransition3,  2600 },
+            { BgmId.ChorusTransition1, 2640 },
+            { BgmId.ChorusTransition2,  2540 },
+            { BgmId.ChorusTransition3,  2590 },
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new()
@@ -104,6 +104,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.Subhuman
             {
                 return;
             }
+
             if (currentTrackStopwatch.ElapsedMilliseconds >= transitionTime)
             {
                 elapsedStopwatchTimeBeforeDemotion = 0;
@@ -142,7 +143,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.Subhuman
                 samples.Enqueue(sample);
             }
             currentState = PeakState.CleaningUpDemotion;
-            nextStateTransitionTime = 1590;
+            nextStateTransitionTime = 1290;
             currentTrackStopwatch.Restart();
         }
 
@@ -161,7 +162,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.Subhuman
             {
                 if (sample is ExposedFadeInOutSampleProvider)
                 {
-                    ((ExposedFadeInOutSampleProvider)sample).BeginFadeOut(500);
+                    ((ExposedFadeInOutSampleProvider)sample).BeginFadeOut(1300);
                 }
             }
 
@@ -200,8 +201,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.Subhuman
 
         private int ComputeNextStateTransitionTime()
         {
-            var time = possibleTransitionTimesToNewState[currentTrack!.Value];
-            return time;
+            return possibleTransitionTimesToNewState[currentTrack!.Value];
         }
 
         private LinkedList<BgmId> GenerateChorusLoop()
@@ -288,7 +288,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.Subhuman
                 {
                     if (provider.fadeState == ExposedFadeInOutSampleProvider.FadeState.FullVolume)
                     {
-                        provider.BeginFadeOut(1500);
+                        provider.BeginFadeOut(1700);
                         continue;
                     }
                 }

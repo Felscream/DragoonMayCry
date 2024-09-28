@@ -30,9 +30,9 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.Subhuman
             { BgmId.CombatCoreLoopTransition2, new BgmTrackData(0, 20650) },
             { BgmId.CombatCoreLoopTransition3, new BgmTrackData(0, 20650) },
             { BgmId.CombatCoreLoopTransition4, new BgmTrackData(0, 20650) },
-            { BgmId.CombatCoreLoopExit1, new BgmTrackData(1259, 2650) },
-            { BgmId.CombatCoreLoopExit2, new BgmTrackData(1259, 2550) },
-            { BgmId.CombatCoreLoopExit3, new BgmTrackData(1259, 2600) },
+            { BgmId.CombatCoreLoopExit1, new BgmTrackData(1290, 2650) },
+            { BgmId.CombatCoreLoopExit2, new BgmTrackData(1290, 2550) },
+            { BgmId.CombatCoreLoopExit3, new BgmTrackData(1290, 2600) },
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new()
@@ -164,7 +164,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.Subhuman
                 {
                     if (provider.fadeState == ExposedFadeInOutSampleProvider.FadeState.FullVolume)
                     {
-                        provider.BeginFadeOut(1500);
+                        provider.BeginFadeOut(1800);
                         continue;
                     }
 
@@ -222,7 +222,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.Subhuman
 
         private Queue<BgmId> RandomizeQueue(params BgmId[] bgmIds)
         {
-
             var list = new List<BgmId>(bgmIds);
             var queue = new Queue<BgmId>();
             while (list.Count > 0)
@@ -233,8 +232,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.Subhuman
             }
             return queue;
         }
-
-
 
         private LinkedList<BgmId> GenerateCombatLoop()
         {

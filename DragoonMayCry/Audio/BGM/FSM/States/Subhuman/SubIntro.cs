@@ -136,7 +136,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.Subhuman
                 {
                     if (provider.fadeState == ExposedFadeInOutSampleProvider.FadeState.FullVolume)
                     {
-                        provider.BeginFadeOut(2400);
+                        provider.BeginFadeOut(4500);
                         continue;
                     }
                 }

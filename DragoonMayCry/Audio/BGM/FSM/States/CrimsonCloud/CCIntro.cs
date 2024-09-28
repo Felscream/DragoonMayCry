@@ -140,6 +140,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud
                     }
                 }
                 audioService.RemoveBgmPart(sample);
+
             }
 
             currentTrackStopwatch.Reset();
