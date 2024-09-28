@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
@@ -12,6 +5,8 @@ using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using ImGuiNET;
+using System;
+using System.Diagnostics;
 
 namespace DragoonMayCry.Score
 {
@@ -71,7 +66,7 @@ namespace DragoonMayCry.Score
             interpolatedScore = float.Lerp(
                 interpolatedScore, currentScoreRank.Score,
                 InterpolationWeight);
-            Progress = Math.Clamp(interpolatedScore / threshold, 0,1);
+            Progress = Math.Clamp(interpolatedScore / threshold, 0, 1);
 
             if (Progress > 0.995f)
             {
@@ -83,12 +78,12 @@ namespace DragoonMayCry.Score
                     }
                     return;
                 }
-                if(GetTimeSinceLastPromotion() > TimeBetweenRankChanges)
+                if (GetTimeSinceLastPromotion() > TimeBetweenRankChanges)
                 {
                     Promotion?.Invoke(this, EventArgs.Empty);
                 }
             }
-            else 
+            else
             {
                 HandleDemotion();
             }
@@ -134,8 +129,8 @@ namespace DragoonMayCry.Score
 
         private bool CanCancelDemotion()
         {
-            return demotionApplicationStopwatch.IsRunning 
-                   && (Progress >= demotionThreshold 
+            return demotionApplicationStopwatch.IsRunning
+                   && (Progress >= demotionThreshold
                        || GetTimeSinceLastPromotion() < PromotionSafeguardDuration);
         }
 
@@ -167,7 +162,7 @@ namespace DragoonMayCry.Score
             {
                 CancelDemotion();
             }
-            
+
         }
 
         private void OnLimitBreakCast(object? sender, PlayerActionTracker.LimitBreakEvent e)
@@ -198,7 +193,7 @@ namespace DragoonMayCry.Score
                 DemotionCanceled?.Invoke(this, EventArgs.Empty);
                 demotionApplicationStopwatch.Reset();
             }
-            
+
         }
 
         private double GetTimeSinceLastPromotion()
@@ -225,7 +220,7 @@ namespace DragoonMayCry.Score
             {
                 CancelDemotion();
             }
-            
+
         }
     }
 }

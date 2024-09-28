@@ -43,7 +43,6 @@ namespace DragoonMayCry.Score.Action
                 GracePeriod = gracePeriod;
                 IsTankLb = isTankLb;
                 ActionId = id;
-
             }
         }
 
@@ -89,7 +88,7 @@ namespace DragoonMayCry.Score.Action
         private readonly PlayerState playerState;
         private readonly LuminaCache<LuminaAction> luminaActionCache;
 
-        private const float GcdDropThreshold = 0.1f;
+        private const float GcdDropThreshold = 0.2f;
         private ushort lastDetectedClip = 0;
         private float currentWastedGcd = 0;
 
@@ -114,7 +113,7 @@ namespace DragoonMayCry.Score.Action
             };
         public PlayerActionTracker()
         {
-            actionHistory = new Queue<UsedAction>();
+            actionHistory = new();
             luminaActionCache = LuminaCache<LuminaAction>.Instance;
             playerState = PlayerState.GetInstance();
             limitBreakStopwatch = new Stopwatch();
@@ -189,6 +188,7 @@ namespace DragoonMayCry.Score.Action
             {
                 return;
             }
+
             RegisterAndFireUsedAction(kind, damage, (uint)castID);
         }
 
@@ -332,7 +332,6 @@ namespace DragoonMayCry.Score.Action
             DetectClipping();
             HandleLimitBreakUse();
             DetectWastedGCD();
-
         }
 
         private void HandleLimitBreakUse()
@@ -407,6 +406,15 @@ namespace DragoonMayCry.Score.Action
             UsingLimitBreak?.Invoke(this, new LimitBreakEvent(isTankLb, true));
         }
 
+        private static bool IsGcdClipped(float animationLock)
+        {
+            if (Plugin.IsEmdModeEnabled())
+            {
+                return animationLock != 0.1f;
+            }
+            return animationLock > 0.2f;
+        }
+
         private unsafe void DetectClipping()
         {
             var animationLock = actionManager->animationLock;
@@ -417,12 +425,19 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-            if (animationLock > 0.1f)
+            if (IsGcdClipped(animationLock))
             {
                 Service.Log.Debug($"GCD Clip: {animationLock} s");
                 if (limitBreakCast == null)
                 {
-                    OnGcdClip?.Invoke(this, animationLock);
+                    if (Plugin.IsEmdModeEnabled() && !playerState.IsIncapacitated() && playerState.CanTargetEnemy())
+                    {
+                        OnGcdDropped?.Invoke(this, EventArgs.Empty);
+                    }
+                    else
+                    {
+                        OnGcdClip?.Invoke(this, animationLock);
+                    }
                 }
                 else if (!limitBreakCast.IsTankLb)
                 {
@@ -431,6 +446,11 @@ namespace DragoonMayCry.Score.Action
             }
 
             lastDetectedClip = actionManager->currentSequence;
+        }
+
+        private float GetGcdDropThreshold()
+        {
+            return Plugin.IsEmdModeEnabled() ? 0 : GcdDropThreshold;
         }
 
         private unsafe void DetectWastedGCD()
@@ -445,7 +465,7 @@ namespace DragoonMayCry.Score.Action
             {
                 if (actionManager->animationLock > 0) return;
                 currentWastedGcd += ImGui.GetIO().DeltaTime;
-                if (!isGcdDropped && currentWastedGcd > GcdDropThreshold)
+                if (!isGcdDropped && currentWastedGcd > GetGcdDropThreshold())
                 {
                     isGcdDropped = true;
                     if (!playerState.IsIncapacitated() && playerState.CanTargetEnemy() && limitBreakCast == null)

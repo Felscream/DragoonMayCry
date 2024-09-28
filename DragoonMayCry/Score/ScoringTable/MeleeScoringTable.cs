@@ -7,7 +7,7 @@ namespace DragoonMayCry.Score.Table
     class MeleeScoringTable : ScoringTable
     {
         private readonly Dictionary<StyleType, StyleScoring>
-            meleeScoring = new Dictionary<StyleType, StyleScoring>
+            meleeScoring = new()
             {
                 { StyleType.NoStyle, new StyleScoring(60000, 500, 0, 1) },
                 { StyleType.D, new StyleScoring(80000, 1000, 8000, 1) },
@@ -20,7 +20,7 @@ namespace DragoonMayCry.Score.Table
             };
 
         private readonly Dictionary<StyleType, ScoringCoefficient>
-            meleeScoringCoefficient = new Dictionary<StyleType, ScoringCoefficient>
+            meleeScoringCoefficient = new()
             {
                 { StyleType.NoStyle, new ScoringCoefficient(3f, 0.05f) },
                 { StyleType.D, new ScoringCoefficient(6.6f, 0.1f) },
@@ -31,10 +31,24 @@ namespace DragoonMayCry.Score.Table
                 { StyleType.SS, new ScoringCoefficient(4.5f, 0.5f) },
                 { StyleType.SSS, new ScoringCoefficient(3f, 0.56f) },
             };
+
+        private readonly Dictionary<StyleType, ScoringCoefficient>
+            emdScoringCoefficient = new()
+            {
+                { StyleType.NoStyle, new ScoringCoefficient(3f, 0.05f) },
+                { StyleType.D, new ScoringCoefficient(7.92f, 0.1f) },
+                { StyleType.C, new ScoringCoefficient(8.88f, 0.26f) },
+                { StyleType.B, new ScoringCoefficient(9.6f, 0.33f) },
+                { StyleType.A, new ScoringCoefficient(14.16f, 0.38f) },
+                { StyleType.S, new ScoringCoefficient(6.5f, 0.42f) },
+                { StyleType.SS, new ScoringCoefficient(5.2f, 0.5f) },
+                { StyleType.SSS, new ScoringCoefficient(4f, 0.56f) },
+            };
+        protected override Dictionary<StyleType, ScoringCoefficient> EmdScoringCoefficient => emdScoringCoefficient;
         protected override Dictionary<StyleType, StyleScoring> RoleScoringTable => meleeScoring;
         protected override Dictionary<StyleType, ScoringCoefficient> ScoringCoefficient => meleeScoringCoefficient;
         protected override Dictionary<int, Dictionary<StyleType, StyleScoring>> Cache => cache;
-        private readonly Dictionary<int, Dictionary<StyleType, StyleScoring>> cache = new Dictionary<int, Dictionary<StyleType, StyleScoring>>();
+        private readonly Dictionary<int, Dictionary<StyleType, StyleScoring>> cache = new();
 
         protected override float GetDpsAtIlvl(int ilvl)
         {

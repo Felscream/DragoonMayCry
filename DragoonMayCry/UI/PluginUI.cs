@@ -40,14 +40,14 @@ namespace DragoonMayCry.UI
             JobConfigurationWindow.JobAnnouncerTypeChange += styleAnnouncerService.OnAnnouncerTypeChange;
             JobConfigurationWindow.EnabledForJobChange += dynamicBgmService.OnJobEnableChange;
 
-            ConfigWindow = new ConfigWindow(Plugin.Configuration!, JobConfigurationWindow);
+            HowItWorksWindow = new HowItWorksWindow();
+
+            ConfigWindow = new ConfigWindow(Plugin.Configuration!, JobConfigurationWindow, HowItWorksWindow);
             ConfigWindow.ActiveOutsideInstanceChange += Plugin.OnActiveOutsideInstanceConfChange;
             ConfigWindow.ToggleDynamicBgmChange += dynamicBgmService.ToggleDynamicBgm;
             ConfigWindow.MuffledOnDeathChange += dynamicBgmService.OnMuffledOnDeathChange;
             ConfigWindow.SfxVolumeChange += AudioService.Instance.OnSfxVolumeChange;
             ConfigWindow.BgmVolumeChange += AudioService.Instance.OnBgmVolumeChange;
-
-            HowItWorksWindow = new HowItWorksWindow();
 
             styleRankUi = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator, playerActionTracker);
 

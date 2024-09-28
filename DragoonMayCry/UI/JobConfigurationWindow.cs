@@ -38,7 +38,7 @@ namespace DragoonMayCry.UI
         private readonly IList<ISelectable> selectableJobConfiguration = new List<ISelectable>();
         public JobConfigurationWindow(DmcConfigurationOne configuration) : base("DragoonMayCry - Job configuration##DmCJobConfiguration", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
         {
-            Size = new Vector2(550, 250);
+            Size = new Vector2(550, 300);
             SizeCondition = ImGuiCond.Appearing;
 
             this.configuration = configuration;

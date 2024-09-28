@@ -56,6 +56,11 @@ namespace DragoonMayCry.UI
                 return Colors.Grey;
             }
 
+            if (configuration.EstinienMustDie)
+            {
+                return Colors.SoftRed;
+            }
+
             return Colors.White;
         }
 
@@ -64,15 +69,18 @@ namespace DragoonMayCry.UI
             InfoBox.Instance.AddTitle(job.ToString())
                 .AddAction(() =>
                 {
+                    var cursorPos = ImGui.GetCursorPos();
                     var enabled = configuration.EnableDmc.Value;
-                    if (ImGui.Checkbox("Enable DragoonMayCry", ref enabled))
+                    if (ImGui.Checkbox("", ref enabled))
                     {
                         configuration.EnableDmc.Value = enabled;
                         KamiCommon.SaveConfiguration();
                         dmcToggleChange?.Invoke(job);
                     }
+                    ConfigWindow.AddLabel("Enable DragoonMayCry", cursorPos);
                 })
                 .BeginDisabled(PlayerState.GetInstance().IsInCombat)
+                .AddConfigCheckbox($"Estinien Must Die", configuration.EstinienMustDie, "You have no leeway", $"EMD-{job}")
                 .AddAction(() =>
                 {
                     ImGui.SetNextItemWidth(200f);
