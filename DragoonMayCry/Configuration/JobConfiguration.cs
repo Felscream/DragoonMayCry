@@ -1,10 +1,5 @@
 using DragoonMayCry.Audio.StyleAnnouncer;
 using KamiLib.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DragoonMayCry.Configuration
 {
@@ -12,14 +7,15 @@ namespace DragoonMayCry.Configuration
     {
         public enum BgmConfiguration
         {
-            Off,
-            BuryTheLight,
-            DevilTrigger,
-            CrimsonCloud,
-            Randomize
+            Off = 0,
+            BuryTheLight = 1,
+            DevilTrigger = 2,
+            CrimsonCloud = 3,
+            Subhuman = 5,
+            Randomize = 4
         }
-        public Setting<bool> EnableDmc = new (true);
-        public Setting<AnnouncerType> Announcer = new (AnnouncerType.DmC5);
-        public Setting<BgmConfiguration> Bgm = new (BgmConfiguration.Off);
+        public Setting<bool> EnableDmc = new(true);
+        public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);
+        public Setting<BgmConfiguration> Bgm = new(BgmConfiguration.Off);
     }
 }

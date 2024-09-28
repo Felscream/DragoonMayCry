@@ -41,6 +41,7 @@ namespace DragoonMayCry.State
         private readonly JobChangeTracker jobChangeTracker;
         private readonly DebuffTracker debuffTracker;
         private readonly PvpStateTracker pvpStateTracker;
+        private readonly IClientState clientState;
         private static PlayerState? Instance;
         private PlayerState()
         {
@@ -51,6 +52,7 @@ namespace DragoonMayCry.State
             jobChangeTracker = new();
             debuffTracker = new();
             pvpStateTracker = new();
+            clientState = Service.ClientState;
             Service.Framework.Update += Update;
         }
 
@@ -228,6 +230,11 @@ namespace DragoonMayCry.State
         public void Dispose()
         {
             Service.Framework.Update -= Update;
+        }
+
+        public uint GetCurrentTerritoryId()
+        {
+            return clientState.TerritoryType;
         }
     }
 }

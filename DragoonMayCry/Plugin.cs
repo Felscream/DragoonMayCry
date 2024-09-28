@@ -102,7 +102,7 @@ public unsafe class Plugin : IDalamudPlugin
 
     public static bool IsEnabledForCurrentJob()
     {
-        return Configuration!.JobConfiguration.ContainsKey(CurrentJob)
+        return Configuration != null && Configuration!.JobConfiguration.ContainsKey(CurrentJob)
                 && Configuration.JobConfiguration[CurrentJob].EnableDmc;
     }
 

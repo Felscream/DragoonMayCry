@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace DragoonMayCry.Audio.BGM
 {
     public enum BgmId
@@ -20,6 +14,7 @@ namespace DragoonMayCry.Audio.BGM
         CombatCoreLoopTransition1,
         CombatCoreLoopTransition2,
         CombatCoreLoopTransition3,
+        CombatCoreLoopTransition4,
         CombatCoreLoopExit1,
         CombatCoreLoopExit2,
         CombatCoreLoopExit3,
@@ -29,6 +24,8 @@ namespace DragoonMayCry.Audio.BGM
         ChorusTransition2,
         ChorusTransition3,
         Chorus,
+        Chorus2,
+        Chorus3,
         Riff,
         CombatEnd,
         Demotion,

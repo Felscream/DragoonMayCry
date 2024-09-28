@@ -4,9 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud
+namespace DragoonMayCry.Audio.BGM.FSM.States.Subhuman
 {
-    public class CCIntro : IFsmState
+    public class SubIntro : IFsmState
     {
         enum IntroState
         {
@@ -18,13 +18,13 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud
 
         private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new()
         {
-            { BgmId.Intro, new BgmTrackData(0, 85500) },
+            { BgmId.Intro, new BgmTrackData(0, 61950) },
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new()
         {
-            { BgmId.Intro, DynamicBgmService.GetPathToAudio("CrimsonCloud\\intro.ogg") },
-            { BgmId.CombatEnd, DynamicBgmService.GetPathToAudio("CrimsonCloud\\end.ogg") },
+            { BgmId.Intro, DynamicBgmService.GetPathToAudio("Subhuman\\intro.ogg") },
+            { BgmId.CombatEnd, DynamicBgmService.GetPathToAudio("Subhuman\\end.ogg") },
         };
 
         private readonly AudioService audioService;
@@ -34,7 +34,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud
         private IntroState state = IntroState.OutOfCombat;
         private int nextStateTransitionTime = 0;
 
-        public CCIntro(AudioService audioService)
+        public SubIntro(AudioService audioService)
         {
             currentTrackStopwatch = new Stopwatch();
 
@@ -97,6 +97,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud
             {
                 return 0;
             }
+
             if (exit == ExitType.ImmediateExit)
             {
                 transitionTime = 0;
@@ -119,10 +120,10 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud
             if (exit == ExitType.EndOfCombat && state != IntroState.EndCombat)
             {
                 state = IntroState.EndCombat;
-                transitionTime = 100;
-                nextStateTransitionTime = 4500;
+                transitionTime = 1300;
+                nextStateTransitionTime = 6000;
                 currentTrackStopwatch.Restart();
-                audioService.PlayBgm(BgmId.CombatEnd);
+                audioService.PlayBgm(BgmId.CombatEnd, 0, 9000, 6000);
             }
             return nextStateTransitionTime;
         }
@@ -135,7 +136,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud
                 {
                     if (provider.fadeState == ExposedFadeInOutSampleProvider.FadeState.FullVolume)
                     {
-                        provider.BeginFadeOut(1500);
+                        provider.BeginFadeOut(2400);
                         continue;
                     }
                 }
