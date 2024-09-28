@@ -1,16 +1,15 @@
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
-using System;
 using System.Numerics;
 
 namespace DragoonMayCry.UI
 {
     public class HowItWorksWindow : Window
     {
-        private readonly Vector4 goldColor = new Vector4(229, 48, 0, 255);
-        public HowItWorksWindow(): base("DragoonMayCry - How it works")
+        private readonly Vector4 goldColor = new(229, 48, 0, 255);
+        public HowItWorksWindow() : base("DragoonMayCry - How it works")
         {
-            this.Size = new Vector2(800,400);
+            this.Size = new Vector2(800, 400);
             this.SizeCondition = ImGuiCond.Appearing;
         }
 
@@ -35,8 +34,8 @@ namespace DragoonMayCry.UI
 
             ImGui.TextColored(goldColor, "\nBlunders");
             ImGui.Text("Blunders affect your rank significantly.");
-            ImGui.Text("- Clipping your GCD will substract points from your current gauge, and heavily reduce points gained for the next 8 seconds.");
-            ImGui.Text("- Holding your GCD, if you are not incapacited, will move you to the previous tier. But if you were in tier S or above, you will return to B tier.");
+            ImGui.Text("- Clipping your GCD for more than 0.2s will substract points from your current gauge, and heavily reduce points gained for the next 8 seconds.");
+            ImGui.Text("- Holding your GCD for more than 0.2s, if you are not incapacited, will move you to the previous tier. But if you were in tier S or above, you will return to B tier.");
             ImGui.Text("- Receiving a damage down or any other debuffs applied after a failed mechanic resolution will move you to D*. This only applies if you had no other 'blunder' debuffs before.");
             ImGui.Text("- Dying is bad.");
 
@@ -44,12 +43,18 @@ namespace DragoonMayCry.UI
             ImGui.Text("- A final rank between D and S is attributed at the end of combat by selecting the tier in which you spent the most time in.");
             ImGui.Text("- Every blunder will substract time spent in S tier.");
 
+            ImGui.TextColored(goldColor, "\nEstinien Must Die");
+            ImGui.Text("Estinien Must Die adds some modifiers");
+            ImGui.Text("- Thresholds are generally 20 percent higher");
+            ImGui.Text("- You have no breathing room : you MUST press your GCD if an enemy target is available");
+            ImGui.Text("- Clipping your GCD will rank you down");
+
             ImGui.Text("\nI'd appreciate any feedback or bug report to improve the experience. You can find me on the XIVLauncher & Dalamud discord server.");
 
             ImGui.TextColored(new Vector4(.75f, .75f, .75f, 1), "\nTo healers");
             ImGui.TextColored(new Vector4(.75f, .75f, .75f, 1), "Listen people, I don't play the role so I have no idea how the experience is using this plugin as a healer. If you've got some ideas to improve it, send them to me :)");
 
-           ImGui.TextColored(new Vector4(.75f, .75f, .75f, 1), "\n * Not all debuffs across all content have been identified, and some demotions may be applied wrongfully. Don't hesitate to send feedback if you find a debuff that should be removed or added.");
+            ImGui.TextColored(new Vector4(.75f, .75f, .75f, 1), "\n * Not all debuffs across all content have been identified, and some demotions may be applied wrongfully. Don't hesitate to send feedback if you find a debuff that should be removed or added.");
 
         }
     }

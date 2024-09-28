@@ -25,16 +25,17 @@ public class ConfigWindow : Window
 
     private readonly DmcConfigurationOne configuration;
     private readonly JobConfigurationWindow jobConfigurationWindow;
+    private readonly HowItWorksWindow howItWorksWindow;
     private readonly Setting<int> decay = new(0);
 
     // We give this window a constant ID using ###
     // This allows for labels being dynamic, like "{FPS Counter}fps###XYZ counter window",
     // and the window ID will always be "###XYZ counter window" for ImGui
-    public ConfigWindow(DmcConfigurationOne configuration, JobConfigurationWindow jobConfiguration) : base("DragoonMayCry - Configuration")
+    public ConfigWindow(DmcConfigurationOne configuration, JobConfigurationWindow jobConfiguration, HowItWorksWindow howItWorks) : base("DragoonMayCry - Configuration")
     {
-
-        Size = new Vector2(525, 450);
+        Size = new Vector2(525, 470);
         SizeCondition = ImGuiCond.Appearing;
+        howItWorksWindow = howItWorks;
         jobConfigurationWindow = jobConfiguration;
         this.configuration = configuration;
     }
@@ -82,12 +83,15 @@ public class ConfigWindow : Window
             .AddConfigCheckbox("Lock rank window", configuration.LockScoreWindow)
             .AddAction(() =>
             {
-                if (ImGui.Checkbox("Active outside instance", ref configuration.ActiveOutsideInstance.Value))
+                var cursorPos = ImGui.GetCursorPos();
+                if (ImGui.Checkbox("", ref configuration.ActiveOutsideInstance.Value))
                 {
                     KamiCommon.SaveConfiguration();
                     ActiveOutsideInstanceChange?.Invoke(this, configuration.ActiveOutsideInstance.Value);
                 }
+                AddLabel("Active outside instance", cursorPos);
             })
+            .AddButton("How it works", () => howItWorksWindow.Toggle())
             .AddButton("Open job configuration", () => jobConfigurationWindow.Toggle())
             .Draw();
 
@@ -189,7 +193,7 @@ public class ConfigWindow : Window
         }
     }
 
-    private static void AddLabel(String label, Vector2 cursorPosition)
+    public static void AddLabel(String label, Vector2 cursorPosition)
     {
         var spacing = ImGui.GetStyle().ItemSpacing;
         cursorPosition += spacing;

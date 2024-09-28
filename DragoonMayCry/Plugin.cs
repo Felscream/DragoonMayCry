@@ -138,6 +138,16 @@ public unsafe class Plugin : IDalamudPlugin
         StyleRankHandler?.Reset();
     }
 
+    public static bool IsEmdModeEnabled()
+    {
+        if (Configuration == null || !Configuration.JobConfiguration.ContainsKey(CurrentJob))
+        {
+            return false;
+        }
+
+        return Configuration.JobConfiguration[CurrentJob].EstinienMustDie;
+    }
+
     private static DmcConfigurationOne InitConfig()
     {
         var configFile = PluginInterface.ConfigFile.FullName;
