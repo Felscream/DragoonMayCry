@@ -30,6 +30,7 @@ namespace DragoonMayCry.Audio.BGM
         private readonly Dictionary<BgmState, IFsmState> buryTheLightStates;
         private readonly Dictionary<BgmState, IFsmState> devilTriggerStates;
         private readonly Dictionary<BgmState, IFsmState> crimsonCloudStates;
+        private readonly Dictionary<BgmState, IFsmState> subhumanStates;
         private readonly Dictionary<Bgm, Dictionary<BgmState, IFsmState>> bgmStates = new();
         private readonly DynamicBgmFsm bgmFsm;
         private readonly PlayerState playerState;
@@ -84,9 +85,20 @@ namespace DragoonMayCry.Audio.BGM
                 { BgmState.CombatPeak, ccPeak },
             };
 
+            IFsmState subIntro = new SubIntro(audioService);
+            IFsmState subCombat = new SubVerse(audioService);
+            IFsmState subPeak = new SubChorus(audioService);
+            subhumanStates = new Dictionary<BgmState, IFsmState>
+            {
+                { BgmState.Intro, subIntro },
+                { BgmState.CombatLoop, subCombat },
+                { BgmState.CombatPeak, subPeak },
+            };
+
             bgmStates.Add(Bgm.BuryTheLight, buryTheLightStates);
             bgmStates.Add(Bgm.DevilTrigger, devilTriggerStates);
             bgmStates.Add(Bgm.CrimsonCloud, crimsonCloudStates);
+            bgmStates.Add(Bgm.Subhuman, subhumanStates);
         }
 
         public DynamicBgmFsm GetFsm()
@@ -193,7 +205,8 @@ namespace DragoonMayCry.Audio.BGM
                     && Plugin.Configuration!.EnableDynamicBgm
                     && Plugin.Configuration.JobConfiguration.ContainsKey(job)
                     && Plugin.Configuration.JobConfiguration[job].EnableDmc
-                    && Plugin.Configuration.JobConfiguration[job].Bgm.Value != JobConfiguration.BgmConfiguration.Off;
+                    && Plugin.Configuration.JobConfiguration[job].Bgm.Value != JobConfiguration.BgmConfiguration.Off
+                    && !TerritoryIds.NoBgmInstances.Contains(Service.ClientState.TerritoryType);
         }
 
         private void OnAssetsAvailable(object? sender, bool loaded)
@@ -249,6 +262,7 @@ namespace DragoonMayCry.Audio.BGM
                 JobConfiguration.BgmConfiguration.BuryTheLight => Bgm.BuryTheLight,
                 JobConfiguration.BgmConfiguration.DevilTrigger => Bgm.DevilTrigger,
                 JobConfiguration.BgmConfiguration.CrimsonCloud => Bgm.CrimsonCloud,
+                JobConfiguration.BgmConfiguration.Subhuman => Bgm.Subhuman,
                 _ => Bgm.BuryTheLight,
             };
             LoadBgm(selectedBgm);

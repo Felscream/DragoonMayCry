@@ -44,10 +44,6 @@
     <ItemGroup>
         <ProjectReference Include="..\KamiLib\KamiLib.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Audio\BGM\FSM\States\Subhuman\" />
-    </ItemGroup>
     <PropertyGroup>
         <NoWarn>CA1416</NoWarn>  <!-- Validate platform compatibility -->
     </PropertyGroup>
