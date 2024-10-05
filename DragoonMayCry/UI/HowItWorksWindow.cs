@@ -40,14 +40,28 @@ namespace DragoonMayCry.UI
             ImGui.Text("- Dying is bad.");
 
             ImGui.TextColored(goldColor, "\nFinal rank");
-            ImGui.Text("- A final rank between D and S is attributed at the end of combat by selecting the tier in which you spent the most time in.");
-            ImGui.Text("- Every blunder will substract time spent in S tier.");
+            ImGui.Text("A final rank between D and S is attributed at the end of combat depending on your GCD uptime :");
+            ImGui.Indent();
+            ImGui.TextUnformatted("- Above 98 % : S");
+            ImGui.TextUnformatted("- Between 97 % and 98 % : A");
+            ImGui.TextUnformatted("- Between 95 % and 97 % : B");
+            ImGui.TextUnformatted("- Between 93 % and 95 % : C");
+            ImGui.TextUnformatted("- Below 93 % : D");
+            ImGui.Unindent();
 
             ImGui.TextColored(goldColor, "\nEstinien Must Die");
             ImGui.Text("Estinien Must Die adds some modifiers");
-            ImGui.Text("- Thresholds are generally 20 percent higher");
+            ImGui.TextUnformatted("- Thresholds are generally 20 % higher");
             ImGui.Text("- You have no breathing room : you MUST press your GCD if an enemy target is available");
             ImGui.Text("- Clipping your GCD will rank you down");
+            ImGui.Text("- The final rank attribution thresholds also change :");
+            ImGui.Indent();
+            ImGui.TextUnformatted("- Above 99.1 % : S");
+            ImGui.TextUnformatted("- Between 98 % and 99.1 % : A");
+            ImGui.TextUnformatted("- Between 97 % and 98 % : B");
+            ImGui.TextUnformatted("- Between 95 % and 97 % : C");
+            ImGui.TextUnformatted("- Below 95 % : D");
+            ImGui.Unindent();
 
             ImGui.Text("\nI'd appreciate any feedback or bug report to improve the experience. You can find me on the XIVLauncher & Dalamud discord server.");
 

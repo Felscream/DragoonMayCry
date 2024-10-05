@@ -1,10 +1,9 @@
+using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using static DragoonMayCry.Score.Rank.StyleRankHandler;
 
 namespace DragoonMayCry.Score.Rank
 {
@@ -12,33 +11,26 @@ namespace DragoonMayCry.Score.Rank
     {
         public EventHandler<StyleType>? FinalRankCalculated;
         private readonly PlayerState playerState;
-        private Dictionary<StyleType, double> timeInEachTier;
-        private readonly Stopwatch tierTimer;
-        private StyleType currentTier = StyleType.NoStyle;
-        public FinalRankCalculator(PlayerState playerState, StyleRankHandler styleRankHandler)
+        private readonly PlayerActionTracker playerActionTracker;
+        private readonly Stopwatch combatTimer;
+
+        public FinalRankCalculator(PlayerState playerState, PlayerActionTracker playerActionTracker)
         {
-            timeInEachTier = new Dictionary<StyleType, double>();
-            tierTimer = new Stopwatch();
-            styleRankHandler.StyleRankChange += OnRankChange;
+            combatTimer = new Stopwatch();
+            this.playerActionTracker = playerActionTracker;
+            this.playerActionTracker.TotalCombatWastedGcd += OnTotalCombatWastedGcd;
             this.playerState = playerState;
             this.playerState.RegisterCombatStateChangeHandler(OnCombat);
         }
 
-        private StyleType DetermineFinalRank()
+        private StyleType DetermineFinalRank(float wastedGcd)
         {
-            var finalRank = StyleType.D;
-            double maxTime = 0;
-
-            foreach (var entry in timeInEachTier)
+            var uptimePercentage = Math.Max(combatTimer.Elapsed.TotalSeconds - wastedGcd, 0) / Math.Max(combatTimer.Elapsed.TotalSeconds, 0.1);
+            if (Plugin.IsEmdModeEnabled())
             {
-                var timeInTier = entry.Value;
-                if (timeInTier > maxTime)
-                {
-                    maxTime = timeInTier;
-                    finalRank = entry.Key;
-                }
+                return GetFinalRankEmd(uptimePercentage);
             }
-            return finalRank;
+            return GetFinalRank(uptimePercentage); ;
 
         }
 
@@ -46,21 +38,25 @@ namespace DragoonMayCry.Score.Rank
         {
             if (!CanDisplayFinalRank())
             {
+                combatTimer.Reset();
                 return;
             }
 
             if (enteredCombat)
             {
-                timeInEachTier = new Dictionary<StyleType, double>();
-                tierTimer.Start();
+                combatTimer.Restart();
             }
-            else if (tierTimer.IsRunning)
+            else
             {
-                saveTimeInTier(currentTier);
-                tierTimer.Reset();
-                var finalRank = DetermineFinalRank();
-                FinalRankCalculated?.Invoke(this, finalRank);
+                combatTimer.Stop();
             }
+        }
+
+        private void OnTotalCombatWastedGcd(object? sender, float wastedGcd)
+        {
+            var finalRank = DetermineFinalRank(wastedGcd);
+            FinalRankCalculated?.Invoke(this, finalRank);
+            combatTimer.Reset();
         }
 
         public bool CanDisplayFinalRank()
@@ -72,62 +68,59 @@ namespace DragoonMayCry.Score.Rank
                     || Plugin.Configuration!.ActiveOutsideInstance);
         }
 
-        private void OnRankChange(object? sender, RankChangeData rankChange)
+        private static StyleType GetFinalRank(double uptimePercentage)
         {
-            if (!CanDisplayFinalRank())
+            if (uptimePercentage > 0.98)
             {
-                return;
+                return StyleType.S;
             }
 
-            currentTier = rankChange.NewRank;
-            if (!tierTimer.IsRunning)
+            if (uptimePercentage > 0.97)
             {
-                return;
-            }
-            saveTimeInTier(rankChange.PreviousRank);
-            if (rankChange.IsBlunder)
-            {
-                if (timeInEachTier.ContainsKey(StyleType.S))
-                {
-                    timeInEachTier[StyleType.S] -= 10d;
-                }
-                else
-                {
-                    timeInEachTier.Add(StyleType.S, -10d);
-                }
+                return StyleType.A;
             }
 
-            if (!timeInEachTier.ContainsKey(currentTier))
+            if (uptimePercentage > 0.95)
             {
-                timeInEachTier.Add(currentTier, 0);
+                return StyleType.B;
             }
-            tierTimer.Restart();
+
+            if (uptimePercentage > 0.93)
+            {
+                return StyleType.C;
+            }
+
+            return StyleType.D;
         }
 
-        private void saveTimeInTier(StyleType tier)
+        private static StyleType GetFinalRankEmd(double uptimePercentage)
         {
-            if (tier == StyleType.NoStyle)
+            if (uptimePercentage > 0.991)
             {
-                tier = StyleType.D;
+                return StyleType.S;
             }
-            else if (tier == StyleType.S || tier == StyleType.SS || tier == StyleType.SSS)
+
+            if (uptimePercentage > 0.98)
             {
-                tier = StyleType.S;
+                return StyleType.A;
             }
-            if (!timeInEachTier.ContainsKey(tier))
+
+            if (uptimePercentage > 0.97)
             {
-                timeInEachTier.Add(tier, tierTimer.Elapsed.TotalSeconds);
+                return StyleType.B;
             }
-            else
+
+            if (uptimePercentage > 0.95)
             {
-                timeInEachTier[tier] += tierTimer.Elapsed.TotalSeconds;
+                return StyleType.C;
             }
+
+            return StyleType.D;
         }
 
         public void Reset()
         {
-            timeInEachTier = new Dictionary<StyleType, double>();
-            tierTimer.Reset();
+            combatTimer.Reset();
         }
     }
 }

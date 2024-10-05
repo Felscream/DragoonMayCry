@@ -46,8 +46,6 @@ namespace DragoonMayCry.Score.Action
             }
         }
 
-
-
         private readonly HashSet<FlyTextKind> validTextKind = new() {
             FlyTextKind.Damage,
             FlyTextKind.DamageCrit,
@@ -62,6 +60,7 @@ namespace DragoonMayCry.Score.Action
         public EventHandler? OnLimitBreakEffect;
         public EventHandler? OnLimitBreakCanceled;
         public EventHandler? ActionFlyTextCreated;
+        public EventHandler<float>? TotalCombatWastedGcd;
 
 
         private delegate void OnActionUsedDelegate(
@@ -90,15 +89,18 @@ namespace DragoonMayCry.Score.Action
 
         private const float GcdDropThreshold = 0.2f;
         private ushort lastDetectedClip = 0;
-        private float currentWastedGcd = 0;
+        private float wastedGcd = 0;
+        private float combatWastedGcd = 0;
 
         private bool isGcdDropped;
 
         private readonly Stopwatch limitBreakStopwatch;
+        private readonly Stopwatch spellCastStopwatch;
         private LimitBreak? limitBreakCast;
         private const int MaxActionHistorySize = 6;
         private readonly Queue<UsedAction> actionHistory;
         private readonly HashSet<FlyTextKind> validHitTypes = new() { FlyTextKind.Damage, FlyTextKind.DamageDh, FlyTextKind.DamageCrit, FlyTextKind.DamageCritDh };
+        private uint spellCastId = uint.MaxValue;
 
         // added 0.1f to all duration
         private readonly Dictionary<uint, float> tankLimitBreakDelays =
@@ -117,6 +119,7 @@ namespace DragoonMayCry.Score.Action
             luminaActionCache = LuminaCache<LuminaAction>.Instance;
             playerState = PlayerState.GetInstance();
             limitBreakStopwatch = new Stopwatch();
+            spellCastStopwatch = new Stopwatch();
             actionManager =
                 (State.ActionManagerLight*)FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
             Service.FlyText.FlyTextCreated += OnFlyText;
@@ -213,6 +216,12 @@ namespace DragoonMayCry.Score.Action
 
             var actionId = Marshal.ReadInt32(effectHeader, 0x8);
 
+            if (spellCastId == actionId)
+            {
+                spellCastStopwatch.Reset();
+                spellCastId = uint.MaxValue;
+            }
+
             var type = TypeForActionId((uint)actionId);
 
             if (type == PlayerActionType.LimitBreak)
@@ -267,6 +276,8 @@ namespace DragoonMayCry.Score.Action
             {
                 return;
             }
+
+            // 15 seems to be related to cast cancelation
             if (type != 15)
             {
                 return;
@@ -278,10 +289,22 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
+            var canTargetEnemy = playerState.CanTargetEnemy();
+
             if (limitBreakCast != null)
             {
+                if (canTargetEnemy)
+                {
+                    combatWastedGcd += (float)limitBreakStopwatch.Elapsed.TotalSeconds;
+                }
                 CancelLimitBreak();
             }
+            else if (canTargetEnemy)
+            {
+                combatWastedGcd += (float)spellCastStopwatch.Elapsed.TotalSeconds;
+            }
+            spellCastStopwatch.Reset();
+            spellCastId = uint.MaxValue;
         }
 
         private void OnCast(uint sourceId, nint ptr)
@@ -301,11 +324,16 @@ namespace DragoonMayCry.Score.Action
 
             int value = Marshal.ReadInt16(ptr);
             var actionId = value < 0 ? (uint)(value + 65536) : (uint)value;
-            var type = TypeForActionId(actionId);
 
+            var type = TypeForActionId(actionId);
             if (type == PlayerActionType.LimitBreak)
             {
                 StartLimitBreakUse(actionId);
+            }
+            else if (playerState.CanTargetEnemy())
+            {
+                spellCastId = actionId;
+                spellCastStopwatch.Restart();
             }
         }
 
@@ -349,15 +377,24 @@ namespace DragoonMayCry.Score.Action
 
         private void OnCombat(object? sender, bool enteredCombat)
         {
-            currentWastedGcd = 0;
+            wastedGcd = 0;
             actionHistory.Clear();
+            spellCastStopwatch.Reset();
+            spellCastId = uint.MaxValue;
+
             if (!enteredCombat)
             {
                 if (limitBreakCast != null || limitBreakStopwatch.IsRunning)
                 {
                     ResetLimitBreakUse();
                 }
+                if (Plugin.IsEnabledForCurrentJob())
+                {
+                    TotalCombatWastedGcd?.Invoke(this, combatWastedGcd);
+                }
             }
+            combatWastedGcd = 0;
+
         }
 
         private void ResetLimitBreakUse()
@@ -425,9 +462,13 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
+            if (limitBreakCast == null && animationLock != 0.1f)
+            {
+                combatWastedGcd += animationLock;
+            }
+
             if (IsGcdClipped(animationLock))
             {
-                Service.Log.Debug($"GCD Clip: {animationLock} s");
                 if (limitBreakCast == null)
                 {
                     if (Plugin.IsEmdModeEnabled() && !playerState.IsIncapacitated() && playerState.CanTargetEnemy())
@@ -455,30 +496,38 @@ namespace DragoonMayCry.Score.Action
 
         private unsafe void DetectWastedGCD()
         {
+            if (!actionManager->isGCDRecastActive
+                && actionManager->animationLock == 0
+                && !actionManager->isCasting
+                && limitBreakCast == null
+                && playerState.CanTargetEnemy())
+            {
+                combatWastedGcd += ImGui.GetIO().DeltaTime;
+            }
+
             // do not track dropped GCDs if the LB is being cast
             // or the player died between 2 GCDs
             if (playerState.IsDead)
             {
                 return;
             }
+
             if (!actionManager->isGCDRecastActive && !actionManager->isQueued && !actionManager->isCasting)
             {
                 if (actionManager->animationLock > 0) return;
-                currentWastedGcd += ImGui.GetIO().DeltaTime;
-                if (!isGcdDropped && currentWastedGcd > GetGcdDropThreshold())
+                wastedGcd += ImGui.GetIO().DeltaTime;
+                if (!isGcdDropped && wastedGcd > GetGcdDropThreshold())
                 {
                     isGcdDropped = true;
                     if (!playerState.IsIncapacitated() && playerState.CanTargetEnemy() && limitBreakCast == null)
                     {
                         OnGcdDropped?.Invoke(this, EventArgs.Empty);
                     }
-
                 }
             }
-            else if (currentWastedGcd > 0)
+            else if (wastedGcd > 0)
             {
-                Service.Log.Debug($"Wasted GCD: {currentWastedGcd} ms");
-                currentWastedGcd = 0;
+                wastedGcd = 0;
                 isGcdDropped = false;
             }
         }
