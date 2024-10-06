@@ -60,7 +60,7 @@ public unsafe class Plugin : IDalamudPlugin
         BgmService = new DynamicBgmService(StyleRankHandler);
         ScoreManager = new(StyleRankHandler, PlayerActionTracker);
         ScoreProgressBar = new(ScoreManager, StyleRankHandler, PlayerActionTracker, PlayerState);
-        FinalRankCalculator = new(PlayerState, StyleRankHandler);
+        FinalRankCalculator = new(PlayerState, PlayerActionTracker);
         PluginUi = new(ScoreProgressBar, StyleRankHandler, ScoreManager, FinalRankCalculator, StyleAnnouncerService, BgmService, PlayerActionTracker);
 
 
