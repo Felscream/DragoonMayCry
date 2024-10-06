@@ -496,11 +496,14 @@ namespace DragoonMayCry.Score.Action
 
         private unsafe void DetectWastedGCD()
         {
+            bool isIncapacitated = playerState.IsIncapacitated();
+            bool canTargetEnemy = playerState.CanTargetEnemy();
             if (!actionManager->isGCDRecastActive
                 && actionManager->animationLock == 0
                 && !actionManager->isCasting
                 && limitBreakCast == null
-                && playerState.CanTargetEnemy())
+                && !isIncapacitated
+                && canTargetEnemy)
             {
                 combatWastedGcd += ImGui.GetIO().DeltaTime;
             }
@@ -519,7 +522,7 @@ namespace DragoonMayCry.Score.Action
                 if (!isGcdDropped && wastedGcd > GetGcdDropThreshold())
                 {
                     isGcdDropped = true;
-                    if (!playerState.IsIncapacitated() && playerState.CanTargetEnemy() && limitBreakCast == null)
+                    if (!isIncapacitated && canTargetEnemy && limitBreakCast == null)
                     {
                         OnGcdDropped?.Invoke(this, EventArgs.Empty);
                     }
