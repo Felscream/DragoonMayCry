@@ -124,7 +124,7 @@ public class ConfigWindow : Window
                 .AddSliderInt("occurrences", configuration.PlaySfxEveryOccurrences, 1, 20, 100)
                 .Draw();
 
-            InfoBox.Instance.AddTitle("Dynamic BGM - mega experimental")
+            InfoBox.Instance.AddTitle("Dynamic BGM")
                 .AddAction(() =>
                 {
                     var cursorPosition = ImGui.GetCursorPos();
