@@ -43,24 +43,24 @@ namespace DragoonMayCry.UI
             ImGui.Text("A final rank between D and S is attributed at the end of combat depending on your GCD uptime :");
             ImGui.Indent();
             ImGui.TextUnformatted("- Above 98 % : S");
-            ImGui.TextUnformatted("- Between 97 % and 98 % : A");
-            ImGui.TextUnformatted("- Between 95 % and 97 % : B");
-            ImGui.TextUnformatted("- Between 93 % and 95 % : C");
-            ImGui.TextUnformatted("- Below 93 % : D");
+            ImGui.TextUnformatted("- 97 % to 98 % : A");
+            ImGui.TextUnformatted("- 95 % to 97 % : B");
+            ImGui.TextUnformatted("- 93 % to 95 % : C");
+            ImGui.TextUnformatted("- 93 % and below : D");
             ImGui.Unindent();
 
             ImGui.TextColored(goldColor, "\nEstinien Must Die");
             ImGui.Text("Estinien Must Die adds some modifiers");
-            ImGui.TextUnformatted("- Thresholds are generally 20 % higher");
+            ImGui.TextUnformatted("- Rank thresholds are generally 20 % higher");
             ImGui.Text("- You have no breathing room : you MUST press your GCD if an enemy target is available");
             ImGui.Text("- Clipping your GCD will rank you down");
-            ImGui.Text("- The final rank attribution thresholds also change :");
+            ImGui.Text("- Final rank GCD uptime thresholds are :");
             ImGui.Indent();
             ImGui.TextUnformatted("- Above 99.1 % : S");
-            ImGui.TextUnformatted("- Between 98 % and 99.1 % : A");
-            ImGui.TextUnformatted("- Between 97 % and 98 % : B");
-            ImGui.TextUnformatted("- Between 95 % and 97 % : C");
-            ImGui.TextUnformatted("- Below 95 % : D");
+            ImGui.TextUnformatted("- 98 % to 99.1 % : A");
+            ImGui.TextUnformatted("- 97 % to 98 % : B");
+            ImGui.TextUnformatted("- 95 % to 97 % : C");
+            ImGui.TextUnformatted("- 95 % and below : D");
             ImGui.Unindent();
 
             ImGui.Text("\nI'd appreciate any feedback or bug report to improve the experience. You can find me on the XIVLauncher & Dalamud discord server.");

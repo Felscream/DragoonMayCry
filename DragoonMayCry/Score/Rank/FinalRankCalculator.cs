@@ -30,7 +30,7 @@ namespace DragoonMayCry.Score.Rank
             {
                 return GetFinalRankEmd(uptimePercentage);
             }
-            return GetFinalRank(uptimePercentage); ;
+            return GetFinalRank(uptimePercentage);
 
         }
 
@@ -54,18 +54,33 @@ namespace DragoonMayCry.Score.Rank
 
         private void OnTotalCombatWastedGcd(object? sender, float wastedGcd)
         {
+            if (!CanDisplayFinalRank())
+            {
+                combatTimer.Reset();
+                return;
+            }
             var finalRank = DetermineFinalRank(wastedGcd);
             FinalRankCalculated?.Invoke(this, finalRank);
+            PrintFinalRank(finalRank);
             combatTimer.Reset();
+        }
+
+        private void PrintFinalRank(StyleType finalRank)
+        {
+            var minutes = $"{combatTimer.Elapsed.Minutes}";
+            minutes = minutes.PadLeft(2, '0');
+            var seconds = $"{combatTimer.Elapsed.Seconds}";
+            seconds = seconds.PadLeft(2, '0');
+            Service.ChatGui.Print($"[DragoonMayCry] [{minutes}:{seconds}] Final rank : {finalRank}");
         }
 
         public bool CanDisplayFinalRank()
         {
             return JobHelper.IsCombatJob(playerState.GetCurrentJob())
-            && !playerState.IsInPvp()
-            && Plugin.IsEnabledForCurrentJob()
-            && (playerState.IsInsideInstance
-                    || Plugin.Configuration!.ActiveOutsideInstance);
+                && !playerState.IsInPvp()
+                && Plugin.IsEnabledForCurrentJob()
+                && (playerState.IsInsideInstance
+                        || Plugin.Configuration!.ActiveOutsideInstance);
         }
 
         private static StyleType GetFinalRank(double uptimePercentage)
