@@ -10,6 +10,8 @@ namespace DragoonMayCry.Score.Rank
     public class FinalRankCalculator : IResettable
     {
         public EventHandler<StyleType>? FinalRankCalculated;
+        public EventHandler<FinalRank>? DutyCompletedFinalRank;
+        public FinalRank FinalRank { get; private set; }
         private readonly PlayerState playerState;
         private readonly PlayerActionTracker playerActionTracker;
         private readonly Stopwatch combatTimer;
@@ -19,26 +21,32 @@ namespace DragoonMayCry.Score.Rank
             combatTimer = new Stopwatch();
             this.playerActionTracker = playerActionTracker;
             this.playerActionTracker.TotalCombatWastedGcd += OnTotalCombatWastedGcd;
+            this.playerActionTracker.DutyCompletedWastedGcd += OnDutyCompletedWastedGcd;
             this.playerState = playerState;
             this.playerState.RegisterCombatStateChangeHandler(OnCombat);
         }
 
-        private StyleType DetermineFinalRank(float wastedGcd)
+        private FinalRank DetermineFinalRank(float wastedGcd, ushort instanceId = 0)
         {
             var uptimePercentage = Math.Max(combatTimer.Elapsed.TotalSeconds - wastedGcd, 0) / Math.Max(combatTimer.Elapsed.TotalSeconds, 0.1);
+            var rank = StyleType.D;
             if (Plugin.IsEmdModeEnabled())
             {
-                return GetFinalRankEmd(uptimePercentage);
+                rank = GetFinalRankEmd(uptimePercentage);
             }
-            return GetFinalRank(uptimePercentage);
+            else
+            {
+                rank = GetFinalRank(uptimePercentage);
+            }
 
+            return new FinalRank(rank, new TimeSpan(combatTimer.ElapsedTicks), instanceId);
         }
 
         private void OnCombat(object? sender, bool enteredCombat)
         {
             if (!CanDisplayFinalRank())
             {
-                combatTimer.Reset();
+                combatTimer.Stop();
                 return;
             }
 
@@ -54,24 +62,34 @@ namespace DragoonMayCry.Score.Rank
 
         private void OnTotalCombatWastedGcd(object? sender, float wastedGcd)
         {
+            combatTimer.Stop();
             if (!CanDisplayFinalRank())
             {
-                combatTimer.Reset();
                 return;
             }
-            var finalRank = DetermineFinalRank(wastedGcd);
-            FinalRankCalculated?.Invoke(this, finalRank);
-            PrintFinalRank(finalRank);
-            combatTimer.Reset();
+            FinalRank = DetermineFinalRank(wastedGcd);
+            FinalRankCalculated?.Invoke(this, FinalRank.Rank);
+            PrintFinalRank(FinalRank);
         }
 
-        private void PrintFinalRank(StyleType finalRank)
+        private void OnDutyCompletedWastedGcd(object? sender, PlayerActionTracker.DutyCompletionStats dutyCompletionStats)
         {
-            var minutes = $"{combatTimer.Elapsed.Minutes}";
+            combatTimer.Stop();
+            if (!Plugin.IsEnabledForCurrentJob())
+            {
+                return;
+            }
+            FinalRank = DetermineFinalRank(dutyCompletionStats.WastedGcd, dutyCompletionStats.InstanceId);
+            DutyCompletedFinalRank?.Invoke(this, FinalRank);
+        }
+
+        private void PrintFinalRank(FinalRank finalRank)
+        {
+            var minutes = $"{finalRank.KillTime.Minutes}";
             minutes = minutes.PadLeft(2, '0');
-            var seconds = $"{combatTimer.Elapsed.Seconds}";
+            var seconds = $"{finalRank.KillTime.Seconds}";
             seconds = seconds.PadLeft(2, '0');
-            Service.ChatGui.Print($"[DragoonMayCry] [{minutes}:{seconds}] Final rank : {finalRank}");
+            Service.ChatGui.Print($"[DragoonMayCry] [{minutes}:{seconds}] Final rank : {finalRank.Rank}");
         }
 
         public bool CanDisplayFinalRank()
@@ -136,6 +154,20 @@ namespace DragoonMayCry.Score.Rank
         public void Reset()
         {
             combatTimer.Reset();
+        }
+    }
+
+    public struct FinalRank
+    {
+        public StyleType Rank { get; private set; }
+        public TimeSpan KillTime { get; private set; }
+        public ushort InstanceId { get; private set; }
+
+        public FinalRank(StyleType rank, TimeSpan killTime, ushort instanceId)
+        {
+            Rank = rank;
+            KillTime = killTime;
+            InstanceId = instanceId;
         }
     }
 }

@@ -1,0 +1,185 @@
+[
+    {
+        "Name": "ARR",
+        "Categories": [
+            {
+                "Type": 0,
+                "Subcategories": []
+            }
+        ],
+        "Instances": {
+            "368": {
+                "Name": "Chimera",
+                "LvlSync": 50,
+                "Difficulty": 0,
+                "Category": 0
+            }
+        }
+    },
+    {
+        "Name": "Stormblood",
+        "Categories": [
+            {
+                "Type": 2,
+                "Subcategories": []
+            }
+        ],
+        "Instances": {
+            "733": {
+                "Name": "The Binding Coil of Bahamut",
+                "LvlSync": 70,
+                "Difficulty": 1,
+                "Category": 2
+            },
+            "777": {
+                "Name": "The Weapon's Refrain",
+                "LvlSync": 70,
+                "Difficulty": 1,
+                "Category": 2
+            }
+        }
+    },
+    {
+        "Name": "Shadowbringers",
+        "Categories": [
+            {
+                "Type": 2,
+                "Subcategories": []
+            }
+        ],
+        "Instances": {
+            "887": {
+                "Name": "The Epic of Alexander",
+                "LvlSync": 80,
+                "Difficulty": 1,
+                "Category": 2
+            }
+        }
+    },
+    {
+        "Name": "Endwalker",
+        "Categories": [
+            {
+                "Type": 2,
+                "Subcategories": []
+            }
+        ],
+        "Instances": {
+            "968": {
+                "Name": "Dragonsong's Reprise",
+                "LvlSync": 90,
+                "Difficulty": 1,
+                "Category": 2
+            },
+            "1122": {
+                "Name": "The Omega Protocol",
+                "LvlSync": 90,
+                "Difficulty": 1,
+                "Category": 2
+            }
+        }
+    },
+    {
+        "Name": "Dawntrail",
+        "Categories": [
+            {
+                "Type": 0,
+                "Subcategories": []
+            },
+            {
+                "Type": 1,
+                "Subcategories": [
+                    "AAC Light-heavyweight"
+                ]
+            }
+        ],
+        "Instances": {
+            "1195": {
+                "Name": "Worqor Lar Dor",
+                "LvlSync": 94,
+                "Difficulty": 0,
+                "Category": 0
+            },
+            "1196": {
+                "Name": "Worqor Lar Dor",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0
+            },
+            "1200": {
+                "Name": "Everkeep",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 0
+            },
+            "1201": {
+                "Name": "Everkeep",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0
+            },
+            "1202": {
+                "Name": "The Interphos",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 0
+            },
+            "1225": {
+                "Name": "AAC Light-heavyweight M1",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 1,
+                "Subcategory": "AAC Light-heavyweight"
+            },
+            "1226": {
+                "Name": "AAC Light-heavyweight M1",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 1,
+                "Subcategory": "AAC Light-heavyweight"
+            },
+            "1227": {
+                "Name": "AAC Light-heavyweight M2",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 1,
+                "Subcategory": "AAC Light-heavyweight"
+            },
+            "1228": {
+                "Name": "AAC Light-heavyweight M2",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 1,
+                "Subcategory": "AAC Light-heavyweight"
+            },
+            "1229": {
+                "Name": "AAC Light-heavyweight M3",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 1,
+                "Subcategory": "AAC Light-heavyweight"
+            },
+            "1230": {
+                "Name": "AAC Light-heavyweight M3",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 1,
+                "Subcategory": "AAC Light-heavyweight"
+            },
+            "1231": {
+                "Name": "AAC Light-heavyweight M4",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 1,
+                "Subcategory": "AAC Light-heavyweight"
+            },
+            "1232": {
+                "Name": "AAC Light-heavyweight M4",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 1,
+                "Subcategory": "AAC Light-heavyweight"
+            }
+        }
+    }
+]

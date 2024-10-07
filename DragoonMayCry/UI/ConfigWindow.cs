@@ -188,6 +188,7 @@ public class ConfigWindow : Window
                 .SameLine().AddButton("Remove muffled", () => AudioService.Instance.RemoveDeathEffect())
                 .AddSliderInt("Decay", decay, 0, 70)
                 .AddButton("Apply decay", () => AudioService.Instance.ApplyDecay(decay.Value / 100f))
+                .AddButton("Char id", () => Service.Log.Debug($"{Service.ClientState.LocalContentId}"))
                 .Draw();
 #endif
         }

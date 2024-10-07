@@ -61,6 +61,7 @@ namespace DragoonMayCry.Score.Action
         public EventHandler? OnLimitBreakCanceled;
         public EventHandler? ActionFlyTextCreated;
         public EventHandler<float>? TotalCombatWastedGcd;
+        public EventHandler<DutyCompletionStats>? DutyCompletedWastedGcd;
 
 
         private delegate void OnActionUsedDelegate(
@@ -85,6 +86,7 @@ namespace DragoonMayCry.Score.Action
 
         private readonly State.ActionManagerLight* actionManager;
         private readonly PlayerState playerState;
+        private readonly IDutyState dutyState;
         private readonly LuminaCache<LuminaAction> luminaActionCache;
 
         private const float GcdDropThreshold = 0.2f;
@@ -118,6 +120,9 @@ namespace DragoonMayCry.Score.Action
             actionHistory = new();
             luminaActionCache = LuminaCache<LuminaAction>.Instance;
             playerState = PlayerState.GetInstance();
+            dutyState = Service.DutyState;
+            dutyState.DutyCompleted += OnDutyCompleted;
+
             limitBreakStopwatch = new Stopwatch();
             spellCastStopwatch = new Stopwatch();
             actionManager =
@@ -152,6 +157,7 @@ namespace DragoonMayCry.Score.Action
         public void Dispose()
         {
             Service.Framework.Update -= Update;
+            dutyState.DutyCompleted -= OnDutyCompleted;
 
             onActionUsedHook?.Disable();
             onActionUsedHook?.Dispose();
@@ -299,7 +305,7 @@ namespace DragoonMayCry.Score.Action
                 }
                 CancelLimitBreak();
             }
-            else if (canTargetEnemy)
+            else if (spellCastStopwatch.IsRunning)
             {
                 combatWastedGcd += (float)spellCastStopwatch.Elapsed.TotalSeconds;
             }
@@ -379,8 +385,6 @@ namespace DragoonMayCry.Score.Action
         {
             wastedGcd = 0;
             actionHistory.Clear();
-            spellCastStopwatch.Reset();
-            spellCastId = uint.MaxValue;
 
             if (!enteredCombat)
             {
@@ -390,11 +394,19 @@ namespace DragoonMayCry.Score.Action
                 }
                 if (Plugin.IsEnabledForCurrentJob())
                 {
+                    if (spellCastStopwatch.IsRunning)
+                    {
+                        combatWastedGcd += (float)spellCastStopwatch.Elapsed.TotalSeconds;
+                    }
                     TotalCombatWastedGcd?.Invoke(this, combatWastedGcd);
                 }
             }
-            combatWastedGcd = 0;
-
+            else
+            {
+                combatWastedGcd = 0;
+            }
+            spellCastStopwatch.Reset();
+            spellCastId = uint.MaxValue;
         }
 
         private void ResetLimitBreakUse()
@@ -496,8 +508,8 @@ namespace DragoonMayCry.Score.Action
 
         private unsafe void DetectWastedGCD()
         {
-            bool isIncapacitated = playerState.IsIncapacitated();
-            bool canTargetEnemy = playerState.CanTargetEnemy();
+            var isIncapacitated = playerState.IsIncapacitated();
+            var canTargetEnemy = playerState.CanTargetEnemy();
             if (!actionManager->isGCDRecastActive
                 && actionManager->animationLock == 0
                 && !actionManager->isCasting
@@ -605,6 +617,25 @@ namespace DragoonMayCry.Score.Action
             else
             {
                 DamageActionUsed?.Invoke(this, damage);
+            }
+        }
+
+        private void OnDutyCompleted(object? sender, ushort instance)
+        {
+            if (Plugin.IsEnabledForCurrentJob())
+            {
+                DutyCompletedWastedGcd?.Invoke(this, new DutyCompletionStats(combatWastedGcd, instance));
+            }
+        }
+
+        public struct DutyCompletionStats
+        {
+            public float WastedGcd { get; private set; }
+            public ushort InstanceId { get; private set; }
+            public DutyCompletionStats(float wastedGcd, ushort instanceId)
+            {
+                WastedGcd = wastedGcd;
+                InstanceId = instanceId;
             }
         }
 
