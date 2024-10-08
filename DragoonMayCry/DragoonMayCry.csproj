@@ -26,6 +26,8 @@
       <EmbeddedResource Include="Assets\SS.png" />
       <EmbeddedResource Include="Assets\SSS.png" />
       <EmbeddedResource Include="Assets\GaugeDefault.png" />
+      <EmbeddedResource Include="Assets\MissingRank.png" />
+      <EmbeddedResource Include="Data\TrackedDuties.json" />
   </ItemGroup>
   
   <ItemGroup>

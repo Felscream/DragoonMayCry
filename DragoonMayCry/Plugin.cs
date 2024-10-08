@@ -6,6 +6,7 @@ using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
+using DragoonMayCry.Record;
 using DragoonMayCry.Score;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
@@ -40,6 +41,7 @@ public unsafe class Plugin : IDalamudPlugin
     private static FinalRankCalculator? FinalRankCalculator;
     private static AudioService? AudioService;
     private static DynamicBgmService? BgmService;
+    private static RecordService? RecordService;
     public static StyleAnnouncerService? StyleAnnouncerService;
     private static JobIds CurrentJob = JobIds.OTHER;
     public Plugin()
@@ -61,13 +63,20 @@ public unsafe class Plugin : IDalamudPlugin
         ScoreManager = new(StyleRankHandler, PlayerActionTracker);
         ScoreProgressBar = new(ScoreManager, StyleRankHandler, PlayerActionTracker, PlayerState);
         FinalRankCalculator = new(PlayerState, PlayerActionTracker);
-        PluginUi = new(ScoreProgressBar, StyleRankHandler, ScoreManager, FinalRankCalculator, StyleAnnouncerService, BgmService, PlayerActionTracker);
+        RecordService = new(FinalRankCalculator);
+        RecordService.Initialize();
+        PluginUi = new(ScoreProgressBar, StyleRankHandler, ScoreManager, FinalRankCalculator, StyleAnnouncerService, BgmService, PlayerActionTracker, RecordService);
 
 
         ScoreProgressBar.DemotionApplied += StyleRankHandler.OnDemotion;
         ScoreProgressBar.Promotion += StyleRankHandler.OnPromotion;
 
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
+        {
+            HelpMessage = "opens record history"
+        });
+
+        Service.CommandManager.AddHandler("/dmc conf", new CommandInfo(OnCommand)
         {
             HelpMessage = "opens configuration menu"
         });
@@ -119,11 +128,16 @@ public unsafe class Plugin : IDalamudPlugin
         Service.CommandManager.RemoveHandler(CommandName);
     }
 
-
-
     private void OnCommand(string command, string args)
     {
-        PluginUi?.ToggleConfigUI();
+        if (args.Contains("conf"))
+        {
+            PluginUi?.ToggleConfigUI();
+        }
+        else
+        {
+            PluginUi?.ToggleCharacterRecords();
+        }
     }
 
     public static void OnActiveOutsideInstanceConfChange(object? sender, bool activeOutsideInstance)
