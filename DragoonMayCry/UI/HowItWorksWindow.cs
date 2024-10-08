@@ -47,6 +47,7 @@ namespace DragoonMayCry.UI
             ImGui.TextUnformatted("- 95 % to 97 % : B");
             ImGui.TextUnformatted("- 93 % to 95 % : C");
             ImGui.TextUnformatted("- 93 % and below : D");
+            ImGui.Text("Failing a mechanic incurs a 3 seconds uptime penalty :");
             ImGui.Unindent();
 
             ImGui.TextColored(goldColor, "\nEstinien Must Die");
