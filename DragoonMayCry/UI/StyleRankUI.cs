@@ -21,7 +21,7 @@ namespace DragoonMayCry.UI
 {
     public sealed class StyleRankUI
     {
-        private readonly Dictionary<StyleType, StyleUi> styleUis =
+        public static readonly Dictionary<StyleType, StyleUi> styleUis =
             new()
             {
                 { StyleType.D, new("DragoonMayCry.Assets.D.png", new(223, 152, 30)) },

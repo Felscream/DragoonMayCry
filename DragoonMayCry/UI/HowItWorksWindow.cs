@@ -63,6 +63,13 @@ namespace DragoonMayCry.UI
             ImGui.TextUnformatted("- 95 % and below : D");
             ImGui.Unindent();
 
+            ImGui.TextColored(goldColor, "\nRecords");
+            ImGui.Text("Records are saved on a character per character basis.");
+            ImGui.Text("You must complete the duty level synced");
+            ImGui.Text("At the end of a successful duty completion, your final rank is processed for your current character, with the current job.");
+            ImGui.Text("Only your best rank on the selected job is kept.");
+            ImGui.Text("Only duties available in the 'Character records' window are tracked");
+
             ImGui.Text("\nI'd appreciate any feedback or bug report to improve the experience. You can find me on the XIVLauncher & Dalamud discord server.");
 
             ImGui.TextColored(new Vector4(.75f, .75f, .75f, 1), "\nTo healers");

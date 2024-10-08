@@ -134,7 +134,7 @@ public class ConfigWindow : Window
                         ToggleDynamicBgmChange?.Invoke(this, configuration.EnableDynamicBgm.Value);
                     }
                     AddLabel("Enable dynamic BGM", cursorPosition);
-                    ImGuiComponents.HelpMarker("This will disable the game's background music inside instances.");
+                    ImGuiComponents.HelpMarker("Only inside duties.\nThis will disable the game's background music inside instances.\n Check the job configuration window to select a BGM, they are set to off by default. \n You can use this checkbox to disable dynamic BGM if things go terribly wrong.");
                 })
                 .AddAction(() =>
                 {
@@ -188,6 +188,7 @@ public class ConfigWindow : Window
                 .SameLine().AddButton("Remove muffled", () => AudioService.Instance.RemoveDeathEffect())
                 .AddSliderInt("Decay", decay, 0, 70)
                 .AddButton("Apply decay", () => AudioService.Instance.ApplyDecay(decay.Value / 100f))
+                .AddButton("Char id", () => Service.Log.Debug($"{Service.ClientState.LocalContentId}"))
                 .Draw();
 #endif
         }
