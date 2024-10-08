@@ -152,6 +152,7 @@ namespace DragoonMayCry.Score.Action
             Service.Framework.Update += Update;
             playerState.RegisterCombatStateChangeHandler(OnCombat);
             playerState.RegisterDeathStateChangeHandler(OnDeath);
+            playerState.RegisterDamageDownHandler(OnFailedMechanic);
         }
 
         public void Dispose()
@@ -199,6 +200,14 @@ namespace DragoonMayCry.Score.Action
             }
 
             RegisterAndFireUsedAction(kind, damage, (uint)castID);
+        }
+
+        private void OnFailedMechanic(object? sender, bool hasFailedMechanic)
+        {
+            if (Plugin.CanRunDmc() && hasFailedMechanic)
+            {
+                combatWastedGcd += 3f;
+            }
         }
 
         private void OnActionUsed(
