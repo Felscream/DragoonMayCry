@@ -468,8 +468,8 @@ namespace DragoonMayCry.Score.Action
         {
             var animationLock = actionManager->animationLock;
             if (lastDetectedClip == actionManager->currentSequence
-                || actionManager->isGCDRecastActive
-                || animationLock <= 0)
+                            || actionManager->isGCDRecastActive
+                            || animationLock <= 0)
             {
                 return;
             }
@@ -515,7 +515,7 @@ namespace DragoonMayCry.Score.Action
                 && !actionManager->isCasting
                 && limitBreakCast == null
                 && !isIncapacitated
-                && canTargetEnemy)
+                && (canTargetEnemy || playerState.IsDead))
             {
                 combatWastedGcd += ImGui.GetIO().DeltaTime;
             }

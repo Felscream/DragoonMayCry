@@ -181,7 +181,7 @@ namespace DragoonMayCry.Record
 
         private bool IsInvalidEntry(FinalRank finalRank)
         {
-            var playerLevel = playerState.Player != null ? playerState.Player.Level : 0;
+            var playerLevel = playerState.Player != null ? playerState.Player.Level : int.MaxValue;
             return !ready
                     || !trackableDuties.ContainsKey(finalRank.InstanceId)
                     || !Plugin.IsEnabledForCurrentJob()

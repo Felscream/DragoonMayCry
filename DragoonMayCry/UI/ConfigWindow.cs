@@ -134,7 +134,7 @@ public class ConfigWindow : Window
                         ToggleDynamicBgmChange?.Invoke(this, configuration.EnableDynamicBgm.Value);
                     }
                     AddLabel("Enable dynamic BGM", cursorPosition);
-                    ImGuiComponents.HelpMarker("This will disable the game's background music inside instances.");
+                    ImGuiComponents.HelpMarker("Only inside duties.\nThis will disable the game's background music inside instances.\n Check the job configuration window to select a BGM, they are set to off by default. \n You can use this checkbox to disable dynamic BGM if things go terribly wrong.");
                 })
                 .AddAction(() =>
                 {
