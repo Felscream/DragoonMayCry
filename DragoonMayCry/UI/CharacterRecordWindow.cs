@@ -1,26 +1,39 @@
+using Dalamud.Interface.Components;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Data;
 using DragoonMayCry.Record;
 using DragoonMayCry.Record.Model;
-using DragoonMayCry.State;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ImGuiNET;
+using KamiLib.Caching;
+using Lumina.Excel.GeneratedSheets2;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Numerics;
+using System.Reflection;
+using PlayerState = DragoonMayCry.State.PlayerState;
 
 namespace DragoonMayCry.UI
 {
     public class CharacterRecordWindow : Window
     {
         private readonly IClientState clientState;
+        private readonly ITextureProvider textureProvider;
         private readonly RecordService recordService;
         private readonly PlayerState playerState;
+        private readonly ConfigWindow configWindow;
 
         private Dictionary<JobIds, JobRecord> characterRecords = new();
+        private readonly Dictionary<ushort, uint> dutyToContentId = new();
+        private readonly LuminaCache<ContentFinderCondition> contentFinder;
         private readonly Extension[] extensions = new Extension[0];
         private readonly List<String> extensionValues = new();
         private readonly List<JobIds> jobs = new();
+        private const string HiddenDutyTexPath = "ui/icon/112000/112036_hr1.tex";
+        private const string MissingRankTexPath = "DragoonMayCry.Assets.MissingRank.png";
         private ExtensionCategory[] categories = [];
         private List<string> subcategories = new();
         private List<Difficulty> difficulties = new();
@@ -30,10 +43,17 @@ namespace DragoonMayCry.UI
         private int selectedCategoryId = 0;
         private int selectedSubcategoryId = 0;
         private int selectedDifficultyId = 0;
+        private readonly Vector2 dutyTextureSize = new(376, 120);
+        private readonly Vector2 rankSize = new(130, 130);
+        private readonly ImGuiTableFlags tableFlags = ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.ScrollX | ImGuiTableFlags.BordersInnerH;
 
-        public CharacterRecordWindow(RecordService recordService) : base("DragoonMayCry - Character records")
+        public CharacterRecordWindow(RecordService recordService, ConfigWindow configWindow) : base("DragoonMayCry - Character records")
         {
-            Size = new System.Numerics.Vector2(1000f, 600f);
+            textureProvider = Service.TextureProvider;
+            contentFinder = LuminaCache<ContentFinderCondition>.Instance;
+            this.configWindow = configWindow;
+
+            Size = new Vector2(955f, 730f);
             SizeCondition = ImGuiCond.Appearing;
 
             playerState = PlayerState.GetInstance();
@@ -63,13 +83,11 @@ namespace DragoonMayCry.UI
                     selectedJob = job;
                 }
             }
-
-
         }
 
         public override void Draw()
         {
-            if (characterRecords.Count == 0)
+            if (!clientState.IsLoggedIn)
             {
                 DrawEmptyWindow();
             }
@@ -98,13 +116,18 @@ namespace DragoonMayCry.UI
             selectedJob = job;
         }
 
-        private void DrawEmptyWindow()
+        private static void DrawEmptyWindow()
         {
             ImGui.Text("Please log in with a character to access this window");
         }
 
         private void DrawRecords()
         {
+            if (ImGuiComponents.IconButton(Dalamud.Interface.FontAwesomeIcon.Cog))
+            {
+                configWindow.Toggle();
+            }
+            ImGui.SameLine();
             ImGui.SetNextItemWidth(75f);
             if (ImGui.BeginCombo("Job", selectedJob.ToString()))
             {
@@ -113,7 +136,6 @@ namespace DragoonMayCry.UI
                     if (ImGui.Selectable(jobs[i].ToString(), jobs[i] == selectedJob))
                     {
                         selectedJob = jobs[i];
-
                     }
                 }
                 ImGui.EndCombo();
@@ -197,14 +219,66 @@ namespace DragoonMayCry.UI
             #region duties
             if (ImGui.BeginChild("Duties"))
             {
-                for (var i = 0; i < displayedDuties.Count; i++)
+                if (ImGui.BeginTable("duties-table", 3, tableFlags))
                 {
-                    ImGui.Text(GetDutyName(displayedDuties[i].duty));
+
+                    ImGui.TableSetupColumn("Duty", ImGuiTableColumnFlags.WidthFixed, 540f);
+                    ImGui.TableSetupColumn("Normal", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoHeaderWidth, 180f);
+                    ImGui.TableSetupColumn("Estinien Must Die", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoHeaderWidth, 180f);
+                    ImGui.TableHeadersRow();
+                    for (var i = 0; i < displayedDuties.Count; i++)
+                    {
+                        ImGui.TableNextRow();
+
+                        #region duty
+                        ImGui.TableNextColumn();
+
+                        var scaledDutyTextureSize = dutyTextureSize * 1.4f;
+
+                        CenterText(GetDutyName(displayedDuties[i]), scaledDutyTextureSize);
+                        if (textureProvider.GetFromGame(GetTexturePath(displayedDuties[i])).TryGetWrap(out var tex, out var _))
+                        {
+                            ImGui.Image(tex.ImGuiHandle, scaledDutyTextureSize);
+                        }
+                        #endregion
+
+                        var jobRecords = GetJobRecord();
+
+                        #region normal
+                        ImGui.TableNextColumn();
+                        var normalRecord = GetDutyRecordPerDifficulty(1, jobRecords);
+
+                        DrawRank(displayedDuties[i].dutyId, normalRecord);
+                        CenterText(GetKillTime(displayedDuties[i].dutyId, normalRecord), ImGui.GetContentRegionAvail());
+
+                        var recordDate = GetRecordDate(displayedDuties[i].dutyId, normalRecord);
+                        if (!string.IsNullOrEmpty(recordDate))
+                        {
+                            CenterText(recordDate, ImGui.GetContentRegionAvail());
+                        }
+                        #endregion
+
+
+                        #region emd
+                        ImGui.TableNextColumn();
+
+                        var emdRecords = GetDutyRecordPerDifficulty(2, jobRecords);
+
+                        DrawRank(displayedDuties[i].dutyId, emdRecords);
+                        CenterText(GetKillTime(displayedDuties[i].dutyId, emdRecords), ImGui.GetContentRegionAvail());
+                        var emdRecordDate = GetRecordDate(displayedDuties[i].dutyId, emdRecords);
+                        if (!string.IsNullOrEmpty(emdRecordDate))
+                        {
+                            CenterText(emdRecordDate, ImGui.GetContentRegionAvail());
+                        }
+                        #endregion
+                    }
+                    ImGui.EndTable();
                 }
+
                 ImGui.EndChild();
             }
             #endregion
-
         }
 
         private void UpdateCategories()
@@ -258,7 +332,7 @@ namespace DragoonMayCry.UI
                 .ToList();
         }
 
-        private string GetDifficultyLabel(Difficulty diff)
+        private static string GetDifficultyLabel(Difficulty diff)
         {
             return diff switch
             {
@@ -268,8 +342,111 @@ namespace DragoonMayCry.UI
             };
         }
 
-        private string GetDutyName(TrackableDuty duty)
+        private uint GetContentId(DisplayedDuty displayedDuty)
         {
+            if (dutyToContentId.TryGetValue(displayedDuty.dutyId, out var contentId))
+            {
+                return contentId;
+            }
+
+            var contentFinderCondition = contentFinder.FirstOrDefault(content => content.TerritoryType.Row == displayedDuty.dutyId);
+            if (contentFinderCondition == null)
+            {
+                return 0;
+            }
+
+            dutyToContentId.Add(displayedDuty.dutyId, contentFinderCondition.Content.Row);
+            return dutyToContentId[displayedDuty.dutyId];
+        }
+
+        private string GetTexturePath(DisplayedDuty displayed)
+        {
+            var contentId = GetContentId(displayed);
+            if (contentId == 0 || !UIState.IsInstanceContentUnlocked(contentId))
+            {
+                return HiddenDutyTexPath;
+            }
+            return displayed.duty.TexPath;
+        }
+
+        private void CenterText(string text, Vector2 availableSpace)
+        {
+            var textWidth = ImGui.CalcTextSize(text).X;
+            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + (availableSpace.X - textWidth) * 0.5f);
+            ImGui.TextUnformatted(text);
+        }
+
+        private string GetKillTime(ushort dutyId, Dictionary<ushort, DutyRecord> difficultyRecord)
+        {
+            var defaultKillTime = "--:--";
+            if (!difficultyRecord.ContainsKey(dutyId))
+            {
+                return defaultKillTime;
+            }
+
+            var dutyResult = difficultyRecord[dutyId];
+            var minutes = $"{dutyResult.KillTime.Minutes}";
+            minutes = minutes.PadLeft(2, '0');
+            var seconds = $"{dutyResult.KillTime.Seconds}";
+            seconds = seconds.PadLeft(2, '0');
+
+            return $"{minutes}:{seconds}";
+        }
+
+        private void DrawRank(ushort dutyId, Dictionary<ushort, DutyRecord> difficultyRecord)
+        {
+            var rankIconPath = MissingRankTexPath;
+
+            if (difficultyRecord.TryGetValue(dutyId, out var dutyRecord))
+            {
+                if (StyleRankUI.styleUis.TryGetValue(dutyRecord.Result, out var style))
+                {
+                    rankIconPath = style.IconPath;
+                }
+            }
+
+            ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX() + 30, ImGui.GetCursorPosY() + 10));
+            if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), rankIconPath).TryGetWrap(out var rankIcon, out var _))
+            {
+                ImGui.Image(rankIcon.ImGuiHandle, rankSize);
+            }
+        }
+
+        private string GetRecordDate(ushort dutyId, Dictionary<ushort, DutyRecord> difficultyRecord)
+        {
+            if (difficultyRecord.TryGetValue(dutyId, out var dutyRecord))
+            {
+                return dutyRecord.Date.ToString(CultureInfo.CurrentCulture);
+            }
+            return "";
+        }
+
+        private JobRecord GetJobRecord()
+        {
+            if (characterRecords.TryGetValue(selectedJob, out var jobRecord))
+            {
+                return jobRecord;
+            }
+            return new JobRecord();
+        }
+
+        private Dictionary<ushort, DutyRecord> GetDutyRecordPerDifficulty(int column, JobRecord jobRecord)
+        {
+            if (column == 2)
+            {
+                return jobRecord.EmdRecord;
+            }
+            return jobRecord.Record;
+        }
+
+        private string GetDutyName(DisplayedDuty displayed)
+        {
+            var contentId = GetContentId(displayed);
+            if (contentId == 0 || !UIState.IsInstanceContentUnlocked(contentId))
+            {
+                return "???";
+            }
+            var duty = displayed.duty;
             if (duty.Difficulty == Difficulty.HighEnd)
             {
                 if (duty.Category == Category.Trials)

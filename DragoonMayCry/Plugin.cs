@@ -73,6 +73,11 @@ public unsafe class Plugin : IDalamudPlugin
 
         Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
+            HelpMessage = "opens record history"
+        });
+
+        Service.CommandManager.AddHandler("/dmc conf", new CommandInfo(OnCommand)
+        {
             HelpMessage = "opens configuration menu"
         });
 
@@ -123,11 +128,16 @@ public unsafe class Plugin : IDalamudPlugin
         Service.CommandManager.RemoveHandler(CommandName);
     }
 
-
-
     private void OnCommand(string command, string args)
     {
-        PluginUi?.ToggleConfigUI();
+        if (args.Contains("conf"))
+        {
+            PluginUi?.ToggleConfigUI();
+        }
+        else
+        {
+            PluginUi?.ToggleCharacterRecords();
+        }
     }
 
     public static void OnActiveOutsideInstanceConfChange(object? sender, bool activeOutsideInstance)

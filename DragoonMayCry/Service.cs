@@ -19,5 +19,6 @@ namespace DragoonMayCry
         [PluginService] public static INotificationManager NotificationManager { get; private set; }
         [PluginService] public static IChatGui ChatGui { get; private set; }
         [PluginService] public static IDutyState DutyState { get; private set; }
+        [PluginService] public static IDataManager DataManager { get; private set; }
     }
 }

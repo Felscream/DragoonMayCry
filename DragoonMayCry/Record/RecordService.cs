@@ -184,8 +184,8 @@ namespace DragoonMayCry.Record
             var playerLevel = playerState.Player != null ? playerState.Player.Level : 0;
             return !ready
                     || !trackableDuties.ContainsKey(finalRank.InstanceId)
-                    || !Plugin.IsEnabledForCurrentJob();
-            //|| trackableDuties[finalRank.InstanceId].LvlSync < playerLevel;
+                    || !Plugin.IsEnabledForCurrentJob()
+                    || trackableDuties[finalRank.InstanceId].LvlSync < playerLevel;
         }
 
         private JobRecord GetJobRecord(FinalRank finalRank, JobIds currentJob, bool emdEnabled)

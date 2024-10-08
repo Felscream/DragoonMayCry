@@ -45,7 +45,7 @@ namespace DragoonMayCry.UI
 
             HowItWorksWindow = new HowItWorksWindow();
 
-            CharacterRecordWindow = new(recordService);
+
 
             ConfigWindow = new ConfigWindow(Plugin.Configuration!, JobConfigurationWindow, HowItWorksWindow);
             ConfigWindow.ActiveOutsideInstanceChange += Plugin.OnActiveOutsideInstanceConfChange;
@@ -53,6 +53,8 @@ namespace DragoonMayCry.UI
             ConfigWindow.MuffledOnDeathChange += dynamicBgmService.OnMuffledOnDeathChange;
             ConfigWindow.SfxVolumeChange += AudioService.Instance.OnSfxVolumeChange;
             ConfigWindow.BgmVolumeChange += AudioService.Instance.OnBgmVolumeChange;
+
+            CharacterRecordWindow = new(recordService, ConfigWindow);
 
             styleRankUi = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator, playerActionTracker);
 
@@ -76,7 +78,7 @@ namespace DragoonMayCry.UI
         public void Dispose()
         {
             pluginInterface.UiBuilder.Draw -= DrawUI;
-            pluginInterface.UiBuilder.OpenMainUi -= ToggleConfigUI;
+            pluginInterface.UiBuilder.OpenMainUi -= ToggleCharacterRecords;
             pluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUI;
 
             windowSystem.RemoveAllWindows();
