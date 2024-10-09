@@ -524,7 +524,7 @@ namespace DragoonMayCry.Score.Action
                 && !actionManager->isCasting
                 && limitBreakCast == null
                 && !isIncapacitated
-                && (canTargetEnemy || playerState.IsDead))
+                && canTargetEnemy)
             {
                 combatWastedGcd += ImGui.GetIO().DeltaTime;
             }
