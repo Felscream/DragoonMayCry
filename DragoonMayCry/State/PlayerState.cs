@@ -207,7 +207,7 @@ namespace DragoonMayCry.State
                 return false;
             }
             return address->GetIsTargetable()
-                && ActionManager.CanUseActionOnTarget(142, address);
+                && (ActionManager.CanUseActionOnTarget(142, address) || IsDead);
         }
 
         private ISet<uint> GetEnemyListObjectIds()
