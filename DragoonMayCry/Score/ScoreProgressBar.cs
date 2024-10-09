@@ -138,7 +138,6 @@ namespace DragoonMayCry.Score
         {
             return this.Progress < demotionThreshold
                    && !playerState.IsIncapacitated()
-                   && !playerState.IsDead
                    && styleRankHandler.CurrentStyle.Value > StyleType.D
                    && !demotionApplicationStopwatch.IsRunning
                    && GetTimeSinceLastPromotion() > PromotionSafeguardDuration
