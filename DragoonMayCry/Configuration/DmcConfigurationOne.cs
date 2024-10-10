@@ -23,6 +23,8 @@ public class DmcConfigurationOne : IPluginConfiguration
     public Setting<bool> ApplyGameVolumeBgm = new(false);
     public Setting<bool> EnableDynamicBgm = new(false);
     public Setting<bool> EnableMuffledEffectOnDeath = new(false);
+    public Setting<bool> EnabledFinalRankChatLogging = new(true);
+    public Setting<bool> LockScoreWindow { get; set; } = new(true);
     public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);
     public readonly Dictionary<JobIds, JobConfiguration> JobConfiguration = new()
     {
@@ -48,8 +50,6 @@ public class DmcConfigurationOne : IPluginConfiguration
         { JobIds.WAR, new JobConfiguration() },
         { JobIds.WHM, new JobConfiguration() },
     };
-
-    public Setting<bool> LockScoreWindow { get; set; } = new(true);
 
     public void Save()
     {
