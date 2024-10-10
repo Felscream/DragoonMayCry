@@ -29,6 +29,10 @@ namespace DragoonMayCry.Score.Rank
         private FinalRank DetermineFinalRank(float wastedGcd, ushort instanceId = 0)
         {
             var uptimePercentage = Math.Max(combatTimer.Elapsed.TotalSeconds - wastedGcd, 0) / Math.Max(combatTimer.Elapsed.TotalSeconds, 0.1);
+
+#if DEBUG
+            Service.Log.Debug($"uptime % {uptimePercentage} wasted GCD {wastedGcd} s");
+#endif
             var rank = StyleType.D;
             if (Plugin.IsEmdModeEnabled())
             {
@@ -75,7 +79,7 @@ namespace DragoonMayCry.Score.Rank
         private void OnDutyCompletedWastedGcd(object? sender, PlayerActionTracker.DutyCompletionStats dutyCompletionStats)
         {
             combatTimer.Stop();
-            if (!Plugin.IsEnabledForCurrentJob())
+            if (!CanDisplayFinalRank())
             {
                 return;
             }
@@ -85,6 +89,10 @@ namespace DragoonMayCry.Score.Rank
 
         private void PrintFinalRank(FinalRank finalRank)
         {
+            if (!Plugin.Configuration!.EnabledFinalRankChatLogging)
+            {
+                return;
+            }
             var minutes = $"{finalRank.KillTime.Minutes}";
             minutes = minutes.PadLeft(2, '0');
             var seconds = $"{finalRank.KillTime.Seconds}";

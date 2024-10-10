@@ -91,6 +91,7 @@ public class ConfigWindow : Window
                 }
                 AddLabel("Active outside instance", cursorPos);
             })
+            .AddConfigCheckbox("Output final rank to chat", configuration.EnabledFinalRankChatLogging, "The message will be sent in the echo channel")
             .AddButton("How it works", () => howItWorksWindow.Toggle())
             .AddButton("Open job configuration", () => jobConfigurationWindow.Toggle())
             .Draw();
