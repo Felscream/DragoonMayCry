@@ -16,7 +16,7 @@ namespace DragoonMayCry.Record
     public class RecordService
     {
         public Extension[] Extensions { get; private set; } = [];
-        public EventHandler<Dictionary<JobIds, JobRecord>> CharacterRecordsChanged;
+        public EventHandler<Dictionary<JobIds, JobRecord>>? CharacterRecordsChanged;
 
         private const string TrackedDutiesResource = "DragoonMayCry.Data.TrackedDuties.json";
         private readonly IDalamudPluginInterface pluginInterface;
@@ -51,7 +51,6 @@ namespace DragoonMayCry.Record
                 return;
             }
             var assembly = Assembly.GetExecutingAssembly();
-            var resourceName = assembly.GetManifestResourceNames();
             try
             {
                 using (var stream = assembly.GetManifestResourceStream(TrackedDutiesResource))
@@ -108,13 +107,13 @@ namespace DragoonMayCry.Record
             var characterRecordPath = GetCharacterRecordsPath(characterId);
             if (!File.Exists(characterRecordPath))
             {
-                return new Dictionary<JobIds, JobRecord>();
+                return [];
             }
 
             try
             {
                 var localRecords = File.ReadAllText(characterRecordPath);
-                return JsonConvert.DeserializeObject<Dictionary<JobIds, JobRecord>>(localRecords) ?? new Dictionary<JobIds, JobRecord>();
+                return JsonConvert.DeserializeObject<Dictionary<JobIds, JobRecord>>(localRecords) ?? [];
             }
             catch (Exception e)
             {
@@ -125,7 +124,7 @@ namespace DragoonMayCry.Record
                 var recordBackUp = $"{recordDirectoryPath}/{characterId}_back.json";
                 File.Move(characterRecordPath, recordBackUp);
                 Service.Log.Warning($"This character records are unreadable. They have been backed up here {recordBackUp}. New empty records will be used.");
-                return new Dictionary<JobIds, JobRecord>();
+                return [];
             }
         }
 
