@@ -1,4 +1,5 @@
 using DragoonMayCry.Score.Model;
+using Newtonsoft.Json;
 using System;
 
 namespace DragoonMayCry.Record.Model
@@ -13,6 +14,14 @@ namespace DragoonMayCry.Record.Model
             Result = result;
             KillTime = killTime;
             Date = DateOnly.FromDateTime(DateTime.Now);
+        }
+
+        [JsonConstructor]
+        public DutyRecord(StyleType result, TimeSpan killTime, DateOnly date)
+        {
+            Result = result;
+            KillTime = killTime;
+            Date = date;
         }
     }
 }
