@@ -209,8 +209,6 @@ namespace DragoonMayCry
         }
     }
 
-
-
     class AssetsManifest
     {
         [JsonProperty("version")]

@@ -26,7 +26,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
         private readonly IStyleAnnouncer morrisonAnnouncer;
         private readonly float sfxCooldown = 1f;
         private readonly Dictionary<SoundId, int> soundIdsNextAvailability = new();
-        private readonly Random random = new Random();
+        private readonly Random random = new();
         private readonly PlayerState playerState;
         private bool isCastingLimitBreak;
 
@@ -320,7 +320,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             {
                 AnnouncerType.DmC => "DmC: Devil May Cry",
                 AnnouncerType.DmC5 => "Devil May Cry 5",
-                AnnouncerType.DmC5Balrog => "Devil May Cry 5 / Balrog VA",
+                AnnouncerType.DmC5Balrog => "Devil May Cry 5 / Michael Schwalbe",
                 AnnouncerType.Nico => "Nico",
                 AnnouncerType.Morrison => "Morrison",
                 _ => "Unknown"

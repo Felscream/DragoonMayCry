@@ -3,6 +3,7 @@ using Dalamud.Plugin;
 using DragoonMayCry.Audio;
 using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.StyleAnnouncer;
+using DragoonMayCry.Record;
 using DragoonMayCry.Score;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Rank;
@@ -19,6 +20,7 @@ namespace DragoonMayCry.UI
         private ConfigWindow ConfigWindow { get; init; }
         private HowItWorksWindow HowItWorksWindow { get; init; }
         private JobConfigurationWindow JobConfigurationWindow { get; init; }
+        private CharacterRecordWindow CharacterRecordWindow { get; init; }
 
         private readonly StyleRankUI styleRankUi;
         private readonly FinalRankCalculator finalRankCalculator;
@@ -33,7 +35,8 @@ namespace DragoonMayCry.UI
             FinalRankCalculator finalRankCalculator,
             StyleAnnouncerService styleAnnouncerService,
             DynamicBgmService dynamicBgmService,
-            PlayerActionTracker playerActionTracker)
+            PlayerActionTracker playerActionTracker,
+            RecordService recordService)
         {
             this.finalRankCalculator = finalRankCalculator;
             JobConfigurationWindow = new(Plugin.Configuration!);
@@ -42,6 +45,8 @@ namespace DragoonMayCry.UI
 
             HowItWorksWindow = new HowItWorksWindow();
 
+
+
             ConfigWindow = new ConfigWindow(Plugin.Configuration!, JobConfigurationWindow, HowItWorksWindow);
             ConfigWindow.ActiveOutsideInstanceChange += Plugin.OnActiveOutsideInstanceConfChange;
             ConfigWindow.ToggleDynamicBgmChange += dynamicBgmService.ToggleDynamicBgm;
@@ -49,15 +54,18 @@ namespace DragoonMayCry.UI
             ConfigWindow.SfxVolumeChange += AudioService.Instance.OnSfxVolumeChange;
             ConfigWindow.BgmVolumeChange += AudioService.Instance.OnBgmVolumeChange;
 
+            CharacterRecordWindow = new(recordService, ConfigWindow);
+
             styleRankUi = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator, playerActionTracker);
 
             KamiCommon.WindowManager.AddWindow(JobConfigurationWindow);
             KamiCommon.WindowManager.AddWindow(ConfigWindow);
             KamiCommon.WindowManager.AddWindow(HowItWorksWindow);
+            KamiCommon.WindowManager.AddWindow(CharacterRecordWindow);
 
             pluginInterface = Plugin.PluginInterface;
             pluginInterface.UiBuilder.Draw += DrawUI;
-            pluginInterface.UiBuilder.OpenMainUi += ToggleHowItWorks;
+            pluginInterface.UiBuilder.OpenMainUi += ToggleCharacterRecords;
             pluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUI;
 
             this.playerState = PlayerState.GetInstance();
@@ -70,7 +78,7 @@ namespace DragoonMayCry.UI
         public void Dispose()
         {
             pluginInterface.UiBuilder.Draw -= DrawUI;
-            pluginInterface.UiBuilder.OpenMainUi -= ToggleConfigUI;
+            pluginInterface.UiBuilder.OpenMainUi -= ToggleCharacterRecords;
             pluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUI;
 
             windowSystem.RemoveAllWindows();
@@ -127,9 +135,9 @@ namespace DragoonMayCry.UI
             }
         }
 
-        public void ToggleHowItWorks()
+        public void ToggleCharacterRecords()
         {
-            if (KamiCommon.WindowManager.GetWindowOfType<HowItWorksWindow>() is { } window)
+            if (KamiCommon.WindowManager.GetWindowOfType<CharacterRecordWindow>() is { } window)
             {
                 window.IsOpen = !window.IsOpen;
             }

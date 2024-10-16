@@ -10,7 +10,7 @@
       <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>1.0.0.0</Version>
+    <Version>1.1.0.2</Version>
     <Description>DragoonMayCry</Description>
     <PackageProjectUrl>https://github.com/Felscream/DragoonMayCry</PackageProjectUrl>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
@@ -26,6 +26,8 @@
       <EmbeddedResource Include="Assets\SS.png" />
       <EmbeddedResource Include="Assets\SSS.png" />
       <EmbeddedResource Include="Assets\GaugeDefault.png" />
+      <EmbeddedResource Include="Assets\MissingRank.png" />
+      <EmbeddedResource Include="Data\TrackedDuties.json" />
   </ItemGroup>
   
   <ItemGroup>

@@ -29,7 +29,7 @@ namespace DragoonMayCry.UI
         }
 
         public EventHandler<JobAnnouncerType>? JobAnnouncerTypeChange;
-        public EventHandler<JobIds> EnabledForJobChange;
+        public EventHandler<JobIds>? EnabledForJobChange;
         private readonly DmcConfigurationOne configuration;
         private readonly IList<AnnouncerType> announcers = Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>().ToList();
         private readonly IList<JobConfiguration.BgmConfiguration> bgmOptions = Enum.GetValues(typeof(JobConfiguration.BgmConfiguration)).Cast<JobConfiguration.BgmConfiguration>().ToList();
@@ -52,8 +52,6 @@ namespace DragoonMayCry.UI
             }
             selected = selectableJobConfiguration[0];
         }
-
-
 
         public override void Draw()
         {
@@ -87,8 +85,6 @@ namespace DragoonMayCry.UI
 
                 ImGui.EndTable();
             }
-
-
         }
 
         private void ApplyToAll(bool enabled, AnnouncerType announcer, JobConfiguration.BgmConfiguration bgm)
@@ -138,8 +134,6 @@ namespace DragoonMayCry.UI
                 ImGui.EndListBox();
             }
         }
-
-
 
         public void Dispose()
         {

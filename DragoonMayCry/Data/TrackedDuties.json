@@ -1,0 +1,186 @@
+[
+    {
+        "Name": "Stormblood",
+        "Categories": [
+            {
+                "Type": 2,
+                "Subcategories": []
+            }
+        ],
+        "Instances": {
+            "733": {
+                "Name": "The Binding Coil of Bahamut",
+                "LvlSync": 70,
+                "Difficulty": 1,
+                "Category": 2,
+                "TexPath": "ui/icon/112000/112261_hr1.tex"
+            },
+            "777": {
+                "Name": "The Weapon's Refrain",
+                "LvlSync": 70,
+                "Difficulty": 1,
+                "Category": 2,
+                "TexPath": "ui/icon/112000/112296_hr1.tex"
+            }
+        }
+    },
+    {
+        "Name": "Shadowbringers",
+        "Categories": [
+            {
+                "Type": 2,
+                "Subcategories": []
+            }
+        ],
+        "Instances": {
+            "887": {
+                "Name": "The Epic of Alexander",
+                "LvlSync": 80,
+                "Difficulty": 1,
+                "Category": 2,
+                "TexPath": "ui/icon/112000/112374_hr1.tex"
+            }
+        }
+    },
+    {
+        "Name": "Endwalker",
+        "Categories": [
+            {
+                "Type": 2,
+                "Subcategories": []
+            }
+        ],
+        "Instances": {
+            "968": {
+                "Name": "Dragonsong's Reprise",
+                "LvlSync": 90,
+                "Difficulty": 1,
+                "Category": 2,
+                "TexPath": "ui/icon/112000/112469_hr1.tex"
+            },
+            "1122": {
+                "Name": "The Omega Protocol",
+                "LvlSync": 90,
+                "Difficulty": 1,
+                "Category": 2,
+                "TexPath": "ui/icon/112000/112518_hr1.tex"
+            }
+        }
+    },
+    {
+        "Name": "Dawntrail",
+        "Categories": [
+            {
+                "Type": 0,
+                "Subcategories": []
+            },
+            {
+                "Type": 1,
+                "Subcategories": [
+                    "AAC Light-heavyweight"
+                ]
+            }
+        ],
+        "Instances": {
+            "1195": {
+                "Name": "Worqor Lar Dor",
+                "LvlSync": 94,
+                "Difficulty": 0,
+                "Category": 0,
+                "TexPath": "ui/icon/112000/112562_hr1.tex"
+            },
+            "1196": {
+                "Name": "Worqor Lar Dor",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0,
+                "TexPath": "ui/icon/112000/112563_hr1.tex"
+            },
+            "1200": {
+                "Name": "Everkeep",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 0,
+                "TexPath": "ui/icon/112000/112564_hr1.tex"
+            },
+            "1201": {
+                "Name": "Everkeep",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0,
+                "TexPath": "ui/icon/112000/112565_hr1.tex"
+            },
+            "1202": {
+                "Name": "The Interphos",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 0,
+                "TexPath": "ui/icon/112000/112566_hr1.tex"
+            },
+            "1225": {
+                "Name": "AAC Light-heavyweight M1",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 1,
+                "Subcategory": "AAC Light-heavyweight",
+                "TexPath": "ui/icon/112000/112567_hr1.tex"
+            },
+            "1226": {
+                "Name": "AAC Light-heavyweight M1",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 1,
+                "Subcategory": "AAC Light-heavyweight",
+                "TexPath": "ui/icon/112000/112568_hr1.tex"
+            },
+            "1227": {
+                "Name": "AAC Light-heavyweight M2",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 1,
+                "Subcategory": "AAC Light-heavyweight",
+                "TexPath": "ui/icon/112000/112569_hr1.tex"
+            },
+            "1228": {
+                "Name": "AAC Light-heavyweight M2",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 1,
+                "Subcategory": "AAC Light-heavyweight",
+                "TexPath": "ui/icon/112000/112570_hr1.tex"
+            },
+            "1229": {
+                "Name": "AAC Light-heavyweight M3",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 1,
+                "Subcategory": "AAC Light-heavyweight",
+                "TexPath": "ui/icon/112000/112571_hr1.tex"
+            },
+            "1230": {
+                "Name": "AAC Light-heavyweight M3",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 1,
+                "Subcategory": "AAC Light-heavyweight",
+                "TexPath": "ui/icon/112000/112572_hr1.tex"
+            },
+            "1231": {
+                "Name": "AAC Light-heavyweight M4",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 1,
+                "Subcategory": "AAC Light-heavyweight",
+                "TexPath": "ui/icon/112000/112573_hr1.tex"
+            },
+            "1232": {
+                "Name": "AAC Light-heavyweight M4",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 1,
+                "Subcategory": "AAC Light-heavyweight",
+                "TexPath": "ui/icon/112000/112574_hr1.tex"
+            }
+        }
+    }
+]

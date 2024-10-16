@@ -40,14 +40,36 @@ namespace DragoonMayCry.UI
             ImGui.Text("- Dying is bad.");
 
             ImGui.TextColored(goldColor, "\nFinal rank");
-            ImGui.Text("- A final rank between D and S is attributed at the end of combat by selecting the tier in which you spent the most time in.");
-            ImGui.Text("- Every blunder will substract time spent in S tier.");
+            ImGui.Text("A final rank between D and S is attributed at the end of combat depending on your GCD uptime :");
+            ImGui.Indent();
+            ImGui.TextUnformatted("- Above 98 % : S");
+            ImGui.TextUnformatted("- 97 % to 98 % : A");
+            ImGui.TextUnformatted("- 95 % to 97 % : B");
+            ImGui.TextUnformatted("- 93 % to 95 % : C");
+            ImGui.TextUnformatted("- 93 % and below : D");
+            ImGui.Text("Failing a mechanic incurs a 3 seconds uptime penalty :");
+            ImGui.Unindent();
 
             ImGui.TextColored(goldColor, "\nEstinien Must Die");
             ImGui.Text("Estinien Must Die adds some modifiers");
-            ImGui.Text("- Thresholds are generally 20 percent higher");
+            ImGui.TextUnformatted("- Rank thresholds are generally 20 % higher");
             ImGui.Text("- You have no breathing room : you MUST press your GCD if an enemy target is available");
             ImGui.Text("- Clipping your GCD will rank you down");
+            ImGui.Text("- Final rank GCD uptime thresholds are :");
+            ImGui.Indent();
+            ImGui.TextUnformatted("- Above 99.1 % : S");
+            ImGui.TextUnformatted("- 98 % to 99.1 % : A");
+            ImGui.TextUnformatted("- 97 % to 98 % : B");
+            ImGui.TextUnformatted("- 95 % to 97 % : C");
+            ImGui.TextUnformatted("- 95 % and below : D");
+            ImGui.Unindent();
+
+            ImGui.TextColored(goldColor, "\nRecords");
+            ImGui.Text("Records are saved on a character per character basis.");
+            ImGui.Text("You must complete the duty level synced");
+            ImGui.Text("At the end of a successful duty completion, your final rank is processed for your current character, with the current job.");
+            ImGui.Text("Only your best rank on the selected job is kept.");
+            ImGui.Text("Only duties available in the 'Character records' window are tracked");
 
             ImGui.Text("\nI'd appreciate any feedback or bug report to improve the experience. You can find me on the XIVLauncher & Dalamud discord server.");
 

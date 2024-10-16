@@ -1,133 +1,181 @@
+using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using static DragoonMayCry.Score.Rank.StyleRankHandler;
 
 namespace DragoonMayCry.Score.Rank
 {
     public class FinalRankCalculator : IResettable
     {
         public EventHandler<StyleType>? FinalRankCalculated;
+        public EventHandler<FinalRank>? DutyCompletedFinalRank;
+        public FinalRank FinalRank { get; private set; }
         private readonly PlayerState playerState;
-        private Dictionary<StyleType, double> timeInEachTier;
-        private readonly Stopwatch tierTimer;
-        private StyleType currentTier = StyleType.NoStyle;
-        public FinalRankCalculator(PlayerState playerState, StyleRankHandler styleRankHandler)
+        private readonly PlayerActionTracker playerActionTracker;
+        private readonly Stopwatch combatTimer;
+
+        public FinalRankCalculator(PlayerState playerState, PlayerActionTracker playerActionTracker)
         {
-            timeInEachTier = new Dictionary<StyleType, double>();
-            tierTimer = new Stopwatch();
-            styleRankHandler.StyleRankChange += OnRankChange;
+            combatTimer = new Stopwatch();
+            this.playerActionTracker = playerActionTracker;
+            this.playerActionTracker.TotalCombatWastedGcd += OnTotalCombatWastedGcd;
+            this.playerActionTracker.DutyCompletedWastedGcd += OnDutyCompletedWastedGcd;
             this.playerState = playerState;
             this.playerState.RegisterCombatStateChangeHandler(OnCombat);
         }
 
-        private StyleType DetermineFinalRank()
+        private FinalRank DetermineFinalRank(float wastedGcd, ushort instanceId = 0)
         {
-            var finalRank = StyleType.D;
-            double maxTime = 0;
+            var uptimePercentage = Math.Max(combatTimer.Elapsed.TotalSeconds - wastedGcd, 0) / Math.Max(combatTimer.Elapsed.TotalSeconds, 0.1);
 
-            foreach (var entry in timeInEachTier)
+#if DEBUG
+            Service.Log.Debug($"uptime % {uptimePercentage} wasted GCD {wastedGcd} s");
+#endif
+            var rank = StyleType.D;
+            if (Plugin.IsEmdModeEnabled())
             {
-                var timeInTier = entry.Value;
-                if (timeInTier > maxTime)
-                {
-                    maxTime = timeInTier;
-                    finalRank = entry.Key;
-                }
+                rank = GetFinalRankEmd(uptimePercentage);
             }
-            return finalRank;
+            else
+            {
+                rank = GetFinalRank(uptimePercentage);
+            }
 
+            return new FinalRank(rank, new TimeSpan(combatTimer.ElapsedTicks), instanceId);
         }
 
         private void OnCombat(object? sender, bool enteredCombat)
         {
             if (!CanDisplayFinalRank())
             {
+                combatTimer.Stop();
                 return;
             }
 
             if (enteredCombat)
             {
-                timeInEachTier = new Dictionary<StyleType, double>();
-                tierTimer.Start();
+                combatTimer.Restart();
             }
-            else if (tierTimer.IsRunning)
+            else
             {
-                saveTimeInTier(currentTier);
-                tierTimer.Reset();
-                var finalRank = DetermineFinalRank();
-                FinalRankCalculated?.Invoke(this, finalRank);
+                combatTimer.Stop();
             }
+        }
+
+        private void OnTotalCombatWastedGcd(object? sender, float wastedGcd)
+        {
+            combatTimer.Stop();
+            if (!CanDisplayFinalRank())
+            {
+                return;
+            }
+            FinalRank = DetermineFinalRank(wastedGcd);
+            FinalRankCalculated?.Invoke(this, FinalRank.Rank);
+            PrintFinalRank(FinalRank);
+        }
+
+        private void OnDutyCompletedWastedGcd(object? sender, PlayerActionTracker.DutyCompletionStats dutyCompletionStats)
+        {
+            combatTimer.Stop();
+            if (!CanDisplayFinalRank())
+            {
+                return;
+            }
+            FinalRank = DetermineFinalRank(dutyCompletionStats.WastedGcd, dutyCompletionStats.InstanceId);
+            DutyCompletedFinalRank?.Invoke(this, FinalRank);
+        }
+
+        private void PrintFinalRank(FinalRank finalRank)
+        {
+            if (!Plugin.Configuration!.EnabledFinalRankChatLogging)
+            {
+                return;
+            }
+            var minutes = $"{finalRank.KillTime.Minutes}";
+            minutes = minutes.PadLeft(2, '0');
+            var seconds = $"{finalRank.KillTime.Seconds}";
+            seconds = seconds.PadLeft(2, '0');
+            Service.ChatGui.Print($"[DragoonMayCry] [{minutes}:{seconds}] Final rank : {finalRank.Rank}");
         }
 
         public bool CanDisplayFinalRank()
         {
             return JobHelper.IsCombatJob(playerState.GetCurrentJob())
-            && !playerState.IsInPvp()
-            && Plugin.IsEnabledForCurrentJob()
-            && (playerState.IsInsideInstance
-                    || Plugin.Configuration!.ActiveOutsideInstance);
+                && !playerState.IsInPvp()
+                && Plugin.IsEnabledForCurrentJob()
+                && (playerState.IsInsideInstance
+                        || Plugin.Configuration!.ActiveOutsideInstance);
         }
 
-        private void OnRankChange(object? sender, RankChangeData rankChange)
+        private static StyleType GetFinalRank(double uptimePercentage)
         {
-            if (!CanDisplayFinalRank())
+            if (uptimePercentage > 0.98)
             {
-                return;
+                return StyleType.S;
             }
 
-            currentTier = rankChange.NewRank;
-            if (!tierTimer.IsRunning)
+            if (uptimePercentage > 0.97)
             {
-                return;
-            }
-            saveTimeInTier(rankChange.PreviousRank);
-            if (rankChange.IsBlunder)
-            {
-                if (timeInEachTier.ContainsKey(StyleType.S))
-                {
-                    timeInEachTier[StyleType.S] -= 10d;
-                }
-                else
-                {
-                    timeInEachTier.Add(StyleType.S, -10d);
-                }
+                return StyleType.A;
             }
 
-            if (!timeInEachTier.ContainsKey(currentTier))
+            if (uptimePercentage > 0.95)
             {
-                timeInEachTier.Add(currentTier, 0);
+                return StyleType.B;
             }
-            tierTimer.Restart();
+
+            if (uptimePercentage > 0.93)
+            {
+                return StyleType.C;
+            }
+
+            return StyleType.D;
         }
 
-        private void saveTimeInTier(StyleType tier)
+        private static StyleType GetFinalRankEmd(double uptimePercentage)
         {
-            if (tier == StyleType.NoStyle)
+            if (uptimePercentage > 0.991)
             {
-                tier = StyleType.D;
+                return StyleType.S;
             }
-            else if (tier == StyleType.S || tier == StyleType.SS || tier == StyleType.SSS)
+
+            if (uptimePercentage > 0.98)
             {
-                tier = StyleType.S;
+                return StyleType.A;
             }
-            if (!timeInEachTier.ContainsKey(tier))
+
+            if (uptimePercentage > 0.97)
             {
-                timeInEachTier.Add(tier, tierTimer.Elapsed.TotalSeconds);
+                return StyleType.B;
             }
-            else
+
+            if (uptimePercentage > 0.95)
             {
-                timeInEachTier[tier] += tierTimer.Elapsed.TotalSeconds;
+                return StyleType.C;
             }
+
+            return StyleType.D;
         }
 
         public void Reset()
         {
-            timeInEachTier = new Dictionary<StyleType, double>();
-            tierTimer.Reset();
+            combatTimer.Reset();
+        }
+    }
+
+    public struct FinalRank
+    {
+        public StyleType Rank { get; private set; }
+        public TimeSpan KillTime { get; private set; }
+        public ushort InstanceId { get; private set; }
+
+        public FinalRank(StyleType rank, TimeSpan killTime, ushort instanceId)
+        {
+            Rank = rank;
+            KillTime = killTime;
+            InstanceId = instanceId;
         }
     }
 }
