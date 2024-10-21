@@ -135,10 +135,11 @@ namespace DragoonMayCry.UI
         {
             return job switch
             {
-                JobId.AST => JobModifiers.HealerModifiers,
+
                 JobId.BRD => JobModifiers.BrdModifiers,
-                JobId.SGE => JobModifiers.HealerModifiers,
+                JobId.AST => JobModifiers.HealerModifiers,
                 JobId.SCH => JobModifiers.HealerModifiers,
+                JobId.SGE => JobModifiers.HealerModifiers,
                 JobId.WHM => JobModifiers.HealerModifiers,
                 _ => ""
             };

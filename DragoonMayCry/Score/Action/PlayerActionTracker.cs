@@ -125,6 +125,7 @@ namespace DragoonMayCry.Score.Action
             actionHistory = new();
             luminaActionCache = LuminaCache<LuminaAction>.Instance;
             playerState = PlayerState.GetInstance();
+            currentJob = playerState.GetCurrentJob();
             dutyState = Service.DutyState;
             dutyState.DutyCompleted += OnDutyCompleted;
 
@@ -248,6 +249,12 @@ namespace DragoonMayCry.Score.Action
             if (type == PlayerActionType.LimitBreak)
             {
                 StartLimitBreakUse((uint)actionId);
+            }
+
+
+            if (jobActionModule == null)
+            {
+                return;
             }
 
             var bonusPoints = jobActionModule?.OnAction((uint)actionId);
@@ -478,7 +485,7 @@ namespace DragoonMayCry.Score.Action
 
         private bool IsGcdClipped(float animationLock)
         {
-            if (!Plugin.IsEnabledForCurrentJob())
+            if (!Plugin.IsEnabledForCurrentJob() || !Plugin.Configuration!.JobConfiguration.ContainsKey(currentJob))
             {
                 return animationLock > 0.2f;
             }
@@ -534,7 +541,7 @@ namespace DragoonMayCry.Score.Action
 
         private float GetGcdDropThreshold()
         {
-            if (!Plugin.IsEnabledForCurrentJob())
+            if (!Plugin.IsEnabledForCurrentJob() || !Plugin.Configuration!.JobConfiguration.ContainsKey(currentJob))
             {
                 return DefaultGcdDropThreshold;
             }

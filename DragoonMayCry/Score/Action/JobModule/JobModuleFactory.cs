@@ -21,6 +21,7 @@ namespace DragoonMayCry.Score.Action.JobModule
                 JobId.AST => new AST(scoreManager),
                 JobId.BRD => new BRD(scoreManager),
                 JobId.SCH => new SCH(scoreManager),
+                JobId.SGE => new SGE(scoreManager),
                 JobId.WHM => new WHM(scoreManager),
                 _ => null
             };
