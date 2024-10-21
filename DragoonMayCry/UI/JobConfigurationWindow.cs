@@ -93,7 +93,7 @@ namespace DragoonMayCry.UI
             {
                 entry.Value.Announcer = new(targetConfiguration.Announcer.Value);
                 entry.Value.Bgm = new(targetConfiguration.Bgm.Value);
-                entry.Value.GcdClippingThreshold = new(targetConfiguration.GcdClippingThreshold.Value);
+                entry.Value.GcdDropThreshold = new(targetConfiguration.GcdDropThreshold.Value);
             }
             KamiCommon.SaveConfiguration();
         }

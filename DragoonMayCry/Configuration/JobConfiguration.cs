@@ -19,6 +19,6 @@ namespace DragoonMayCry.Configuration
         public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);
         public Setting<BgmConfiguration> Bgm = new(BgmConfiguration.Off);
         public Setting<bool> EstinienMustDie = new(false);
-        public Setting<float> GcdClippingThreshold = new(0.2f);
+        public Setting<float> GcdDropThreshold = new(0.2f);
     }
 }

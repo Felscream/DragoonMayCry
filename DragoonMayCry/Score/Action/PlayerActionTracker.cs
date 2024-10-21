@@ -477,7 +477,7 @@ namespace DragoonMayCry.Score.Action
             {
                 return animationLock != 0.1f;
             }
-            return animationLock > Plugin.Configuration!.JobConfiguration[currentJob].GcdClippingThreshold.Value;
+            return animationLock > Plugin.Configuration!.JobConfiguration[currentJob].GcdDropThreshold.Value;
         }
 
         private unsafe void DetectClipping()
@@ -528,7 +528,7 @@ namespace DragoonMayCry.Score.Action
             {
                 return DefaultGcdDropThreshold;
             }
-            return Plugin.IsEmdModeEnabled() ? 0 : Plugin.Configuration!.JobConfiguration[currentJob].GcdClippingThreshold.Value;
+            return Plugin.IsEmdModeEnabled() ? 0 : Plugin.Configuration!.JobConfiguration[currentJob].GcdDropThreshold.Value;
         }
 
         private unsafe void DetectWastedGCD()

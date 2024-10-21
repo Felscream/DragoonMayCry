@@ -88,9 +88,9 @@ namespace DragoonMayCry.UI
                     var curPos = ImGui.GetCursorPos();
                     ImGui.SetNextItemWidth(200f);
 
-                    if (ImGui.InputFloat("GCD clip / drop threshold", ref configuration.GcdClippingThreshold.Value, 0.01f, 0.1f))
+                    if (ImGui.InputFloat("GCD clip / drop threshold", ref configuration.GcdDropThreshold.Value, 0.01f, 0.1f))
                     {
-                        configuration.GcdClippingThreshold.Value = Math.Min(1, Math.Max(0, configuration.GcdClippingThreshold.Value));
+                        configuration.GcdDropThreshold.Value = Math.Min(1, Math.Max(0, configuration.GcdDropThreshold.Value));
                         KamiCommon.SaveConfiguration();
                     }
                     ImGui.EndDisabled();
