@@ -4,6 +4,7 @@ using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
 using DragoonMayCry.State;
+using DragoonMayCry.UI.Text;
 using ImGuiNET;
 using KamiLib;
 using KamiLib.Drawing;
@@ -17,17 +18,17 @@ namespace DragoonMayCry.UI
 {
     internal class SelectedJobConfiguration : ISelectable, IDrawable
     {
-        public delegate void JobAnnouncerChange(JobIds job, AnnouncerType announcer);
-        public delegate void DmcToggleChange(JobIds job);
-        public delegate void ApplyToAll(JobConfiguration configuration);
+        public delegate void JobAnnouncerChange(JobId job, AnnouncerType announcer);
+        public delegate void DmcToggleChange(JobId job);
+        public delegate void ApplyToAll(bool enabled, AnnouncerType announcer, JobConfiguration.BgmConfiguration bgm);
         public JobAnnouncerChange jobAnnouncerChange;
         public DmcToggleChange dmcToggleChange;
         public ApplyToAll applyToAll;
-        private readonly JobIds job;
+        private readonly JobId job;
         private readonly JobConfiguration configuration;
         private readonly IList<AnnouncerType> announcers;
         private readonly IList<JobConfiguration.BgmConfiguration> bgms;
-        public SelectedJobConfiguration(JobIds job, JobConfiguration configuration, IList<AnnouncerType> announcers, IList<JobConfiguration.BgmConfiguration> bgms)
+        public SelectedJobConfiguration(JobId job, JobConfiguration configuration, IList<AnnouncerType> announcers, IList<JobConfiguration.BgmConfiguration> bgms)
         {
             this.job = job;
             this.configuration = configuration;
@@ -67,6 +68,7 @@ namespace DragoonMayCry.UI
 
         void IDrawable.Draw()
         {
+            var jobModifiers = GetJobModifiers();
             InfoBox.Instance.AddTitle(job.ToString())
                 .AddAction(() =>
                 {
@@ -122,7 +124,24 @@ namespace DragoonMayCry.UI
                     applyToAll?.Invoke(configuration);
                 })
                 .EndDisabled()
+                .StartConditional(!string.IsNullOrEmpty(jobModifiers))
+                .AddStringCentered("Job modifiers")
+                .AddString(jobModifiers)
+                .EndConditional()
                 .Draw();
+        }
+
+        private string GetJobModifiers()
+        {
+            return job switch
+            {
+                JobId.AST => JobModifiers.HealerModifiers,
+                JobId.BRD => JobModifiers.BrdModifiers,
+                JobId.SGE => JobModifiers.HealerModifiers,
+                JobId.SCH => JobModifiers.HealerModifiers,
+                JobId.WHM => JobModifiers.HealerModifiers,
+                _ => ""
+            };
         }
 
         void ISelectable.DrawLabel()

@@ -118,7 +118,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             soundIdsNextAvailability.Clear();
         }
 
-        private void OnJobChange(object? sender, JobIds job)
+        private void OnJobChange(object? sender, JobId job)
         {
             UpdateAnnouncer();
         }

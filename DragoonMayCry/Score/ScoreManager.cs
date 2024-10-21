@@ -13,8 +13,7 @@ using static DragoonMayCry.Score.Rank.StyleRankHandler;
 
 namespace DragoonMayCry.Score
 {
-    public unsafe class ScoreManager : IDisposable, IResettable
-
+    public class ScoreManager : IDisposable, IResettable
     {
         public class ScoreRank
         {
@@ -85,7 +84,7 @@ namespace DragoonMayCry.Score
             Service.ClientState.Logout -= ResetScore;
         }
 
-        public void UpdateScore(IFramework framework)
+        private void UpdateScore(IFramework framework)
         {
             if (!Plugin.CanRunDmc())
             {
@@ -134,7 +133,7 @@ namespace DragoonMayCry.Score
                 CurrentScoreRank.Score = Math.Min(
                     CurrentScoreRank.Score, CurrentScoreRank.StyleScoring.Threshold);
             }
-
+            Service.Log.Debug($"score {CurrentScoreRank.Score} thresh {CurrentScoreRank.StyleScoring.Threshold}");
             OnScoring?.Invoke(this, points);
         }
 
@@ -148,14 +147,13 @@ namespace DragoonMayCry.Score
 
         private void OnCombatChange(object send, bool enteringCombat)
         {
+            DisablePointsGainedReduction();
+            isCastingLb = false;
             if (enteringCombat)
             {
                 jobScoringTable = GetJobScoringTable();
                 ResetScore();
             }
-
-            DisablePointsGainedReduction();
-            isCastingLb = false;
         }
 
         private void OnLimitBreakCast(object? sender, PlayerActionTracker.LimitBreakEvent e)
@@ -209,7 +207,7 @@ namespace DragoonMayCry.Score
 
         private void ResetScore()
         {
-            CurrentScoreRank.Score = 0;
+            CurrentScoreRank = new(0, StyleType.NoStyle, jobScoringTable[StyleType.NoStyle]);
         }
 
         private bool AreGcdClippingRestrictionsActive()
@@ -217,7 +215,7 @@ namespace DragoonMayCry.Score
             return pointsReductionStopwatch.IsRunning;
         }
 
-        private void OnJobChange(object? sender, JobIds jobId)
+        private void OnJobChange(object? sender, JobId jobId)
         {
             ResetScore();
             DisablePointsGainedReduction();
@@ -227,6 +225,7 @@ namespace DragoonMayCry.Score
         {
             var ilvl = itemLevelCalculator.CalculateCurrentItemLevel();
             var currentJob = playerState.GetCurrentJob();
+            Service.Log.Debug($"{currentJob}");
             return scoringTableFactory.GetScoringTable(ilvl, currentJob);
         }
 

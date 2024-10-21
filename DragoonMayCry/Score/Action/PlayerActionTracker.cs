@@ -3,6 +3,7 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Data;
+using DragoonMayCry.Score.Action.JobModule;
 using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
@@ -104,7 +105,9 @@ namespace DragoonMayCry.Score.Action
         private readonly Queue<UsedAction> actionHistory;
         private readonly HashSet<FlyTextKind> validHitTypes = new() { FlyTextKind.Damage, FlyTextKind.DamageDh, FlyTextKind.DamageCrit, FlyTextKind.DamageCritDh };
         private uint spellCastId = uint.MaxValue;
-        private JobIds currentJob = JobIds.OTHER;
+        private IJobActionModule? jobActionModule;
+        private JobModuleFactory jobModuleFactory;
+        private JobId currentJob = JobId.OTHER;
 
         // added 0.1f to all duration
         private readonly Dictionary<uint, float> tankLimitBreakDelays =
@@ -185,7 +188,7 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-            if (dealer->GetGameObjectId() != playerState.Player.GameObjectId)
+            if (dealer->GetGameObjectId() != playerState.Player.GameObjectId && dealer->CompanionOwnerId != playerState.Player.GameObjectId)
             {
                 return;
             }
@@ -246,9 +249,15 @@ namespace DragoonMayCry.Score.Action
             {
                 StartLimitBreakUse((uint)actionId);
             }
+
+            var bonusPoints = jobActionModule?.OnAction((uint)actionId);
+            if (bonusPoints > 0)
+            {
+                DamageActionUsed?.Invoke(this, bonusPoints.Value);
+            }
         }
 
-        private FlyTextKind GetHitType(int hitType)
+        private static FlyTextKind GetHitType(int hitType)
         {
             return hitType switch
             {
@@ -517,9 +526,10 @@ namespace DragoonMayCry.Score.Action
             lastDetectedClip = actionManager->currentSequence;
         }
 
-        private void OnJobChanged(object? sender, JobIds job)
+        private void OnJobChanged(object? sender, JobId job)
         {
             currentJob = job;
+            jobActionModule = jobModuleFactory.GetJobActionModule();
         }
 
         private float GetGcdDropThreshold()
@@ -581,6 +591,12 @@ namespace DragoonMayCry.Score.Action
                 OnLimitBreakCanceled?.Invoke(this, EventArgs.Empty);
                 UsingLimitBreak?.Invoke(this, new LimitBreakEvent(false, false));
             }
+        }
+
+        internal void SetJobModuleFactory(JobModuleFactory factory)
+        {
+            this.jobModuleFactory = factory;
+            jobActionModule = jobModuleFactory.GetJobActionModule();
         }
 
         private unsafe void OnFlyText(

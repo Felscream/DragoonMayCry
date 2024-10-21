@@ -20,8 +20,8 @@ namespace DragoonMayCry.UI
         public struct JobAnnouncerType
         {
             public AnnouncerType type;
-            public JobIds job;
-            public JobAnnouncerType(AnnouncerType type, JobIds job)
+            public JobId job;
+            public JobAnnouncerType(AnnouncerType type, JobId job)
             {
                 this.type = type;
                 this.job = job;
@@ -29,7 +29,7 @@ namespace DragoonMayCry.UI
         }
 
         public EventHandler<JobAnnouncerType>? JobAnnouncerTypeChange;
-        public EventHandler<JobIds>? EnabledForJobChange;
+        public EventHandler<JobId>? EnabledForJobChange;
         private readonly DmcConfigurationOne configuration;
         private readonly IList<AnnouncerType> announcers = Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>().ToList();
         private readonly IList<JobConfiguration.BgmConfiguration> bgmOptions = Enum.GetValues(typeof(JobConfiguration.BgmConfiguration)).Cast<JobConfiguration.BgmConfiguration>().ToList();
@@ -98,12 +98,12 @@ namespace DragoonMayCry.UI
             KamiCommon.SaveConfiguration();
         }
 
-        private void JobAnnouncerChange(JobIds job, AnnouncerType announcer)
+        private void JobAnnouncerChange(JobId job, AnnouncerType announcer)
         {
             JobAnnouncerTypeChange?.Invoke(this, new(announcer, job));
         }
 
-        private void DmcEnabledForJobChange(JobIds job)
+        private void DmcEnabledForJobChange(JobId job)
         {
             EnabledForJobChange?.Invoke(this, job);
         }

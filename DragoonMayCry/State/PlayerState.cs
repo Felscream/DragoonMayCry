@@ -118,7 +118,7 @@ namespace DragoonMayCry.State
             loginStateTracker.OnChange += onLoginStateChange;
         }
 
-        public void RegisterJobChangeHandler(EventHandler<JobIds> onJobChange)
+        public void RegisterJobChangeHandler(EventHandler<JobId> onJobChange)
         {
             jobChangeTracker.OnChange += onJobChange;
         }
@@ -133,7 +133,7 @@ namespace DragoonMayCry.State
             pvpStateTracker.OnChange += onPvpStateChange;
         }
 
-        public JobIds GetCurrentJob()
+        public JobId GetCurrentJob()
         {
             return jobChangeTracker.CurrentJob;
         }

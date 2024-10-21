@@ -26,29 +26,29 @@ public class DmcConfigurationOne : IPluginConfiguration
     public Setting<bool> EnabledFinalRankChatLogging = new(true);
     public Setting<bool> LockScoreWindow { get; set; } = new(true);
     public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);
-    public readonly Dictionary<JobIds, JobConfiguration> JobConfiguration = new()
+    public readonly Dictionary<JobId, JobConfiguration> JobConfiguration = new()
     {
-        { JobIds.AST, new JobConfiguration() },
-        { JobIds.BLM, new JobConfiguration() },
-        { JobIds.BRD, new JobConfiguration() },
-        { JobIds.DNC, new JobConfiguration() },
-        { JobIds.DRG, new JobConfiguration() },
-        { JobIds.DRK, new JobConfiguration() },
-        { JobIds.GNB, new JobConfiguration() },
-        { JobIds.MCH, new JobConfiguration() },
-        { JobIds.MNK, new JobConfiguration() },
-        { JobIds.NIN, new JobConfiguration() },
-        { JobIds.PCT, new JobConfiguration() },
-        { JobIds.PLD, new JobConfiguration() },
-        { JobIds.RDM, new JobConfiguration() },
-        { JobIds.RPR, new JobConfiguration() },
-        { JobIds.SAM, new JobConfiguration() },
-        { JobIds.SCH, new JobConfiguration() },
-        { JobIds.SGE, new JobConfiguration() },
-        { JobIds.SMN, new JobConfiguration() },
-        { JobIds.VPR, new JobConfiguration() },
-        { JobIds.WAR, new JobConfiguration() },
-        { JobIds.WHM, new JobConfiguration() },
+        { JobId.AST, new JobConfiguration() },
+        { JobId.BLM, new JobConfiguration() },
+        { JobId.BRD, new JobConfiguration() },
+        { JobId.DNC, new JobConfiguration() },
+        { JobId.DRG, new JobConfiguration() },
+        { JobId.DRK, new JobConfiguration() },
+        { JobId.GNB, new JobConfiguration() },
+        { JobId.MCH, new JobConfiguration() },
+        { JobId.MNK, new JobConfiguration() },
+        { JobId.NIN, new JobConfiguration() },
+        { JobId.PCT, new JobConfiguration() },
+        { JobId.PLD, new JobConfiguration() },
+        { JobId.RDM, new JobConfiguration() },
+        { JobId.RPR, new JobConfiguration() },
+        { JobId.SAM, new JobConfiguration() },
+        { JobId.SCH, new JobConfiguration() },
+        { JobId.SGE, new JobConfiguration() },
+        { JobId.SMN, new JobConfiguration() },
+        { JobId.VPR, new JobConfiguration() },
+        { JobId.WAR, new JobConfiguration() },
+        { JobId.WHM, new JobConfiguration() },
     };
 
     public void Save()

@@ -130,7 +130,7 @@ namespace DragoonMayCry.Audio.BGM
 
         // Is triggered when player in instanciated in a new territory
         // Grab the current job here and play
-        private void OnJobChange(object? sender, JobIds job)
+        private void OnJobChange(object? sender, JobId job)
         {
             var insideInstance = playerState.IsInsideInstance;
             var currentJob = playerState.GetCurrentJob();
@@ -173,7 +173,7 @@ namespace DragoonMayCry.Audio.BGM
             PrepareBgm(currentJob);
         }
 
-        public void OnJobEnableChange(object? sender, JobIds job)
+        public void OnJobEnableChange(object? sender, JobId job)
         {
             if (job != playerState.GetCurrentJob())
             {
@@ -200,7 +200,7 @@ namespace DragoonMayCry.Audio.BGM
             return bgmFsm.IsActive;
         }
 
-        private bool CanPlayDynamicBgm(bool isInInstance, JobIds job)
+        private bool CanPlayDynamicBgm(bool isInInstance, JobId job)
         {
             return playerState.Player != null
                     && !playerState.IsInPvp()
@@ -228,7 +228,7 @@ namespace DragoonMayCry.Audio.BGM
             PrepareBgm(currentJob);
         }
 
-        private void PrepareBgm(JobIds job)
+        private void PrepareBgm(JobId job)
         {
             bgmFsm.Disable();
             if (!Plugin.Configuration!.JobConfiguration.ContainsKey(job))
