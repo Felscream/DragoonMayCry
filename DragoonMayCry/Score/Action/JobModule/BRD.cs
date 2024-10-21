@@ -33,14 +33,16 @@ namespace DragoonMayCry.Score.Action.JobModule
                 return 0;
             }
 
-            if (!IsValidIronJawsUsage())
-            {
-                return 0;
-            }
-
             var buffCount = GetBuffCount();
             var currentRankThreshold = scoreManager.CurrentScoreRank.StyleScoring.Threshold;
-            return (0.3f + buffCount * 0.06f) * currentRankThreshold;
+
+            if (!IsValidIronJawsUsage())
+            {
+                return buffCount * 0.1f * currentRankThreshold;
+            }
+
+
+            return (0.3f + buffCount * 0.1f) * currentRankThreshold;
         }
 
         private int GetBuffCount()
