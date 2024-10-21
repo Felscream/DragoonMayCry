@@ -2,6 +2,7 @@ using Dalamud.Game.Gui.FlyText;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
 using Dalamud.Plugin.Services;
+using DragoonMayCry.Data;
 using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
@@ -89,7 +90,7 @@ namespace DragoonMayCry.Score.Action
         private readonly IDutyState dutyState;
         private readonly LuminaCache<LuminaAction> luminaActionCache;
 
-        private const float GcdDropThreshold = 0.2f;
+        private const float DefaultGcdDropThreshold = 0.2f;
         private ushort lastDetectedClip = 0;
         private float wastedGcd = 0;
         private float combatWastedGcd = 0;
@@ -103,6 +104,7 @@ namespace DragoonMayCry.Score.Action
         private readonly Queue<UsedAction> actionHistory;
         private readonly HashSet<FlyTextKind> validHitTypes = new() { FlyTextKind.Damage, FlyTextKind.DamageDh, FlyTextKind.DamageCrit, FlyTextKind.DamageCritDh };
         private uint spellCastId = uint.MaxValue;
+        private JobIds currentJob = JobIds.OTHER;
 
         // added 0.1f to all duration
         private readonly Dictionary<uint, float> tankLimitBreakDelays =
@@ -153,6 +155,7 @@ namespace DragoonMayCry.Score.Action
             playerState.RegisterCombatStateChangeHandler(OnCombat);
             playerState.RegisterDeathStateChangeHandler(OnDeath);
             playerState.RegisterDamageDownHandler(OnFailedMechanic);
+            playerState.RegisterJobChangeHandler(OnJobChanged);
         }
 
         public void Dispose()
@@ -464,13 +467,17 @@ namespace DragoonMayCry.Score.Action
             UsingLimitBreak?.Invoke(this, new LimitBreakEvent(isTankLb, true));
         }
 
-        private static bool IsGcdClipped(float animationLock)
+        private bool IsGcdClipped(float animationLock)
         {
+            if (!Plugin.IsEnabledForCurrentJob())
+            {
+                return animationLock > 0.2f;
+            }
             if (Plugin.IsEmdModeEnabled())
             {
                 return animationLock != 0.1f;
             }
-            return animationLock > 0.2f;
+            return animationLock > Plugin.Configuration!.JobConfiguration[currentJob].GcdClippingThreshold.Value;
         }
 
         private unsafe void DetectClipping()
@@ -510,9 +517,18 @@ namespace DragoonMayCry.Score.Action
             lastDetectedClip = actionManager->currentSequence;
         }
 
+        private void OnJobChanged(object? sender, JobIds job)
+        {
+            currentJob = job;
+        }
+
         private float GetGcdDropThreshold()
         {
-            return Plugin.IsEmdModeEnabled() ? 0 : GcdDropThreshold;
+            if (!Plugin.IsEnabledForCurrentJob())
+            {
+                return DefaultGcdDropThreshold;
+            }
+            return Plugin.IsEmdModeEnabled() ? 0 : Plugin.Configuration!.JobConfiguration[currentJob].GcdClippingThreshold.Value;
         }
 
         private unsafe void DetectWastedGCD()

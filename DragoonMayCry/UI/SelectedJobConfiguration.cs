@@ -1,3 +1,4 @@
+using Dalamud.Interface.Components;
 using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Configuration;
@@ -18,7 +19,7 @@ namespace DragoonMayCry.UI
     {
         public delegate void JobAnnouncerChange(JobIds job, AnnouncerType announcer);
         public delegate void DmcToggleChange(JobIds job);
-        public delegate void ApplyToAll(bool enabled, AnnouncerType announcer, JobConfiguration.BgmConfiguration bgm);
+        public delegate void ApplyToAll(JobConfiguration configuration);
         public JobAnnouncerChange jobAnnouncerChange;
         public DmcToggleChange dmcToggleChange;
         public ApplyToAll applyToAll;
@@ -81,6 +82,20 @@ namespace DragoonMayCry.UI
                 })
                 .BeginDisabled(PlayerState.GetInstance().IsInCombat)
                 .AddConfigCheckbox($"Estinien Must Die", configuration.EstinienMustDie, "You have no leeway", $"EMD-{job}")
+                .BeginDisabled(configuration.EstinienMustDie)
+                .AddAction(() =>
+                {
+                    var curPos = ImGui.GetCursorPos();
+                    ImGui.SetNextItemWidth(200f);
+
+                    if (ImGui.InputFloat("GCD clip / drop threshold", ref configuration.GcdClippingThreshold.Value, 0.01f, 0.1f))
+                    {
+                        configuration.GcdClippingThreshold.Value = Math.Min(1, Math.Max(0, configuration.GcdClippingThreshold.Value));
+                        KamiCommon.SaveConfiguration();
+                    }
+                    ImGui.EndDisabled();
+                    ImGuiComponents.HelpMarker("In seconds.\nOnly used if 'Estinien Must Die' is disabled");
+                })
                 .AddAction(() =>
                 {
                     ImGui.SetNextItemWidth(200f);
@@ -100,11 +115,11 @@ namespace DragoonMayCry.UI
                 })
 
                 .EndDisabled()
-                .BeginDisabled(PlayerState.GetInstance().IsInsideInstance)
+                .BeginDisabled(PlayerState.GetInstance().IsInsideInstance || PlayerState.GetInstance().IsInCombat)
                 .AddConfigCombo(bgms, configuration.Bgm, DynamicBgmService.GetBgmLabel, $"Dynamic BGM##bgm-{job}", 200f)
                 .AddButton("Apply to all jobs", () =>
                 {
-                    applyToAll?.Invoke(configuration.EnableDmc.Value, configuration.Announcer.Value, configuration.Bgm.Value);
+                    applyToAll?.Invoke(configuration);
                 })
                 .EndDisabled()
                 .Draw();
