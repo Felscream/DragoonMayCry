@@ -40,7 +40,6 @@ namespace DragoonMayCry.Score.Table
 
             if (JobHelper.IsHealer(job))
             {
-                Service.Log.Debug("Healer");
                 return healerScoringTable.GetScoringTable(ilvl);
             }
 

@@ -23,7 +23,6 @@ namespace DragoonMayCry.Score.Action.JobModule
         {
             if (!IsValidDotRefresh(actionId))
             {
-                Service.Log.Debug("Failure");
                 return 0f;
             }
 

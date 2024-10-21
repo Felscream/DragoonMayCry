@@ -35,9 +35,6 @@ namespace DragoonMayCry.Score.Action.JobModule
             {
                 if (statuses[i]?.StatusId != 0 && statuses[i]?.SourceId == playerId)
                 {
-#if DEBUG
-                    Service.Log.Debug($"{i} => {statuses[i]?.StatusId}");
-#endif
                     appliedStatuses++;
                 }
             }
@@ -45,9 +42,6 @@ namespace DragoonMayCry.Score.Action.JobModule
         }
         protected virtual bool IsValidDotRefresh(uint actionId)
         {
-#if DEBUG
-            Service.Log.Debug($"cast {actionId}");
-#endif
             if (!StatusIconIds.ContainsKey(actionId))
             {
                 return false;
@@ -101,10 +95,6 @@ namespace DragoonMayCry.Score.Action.JobModule
 
                 var resource = partsList->Parts[0].UldAsset->AtkTexture.Resource;
 
-#if DEBUG
-                Service.Log.Debug($"Icon id {resource->IconId}");
-#endif
-
                 if (resource == null || resource->IconId != targetStatusIconId)
                 {
                     continue;
@@ -128,14 +118,6 @@ namespace DragoonMayCry.Score.Action.JobModule
                 var remainingDotTime = textNode->NodeText.ToString();
                 if (uint.TryParse(remainingDotTime, out var value))
                 {
-                    if (value > 0 && value < 4)
-                    {
-                        Service.Log.Debug("Success");
-                    }
-                    else
-                    {
-                        Service.Log.Debug("Failure");
-                    }
                     return value > 0 && value < 4;
                 }
             }

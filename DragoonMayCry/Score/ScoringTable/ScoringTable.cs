@@ -42,7 +42,6 @@ namespace DragoonMayCry.Score.Table
 
                 scoringTable[entry.Key] = styleScoring;
             }
-            Service.Log.Debug($"{scoringTable[StyleType.NoStyle].Threshold}");
 
             return scoringTable;
         }

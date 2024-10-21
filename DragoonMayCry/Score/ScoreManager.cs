@@ -133,7 +133,6 @@ namespace DragoonMayCry.Score
                 CurrentScoreRank.Score = Math.Min(
                     CurrentScoreRank.Score, CurrentScoreRank.StyleScoring.Threshold);
             }
-            Service.Log.Debug($"score {CurrentScoreRank.Score} thresh {CurrentScoreRank.StyleScoring.Threshold}");
             OnScoring?.Invoke(this, points);
         }
 
@@ -225,7 +224,6 @@ namespace DragoonMayCry.Score
         {
             var ilvl = itemLevelCalculator.CalculateCurrentItemLevel();
             var currentJob = playerState.GetCurrentJob();
-            Service.Log.Debug($"{currentJob}");
             return scoringTableFactory.GetScoringTable(ilvl, currentJob);
         }
 
