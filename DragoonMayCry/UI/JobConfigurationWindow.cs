@@ -38,7 +38,7 @@ namespace DragoonMayCry.UI
         private readonly IList<ISelectable> selectableJobConfiguration = new List<ISelectable>();
         public JobConfigurationWindow(DmcConfigurationOne configuration) : base("DragoonMayCry - Job configuration##DmCJobConfiguration", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
         {
-            Size = new Vector2(550, 300);
+            Size = new Vector2(650f, 300);
             SizeCondition = ImGuiCond.Appearing;
 
             this.configuration = configuration;
@@ -87,13 +87,13 @@ namespace DragoonMayCry.UI
             }
         }
 
-        private void ApplyToAll(bool enabled, AnnouncerType announcer, JobConfiguration.BgmConfiguration bgm)
+        private void ApplyToAll(JobConfiguration targetConfiguration)
         {
             foreach (var entry in configuration.JobConfiguration)
             {
-                entry.Value.EnableDmc = new(enabled);
-                entry.Value.Announcer = new(announcer);
-                entry.Value.Bgm = new(bgm);
+                entry.Value.Announcer = new(targetConfiguration.Announcer.Value);
+                entry.Value.Bgm = new(targetConfiguration.Bgm.Value);
+                entry.Value.GcdDropThreshold = new(targetConfiguration.GcdDropThreshold.Value);
             }
             KamiCommon.SaveConfiguration();
         }

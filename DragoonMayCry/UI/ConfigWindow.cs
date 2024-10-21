@@ -195,25 +195,12 @@ public class ConfigWindow : Window
         }
     }
 
-    public static void AddLabel(String label, Vector2 cursorPosition)
+    public static void AddLabel(string label, Vector2 cursorPosition)
     {
         var spacing = ImGui.GetStyle().ItemSpacing;
         cursorPosition += spacing;
         ImGui.SetCursorPos(cursorPosition with { X = cursorPosition.X + 27.0f * ImGuiHelpers.GlobalScale });
 
         ImGui.TextUnformatted(label);
-    }
-
-    private static string GetAnnouncerTypeLabel(AnnouncerType type)
-    {
-        return type switch
-        {
-            AnnouncerType.DmC => "DmC: Devil May Cry",
-            AnnouncerType.DmC5 => "Devil May Cry 5",
-            AnnouncerType.DmC5Balrog => "Devil May Cry 5 / Balrog VA",
-            AnnouncerType.Nico => "Nico",
-            AnnouncerType.Morrison => "Morrison",
-            _ => "Unknown"
-        };
     }
 }

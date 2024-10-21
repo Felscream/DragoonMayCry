@@ -14,9 +14,11 @@ namespace DragoonMayCry.Configuration
             Subhuman = 5,
             Randomize = 4
         }
+
         public Setting<bool> EnableDmc = new(true);
         public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);
         public Setting<BgmConfiguration> Bgm = new(BgmConfiguration.Off);
         public Setting<bool> EstinienMustDie = new(false);
+        public Setting<float> GcdDropThreshold = new(0.2f);
     }
 }
