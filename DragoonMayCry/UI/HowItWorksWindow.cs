@@ -23,7 +23,6 @@ namespace DragoonMayCry.UI
 
             ImGui.TextColored(goldColor, "\nRanking up");
             ImGui.Text("- You fill your style gauge by dealing damage. The value is read from the flying text.");
-            ImGui.Text("- DoTs are not currently tracked. DoT's that deal no damage on application will not be added to your score.");
             ImGui.Text("- The expected damage output is based on your role and iLvL at the start of the encounter. It is calculated using an exponential regression on the nDPS 90th percentile from FFLogs on Dawntrail and Endwalker content, and some legacy ultimates pulls in 7.05.");
             ImGui.Text("- Limit breaks are cool.");
 
