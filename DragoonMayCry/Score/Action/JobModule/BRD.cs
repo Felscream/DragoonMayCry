@@ -1,5 +1,3 @@
-using FFXIVClientStructs.FFXIV.Component.GUI;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -79,25 +77,24 @@ namespace DragoonMayCry.Score.Action.JobModule
                 return false;
             }
 
-            var debuffAddon = Service.GameGui.GetAddonByName("_TargetInfoBuffDebuff", 1);
-            if (debuffAddon == IntPtr.Zero)
-            {
-                return false;
-            }
-
             var appliedStatusesCount = GetPlayerAppliedStatusesCount();
             if (appliedStatusesCount < 2)
             {
                 return false;
             }
 
-            var targetDebuffAddon = (AtkUnitBase*)debuffAddon;
+            var targetDebuffAddon = FindTargetDebuffAddon();
+            if (targetDebuffAddon == null)
+            {
+                return false;
+            }
 
             var targetStatusIconIds = statusIconIds.Select(entry => entry.Value).ToHashSet();
             var validDotRefreshes = 0;
+            var endIndex = targetDebuffAddon->UldManager.NodeListCount > 32 ? 32 : 31;
             for (var i = 0; i < appliedStatusesCount; i++)
             {
-                var idx = targetDebuffAddon->UldManager.NodeListCount - i - 1;
+                var idx = endIndex - i;
                 var node = targetDebuffAddon->UldManager.NodeList[idx];
                 var cmp = node->GetComponent();
                 if (cmp == null || cmp->UldManager.NodeList == null)
@@ -146,7 +143,7 @@ namespace DragoonMayCry.Score.Action.JobModule
                 var remainingDotTime = textNode->NodeText.ToString();
                 if (uint.TryParse(remainingDotTime, out var value))
                 {
-                    if (value > 0 && value < 6)
+                    if (value > 0 && value < 7)
                     {
                         validDotRefreshes++;
                     }

@@ -41,6 +41,31 @@ namespace DragoonMayCry.Score.Action.JobModule
 
             return appliedStatuses;
         }
+
+        protected AtkUnitBase* FindTargetDebuffAddon()
+        {
+            var targetInfoBuffDebuff = Service.GameGui.GetAddonByName("_TargetInfoBuffDebuff", 1);
+            if (targetInfoBuffDebuff != IntPtr.Zero)
+            {
+                var debuffAddon = (AtkUnitBase*)targetInfoBuffDebuff;
+                if (debuffAddon != null && debuffAddon->IsVisible && debuffAddon->UldManager.NodeList != null && debuffAddon->UldManager.NodeListCount > 31)
+                {
+                    return debuffAddon;
+                }
+            }
+
+            targetInfoBuffDebuff = Service.GameGui.GetAddonByName("_TargetInfo", 1);
+            if (targetInfoBuffDebuff != IntPtr.Zero)
+            {
+                var targetAtk = (AtkUnitBase*)targetInfoBuffDebuff;
+                if (targetAtk != null && targetAtk->IsVisible && targetAtk->UldManager.NodeList != null && targetAtk->UldManager.NodeListCount > 52)
+                {
+                    return targetAtk;
+                }
+            }
+            return null;
+        }
+
         protected virtual bool IsValidDotRefresh(uint actionId)
         {
             if (!StatusIconIds.ContainsKey(actionId))
@@ -53,46 +78,42 @@ namespace DragoonMayCry.Score.Action.JobModule
                 return false;
             }
 
-            var debuffAddon = Service.GameGui.GetAddonByName("_TargetInfoBuffDebuff", 1);
-            if (debuffAddon == IntPtr.Zero)
+            var targetDebuffAddon = FindTargetDebuffAddon();
+            if (targetDebuffAddon == null)
             {
                 return false;
             }
 
-
             var appliedStatusesCount = GetPlayerAppliedStatusesCount();
-            var targetDebuffAddon = (AtkUnitBase*)debuffAddon;
 
             var targetStatusIconId = StatusIconIds[actionId];
-
+            var endIndex = targetDebuffAddon->UldManager.NodeListCount > 32 ? 32 : 31;
             for (var i = 0; i < appliedStatusesCount; i++)
             {
-                var idx = targetDebuffAddon->UldManager.NodeListCount - i - 1;
+                var idx = endIndex - i;
                 var node = targetDebuffAddon->UldManager.NodeList[idx];
                 var cmp = node->GetComponent();
                 if (cmp == null || cmp->UldManager.NodeList == null)
                 {
-                    return false;
+                    continue;
                 }
 
                 var imageNode = cmp->UldManager.NodeList[1];
                 if (imageNode == null)
                 {
-                    return false;
+                    continue;
                 }
 
                 var image = imageNode->GetAsAtkImageNode();
                 if (image == null)
                 {
-                    return false;
+                    continue;
                 }
                 var partsList = image->PartsList;
                 if (partsList == null || partsList->PartCount == 0)
                 {
-                    return false;
+                    continue;
                 }
-
-
 
                 var resource = partsList->Parts[0].UldAsset->AtkTexture.Resource;
 
@@ -100,8 +121,6 @@ namespace DragoonMayCry.Score.Action.JobModule
                 {
                     continue;
                 }
-
-
 
                 var resTextNode = cmp->UldManager.NodeList[2];
                 if (resTextNode == null)

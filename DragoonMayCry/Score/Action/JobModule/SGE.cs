@@ -9,10 +9,13 @@ namespace DragoonMayCry.Score.Action.JobModule
         private readonly Dictionary<uint, uint> statusIconIds = new()
         {
             { 24293, 12960 }, // Eukrasian Dosis
-            { 24306, 12961 }, // Eukrasian Dosis II
-            { 24312,  12962}, // Eukrasian Dosis III
-            { 27822,  12962}, // Eukrasian Dosis III
-            { 29256,  12962}, // Eukrasian Dosis III
+            { 24308, 12961 }, // Eukrasian Dosis II
+            { 24314,  12962}, // Eukrasian Dosis III
+            { 25421,  12962}, // Eukrasian Dosis III
+            { 27823,  12962}, // Eukrasian Dosis III
+            { 29257,  12962}, // Eukrasian Dosis III
+            { 35881,  12962}, // Eukrasian Dosis III
+            { 38910,  12962}, // Eukrasian Dosis III
         };
 
         private const uint TaurocholeId = 24303;
