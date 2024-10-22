@@ -1,19 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DragoonMayCry.Data;
 using DragoonMayCry.Score.Model;
-using DragoonMayCry.State;
 using DragoonMayCry.Util;
+using System.Collections.Generic;
 
 namespace DragoonMayCry.Score.Table
 {
     class ScoringTableFactory
     {
         public static readonly Dictionary<StyleType, StyleScoring>
-            DefaultScoringTable = new Dictionary<StyleType, StyleScoring>
+            DefaultScoringTable = new()
             {
                 { StyleType.NoStyle, new StyleScoring(60000, 500, 0, 1) },
                 { StyleType.D, new StyleScoring(80000, 1000, 8000, 1) },
@@ -31,33 +26,35 @@ namespace DragoonMayCry.Score.Table
         private readonly ScoringTable tankScoringTable = new TankScoringTable();
         private readonly ScoringTable healerScoringTable = new HealerScoringTable();
 
-        public Dictionary<StyleType, StyleScoring> GetScoringTable(int ilvl, JobIds job)
+        public Dictionary<StyleType, StyleScoring> GetScoringTable(int ilvl, JobId job)
         {
             if (!JobHelper.IsCombatJob(job))
             {
                 return DefaultScoringTable;
             }
-            
-            if(JobHelper.IsTank(job)) {
+
+            if (JobHelper.IsTank(job))
+            {
                 return tankScoringTable.GetScoringTable(ilvl);
             }
 
-            if(JobHelper.IsHealer(job)) {
+            if (JobHelper.IsHealer(job))
+            {
                 return healerScoringTable.GetScoringTable(ilvl);
             }
 
             //BLM and PIC damage output comparable to melee
             //MCH raw damage output comparable to casters
-            if ((JobHelper.IsCaster(job) || job == JobIds.MCH) && job != JobIds.BLM && job != JobIds.PCT)
+            if ((JobHelper.IsCaster(job) || job == JobId.MCH) && job != JobId.BLM && job != JobId.PCT)
             {
                 return casterScoringTable.GetScoringTable(ilvl);
             }
 
-            if(JobHelper.IsPhysRange(job))
+            if (JobHelper.IsPhysRange(job))
             {
                 return physRangeScoringTable.GetScoringTable(ilvl);
             }
-            
+
             return meleeScoringTable.GetScoringTable(ilvl);
         }
 

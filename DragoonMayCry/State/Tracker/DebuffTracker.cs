@@ -5,14 +5,15 @@ namespace DragoonMayCry.State.Tracker
 {
     internal class DebuffTracker : StateTracker<bool>
     {
-        private readonly Dictionary<ushort, ISet<uint>> debuffInstanceBlacklist = new Dictionary<ushort, ISet<uint>>{
+        private readonly Dictionary<ushort, ISet<uint>> debuffInstanceBlacklist = new()
+        {
             { 937, new HashSet<uint> {2935} }, // Sustained damage on P9S is applied after a TB
             { 939, new HashSet<uint> {2935} }, // Failed tower soak on P10S, may not be the player's fault
             { 63, new HashSet<uint> {202} }, // Ifrit ex
         };
 
         private bool hasDamageDown;
-        
+
         public override void Update(PlayerState playerState)
         {
             if (!playerState.IsInCombat)
@@ -24,11 +25,12 @@ namespace DragoonMayCry.State.Tracker
             {
                 return;
             }
-            
-            StatusList statuses = player.StatusList;
-            
-            for(int i = 0; i < statuses.Length; i++)
+
+            var statuses = player.StatusList;
+
+            for (var i = 0; i < statuses.Length; i++)
             {
+
                 var status = statuses[i];
                 if (StatusIndicatesFailedMechanic(status))
                 {
@@ -52,18 +54,18 @@ namespace DragoonMayCry.State.Tracker
 
         private bool StatusIndicatesFailedMechanic(Status? status)
         {
-            if(status == null)
+            if (status == null || status.StatusId == 0)
             {
                 return false;
             }
-            
-            ushort territory = Service.ClientState.TerritoryType;
+
+            var territory = Service.ClientState.TerritoryType;
             if (debuffInstanceBlacklist.ContainsKey(territory) && debuffInstanceBlacklist[territory].Contains(status.StatusId))
             {
                 return false;
             }
 
-            
+
             return DebuffIds.DamageDownIds.Contains(status.StatusId) || DebuffIds.SustainedDamageIds.Contains(status.StatusId) || DebuffIds.VulnerabilityUpIds.Contains(status.StatusId);
         }
     }

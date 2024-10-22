@@ -3,6 +3,7 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Data;
+using DragoonMayCry.Score.Action.JobModule;
 using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
@@ -104,7 +105,9 @@ namespace DragoonMayCry.Score.Action
         private readonly Queue<UsedAction> actionHistory;
         private readonly HashSet<FlyTextKind> validHitTypes = new() { FlyTextKind.Damage, FlyTextKind.DamageDh, FlyTextKind.DamageCrit, FlyTextKind.DamageCritDh };
         private uint spellCastId = uint.MaxValue;
-        private JobIds currentJob = JobIds.OTHER;
+        private IJobActionModifier? jobActionModule;
+        private JobModuleFactory jobModuleFactory;
+        private JobId currentJob = JobId.OTHER;
 
         // added 0.1f to all duration
         private readonly Dictionary<uint, float> tankLimitBreakDelays =
@@ -122,6 +125,7 @@ namespace DragoonMayCry.Score.Action
             actionHistory = new();
             luminaActionCache = LuminaCache<LuminaAction>.Instance;
             playerState = PlayerState.GetInstance();
+            currentJob = playerState.GetCurrentJob();
             dutyState = Service.DutyState;
             dutyState.DutyCompleted += OnDutyCompleted;
 
@@ -176,33 +180,41 @@ namespace DragoonMayCry.Score.Action
             addToScreenLogWithLogMessageId?.Dispose();
         }
 
-        private void OnLogMessage(BattleChara* target, BattleChara* dealer, int hitType, char a4, int castID, int damage, int a7, int a8)
+        private void OnLogMessage(BattleChara* target, BattleChara* dealer, int hitType, char a4, int actionId, int damage, int a7, int a8)
         {
-            addToScreenLogWithLogMessageId?.Original(target, dealer, hitType, a4, castID, damage, a7, a8);
+            addToScreenLogWithLogMessageId?.Original(target, dealer, hitType, a4, actionId, damage, a7, a8);
 
             if (!Plugin.CanRunDmc() || dealer == null || target == null || playerState.Player == null)
             {
                 return;
             }
 
-            if (dealer->GetGameObjectId() != playerState.Player.GameObjectId)
+            if (dealer->GetGameObjectId() != playerState.Player.GameObjectId && dealer->CompanionOwnerId != playerState.Player.GameObjectId)
             {
                 return;
             }
 
-            if (limitBreakCast != null && limitBreakCast.ActionId == (uint)castID)
+            if (limitBreakCast != null && limitBreakCast.ActionId == (uint)actionId)
             {
                 OnLimitBreakEffect?.Invoke(this, EventArgs.Empty);
                 return;
             }
 
             var kind = GetHitType(hitType);
-            if (!validHitTypes.Contains(kind) || dealer->Character.GetGameObjectId().ObjectId == target->Character.GetGameObjectId().ObjectId)
+            if (!validHitTypes.Contains(kind) || dealer->Character.GetGameObjectId() == target->Character.GetGameObjectId())
             {
+                if (jobActionModule != null && kind != FlyTextKind.MpRegen)
+                {
+                    var bonusPoints = jobActionModule.OnActionAppliedOnTarget((uint)actionId);
+                    if (bonusPoints > 0)
+                    {
+                        DamageActionUsed?.Invoke(this, bonusPoints);
+                    }
+                }
                 return;
             }
 
-            RegisterAndFireUsedAction(kind, damage, (uint)castID);
+            RegisterAndFireUsedAction(kind, damage, (uint)actionId);
         }
 
         private void OnFailedMechanic(object? sender, bool hasFailedMechanic)
@@ -246,9 +258,21 @@ namespace DragoonMayCry.Score.Action
             {
                 StartLimitBreakUse((uint)actionId);
             }
+
+
+            if (jobActionModule == null)
+            {
+                return;
+            }
+
+            var bonusPoints = jobActionModule?.OnAction((uint)actionId);
+            if (bonusPoints > 0)
+            {
+                DamageActionUsed?.Invoke(this, bonusPoints.Value);
+            }
         }
 
-        private FlyTextKind GetHitType(int hitType)
+        private static FlyTextKind GetHitType(int hitType)
         {
             return hitType switch
             {
@@ -257,6 +281,7 @@ namespace DragoonMayCry.Score.Action
                 510 => FlyTextKind.Damage,
                 511 => FlyTextKind.DamageCrit,
                 519 => FlyTextKind.Healing,
+                521 => FlyTextKind.MpRegen,
                 526 => FlyTextKind.Buff,
                 _ => FlyTextKind.AutoAttackOrDot
             };
@@ -469,7 +494,7 @@ namespace DragoonMayCry.Score.Action
 
         private bool IsGcdClipped(float animationLock)
         {
-            if (!Plugin.IsEnabledForCurrentJob())
+            if (!Plugin.IsEnabledForCurrentJob() || !Plugin.Configuration!.JobConfiguration.ContainsKey(currentJob))
             {
                 return animationLock > 0.2f;
             }
@@ -517,14 +542,15 @@ namespace DragoonMayCry.Score.Action
             lastDetectedClip = actionManager->currentSequence;
         }
 
-        private void OnJobChanged(object? sender, JobIds job)
+        private void OnJobChanged(object? sender, JobId job)
         {
             currentJob = job;
+            jobActionModule = jobModuleFactory.GetJobActionModule();
         }
 
         private float GetGcdDropThreshold()
         {
-            if (!Plugin.IsEnabledForCurrentJob())
+            if (!Plugin.IsEnabledForCurrentJob() || !Plugin.Configuration!.JobConfiguration.ContainsKey(currentJob))
             {
                 return DefaultGcdDropThreshold;
             }
@@ -581,6 +607,12 @@ namespace DragoonMayCry.Score.Action
                 OnLimitBreakCanceled?.Invoke(this, EventArgs.Empty);
                 UsingLimitBreak?.Invoke(this, new LimitBreakEvent(false, false));
             }
+        }
+
+        internal void SetJobModuleFactory(JobModuleFactory factory)
+        {
+            this.jobModuleFactory = factory;
+            jobActionModule = jobModuleFactory.GetJobActionModule();
         }
 
         private unsafe void OnFlyText(
@@ -641,6 +673,15 @@ namespace DragoonMayCry.Score.Action
             }
             else
             {
+                if (jobActionModule != null)
+                {
+                    var modifiedPoints = jobActionModule.OnActionAppliedOnTarget(actionId);
+                    if (modifiedPoints > 0)
+                    {
+                        DamageActionUsed?.Invoke(this, modifiedPoints);
+                        return;
+                    }
+                }
                 DamageActionUsed?.Invoke(this, damage);
             }
         }

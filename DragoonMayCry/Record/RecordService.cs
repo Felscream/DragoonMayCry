@@ -16,7 +16,7 @@ namespace DragoonMayCry.Record
     public class RecordService
     {
         public Extension[] Extensions { get; private set; } = [];
-        public EventHandler<Dictionary<JobIds, JobRecord>>? CharacterRecordsChanged;
+        public EventHandler<Dictionary<JobId, JobRecord>>? CharacterRecordsChanged;
 
         private const string TrackedDutiesResource = "DragoonMayCry.Data.TrackedDuties.json";
         private readonly IDalamudPluginInterface pluginInterface;
@@ -26,7 +26,7 @@ namespace DragoonMayCry.Record
         private readonly PlayerState playerState;
         private readonly string recordDirectoryPath;
         private ulong characterId = 0;
-        private Dictionary<JobIds, JobRecord>? characterRecords;
+        private Dictionary<JobId, JobRecord>? characterRecords;
         private Dictionary<ushort, TrackableDuty> trackableDuties = new();
         private bool ready = false;
         public RecordService(FinalRankCalculator finalRankCalculator)
@@ -102,7 +102,7 @@ namespace DragoonMayCry.Record
             characterRecords = LoadCharacterRecords(characterId);
         }
 
-        private Dictionary<JobIds, JobRecord> LoadCharacterRecords(ulong characterId)
+        private Dictionary<JobId, JobRecord> LoadCharacterRecords(ulong characterId)
         {
             var characterRecordPath = GetCharacterRecordsPath(characterId);
             if (!File.Exists(characterRecordPath))
@@ -113,7 +113,7 @@ namespace DragoonMayCry.Record
             try
             {
                 var localRecords = File.ReadAllText(characterRecordPath);
-                return JsonConvert.DeserializeObject<Dictionary<JobIds, JobRecord>>(localRecords) ?? [];
+                return JsonConvert.DeserializeObject<Dictionary<JobId, JobRecord>>(localRecords) ?? [];
             }
             catch (Exception e)
             {
@@ -158,7 +158,7 @@ namespace DragoonMayCry.Record
             }
 
             var currentJob = playerState.GetCurrentJob();
-            if (currentJob == JobIds.OTHER)
+            if (currentJob == JobId.OTHER)
             {
                 return;
             }
@@ -187,7 +187,7 @@ namespace DragoonMayCry.Record
                     || trackableDuties[finalRank.InstanceId].LvlSync < playerLevel;
         }
 
-        private JobRecord GetJobRecord(FinalRank finalRank, JobIds currentJob, bool emdEnabled)
+        private JobRecord GetJobRecord(FinalRank finalRank, JobId currentJob, bool emdEnabled)
         {
             if (!characterRecords!.ContainsKey(currentJob))
             {
@@ -228,11 +228,11 @@ namespace DragoonMayCry.Record
             File.WriteAllText(characterRecordsPath, JsonConvert.SerializeObject(characterRecords));
         }
 
-        public Dictionary<JobIds, JobRecord> GetCharacterRecords()
+        public Dictionary<JobId, JobRecord> GetCharacterRecords()
         {
             if (clientState.LocalContentId == 0)
             {
-                return new Dictionary<JobIds, JobRecord>();
+                return new Dictionary<JobId, JobRecord>();
             }
 
             if (characterId == clientState.LocalContentId && characterRecords != null)

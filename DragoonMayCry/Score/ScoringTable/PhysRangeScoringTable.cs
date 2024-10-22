@@ -46,13 +46,10 @@ namespace DragoonMayCry.Score.Table
                 { StyleType.SSS, new ScoringCoefficient(4f, 0.56f) },
             };
         protected override Dictionary<StyleType, ScoringCoefficient> EmdScoringCoefficient => emdScoringCoefficient;
-        protected override Dictionary<int, Dictionary<StyleType, StyleScoring>> Cache => cache;
 
         protected override Dictionary<StyleType, StyleScoring> RoleScoringTable => scoringTable;
 
         protected override Dictionary<StyleType, ScoringCoefficient> ScoringCoefficient => scoringCoefficient;
-
-        private readonly Dictionary<int, Dictionary<StyleType, StyleScoring>> cache = new();
 
         protected override float GetDpsAtIlvl(int ilvl)
         {

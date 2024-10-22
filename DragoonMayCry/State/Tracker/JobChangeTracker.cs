@@ -8,15 +8,15 @@ using DragoonMayCry.Util;
 
 namespace DragoonMayCry.State.Tracker
 {
-    internal class JobChangeTracker : StateTracker<JobIds>
+    internal class JobChangeTracker : StateTracker<JobId>
     {
-        public JobIds CurrentJob { get; private set; } = JobIds.OTHER;
+        public JobId CurrentJob { get; private set; } = JobId.OTHER;
         public override void Update(PlayerState playerState)
         {
             
             if (playerState.Player == null)
             {
-                CurrentJob = JobIds.OTHER;
+                CurrentJob = JobId.OTHER;
                 return;
             }
             

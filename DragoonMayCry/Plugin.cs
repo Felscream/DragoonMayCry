@@ -43,7 +43,7 @@ public unsafe class Plugin : IDalamudPlugin
     private static DynamicBgmService? BgmService;
     private static RecordService? RecordService;
     public static StyleAnnouncerService? StyleAnnouncerService;
-    private static JobIds CurrentJob = JobIds.OTHER;
+    private static JobId CurrentJob = JobId.OTHER;
     public Plugin()
     {
         PluginInterface.Create<Service>();
@@ -61,6 +61,9 @@ public unsafe class Plugin : IDalamudPlugin
         StyleAnnouncerService = new(StyleRankHandler, PlayerActionTracker);
         BgmService = new DynamicBgmService(StyleRankHandler);
         ScoreManager = new(StyleRankHandler, PlayerActionTracker);
+
+        PlayerActionTracker.SetJobModuleFactory(new(ScoreManager));
+
         ScoreProgressBar = new(ScoreManager, StyleRankHandler, PlayerActionTracker, PlayerState);
         FinalRankCalculator = new(PlayerState, PlayerActionTracker);
         RecordService = new(FinalRankCalculator);
@@ -199,7 +202,7 @@ public unsafe class Plugin : IDalamudPlugin
         }
     }
 
-    private void OnJobChange(object? sender, JobIds job)
+    private void OnJobChange(object? sender, JobId job)
     {
         CurrentJob = job;
     }

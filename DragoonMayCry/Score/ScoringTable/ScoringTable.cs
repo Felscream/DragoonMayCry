@@ -9,27 +9,14 @@ namespace DragoonMayCry.Score.Table
         protected abstract Dictionary<StyleType, ScoringCoefficient> ScoringCoefficient { get; }
         protected abstract Dictionary<StyleType, ScoringCoefficient> EmdScoringCoefficient { get; }
         protected abstract float GetDpsAtIlvl(int ilvl);
-        protected abstract Dictionary<int, Dictionary<StyleType, StyleScoring>> Cache { get; }
         public Dictionary<StyleType, StyleScoring> GetScoringTable(int ilvl)
         {
-            if (Plugin.IsEmdModeEnabled())
-            {
-                return GenerateScoringTable(ilvl);
-            }
-            if (Cache.ContainsKey(ilvl))
-            {
-                return Cache[ilvl];
-            }
-            var scoringTable = GenerateScoringTable(ilvl);
-            Cache[ilvl] = scoringTable;
-
-            return scoringTable;
+            return GenerateScoringTable(ilvl);
         }
 
         protected Dictionary<StyleType, StyleScoring> GenerateScoringTable(int ilvl)
         {
-            var scoringTable =
-                new Dictionary<StyleType, StyleScoring>();
+            var scoringTable = new Dictionary<StyleType, StyleScoring>();
             var expectedDpsAtILvl = GetDpsAtIlvl(ilvl);
 
             var coefficientTable = Plugin.IsEmdModeEnabled() ? EmdScoringCoefficient : ScoringCoefficient;

@@ -17,17 +17,17 @@ namespace DragoonMayCry.UI
 {
     internal class SelectedJobConfiguration : ISelectable, IDrawable
     {
-        public delegate void JobAnnouncerChange(JobIds job, AnnouncerType announcer);
-        public delegate void DmcToggleChange(JobIds job);
+        public delegate void JobAnnouncerChange(JobId job, AnnouncerType announcer);
+        public delegate void DmcToggleChange(JobId job);
         public delegate void ApplyToAll(JobConfiguration configuration);
         public JobAnnouncerChange jobAnnouncerChange;
         public DmcToggleChange dmcToggleChange;
         public ApplyToAll applyToAll;
-        private readonly JobIds job;
+        private readonly JobId job;
         private readonly JobConfiguration configuration;
         private readonly IList<AnnouncerType> announcers;
         private readonly IList<JobConfiguration.BgmConfiguration> bgms;
-        public SelectedJobConfiguration(JobIds job, JobConfiguration configuration, IList<AnnouncerType> announcers, IList<JobConfiguration.BgmConfiguration> bgms)
+        public SelectedJobConfiguration(JobId job, JobConfiguration configuration, IList<AnnouncerType> announcers, IList<JobConfiguration.BgmConfiguration> bgms)
         {
             this.job = job;
             this.configuration = configuration;
