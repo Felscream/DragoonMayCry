@@ -25,6 +25,7 @@ namespace DragoonMayCry.UI
         private readonly RecordService recordService;
         private readonly PlayerState playerState;
         private readonly ConfigWindow configWindow;
+        private readonly HowItWorksWindow howItWorksWindow;
 
         private Dictionary<JobId, JobRecord> characterRecords = new();
         private readonly Dictionary<ushort, uint> dutyToContentId = new();
@@ -47,11 +48,12 @@ namespace DragoonMayCry.UI
         private readonly Vector2 rankSize = new(130, 130);
         private readonly ImGuiTableFlags tableFlags = ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.ScrollX | ImGuiTableFlags.BordersInnerH;
 
-        public CharacterRecordWindow(RecordService recordService, ConfigWindow configWindow) : base("DragoonMayCry - Character records")
+        public CharacterRecordWindow(RecordService recordService, ConfigWindow configWindow, HowItWorksWindow howItWorksWindow) : base("DragoonMayCry - Character records")
         {
             textureProvider = Service.TextureProvider;
             contentFinder = LuminaCache<ContentFinderCondition>.Instance;
             this.configWindow = configWindow;
+            this.howItWorksWindow = howItWorksWindow;
 
             Size = new Vector2(955f, 730f);
             SizeCondition = ImGuiCond.Appearing;
@@ -87,6 +89,30 @@ namespace DragoonMayCry.UI
 
         public override void Draw()
         {
+            ImGui.SetCursorPosX(ImGui.GetContentRegionAvail().X - 40f - ImGui.GetStyle().WindowPadding.X);
+            if (ImGuiComponents.IconButton(Dalamud.Interface.FontAwesomeIcon.Cog))
+            {
+                configWindow.Toggle();
+            }
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip("Configuration");
+            }
+
+            ImGui.SameLine();
+
+            if (ImGuiComponents.IconButton(Dalamud.Interface.FontAwesomeIcon.Question))
+            {
+                howItWorksWindow.Toggle();
+            }
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip("How it works");
+            }
+            ImGui.SameLine();
+            ImGui.SetCursorPosX(ImGui.GetStyle().WindowPadding.X);
+
+
             if (!clientState.IsLoggedIn)
             {
                 DrawEmptyWindow();
@@ -116,18 +142,13 @@ namespace DragoonMayCry.UI
             selectedJob = job;
         }
 
-        private static void DrawEmptyWindow()
+        private void DrawEmptyWindow()
         {
             ImGui.Text("Please log in with a character to access this window");
         }
 
         private void DrawRecords()
         {
-            if (ImGuiComponents.IconButton(Dalamud.Interface.FontAwesomeIcon.Cog))
-            {
-                configWindow.Toggle();
-            }
-            ImGui.SameLine();
             ImGui.SetNextItemWidth(75f);
             if (ImGui.BeginCombo("Job", selectedJob.ToString()))
             {

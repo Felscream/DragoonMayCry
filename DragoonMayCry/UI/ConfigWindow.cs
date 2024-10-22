@@ -25,17 +25,15 @@ public class ConfigWindow : Window
 
     private readonly DmcConfigurationOne configuration;
     private readonly JobConfigurationWindow jobConfigurationWindow;
-    private readonly HowItWorksWindow howItWorksWindow;
     private readonly Setting<int> decay = new(0);
 
     // We give this window a constant ID using ###
     // This allows for labels being dynamic, like "{FPS Counter}fps###XYZ counter window",
     // and the window ID will always be "###XYZ counter window" for ImGui
-    public ConfigWindow(DmcConfigurationOne configuration, JobConfigurationWindow jobConfiguration, HowItWorksWindow howItWorks) : base("DragoonMayCry - Configuration")
+    public ConfigWindow(DmcConfigurationOne configuration, JobConfigurationWindow jobConfiguration) : base("DragoonMayCry - Configuration")
     {
         Size = new Vector2(525, 470);
         SizeCondition = ImGuiCond.Appearing;
-        howItWorksWindow = howItWorks;
         jobConfigurationWindow = jobConfiguration;
         this.configuration = configuration;
     }
@@ -92,7 +90,6 @@ public class ConfigWindow : Window
                 AddLabel("Active outside instance", cursorPos);
             })
             .AddConfigCheckbox("Output final rank to chat", configuration.EnabledFinalRankChatLogging, "The message will be sent in the echo channel")
-            .AddButton("How it works", () => howItWorksWindow.Toggle())
             .AddButton("Open job configuration", () => jobConfigurationWindow.Toggle())
             .Draw();
 

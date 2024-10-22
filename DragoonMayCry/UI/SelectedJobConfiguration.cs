@@ -4,7 +4,6 @@ using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
 using DragoonMayCry.State;
-using DragoonMayCry.UI.Text;
 using ImGuiNET;
 using KamiLib;
 using KamiLib.Drawing;
@@ -68,7 +67,6 @@ namespace DragoonMayCry.UI
 
         void IDrawable.Draw()
         {
-            var jobModifiers = GetJobModifiers();
             InfoBox.Instance.AddTitle(job.ToString())
                 .AddAction(() =>
                 {
@@ -124,25 +122,7 @@ namespace DragoonMayCry.UI
                     applyToAll?.Invoke(configuration);
                 })
                 .EndDisabled()
-                .StartConditional(!string.IsNullOrEmpty(jobModifiers))
-                .AddString("\nJob modifiers")
-                .AddString(jobModifiers)
-                .EndConditional()
                 .Draw();
-        }
-
-        private string GetJobModifiers()
-        {
-            return job switch
-            {
-
-                JobId.BRD => JobModifiers.BrdModifiers,
-                JobId.AST => JobModifiers.HealerModifiers,
-                JobId.SCH => JobModifiers.HealerModifiers,
-                JobId.SGE => JobModifiers.HealerModifiers,
-                JobId.WHM => JobModifiers.HealerModifiers,
-                _ => ""
-            };
         }
 
         void ISelectable.DrawLabel()

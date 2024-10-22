@@ -47,14 +47,14 @@ namespace DragoonMayCry.UI
 
 
 
-            ConfigWindow = new ConfigWindow(Plugin.Configuration!, JobConfigurationWindow, HowItWorksWindow);
+            ConfigWindow = new ConfigWindow(Plugin.Configuration!, JobConfigurationWindow);
             ConfigWindow.ActiveOutsideInstanceChange += Plugin.OnActiveOutsideInstanceConfChange;
             ConfigWindow.ToggleDynamicBgmChange += dynamicBgmService.ToggleDynamicBgm;
             ConfigWindow.MuffledOnDeathChange += dynamicBgmService.OnMuffledOnDeathChange;
             ConfigWindow.SfxVolumeChange += AudioService.Instance.OnSfxVolumeChange;
             ConfigWindow.BgmVolumeChange += AudioService.Instance.OnBgmVolumeChange;
 
-            CharacterRecordWindow = new(recordService, ConfigWindow);
+            CharacterRecordWindow = new(recordService, ConfigWindow, HowItWorksWindow);
 
             styleRankUi = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator, playerActionTracker);
 

@@ -1,4 +1,5 @@
 using Dalamud.Interface.Windowing;
+using DragoonMayCry.UI.Text;
 using ImGuiNET;
 using System.Numerics;
 
@@ -9,13 +10,59 @@ namespace DragoonMayCry.UI
         private readonly Vector4 goldColor = new(229, 48, 0, 255);
         public HowItWorksWindow() : base("DragoonMayCry - How it works")
         {
-            this.Size = new Vector2(800, 400);
+            this.Size = new Vector2(790, 400);
             this.SizeCondition = ImGuiCond.Appearing;
+            this.Flags = ImGuiWindowFlags.HorizontalScrollbar;
         }
 
         public override void Draw()
         {
-            ImGui.AlignTextToFramePadding();
+            if (ImGui.BeginTabBar("HIW"))
+            {
+                if (ImGui.BeginTabItem("General"))
+                {
+                    DrawGeneralDescription();
+                    ImGui.EndTabItem();
+                }
+                ImGui.PushTextWrapPos(760);
+                if (ImGui.BeginTabItem("AST"))
+                {
+                    DrawJobModifiers("Astrologian", JobModifiers.AstrologianModifiers);
+                    ImGui.EndTabItem();
+                }
+                if (ImGui.BeginTabItem("BRD"))
+                {
+                    DrawJobModifiers("Bard", JobModifiers.BrdModifiers);
+                    ImGui.EndTabItem();
+                }
+                if (ImGui.BeginTabItem("SCH"))
+                {
+                    DrawJobModifiers("Scholar", JobModifiers.ScholarModifiers);
+                    ImGui.EndTabItem();
+                }
+                if (ImGui.BeginTabItem("SGE"))
+                {
+                    DrawJobModifiers("Sage", JobModifiers.SageModifiers);
+                    ImGui.EndTabItem();
+                }
+                if (ImGui.BeginTabItem("WHM"))
+                {
+                    DrawJobModifiers("White Mage", JobModifiers.WhiteMageModifiers);
+                    ImGui.EndTabItem();
+                }
+                ImGui.EndTabBar();
+            }
+        }
+
+        private void DrawJobModifiers(string job, string modifiers)
+        {
+            ImGui.Indent();
+            ImGui.TextColored(goldColor, $"\n{job}");
+            ImGui.TextWrapped(modifiers);
+        }
+
+        private void DrawGeneralDescription()
+        {
             ImGui.PushTextWrapPos(760);
             ImGui.Indent();
             ImGui.Text("\nDragoonMayCry tries to add flavour to the game's combat by ranking you using a Devil May Cry like 'style' system.");
@@ -23,7 +70,7 @@ namespace DragoonMayCry.UI
 
             ImGui.TextColored(goldColor, "\nRanking up");
             ImGui.Text("- You fill your style gauge by dealing damage. The value is read from the flying text.");
-            ImGui.Text("- The expected damage output is based on your role and iLvL at the start of the encounter. It is calculated using an exponential regression on the nDPS 90th percentile from FFLogs on Dawntrail and Endwalker content, and some legacy ultimates pulls in 7.05.");
+            ImGui.Text("- The expected damage output is based on your role and iLvL at the start of the encounter. It is calculated using an exponential regression on the nDPS 80th percentile from FFLogs on Dawntrail and Endwalker content, and some legacy ultimates pulls in 7.05.");
             ImGui.Text("- Limit breaks are cool.");
 
             ImGui.TextColored(goldColor, "\nDemotions");
@@ -76,7 +123,8 @@ namespace DragoonMayCry.UI
             ImGui.TextColored(new Vector4(.75f, .75f, .75f, 1), "Listen people, I don't play the role so I have no idea how the experience is using this plugin as a healer. If you've got some ideas to improve it, send them to me :)");
 
             ImGui.TextColored(new Vector4(.75f, .75f, .75f, 1), "\n * Not all debuffs across all content have been identified, and some demotions may be applied wrongfully. Don't hesitate to send feedback if you find a debuff that should be removed or added.");
-
         }
     }
+
+
 }

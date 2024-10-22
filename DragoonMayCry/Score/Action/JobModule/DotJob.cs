@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace DragoonMayCry.Score.Action.JobModule
 {
-    internal abstract unsafe class DotJob : IJobActionModule
+    internal abstract unsafe class DotJob : IJobActionModifier
     {
         protected abstract Dictionary<uint, uint> StatusIconIds { get; }
         protected const uint PlayerAplliedStatusColor = 4_293_197_769;
@@ -28,7 +28,7 @@ namespace DragoonMayCry.Score.Action.JobModule
             }
 
             var chara = (IBattleChara)targetManager.Target;
-            var playerId = playerState.Player?.EntityId;
+            var playerId = playerState.Player?.GameObjectId;
             var appliedStatuses = 0;
             var statuses = chara.StatusList;
             for (var i = 0; i < statuses.Length; i++)
@@ -38,6 +38,7 @@ namespace DragoonMayCry.Score.Action.JobModule
                     appliedStatuses++;
                 }
             }
+
             return appliedStatuses;
         }
         protected virtual bool IsValidDotRefresh(uint actionId)
@@ -125,6 +126,14 @@ namespace DragoonMayCry.Score.Action.JobModule
         }
 
 
-        public abstract float OnAction(uint actionId);
+        public virtual float OnAction(uint actionId)
+        {
+            return 0;
+        }
+
+        public virtual float OnActionAppliedOnTarget(uint actionId)
+        {
+            return 0;
+        }
     }
 }

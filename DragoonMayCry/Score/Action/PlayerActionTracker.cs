@@ -105,7 +105,7 @@ namespace DragoonMayCry.Score.Action
         private readonly Queue<UsedAction> actionHistory;
         private readonly HashSet<FlyTextKind> validHitTypes = new() { FlyTextKind.Damage, FlyTextKind.DamageDh, FlyTextKind.DamageCrit, FlyTextKind.DamageCritDh };
         private uint spellCastId = uint.MaxValue;
-        private IJobActionModule? jobActionModule;
+        private IJobActionModifier? jobActionModule;
         private JobModuleFactory jobModuleFactory;
         private JobId currentJob = JobId.OTHER;
 
@@ -180,9 +180,9 @@ namespace DragoonMayCry.Score.Action
             addToScreenLogWithLogMessageId?.Dispose();
         }
 
-        private void OnLogMessage(BattleChara* target, BattleChara* dealer, int hitType, char a4, int castID, int damage, int a7, int a8)
+        private void OnLogMessage(BattleChara* target, BattleChara* dealer, int hitType, char a4, int actionId, int damage, int a7, int a8)
         {
-            addToScreenLogWithLogMessageId?.Original(target, dealer, hitType, a4, castID, damage, a7, a8);
+            addToScreenLogWithLogMessageId?.Original(target, dealer, hitType, a4, actionId, damage, a7, a8);
 
             if (!Plugin.CanRunDmc() || dealer == null || target == null || playerState.Player == null)
             {
@@ -194,19 +194,27 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-            if (limitBreakCast != null && limitBreakCast.ActionId == (uint)castID)
+            if (limitBreakCast != null && limitBreakCast.ActionId == (uint)actionId)
             {
                 OnLimitBreakEffect?.Invoke(this, EventArgs.Empty);
                 return;
             }
 
             var kind = GetHitType(hitType);
-            if (!validHitTypes.Contains(kind) || dealer->Character.GetGameObjectId().ObjectId == target->Character.GetGameObjectId().ObjectId)
+            if (!validHitTypes.Contains(kind) || dealer->Character.GetGameObjectId() == target->Character.GetGameObjectId())
             {
+                if (jobActionModule != null && kind != FlyTextKind.MpRegen)
+                {
+                    var bonusPoints = jobActionModule.OnActionAppliedOnTarget((uint)actionId);
+                    if (bonusPoints > 0)
+                    {
+                        DamageActionUsed?.Invoke(this, bonusPoints);
+                    }
+                }
                 return;
             }
 
-            RegisterAndFireUsedAction(kind, damage, (uint)castID);
+            RegisterAndFireUsedAction(kind, damage, (uint)actionId);
         }
 
         private void OnFailedMechanic(object? sender, bool hasFailedMechanic)
@@ -273,6 +281,7 @@ namespace DragoonMayCry.Score.Action
                 510 => FlyTextKind.Damage,
                 511 => FlyTextKind.DamageCrit,
                 519 => FlyTextKind.Healing,
+                521 => FlyTextKind.MpRegen,
                 526 => FlyTextKind.Buff,
                 _ => FlyTextKind.AutoAttackOrDot
             };
@@ -664,6 +673,15 @@ namespace DragoonMayCry.Score.Action
             }
             else
             {
+                if (jobActionModule != null)
+                {
+                    var modifiedPoints = jobActionModule.OnActionAppliedOnTarget(actionId);
+                    if (modifiedPoints > 0)
+                    {
+                        DamageActionUsed?.Invoke(this, modifiedPoints);
+                        return;
+                    }
+                }
                 DamageActionUsed?.Invoke(this, damage);
             }
         }

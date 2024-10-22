@@ -13,7 +13,7 @@ namespace DragoonMayCry.Score.Action.JobModule
             this.playerState = PlayerState.GetInstance();
         }
 
-        public IJobActionModule? GetJobActionModule()
+        public IJobActionModifier? GetJobActionModule()
         {
             var job = playerState.GetCurrentJob();
             return job switch
