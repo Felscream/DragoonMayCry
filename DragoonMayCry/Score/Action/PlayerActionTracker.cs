@@ -106,7 +106,7 @@ namespace DragoonMayCry.Score.Action
         private readonly HashSet<FlyTextKind> validHitTypes = new() { FlyTextKind.Damage, FlyTextKind.DamageDh, FlyTextKind.DamageCrit, FlyTextKind.DamageCritDh };
         private uint spellCastId = uint.MaxValue;
         private IJobActionModifier? jobActionModule;
-        private JobModuleFactory jobModuleFactory;
+        private JobModuleFactory? jobModuleFactory;
         private JobId currentJob = JobId.OTHER;
 
         // added 0.1f to all duration
@@ -545,7 +545,7 @@ namespace DragoonMayCry.Score.Action
         private void OnJobChanged(object? sender, JobId job)
         {
             currentJob = job;
-            jobActionModule = jobModuleFactory.GetJobActionModule();
+            jobActionModule = jobModuleFactory?.GetJobActionModule();
         }
 
         private float GetGcdDropThreshold()

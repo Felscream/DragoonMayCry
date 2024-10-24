@@ -20,9 +20,9 @@ namespace DragoonMayCry.UI
         public delegate void JobAnnouncerChange(JobId job, AnnouncerType announcer);
         public delegate void DmcToggleChange(JobId job);
         public delegate void ApplyToAll(JobConfiguration configuration);
-        public JobAnnouncerChange jobAnnouncerChange;
-        public DmcToggleChange dmcToggleChange;
-        public ApplyToAll applyToAll;
+        public JobAnnouncerChange? jobAnnouncerChange;
+        public DmcToggleChange? dmcToggleChange;
+        public ApplyToAll? applyToAll;
         private readonly JobId job;
         private readonly JobConfiguration configuration;
         private readonly IList<AnnouncerType> announcers;
