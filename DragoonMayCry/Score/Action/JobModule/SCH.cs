@@ -4,15 +4,15 @@ namespace DragoonMayCry.Score.Action.JobModule
 {
     internal class SCH : DotJob
     {
-        protected override Dictionary<uint, uint> StatusIconIds { get { return dotIconIds; } }
+        protected override Dictionary<uint, uint> ActionToStatusIds { get { return actionToStatusIds; } }
 
-        private readonly Dictionary<uint, uint> dotIconIds = new()
+        private readonly Dictionary<uint, uint> actionToStatusIds = new()
         {
-            { 17864, 10504 }, // Bio
-            { 17865, 10505 }, // Bio II
-            { 16540,  12812}, // Biolysis
-            { 17796,  12812}, // Biolysis
-            { 29233,  12812}, // Biolysis
+            { 17864, 179 }, // Bio
+            { 17865, 189 }, // Bio II
+            { 16540,  1895}, // Biolysis
+            { 17796,  2039}, // Biolysis
+            { 29233,  3089}, // Biolysis
         };
         private readonly ScoreManager scoreManager;
         private readonly uint energyDrainId = 167;
@@ -26,7 +26,7 @@ namespace DragoonMayCry.Score.Action.JobModule
 
         public override float OnAction(uint actionId)
         {
-            if (dotIconIds.ContainsKey(actionId))
+            if (actionToStatusIds.ContainsKey(actionId))
             {
                 if (!IsValidDotRefresh(actionId))
                 {

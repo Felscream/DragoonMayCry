@@ -1,20 +1,20 @@
+using Dalamud.Game.ClientState.Objects.Types;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace DragoonMayCry.Score.Action.JobModule
 {
     internal unsafe class BRD : DotJob
     {
-        protected override Dictionary<uint, uint> StatusIconIds { get { return statusIconIds; } }
+        protected override Dictionary<uint, uint> ActionToStatusIds { get { return bardDotIds; } }
 
-        private readonly Dictionary<uint, uint> statusIconIds = new()
+        private readonly Dictionary<uint, uint> bardDotIds = new()
         {
-            { 100, 10352 }, // Venomous Bite
-            { 113, 10360 }, // Windbite
-            { 7406,  12616}, // Caustic Bite
-            { 7407,  12617}, // Stormbite
+            { 100, 124 }, // Venomous Bite
+            { 113, 129 }, // Windbite
+            { 7406,  1200}, // Caustic Bite
+            { 7407,  1201}, // Stormbite
         };
-
+        private readonly HashSet<uint> dotIds;
         private readonly List<uint> bardBuffs = [125, 141, 2722]; // Raging Strikes, Battle Voice, Radiant Finale
         private readonly uint ironJawsId = 3560;
 
@@ -22,25 +22,19 @@ namespace DragoonMayCry.Score.Action.JobModule
         public BRD(ScoreManager scoreManager) : base()
         {
             this.scoreManager = scoreManager;
+            dotIds = [.. bardDotIds.Values];
         }
 
         public override float OnAction(uint actionId)
         {
-            if (actionId != ironJawsId)
+            if (actionId == ironJawsId && IsValidIronJawsUsage())
             {
-                return 0;
+                var buffCount = GetBuffCount();
+                var currentRankThreshold = scoreManager.CurrentScoreRank.StyleScoring.Threshold;
+                return (0.2f + buffCount * 0.07f) * currentRankThreshold;
             }
 
-            var buffCount = GetBuffCount();
-            var currentRankThreshold = scoreManager.CurrentScoreRank.StyleScoring.Threshold;
-
-            if (!IsValidIronJawsUsage())
-            {
-                return buffCount * 0.1f * currentRankThreshold;
-            }
-
-
-            return (0.3f + buffCount * 0.1f) * currentRankThreshold;
+            return 0;
         }
 
         private int GetBuffCount()
@@ -77,83 +71,32 @@ namespace DragoonMayCry.Score.Action.JobModule
                 return false;
             }
 
-            var appliedStatusesCount = GetPlayerAppliedStatusesCount();
-            if (appliedStatusesCount < 2)
+            var target = (IBattleChara)targetManager.Target;
+            var playerId = playerState.Player?.GameObjectId;
+            var statuses = target.StatusList;
+
+            if (statuses == null)
             {
                 return false;
             }
 
-            var targetDebuffAddon = FindTargetDebuffAddon();
-            if (targetDebuffAddon == null)
+            var fadingDotsCount = 0;
+            for (var i = 0; i < statuses.Length; i++)
             {
-                return false;
-            }
-
-            var targetStatusIconIds = statusIconIds.Select(entry => entry.Value).ToHashSet();
-            var validDotRefreshes = 0;
-            var endIndex = targetDebuffAddon->UldManager.NodeListCount > 32 ? 32 : 31;
-            for (var i = 0; i < appliedStatusesCount; i++)
-            {
-                var idx = endIndex - i;
-                var node = targetDebuffAddon->UldManager.NodeList[idx];
-                var cmp = node->GetComponent();
-                if (cmp == null || cmp->UldManager.NodeList == null)
+                var status = statuses[i];
+                if (status != null && status.SourceId == playerId && dotIds.Contains(status.StatusId))
                 {
-                    continue;
-                }
-
-                var imageNode = cmp->UldManager.NodeList[1];
-                if (imageNode == null)
-                {
-                    continue;
-                }
-
-                var image = imageNode->GetAsAtkImageNode();
-                if (image == null)
-                {
-                    continue;
-                }
-
-                var partsList = image->PartsList;
-                if (partsList == null || partsList->PartCount == 0)
-                {
-                    continue;
-                }
-
-                var resource = partsList->Parts[0].UldAsset->AtkTexture.Resource;
-
-                if (resource == null || !targetStatusIconIds.Contains(resource->IconId))
-                {
-                    continue;
-                }
-
-                var resTextNode = cmp->UldManager.NodeList[2];
-                if (resTextNode == null)
-                {
-                    continue;
-                }
-
-                var textNode = resTextNode->GetAsAtkTextNode();
-                var color = textNode->TextColor;
-                if (color.RGBA != PlayerAplliedStatusColor)
-                {
-                    continue;
-                }
-
-                var remainingDotTime = textNode->NodeText.ToString();
-                if (uint.TryParse(remainingDotTime, out var value))
-                {
-                    if (value > 0 && value < 7)
+                    if (status.RemainingTime > 0 && status.RemainingTime <= 6)
                     {
-                        validDotRefreshes++;
+                        fadingDotsCount++;
                     }
                 }
-                if (validDotRefreshes == 2)
+                if (fadingDotsCount >= 2)
                 {
                     return true;
                 }
             }
-            return false;
+            return fadingDotsCount >= 2;
         }
     }
 }

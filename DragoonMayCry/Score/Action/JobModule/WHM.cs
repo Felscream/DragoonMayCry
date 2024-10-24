@@ -4,14 +4,14 @@ namespace DragoonMayCry.Score.Action.JobModule
 {
     internal unsafe class WHM : DotJob
     {
-        protected override Dictionary<uint, uint> StatusIconIds { get { return dotIconIds; } }
+        protected override Dictionary<uint, uint> ActionToStatusIds { get { return actionToStatusIds; } }
 
-        private readonly Dictionary<uint, uint> dotIconIds = new()
+        private readonly Dictionary<uint, uint> actionToStatusIds = new()
         {
-            { 121, 10403 }, // Aero
-            { 132, 10409 }, // Aero II
-            { 16532, 12635 }, // Dia
-            { 17990, 12635 }, // Another Dia ??
+            { 121, 143 }, // Aero
+            { 132, 144 }, // Aero II
+            { 16532, 1871 }, // Dia
+            { 17990, 2035 }, // Another Dia ??
         };
 
         private readonly HashSet<uint> afflatusSolace = [16531, 17791];
@@ -30,7 +30,7 @@ namespace DragoonMayCry.Score.Action.JobModule
 
         public override float OnAction(uint actionId)
         {
-            if (dotIconIds.ContainsKey(actionId))
+            if (actionToStatusIds.ContainsKey(actionId))
             {
                 if (!IsValidDotRefresh(actionId))
                 {

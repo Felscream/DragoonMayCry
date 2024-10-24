@@ -4,14 +4,14 @@ namespace DragoonMayCry.Score.Action.JobModule
 {
     internal class AST : DotJob
     {
-        protected override Dictionary<uint, uint> StatusIconIds { get { return statusIconIds; } }
+        protected override Dictionary<uint, uint> ActionToStatusIds { get { return actionToStatusIds; } }
 
-        private readonly Dictionary<uint, uint> statusIconIds = new()
+        private readonly Dictionary<uint, uint> actionToStatusIds = new()
         {
-            { 3599, 13213 }, // Combust
-            { 3608, 13214 }, // Combust II
-            { 16554,  13248}, // Combust III
-            { 17806,  13248}, // Combust III
+            { 3599, 838 }, // Combust
+            { 3608, 843 }, // Combust II
+            { 16554,  1881}, // Combust III
+            { 17806,  1881}, // Combust III
         };
         private readonly HashSet<uint> playCardIds = [37023, 37024, 37025, 37026, 37027, 37028];
         private readonly uint ladyOfTheCrownId = 7445;
@@ -28,13 +28,8 @@ namespace DragoonMayCry.Score.Action.JobModule
 
         public override float OnAction(uint actionId)
         {
-            if (statusIconIds.ContainsKey(actionId))
+            if (IsValidDotRefresh(actionId))
             {
-                if (!IsValidDotRefresh(actionId))
-                {
-                    return 0f;
-                }
-
                 return dotRefreshBonus * scoreManager.CurrentScoreRank.StyleScoring.Threshold;
             }
             else if (playCardIds.Contains(actionId))

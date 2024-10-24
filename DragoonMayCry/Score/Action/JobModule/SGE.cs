@@ -4,18 +4,16 @@ namespace DragoonMayCry.Score.Action.JobModule
 {
     internal class SGE : DotJob
     {
-        protected override Dictionary<uint, uint> StatusIconIds { get { return statusIconIds; } }
+        protected override Dictionary<uint, uint> ActionToStatusIds { get { return actionToStatusIds; } }
 
-        private readonly Dictionary<uint, uint> statusIconIds = new()
+        private readonly Dictionary<uint, uint> actionToStatusIds = new()
         {
-            { 24293, 12960 }, // Eukrasian Dosis
-            { 24308, 12961 }, // Eukrasian Dosis II
-            { 24314,  12962}, // Eukrasian Dosis III
-            { 25421,  12962}, // Eukrasian Dosis III
-            { 27823,  12962}, // Eukrasian Dosis III
-            { 29257,  12962}, // Eukrasian Dosis III
-            { 35881,  12962}, // Eukrasian Dosis III
-            { 38910,  12962}, // Eukrasian Dosis III
+            { 24293, 2614 }, // Eukrasian Dosis
+            { 24308, 2615 }, // Eukrasian Dosis II
+            { 24314,  2616}, // Eukrasian Dosis III
+            { 25421,  2864}, // Eukrasian Dosis III
+            { 27823,  3108}, // Eukrasian Dosis III
+            { 29257,  3976}, // Eukrasian Dosis III
         };
 
         private const uint TaurocholeId = 24303;
