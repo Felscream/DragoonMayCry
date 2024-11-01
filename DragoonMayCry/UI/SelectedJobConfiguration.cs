@@ -146,7 +146,7 @@ namespace DragoonMayCry.UI
                                    200f)
                    .StartConditional(configuration.Bgm == JobConfiguration.BgmConfiguration.Randomize)
                    .SameLine()
-                   .AddHelpMarker("Randomized on combat status change")
+                   .AddHelpMarker("Randomized at the end of combat")
                    .EndConditional()
                    .AddButton("Apply to all jobs", () => { ApplyToAll?.Invoke(configuration); })
                    .EndDisabled()

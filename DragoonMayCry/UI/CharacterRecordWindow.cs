@@ -205,7 +205,7 @@ namespace DragoonMayCry.UI
                         if (ImGui.Selectable(categories[i].Type.ToString(), i == selectedCategoryId))
                         {
                             selectedCategoryId = i;
-                            UpdateDifficulty();
+                            UpdateSubcategories();
                         }
                     }
 
@@ -222,7 +222,7 @@ namespace DragoonMayCry.UI
                         if (ImGui.Selectable(GetDifficultyLabel(difficulties[i]), i == selectedDifficultyId))
                         {
                             selectedDifficultyId = i;
-                            UpdateSubcategories();
+                            UpdateDisplayedDuties();
                         }
                     }
 
@@ -242,7 +242,7 @@ namespace DragoonMayCry.UI
                             if (ImGui.Selectable(subcategories[i], i == selectedSubcategoryId))
                             {
                                 selectedSubcategoryId = i;
-                                UpdateDisplayedDuties();
+                                UpdateDifficulty();
                             }
                         }
 
@@ -294,10 +294,10 @@ namespace DragoonMayCry.UI
                         ImGui.TableNextColumn();
                         var normalRecord = GetDutyRecordPerDifficulty(1, jobRecords);
 
-                        DrawRank(displayedDuties[i].dutyId, normalRecord);
-                        CenterText(GetKillTime(displayedDuties[i].dutyId, normalRecord), ImGui.GetContentRegionAvail());
+                        DrawRank(displayedDuties[i].DutyId, normalRecord);
+                        CenterText(GetKillTime(displayedDuties[i].DutyId, normalRecord), ImGui.GetContentRegionAvail());
 
-                        var recordDate = GetRecordDate(displayedDuties[i].dutyId, normalRecord);
+                        var recordDate = GetRecordDate(displayedDuties[i].DutyId, normalRecord);
                         if (!string.IsNullOrEmpty(recordDate))
                         {
                             CenterText(recordDate, ImGui.GetContentRegionAvail());
@@ -312,9 +312,9 @@ namespace DragoonMayCry.UI
 
                         var emdRecords = GetDutyRecordPerDifficulty(2, jobRecords);
 
-                        DrawRank(displayedDuties[i].dutyId, emdRecords);
-                        CenterText(GetKillTime(displayedDuties[i].dutyId, emdRecords), ImGui.GetContentRegionAvail());
-                        var emdRecordDate = GetRecordDate(displayedDuties[i].dutyId, emdRecords);
+                        DrawRank(displayedDuties[i].DutyId, emdRecords);
+                        CenterText(GetKillTime(displayedDuties[i].DutyId, emdRecords), ImGui.GetContentRegionAvail());
+                        var emdRecordDate = GetRecordDate(displayedDuties[i].DutyId, emdRecords);
                         if (!string.IsNullOrEmpty(emdRecordDate))
                         {
                             CenterText(emdRecordDate, ImGui.GetContentRegionAvail());
@@ -341,44 +341,29 @@ namespace DragoonMayCry.UI
 
             categories = extensions[selectedExtensionId].Categories;
             selectedCategoryId = 0;
-            UpdateDifficulty();
+            UpdateSubcategories();
         }
 
         private void UpdateSubcategories()
         {
-            HashSet<string> temp = [.. categories[selectedCategoryId].Subcategories];
-            var currentSub = subcategories.Count > 0 ? subcategories[selectedSubcategoryId] : null;
-            subcategories =
-                subcategories = extensions[selectedExtensionId]
-                                .Instances
-                                .Where(duty =>
-                                           duty.Value.Difficulty ==
-                                           difficulties[selectedDifficultyId]
-                                           && temp.Contains(duty.Value.Subcategory))
-                                .Select(duty => duty.Value.Subcategory)
-                                .Distinct()
-                                .ToList();
+            subcategories = [.. categories[selectedCategoryId].Subcategories];
+            selectedSubcategoryId = 0;
 
-            if (currentSub != null && subcategories.Contains(currentSub))
-            {
-                selectedSubcategoryId = subcategories.IndexOf(currentSub);
-            }
-            else
-            {
-                selectedSubcategoryId = 0;
-            }
-
-            UpdateDisplayedDuties();
+            UpdateDifficulty();
         }
 
         private void UpdateDifficulty()
         {
             var tempDiff = extensions[selectedExtensionId].Instances
                                                           .Where(entry => entry.Value.Category ==
-                                                                          categories[selectedCategoryId].Type)
+                                                                          categories[selectedCategoryId].Type
+                                                                          && (subcategories.Count == 0 ||
+                                                                              subcategories[selectedSubcategoryId]
+                                                                                  .Equals(entry.Value.Subcategory)))
                                                           .Select(entry => entry.Value.Difficulty)
                                                           .Distinct()
                                                           .ToList();
+
             if (difficulties.Count == 0 || !tempDiff.Contains(difficulties[selectedDifficultyId]))
             {
                 selectedDifficultyId = 0;
@@ -389,7 +374,7 @@ namespace DragoonMayCry.UI
             }
 
             difficulties = tempDiff;
-            UpdateSubcategories();
+            UpdateDisplayedDuties();
         }
 
         private void UpdateDisplayedDuties()
@@ -420,20 +405,20 @@ namespace DragoonMayCry.UI
 
         private ContentFinderCondition? GetContent(DisplayedDuty displayedDuty)
         {
-            if (dutyIdToContent.TryGetValue(displayedDuty.dutyId, out var cachedContent))
+            if (dutyIdToContent.TryGetValue(displayedDuty.DutyId, out var cachedContent))
             {
                 return cachedContent;
             }
 
             var contentFinderCondition =
-                contentFinder.FirstOrDefault(content => content.TerritoryType.Row == displayedDuty.dutyId);
+                contentFinder.FirstOrDefault(content => content.TerritoryType.Row == displayedDuty.DutyId);
             if (contentFinderCondition == null)
             {
                 return null;
             }
 
-            dutyIdToContent.Add(displayedDuty.dutyId, contentFinderCondition);
-            return dutyIdToContent[displayedDuty.dutyId];
+            dutyIdToContent.Add(displayedDuty.DutyId, contentFinderCondition);
+            return dutyIdToContent[displayedDuty.DutyId];
         }
 
         private string GetTexturePath(DisplayedDuty displayed)
@@ -444,7 +429,7 @@ namespace DragoonMayCry.UI
                 return HiddenDutyTexPath;
             }
 
-            return displayed.duty.TexPath;
+            return displayed.Duty.TexPath;
         }
 
         private void CenterText(string text, Vector2 availableSpace)
@@ -529,20 +514,14 @@ namespace DragoonMayCry.UI
                 return "???";
             }
 
-            var name = content?.Name ?? displayed.duty.Name;
+            var name = content?.Name ?? displayed.Duty.Name;
             return string.Concat(name[0].ToString().ToUpper(), name.AsSpan(1));
         }
 
-        private struct DisplayedDuty
+        private struct DisplayedDuty(ushort id, TrackableDuty duty)
         {
-            public readonly ushort dutyId;
-            public readonly TrackableDuty duty;
-
-            public DisplayedDuty(ushort id, TrackableDuty duty)
-            {
-                dutyId = id;
-                this.duty = duty;
-            }
+            public readonly ushort DutyId = id;
+            public readonly TrackableDuty Duty = duty;
         }
     }
 }

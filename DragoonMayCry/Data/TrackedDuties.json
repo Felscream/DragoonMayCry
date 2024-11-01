@@ -73,8 +73,7 @@
             {
                 "Type": 0,
                 "Subcategories": [
-                    "Story",
-                    "Unreal"
+                    "Main story quest"
                 ]
             },
             {
@@ -90,7 +89,7 @@
                 "LvlSync": 94,
                 "Difficulty": 0,
                 "Category": 0,
-                "Subcategory": "Story",
+                "Subcategory": "Main story quest",
                 "TexPath": "ui/icon/112000/112562_hr1.tex"
             },
             "1196": {
@@ -98,7 +97,7 @@
                 "LvlSync": 100,
                 "Difficulty": 1,
                 "Category": 0,
-                "Subcategory": "Story",
+                "Subcategory": "Main story quest",
                 "TexPath": "ui/icon/112000/112563_hr1.tex"
             },
             "1200": {
@@ -106,7 +105,7 @@
                 "LvlSync": 100,
                 "Difficulty": 0,
                 "Category": 0,
-                "Subcategory": "Story",
+                "Subcategory": "Main story quest",
                 "TexPath": "ui/icon/112000/112564_hr1.tex"
             },
             "1201": {
@@ -114,7 +113,7 @@
                 "LvlSync": 100,
                 "Difficulty": 1,
                 "Category": 0,
-                "Subcategory": "Story",
+                "Subcategory": "Main story quest",
                 "TexPath": "ui/icon/112000/112565_hr1.tex"
             },
             "1202": {
@@ -122,7 +121,7 @@
                 "LvlSync": 100,
                 "Difficulty": 0,
                 "Category": 0,
-                "Subcategory": "Story",
+                "Subcategory": "Main story quest",
                 "TexPath": "ui/icon/112000/112566_hr1.tex"
             },
             "1225": {
