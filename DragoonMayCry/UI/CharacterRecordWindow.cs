@@ -14,6 +14,7 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using FFXIVClientStructs.FFXIV.Client.LayoutEngine;
 using PlayerState = DragoonMayCry.State.PlayerState;
 
 namespace DragoonMayCry.UI
@@ -204,7 +205,7 @@ namespace DragoonMayCry.UI
                         if (ImGui.Selectable(categories[i].Type.ToString(), i == selectedCategoryId))
                         {
                             selectedCategoryId = i;
-                            UpdateSubcategories();
+                            UpdateDifficulty();
                         }
                     }
 
@@ -221,7 +222,7 @@ namespace DragoonMayCry.UI
                         if (ImGui.Selectable(GetDifficultyLabel(difficulties[i]), i == selectedDifficultyId))
                         {
                             selectedDifficultyId = i;
-                            UpdateDisplayedDuties();
+                            UpdateSubcategories();
                         }
                     }
 
@@ -232,7 +233,7 @@ namespace DragoonMayCry.UI
                 {
                     ImGui.SameLine();
                     ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 20f);
-                    ImGui.SetNextItemWidth(200f);
+                    ImGui.SetNextItemWidth(175f);
 
                     if (ImGui.BeginCombo("Series", subcategories[selectedSubcategoryId]))
                     {
@@ -241,7 +242,7 @@ namespace DragoonMayCry.UI
                             if (ImGui.Selectable(subcategories[i], i == selectedSubcategoryId))
                             {
                                 selectedSubcategoryId = i;
-                                UpdateDifficulty();
+                                UpdateDisplayedDuties();
                             }
                         }
 
@@ -340,25 +341,37 @@ namespace DragoonMayCry.UI
 
             categories = extensions[selectedExtensionId].Categories;
             selectedCategoryId = 0;
-            UpdateSubcategories();
+            UpdateDifficulty();
         }
 
         private void UpdateSubcategories()
         {
-            subcategories = [.. categories[selectedCategoryId].Subcategories];
+            HashSet<string> temp = [.. categories[selectedCategoryId].Subcategories];
+            subcategories = new List<string>();
+            if (temp.Count > 0)
+            {
+                var eligibleSubs = extensions[selectedExtensionId].Instances
+                                                                  .Where(duty => duty.Value.Difficulty ==
+                                                                             difficulties[selectedDifficultyId])
+                                                                  .Select(duty => duty.Value.Subcategory).ToHashSet();
+                foreach (var sub in temp)
+                {
+                    if (eligibleSubs.Contains(sub))
+                    {
+                        subcategories.Add(sub);
+                    }
+                }
+            }
+
             selectedSubcategoryId = 0;
-            UpdateDifficulty();
+            UpdateDisplayedDuties();
         }
 
         private void UpdateDifficulty()
         {
             var tempDiff = extensions[selectedExtensionId].Instances
                                                           .Where(entry => entry.Value.Category ==
-                                                                          categories[selectedCategoryId].Type
-                                                                          && (subcategories.Count == 0
-                                                                              || entry.Value.Subcategory.Contains(
-                                                                                  subcategories[
-                                                                                      selectedSubcategoryId])))
+                                                                          categories[selectedCategoryId].Type)
                                                           .Select(entry => entry.Value.Difficulty)
                                                           .Distinct()
                                                           .ToList();
@@ -372,8 +385,7 @@ namespace DragoonMayCry.UI
             }
 
             difficulties = tempDiff;
-
-            UpdateDisplayedDuties();
+            UpdateSubcategories();
         }
 
         private void UpdateDisplayedDuties()
@@ -383,7 +395,7 @@ namespace DragoonMayCry.UI
                                                                              categories[selectedCategoryId].Type
                                                                              && (subcategories.Count == 0
                                                                                          || entry.Value.Subcategory
-                                                                                             .Contains(
+                                                                                             .Equals(
                                                                                                  subcategories[
                                                                                                      selectedSubcategoryId]))
                                                                              && entry.Value.Difficulty ==
