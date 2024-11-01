@@ -24,8 +24,13 @@ public class DmcConfigurationOne : IPluginConfiguration
     public Setting<bool> EnableDynamicBgm = new(false);
     public Setting<bool> EnableMuffledEffectOnDeath = new(false);
     public Setting<bool> EnabledFinalRankChatLogging = new(true);
+
     public Setting<bool> LockScoreWindow { get; set; } = new(true);
+
+    // deprecated
     public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);
+    public Setting<int> RankDisplayScale = new(100);
+
     public readonly Dictionary<JobId, JobConfiguration> JobConfiguration = new()
     {
         { JobId.AST, new JobConfiguration() },

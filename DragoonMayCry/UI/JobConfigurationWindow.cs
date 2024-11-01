@@ -21,6 +21,7 @@ namespace DragoonMayCry.UI
         {
             public AnnouncerType type;
             public JobId job;
+
             public JobAnnouncerType(AnnouncerType type, JobId job)
             {
                 this.type = type;
@@ -31,12 +32,29 @@ namespace DragoonMayCry.UI
         public EventHandler<JobAnnouncerType>? JobAnnouncerTypeChange;
         public EventHandler<JobId>? EnabledForJobChange;
         private readonly DmcConfigurationOne configuration;
-        private readonly IList<AnnouncerType> announcers = Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>().ToList();
-        private readonly IList<JobConfiguration.BgmConfiguration> bgmOptions = Enum.GetValues(typeof(JobConfiguration.BgmConfiguration)).Cast<JobConfiguration.BgmConfiguration>().ToList();
+
+        private readonly IList<AnnouncerType> announcersPreview =
+            Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>()
+                .Where(announcer => announcer != AnnouncerType.Randomize).ToList();
+
+        private readonly IList<AnnouncerType> announcers =
+            Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>().ToList();
+
+        private readonly IList<JobConfiguration.BgmConfiguration> bgmOptions = Enum
+                                                                               .GetValues(
+                                                                                   typeof(JobConfiguration.
+                                                                                       BgmConfiguration))
+                                                                               .Cast<
+                                                                                   JobConfiguration.BgmConfiguration>()
+                                                                               .ToList();
+
         private readonly Setting<AnnouncerType> selectedAnnouncerPreview = new(AnnouncerType.DmC5);
         private ISelectable selected;
         private readonly IList<ISelectable> selectableJobConfiguration = new List<ISelectable>();
-        public JobConfigurationWindow(DmcConfigurationOne configuration) : base("DragoonMayCry - Job configuration##DmCJobConfiguration", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
+
+        public JobConfigurationWindow(DmcConfigurationOne configuration) : base(
+            "DragoonMayCry - Job configuration##DmCJobConfiguration",
+            ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
         {
             Size = new Vector2(675, 375f);
             SizeCondition = ImGuiCond.Appearing;
@@ -45,21 +63,26 @@ namespace DragoonMayCry.UI
             foreach (var entry in configuration.JobConfiguration)
             {
                 var jobSelection = new SelectedJobConfiguration(entry.Key, entry.Value, announcers, bgmOptions);
-                jobSelection.jobAnnouncerChange = JobAnnouncerChange;
-                jobSelection.dmcToggleChange = DmcEnabledForJobChange;
-                jobSelection.applyToAll = ApplyToAll;
+                jobSelection.JobAnnouncerChange = JobAnnouncerChange;
+                jobSelection.DmcToggleChange = DmcEnabledForJobChange;
+                jobSelection.ApplyToAll = ApplyToAll;
                 selectableJobConfiguration.Add(jobSelection);
             }
+
             selected = selectableJobConfiguration[0];
         }
 
         public override void Draw()
         {
             InfoBox.Instance
-                .AddTitle("Announcer Preview")
-                .AddConfigCombo(announcers, selectedAnnouncerPreview, StyleAnnouncerService.GetAnnouncerTypeLabel, "", 150)
-                .SameLine().AddIconButton("preview", Dalamud.Interface.FontAwesomeIcon.Play, () => Plugin.StyleAnnouncerService?.PlayRandomAnnouncerLine(selectedAnnouncerPreview.Value))
-                .Draw();
+                   .AddTitle("Announcer Preview")
+                   .AddConfigCombo(announcersPreview, selectedAnnouncerPreview,
+                                   StyleAnnouncerService.GetAnnouncerTypeLabel,
+                                   "", 150)
+                   .SameLine().AddIconButton("preview", Dalamud.Interface.FontAwesomeIcon.Play,
+                                             () => Plugin.StyleAnnouncerService?.PlayRandomAnnouncerLine(
+                                                 selectedAnnouncerPreview.Value))
+                   .Draw();
 
             var region = ImGui.GetContentRegionAvail();
             var itemSpacing = ImGui.GetStyle().ItemSpacing;
@@ -71,16 +94,19 @@ namespace DragoonMayCry.UI
                 ImGui.TableSetupColumn("##LeftColumn", ImGuiTableColumnFlags.WidthFixed, topLeftSideHeight);
                 ImGui.TableNextColumn();
                 var regionSize = ImGui.GetContentRegionAvail();
-                if (ImGui.BeginChild("##SelectableJobs", regionSize with { Y = topLeftSideHeight }, false, ImGuiWindowFlags.NoDecoration))
+                if (ImGui.BeginChild("##SelectableJobs", regionSize with { Y = topLeftSideHeight }, false,
+                                     ImGuiWindowFlags.NoDecoration))
                 {
                     DrawSelectables();
                 }
+
                 ImGui.EndChild();
                 ImGui.TableNextColumn();
                 if (ImGui.BeginChild("##SelectedJob", Vector2.Zero, false, ImGuiWindowFlags.NoDecoration))
                 {
                     selected.Contents.Draw();
                 }
+
                 ImGui.EndChild();
 
                 ImGui.EndTable();
@@ -92,9 +118,11 @@ namespace DragoonMayCry.UI
             foreach (var entry in configuration.JobConfiguration)
             {
                 entry.Value.Announcer = new(targetConfiguration.Announcer.Value);
+                entry.Value.RandomizeAnnouncement = new(targetConfiguration.RandomizeAnnouncement);
                 entry.Value.Bgm = new(targetConfiguration.Bgm.Value);
                 entry.Value.GcdDropThreshold = new(targetConfiguration.GcdDropThreshold.Value);
             }
+
             KamiCommon.SaveConfiguration();
         }
 
@@ -122,6 +150,7 @@ namespace DragoonMayCry.UI
                     {
                         selected = item;
                     }
+
                     ImGui.PopStyleColor();
                     ImGui.PopStyleColor();
 
@@ -131,13 +160,11 @@ namespace DragoonMayCry.UI
 
                     ImGui.Spacing();
                 }
+
                 ImGui.EndListBox();
             }
         }
 
-        public void Dispose()
-        {
-
-        }
+        public void Dispose() { }
     }
 }
