@@ -28,11 +28,11 @@ namespace DragoonMayCry.UI
         private readonly HowItWorksWindow howItWorksWindow;
 
         private Dictionary<JobId, JobRecord> characterRecords = new();
-        private readonly Dictionary<ushort, uint> dutyToContentId = new();
+        private readonly Dictionary<ushort, ContentFinderCondition> dutyIdToContent = new();
         private readonly LuminaCache<ContentFinderCondition> contentFinder;
-        private readonly Extension[] extensions = new Extension[0];
-        private readonly List<String> extensionValues = new();
-        private readonly List<JobId> jobs = new();
+        private readonly Extension[] extensions;
+        private readonly List<String> extensionValues;
+        private readonly List<JobId> jobs;
         private const string HiddenDutyTexPath = "ui/icon/112000/112036_hr1.tex";
         private const string MissingRankTexPath = "DragoonMayCry.Assets.MissingRank.png";
         private ExtensionCategory[] categories = [];
@@ -46,9 +46,13 @@ namespace DragoonMayCry.UI
         private int selectedDifficultyId = 0;
         private readonly Vector2 dutyTextureSize = new(376, 120);
         private readonly Vector2 rankSize = new(130, 130);
-        private readonly ImGuiTableFlags tableFlags = ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.ScrollX | ImGuiTableFlags.BordersInnerH;
 
-        public CharacterRecordWindow(RecordService recordService, ConfigWindow configWindow, HowItWorksWindow howItWorksWindow) : base("DragoonMayCry - Character records")
+        private readonly ImGuiTableFlags tableFlags =
+            ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.ScrollX | ImGuiTableFlags.BordersInnerH;
+
+        public CharacterRecordWindow(
+            RecordService recordService, ConfigWindow configWindow, HowItWorksWindow howItWorksWindow) : base(
+            "DragoonMayCry - Character records")
         {
             textureProvider = Service.TextureProvider;
             contentFinder = LuminaCache<ContentFinderCondition>.Instance;
@@ -73,7 +77,11 @@ namespace DragoonMayCry.UI
 
             UpdateCategories();
 
-            jobs = [.. Enum.GetValues(typeof(JobId)).Cast<JobId>().Where(job => job != JobId.OTHER).OrderBy(job => job.ToString())];
+            jobs =
+            [
+                .. Enum.GetValues(typeof(JobId)).Cast<JobId>().Where(job => job != JobId.OTHER)
+                       .OrderBy(job => job.ToString())
+            ];
             selectedJob = jobs[0];
 
             if (clientState.IsLoggedIn)
@@ -94,6 +102,7 @@ namespace DragoonMayCry.UI
             {
                 configWindow.Toggle();
             }
+
             if (ImGui.IsItemHovered())
             {
                 ImGui.SetTooltip("Configuration");
@@ -105,10 +114,12 @@ namespace DragoonMayCry.UI
             {
                 howItWorksWindow.Toggle();
             }
+
             if (ImGui.IsItemHovered())
             {
                 ImGui.SetTooltip("How it works");
             }
+
             ImGui.SameLine();
             ImGui.SetCursorPosX(ImGui.GetStyle().WindowPadding.X);
 
@@ -139,6 +150,7 @@ namespace DragoonMayCry.UI
             {
                 return;
             }
+
             selectedJob = job;
         }
 
@@ -159,6 +171,7 @@ namespace DragoonMayCry.UI
                         selectedJob = jobs[i];
                     }
                 }
+
                 ImGui.EndCombo();
             }
 
@@ -166,7 +179,6 @@ namespace DragoonMayCry.UI
 
             if (ImGui.BeginChild("Filters", new System.Numerics.Vector2(1000f, 50f)))
             {
-
                 ImGui.SetNextItemWidth(150f);
                 if (ImGui.BeginCombo("Extension", extensionValues[selectedExtensionId]))
                 {
@@ -178,6 +190,7 @@ namespace DragoonMayCry.UI
                             UpdateCategories();
                         }
                     }
+
                     ImGui.EndCombo();
                 }
 
@@ -194,6 +207,7 @@ namespace DragoonMayCry.UI
                             UpdateSubcategories();
                         }
                     }
+
                     ImGui.EndCombo();
                 }
 
@@ -210,6 +224,7 @@ namespace DragoonMayCry.UI
                             UpdateDisplayedDuties();
                         }
                     }
+
                     ImGui.EndCombo();
                 }
 
@@ -229,43 +244,52 @@ namespace DragoonMayCry.UI
                                 UpdateDifficulty();
                             }
                         }
+
                         ImGui.EndCombo();
                     }
                 }
 
                 ImGui.EndChild();
             }
+
             #endregion
 
             #region duties
+
             if (ImGui.BeginChild("Duties"))
             {
                 if (ImGui.BeginTable("duties-table", 3, tableFlags))
                 {
-
                     ImGui.TableSetupColumn("Duty", ImGuiTableColumnFlags.WidthFixed, 540f);
-                    ImGui.TableSetupColumn("Normal", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoHeaderWidth, 180f);
-                    ImGui.TableSetupColumn("Estinien Must Die", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoHeaderWidth, 180f);
+                    ImGui.TableSetupColumn(
+                        "Normal", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoHeaderWidth, 180f);
+                    ImGui.TableSetupColumn("Estinien Must Die",
+                                           ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoHeaderWidth,
+                                           180f);
                     ImGui.TableHeadersRow();
                     for (var i = 0; i < displayedDuties.Count; i++)
                     {
                         ImGui.TableNextRow();
 
                         #region duty
+
                         ImGui.TableNextColumn();
 
                         var scaledDutyTextureSize = dutyTextureSize * 1.4f;
 
                         CenterText(GetDutyName(displayedDuties[i]), scaledDutyTextureSize);
-                        if (textureProvider.GetFromGame(GetTexturePath(displayedDuties[i])).TryGetWrap(out var tex, out var _))
+                        if (textureProvider.GetFromGame(GetTexturePath(displayedDuties[i]))
+                                           .TryGetWrap(out var tex, out var _))
                         {
                             ImGui.Image(tex.ImGuiHandle, scaledDutyTextureSize);
                         }
+
                         #endregion
 
                         var jobRecords = GetJobRecord();
 
                         #region normal
+
                         ImGui.TableNextColumn();
                         var normalRecord = GetDutyRecordPerDifficulty(1, jobRecords);
 
@@ -277,10 +301,12 @@ namespace DragoonMayCry.UI
                         {
                             CenterText(recordDate, ImGui.GetContentRegionAvail());
                         }
+
                         #endregion
 
 
                         #region emd
+
                         ImGui.TableNextColumn();
 
                         var emdRecords = GetDutyRecordPerDifficulty(2, jobRecords);
@@ -292,13 +318,16 @@ namespace DragoonMayCry.UI
                         {
                             CenterText(emdRecordDate, ImGui.GetContentRegionAvail());
                         }
+
                         #endregion
                     }
+
                     ImGui.EndTable();
                 }
 
                 ImGui.EndChild();
             }
+
             #endregion
         }
 
@@ -308,6 +337,7 @@ namespace DragoonMayCry.UI
             {
                 return;
             }
+
             categories = extensions[selectedExtensionId].Categories;
             selectedCategoryId = 0;
             UpdateSubcategories();
@@ -323,12 +353,15 @@ namespace DragoonMayCry.UI
         private void UpdateDifficulty()
         {
             var tempDiff = extensions[selectedExtensionId].Instances
-                .Where(entry => entry.Value.Category == categories[selectedCategoryId].Type
-                    && (subcategories.Count == 0
-                        || entry.Value.Subcategory.Contains(subcategories[selectedSubcategoryId])))
-                .Select(entry => entry.Value.Difficulty)
-                .Distinct()
-                .ToList();
+                                                          .Where(entry => entry.Value.Category ==
+                                                                          categories[selectedCategoryId].Type
+                                                                          && (subcategories.Count == 0
+                                                                              || entry.Value.Subcategory.Contains(
+                                                                                  subcategories[
+                                                                                      selectedSubcategoryId])))
+                                                          .Select(entry => entry.Value.Difficulty)
+                                                          .Distinct()
+                                                          .ToList();
             if (difficulties.Count == 0 || !tempDiff.Contains(difficulties[selectedDifficultyId]))
             {
                 selectedDifficultyId = 0;
@@ -337,6 +370,7 @@ namespace DragoonMayCry.UI
             {
                 selectedDifficultyId = tempDiff.IndexOf(difficulties[selectedDifficultyId]);
             }
+
             difficulties = tempDiff;
 
             UpdateDisplayedDuties();
@@ -345,12 +379,17 @@ namespace DragoonMayCry.UI
         private void UpdateDisplayedDuties()
         {
             displayedDuties = extensions[selectedExtensionId].Instances
-                .Where(entry => entry.Value.Category == categories[selectedCategoryId].Type
-                    && (subcategories.Count == 0
-                        || entry.Value.Subcategory.Contains(subcategories[selectedSubcategoryId]))
-                    && entry.Value.Difficulty == difficulties[selectedDifficultyId])
-                .Select(entry => new DisplayedDuty(entry.Key, entry.Value))
-                .ToList();
+                                                             .Where(entry => entry.Value.Category ==
+                                                                             categories[selectedCategoryId].Type
+                                                                             && (subcategories.Count == 0
+                                                                                         || entry.Value.Subcategory
+                                                                                             .Contains(
+                                                                                                 subcategories[
+                                                                                                     selectedSubcategoryId]))
+                                                                             && entry.Value.Difficulty ==
+                                                                             difficulties[selectedDifficultyId])
+                                                             .Select(entry => new DisplayedDuty(entry.Key, entry.Value))
+                                                             .ToList();
         }
 
         private static string GetDifficultyLabel(Difficulty diff)
@@ -363,30 +402,32 @@ namespace DragoonMayCry.UI
             };
         }
 
-        private uint GetContentId(DisplayedDuty displayedDuty)
+        private ContentFinderCondition? GetContent(DisplayedDuty displayedDuty)
         {
-            if (dutyToContentId.TryGetValue(displayedDuty.dutyId, out var contentId))
+            if (dutyIdToContent.TryGetValue(displayedDuty.dutyId, out var cachedContent))
             {
-                return contentId;
+                return cachedContent;
             }
 
-            var contentFinderCondition = contentFinder.FirstOrDefault(content => content.TerritoryType.Row == displayedDuty.dutyId);
+            var contentFinderCondition =
+                contentFinder.FirstOrDefault(content => content.TerritoryType.Row == displayedDuty.dutyId);
             if (contentFinderCondition == null)
             {
-                return 0;
+                return null;
             }
 
-            dutyToContentId.Add(displayedDuty.dutyId, contentFinderCondition.Content.Row);
-            return dutyToContentId[displayedDuty.dutyId];
+            dutyIdToContent.Add(displayedDuty.dutyId, contentFinderCondition);
+            return dutyIdToContent[displayedDuty.dutyId];
         }
 
         private string GetTexturePath(DisplayedDuty displayed)
         {
-            var contentId = GetContentId(displayed);
-            if (contentId == 0 || !UIState.IsInstanceContentUnlocked(contentId))
+            var content = GetContent(displayed);
+            if (content == null || !UIState.IsInstanceContentUnlocked(content.Content.Row))
             {
                 return HiddenDutyTexPath;
             }
+
             return displayed.duty.TexPath;
         }
 
@@ -427,7 +468,8 @@ namespace DragoonMayCry.UI
             }
 
             ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX() + 30, ImGui.GetCursorPosY() + 10));
-            if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), rankIconPath).TryGetWrap(out var rankIcon, out var _))
+            if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), rankIconPath)
+                       .TryGetWrap(out var rankIcon, out var _))
             {
                 ImGui.Image(rankIcon.ImGuiHandle, rankSize);
             }
@@ -439,6 +481,7 @@ namespace DragoonMayCry.UI
             {
                 return dutyRecord.Date.ToString(CultureInfo.CurrentCulture);
             }
+
             return "";
         }
 
@@ -448,6 +491,7 @@ namespace DragoonMayCry.UI
             {
                 return jobRecord;
             }
+
             return new JobRecord();
         }
 
@@ -457,29 +501,20 @@ namespace DragoonMayCry.UI
             {
                 return jobRecord.EmdRecord;
             }
+
             return jobRecord.Record;
         }
 
         private string GetDutyName(DisplayedDuty displayed)
         {
-            var contentId = GetContentId(displayed);
-            if (contentId == 0 || !UIState.IsInstanceContentUnlocked(contentId))
+            var content = GetContent(displayed);
+            if (content == null || !UIState.IsInstanceContentUnlocked(content.Content.Row))
             {
                 return "???";
             }
-            var duty = displayed.duty;
-            if (duty.Difficulty == Difficulty.HighEnd)
-            {
-                if (duty.Category == Category.Trials)
-                {
-                    return $"{duty.Name} - Extreme";
-                }
-                if (duty.Category == Category.Raids)
-                {
-                    return $"{duty.Name} - Savage";
-                }
-            }
-            return duty.Name;
+
+            var name = content?.Name ?? displayed.duty.Name;
+            return string.Concat(name[0].ToString().ToUpper(), name.AsSpan(1));
         }
 
         private struct DisplayedDuty

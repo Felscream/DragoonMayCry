@@ -13,5 +13,6 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
         Morrison,
         DmC5Balrog,
         DmC,
+        Randomize
     }
 }

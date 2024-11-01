@@ -1,3 +1,4 @@
+using System;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using KamiLib.Configuration;
 
@@ -20,5 +21,6 @@ namespace DragoonMayCry.Configuration
         public Setting<BgmConfiguration> Bgm = new(BgmConfiguration.Off);
         public Setting<bool> EstinienMustDie = new(false);
         public Setting<float> GcdDropThreshold = new(0.2f);
+        public Setting<bool> RandomizeAnnouncement = new(false);
     }
 }

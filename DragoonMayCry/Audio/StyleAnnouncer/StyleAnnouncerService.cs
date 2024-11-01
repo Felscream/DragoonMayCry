@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Microsoft.VisualBasic.FileIO;
 using static DragoonMayCry.UI.JobConfigurationWindow;
 
 namespace DragoonMayCry.Audio.StyleAnnouncer
@@ -24,6 +25,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
         private readonly IStyleAnnouncer balrogAnnouncer;
         private readonly IStyleAnnouncer nicoAnnouncer;
         private readonly IStyleAnnouncer morrisonAnnouncer;
+
         private readonly float sfxCooldown = 1f;
         private readonly Dictionary<SoundId, int> soundIdsNextAvailability = new();
         private readonly Random random = new();
@@ -32,7 +34,9 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
 
         private bool initialized;
         private double lastPlayTime = 0f;
+        private Queue<IStyleAnnouncer> announcerQueue;
         private IStyleAnnouncer? announcer;
+        private List<IStyleAnnouncer> allAnnouncers;
 
         public StyleAnnouncerService(StyleRankHandler styleRankHandler, PlayerActionTracker actionTracker)
         {
@@ -43,6 +47,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             playerState.RegisterCombatStateChangeHandler(OnCombat);
             playerState.RegisterJobChangeHandler(OnJobChange);
             playerState.RegisterLoginStateChangeHandler(OnLogin);
+            playerState.RegisterInstanceChangeHandler(OnInstanceChange);
 
             rankHandler = styleRankHandler;
             rankHandler.StyleRankChange += OnRankChange;
@@ -55,11 +60,92 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             nicoAnnouncer = new NicoAnnouncer();
             morrisonAnnouncer = new MorrisonAnnouncer();
 
+            allAnnouncers = new List<IStyleAnnouncer>()
+                { dmc5Announcer, dmcAnnouncer, balrogAnnouncer, nicoAnnouncer, morrisonAnnouncer };
+
+            announcerQueue = CreateStyleAnnouncerQueue();
+
             // to update the announcer if the user activates the plugin after character selection
             Service.Framework.Update += Initialize;
         }
 
-        public void PlaySfx(SoundId key, bool force = false)
+
+        private Queue<IStyleAnnouncer> CreateStyleAnnouncerQueue()
+        {
+            var pool = new List<IStyleAnnouncer>(allAnnouncers);
+            var temp = new List<IStyleAnnouncer>(pool);
+            var queue = new Queue<IStyleAnnouncer>();
+
+            for (int i = 0; i < pool.Count; i++)
+            {
+                var randIdx = random.Next(pool.Count);
+                queue.Enqueue(pool[randIdx]);
+                pool.RemoveAt(randIdx);
+            }
+
+            return queue;
+        }
+
+        private IStyleAnnouncer GetNextAnnouncer()
+        {
+            if (announcerQueue.Count == 0)
+            {
+                return dmc5Announcer;
+            }
+
+            var selectedAnnouncer = announcerQueue.Dequeue();
+            announcerQueue.Enqueue(selectedAnnouncer);
+            return selectedAnnouncer;
+        }
+
+        private void PlayAnnouncerFromAll(StyleType rank)
+        {
+            if (!Plugin.Configuration!.PlaySoundEffects || announcer == null || !AssetsManager.IsReady)
+            {
+                return;
+            }
+
+            var announcers = allAnnouncers;
+            if (rank == StyleType.D)
+            {
+                announcers = [dmc5Announcer, dmcAnnouncer, nicoAnnouncer, morrisonAnnouncer];
+            }
+
+            var styleAnnouncer = announcers[random.Next(announcers.Count)];
+            if (styleAnnouncer.GetStyleAnnouncementVariations().TryGetValue(rank, out var variations))
+            {
+                var randomId = SelectRandomSfx(variations);
+                var effectiveKey = GetAnnouncementGroup(randomId);
+                if (!CanPlaySfx(effectiveKey))
+                {
+                    if (!soundIdsNextAvailability.ContainsKey(effectiveKey))
+                    {
+                        soundIdsNextAvailability.Add(effectiveKey, 0);
+                    }
+                    else
+                    {
+                        soundIdsNextAvailability[effectiveKey]--;
+                    }
+
+                    return;
+                }
+
+                if (styleAnnouncer.GetAnnouncerFilesById().TryGetValue(randomId, out var announcerFile))
+                {
+                    audioService.PlaySfx(announcerFile);
+
+                    lastPlayTime = ImGui.GetTime();
+                    if (!soundIdsNextAvailability.ContainsKey(effectiveKey) ||
+                        soundIdsNextAvailability[effectiveKey] <= 0)
+                    {
+                        soundIdsNextAvailability[effectiveKey] =
+                            Plugin.Configuration!.PlaySfxEveryOccurrences.Value - 1;
+                    }
+                }
+            }
+        }
+
+        public void PlayAnnouncer(SoundId key, bool force = false)
         {
             if (!Plugin.Configuration!.PlaySoundEffects || announcer == null || !AssetsManager.IsReady)
             {
@@ -78,12 +164,15 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
                 {
                     soundIdsNextAvailability[effectiveKey]--;
                 }
+
                 return;
             }
+
             audioService.PlaySfx(key);
 
             lastPlayTime = ImGui.GetTime();
-            if (!soundIdsNextAvailability.ContainsKey(effectiveKey) || force || soundIdsNextAvailability[effectiveKey] <= 0)
+            if (!soundIdsNextAvailability.ContainsKey(effectiveKey) || force ||
+                soundIdsNextAvailability[effectiveKey] <= 0)
             {
                 soundIdsNextAvailability[effectiveKey] = Plugin.Configuration!.PlaySfxEveryOccurrences.Value - 1;
             }
@@ -105,11 +194,28 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             {
                 return;
             }
+
             var currentRank = rankHandler.CurrentStyle.Value;
             var sfxByStyle = announcer.GetStyleAnnouncementVariations();
             if (sfxByStyle.TryGetValue(currentRank, out var value))
             {
                 audioService.PlaySfx(SelectRandomSfx(value));
+            }
+        }
+
+        private void OnInstanceChange(object? sender, bool enteredInstance)
+        {
+            if (!enteredInstance)
+            {
+                return;
+            }
+
+            if (Plugin.Configuration!.JobConfiguration.TryGetValue(playerState.GetCurrentJob(),
+                                                                   out var jobConfiguration)
+                && jobConfiguration.Announcer == AnnouncerType.Randomize
+                && !jobConfiguration.RandomizeAnnouncement)
+            {
+                UpdateAnnouncer();
             }
         }
 
@@ -135,9 +241,9 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
         {
             var lastPlayTimeDiff = ImGui.GetTime() - lastPlayTime;
             return lastPlayTimeDiff > sfxCooldown
-                && !isCastingLimitBreak
-                && (!soundIdsNextAvailability.ContainsKey(type) ||
-                   soundIdsNextAvailability[type] <= 0);
+                   && !isCastingLimitBreak
+                   && (!soundIdsNextAvailability.ContainsKey(type) ||
+                       soundIdsNextAvailability[type] <= 0);
         }
 
         private IStyleAnnouncer GetCurrentJobAnnouncer()
@@ -147,6 +253,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             {
                 return dmc5Announcer;
             }
+
             var jobAnnouncer = Plugin.Configuration!.JobConfiguration[currentJob].Announcer.Value;
             return GetAnnouncerByType(jobAnnouncer);
         }
@@ -163,7 +270,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
                 return;
             }
 
-            UdpateAnnouncer(jobAnnouncer.type);
+            UpdateAnnouncer(jobAnnouncer.type);
         }
 
         private void UpdateAnnouncer()
@@ -175,7 +282,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             }
         }
 
-        private void UdpateAnnouncer(AnnouncerType type)
+        private void UpdateAnnouncer(AnnouncerType type)
         {
             if (AssetsManager.IsReady)
             {
@@ -193,6 +300,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
                 AnnouncerType.Morrison => morrisonAnnouncer,
                 AnnouncerType.DmC5Balrog => balrogAnnouncer,
                 AnnouncerType.DmC => dmcAnnouncer,
+                AnnouncerType.Randomize => GetNextAnnouncer(),
                 _ => dmc5Announcer,
             };
         }
@@ -234,7 +342,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             if (data.IsBlunder && previousRank != StyleType.NoStyle)
             {
                 var sfx = SelectRandomSfx(announcer.GetBlunderVariations());
-                PlaySfx(sfx, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
+                PlayAnnouncer(sfx, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
                 return;
             }
 
@@ -244,10 +352,26 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             }
 
             var sfxByStyle = announcer.GetStyleAnnouncementVariations();
-            if (sfxByStyle.ContainsKey(newRank))
+
+            if (CanPlayRandomAnnouncerLineFromAll())
             {
-                PlaySfx(SelectRandomSfx(sfxByStyle[newRank]));
+                PlayAnnouncerFromAll(newRank);
             }
+            else if (sfxByStyle.ContainsKey(newRank))
+            {
+                PlayAnnouncer(SelectRandomSfx(sfxByStyle[newRank]));
+            }
+        }
+
+        private bool CanPlayRandomAnnouncerLineFromAll()
+        {
+            if (Plugin.Configuration!.JobConfiguration.TryGetValue(playerState.GetCurrentJob(),
+                                                                   out var jobConfiguration))
+            {
+                return jobConfiguration.Announcer == AnnouncerType.Randomize && jobConfiguration.RandomizeAnnouncement;
+            }
+
+            return false;
         }
 
         private void OnLimitBreak(object? sender, PlayerActionTracker.LimitBreakEvent el)
@@ -265,7 +389,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
         public void PlayBlunder()
         {
             var sfx = SelectRandomSfx(dmc5Announcer.GetBlunderVariations());
-            PlaySfx(sfx, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
+            PlayAnnouncer(sfx, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
         }
 
         [Conditional("DEBUG")]
@@ -275,8 +399,9 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             {
                 return;
             }
+
             var sfx = SelectRandomSfx(dmc5Announcer.GetStyleAnnouncementVariations()[type]);
-            PlaySfx(sfx, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
+            PlayAnnouncer(sfx, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
         }
 
         private static SoundId GetAnnouncementGroup(SoundId id)
@@ -314,6 +439,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
                     return id;
             }
         }
+
         public static string GetAnnouncerTypeLabel(AnnouncerType type)
         {
             return type switch
@@ -323,6 +449,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
                 AnnouncerType.DmC5Balrog => "Devil May Cry 5 / Michael Schwalbe",
                 AnnouncerType.Nico => "Nico",
                 AnnouncerType.Morrison => "Morrison",
+                AnnouncerType.Randomize => "Randomize",
                 _ => "Unknown"
             };
         }
