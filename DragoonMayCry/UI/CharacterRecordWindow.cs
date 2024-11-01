@@ -347,23 +347,27 @@ namespace DragoonMayCry.UI
         private void UpdateSubcategories()
         {
             HashSet<string> temp = [.. categories[selectedCategoryId].Subcategories];
-            subcategories = new List<string>();
-            if (temp.Count > 0)
+            var currentSub = subcategories.Count > 0 ? subcategories[selectedSubcategoryId] : null;
+            subcategories =
+                subcategories = extensions[selectedExtensionId]
+                                .Instances
+                                .Where(duty =>
+                                           duty.Value.Difficulty ==
+                                           difficulties[selectedDifficultyId]
+                                           && temp.Contains(duty.Value.Subcategory))
+                                .Select(duty => duty.Value.Subcategory)
+                                .Distinct()
+                                .ToList();
+
+            if (currentSub != null && subcategories.Contains(currentSub))
             {
-                var eligibleSubs = extensions[selectedExtensionId].Instances
-                                                                  .Where(duty => duty.Value.Difficulty ==
-                                                                             difficulties[selectedDifficultyId])
-                                                                  .Select(duty => duty.Value.Subcategory).ToHashSet();
-                foreach (var sub in temp)
-                {
-                    if (eligibleSubs.Contains(sub))
-                    {
-                        subcategories.Add(sub);
-                    }
-                }
+                selectedSubcategoryId = subcategories.IndexOf(currentSub);
+            }
+            else
+            {
+                selectedSubcategoryId = 0;
             }
 
-            selectedSubcategoryId = 0;
             UpdateDisplayedDuties();
         }
 
