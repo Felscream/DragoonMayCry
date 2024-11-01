@@ -1,4 +1,3 @@
-using System;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using KamiLib.Configuration;
 

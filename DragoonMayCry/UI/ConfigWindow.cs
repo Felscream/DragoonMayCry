@@ -12,8 +12,6 @@ using KamiLib.Drawing;
 using System;
 using System.Linq;
 using System.Numerics;
-using Dalamud;
-using Dalamud.Interface.Style;
 
 namespace DragoonMayCry.UI;
 

@@ -14,7 +14,6 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using FFXIVClientStructs.FFXIV.Client.LayoutEngine;
 using PlayerState = DragoonMayCry.State.PlayerState;
 
 namespace DragoonMayCry.UI
@@ -29,13 +28,13 @@ namespace DragoonMayCry.UI
         private readonly HowItWorksWindow howItWorksWindow;
 
         private Dictionary<JobId, JobRecord> characterRecords = new();
-        private readonly Dictionary<ushort, ContentFinderCondition> dutyIdToContent = new();
         private readonly LuminaCache<ContentFinderCondition> contentFinder;
         private readonly Extension[] extensions;
         private readonly List<String> extensionValues;
         private readonly List<JobId> jobs;
         private const string HiddenDutyTexPath = "ui/icon/112000/112036_hr1.tex";
         private const string MissingRankTexPath = "DragoonMayCry.Assets.MissingRank.png";
+        private const string DefaultKillTime = "--:--";
         private ExtensionCategory[] categories = [];
         private List<string> subcategories = new();
         private List<Difficulty> difficulties = new();
@@ -155,7 +154,7 @@ namespace DragoonMayCry.UI
             selectedJob = job;
         }
 
-        private void DrawEmptyWindow()
+        private static void DrawEmptyWindow()
         {
             ImGui.Text("Please log in with a character to access this window");
         }
@@ -383,10 +382,12 @@ namespace DragoonMayCry.UI
                                                              .Where(entry => entry.Value.Category ==
                                                                              categories[selectedCategoryId].Type
                                                                              && (subcategories.Count == 0
-                                                                                         || entry.Value.Subcategory
+                                                                                         || subcategories[
+                                                                                                 selectedSubcategoryId]
                                                                                              .Equals(
-                                                                                                 subcategories[
-                                                                                                     selectedSubcategoryId]))
+                                                                                                 entry.Value
+                                                                                                     .Subcategory)
+                                                                                 )
                                                                              && entry.Value.Difficulty ==
                                                                              difficulties[selectedDifficultyId])
                                                              .Select(entry => new DisplayedDuty(entry.Key, entry.Value))
@@ -405,20 +406,9 @@ namespace DragoonMayCry.UI
 
         private ContentFinderCondition? GetContent(DisplayedDuty displayedDuty)
         {
-            if (dutyIdToContent.TryGetValue(displayedDuty.DutyId, out var cachedContent))
-            {
-                return cachedContent;
-            }
-
             var contentFinderCondition =
                 contentFinder.FirstOrDefault(content => content.TerritoryType.Row == displayedDuty.DutyId);
-            if (contentFinderCondition == null)
-            {
-                return null;
-            }
-
-            dutyIdToContent.Add(displayedDuty.DutyId, contentFinderCondition);
-            return dutyIdToContent[displayedDuty.DutyId];
+            return contentFinderCondition ?? null;
         }
 
         private string GetTexturePath(DisplayedDuty displayed)
@@ -439,12 +429,11 @@ namespace DragoonMayCry.UI
             ImGui.TextUnformatted(text);
         }
 
-        private string GetKillTime(ushort dutyId, Dictionary<ushort, DutyRecord> difficultyRecord)
+        private static string GetKillTime(ushort dutyId, Dictionary<ushort, DutyRecord> difficultyRecord)
         {
-            var defaultKillTime = "--:--";
             if (!difficultyRecord.ContainsKey(dutyId))
             {
-                return defaultKillTime;
+                return DefaultKillTime;
             }
 
             var dutyResult = difficultyRecord[dutyId];
@@ -476,14 +465,11 @@ namespace DragoonMayCry.UI
             }
         }
 
-        private string GetRecordDate(ushort dutyId, Dictionary<ushort, DutyRecord> difficultyRecord)
+        private static string GetRecordDate(ushort dutyId, Dictionary<ushort, DutyRecord> difficultyRecord)
         {
-            if (difficultyRecord.TryGetValue(dutyId, out var dutyRecord))
-            {
-                return dutyRecord.Date.ToString(CultureInfo.CurrentCulture);
-            }
-
-            return "";
+            return difficultyRecord.TryGetValue(dutyId, out var dutyRecord)
+                       ? dutyRecord.Date.ToString(CultureInfo.CurrentCulture)
+                       : "";
         }
 
         private JobRecord GetJobRecord()
