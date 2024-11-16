@@ -1,52 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="Dalamud.Plugin.Bootstrap.targets" />
+    <Import Project="Dalamud.Plugin.Bootstrap.targets"/>
 
-  <PropertyGroup Label="Target">
-      <PlatformTarget>x64</PlatformTarget>
-      <TargetFramework>net8.0</TargetFramework>
-      <LangVersion>preview</LangVersion>
-      <Platforms>x64</Platforms>
-      <Configurations>Debug;Release</Configurations>
-      <Authors>Felscream</Authors>
-  </PropertyGroup>
-  <PropertyGroup>
-    <Version>1.2.1.0</Version>
-    <Description>DragoonMayCry</Description>
-    <PackageProjectUrl>https://github.com/Felscream/DragoonMayCry</PackageProjectUrl>
-    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
-    <IsPackable>false</IsPackable>
-  </PropertyGroup>
-
-  <ItemGroup>
-      <EmbeddedResource Include="Assets\A.png" />
-      <EmbeddedResource Include="Assets\B.png" />
-      <EmbeddedResource Include="Assets\C.png" />
-      <EmbeddedResource Include="Assets\D.png" />
-      <EmbeddedResource Include="Assets\S.png" />
-      <EmbeddedResource Include="Assets\SS.png" />
-      <EmbeddedResource Include="Assets\SSS.png" />
-      <EmbeddedResource Include="Assets\GaugeDefault.png" />
-      <EmbeddedResource Include="Assets\MissingRank.png" />
-      <EmbeddedResource Include="Data\TrackedDuties.json" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="NAudio" Version="2.2.1" />
-    <PackageReference Include="NAudio.Vorbis" Version="1.5.0" />
-    <Reference Include="Lumina">
-        <HintPath>$(DalamudLibPath)Lumina.dll</HintPath>
-        <Private>false</Private>
-    </Reference>
-    <Reference Include="Lumina.Excel">
-        <HintPath>$(DalamudLibPath)Lumina.Excel.dll</HintPath>
-        <Private>false</Private>
-    </Reference>
-    <PackageReference Update="DalamudPackager" Version="11.0.0" />
-  </ItemGroup>
+    <PropertyGroup Label="Target">
+        <PlatformTarget>x64</PlatformTarget>
+        <TargetFramework>net8.0</TargetFramework>
+        <LangVersion>preview</LangVersion>
+        <Platforms>x64</Platforms>
+        <Configurations>Debug;Release</Configurations>
+        <Authors>Felscream</Authors>
+    </PropertyGroup>
+    <PropertyGroup>
+        <Version>1.2.1.1</Version>
+        <Description>DragoonMayCry</Description>
+        <PackageProjectUrl>https://github.com/Felscream/DragoonMayCry</PackageProjectUrl>
+        <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\KamiLib\KamiLib.csproj" />
+        <EmbeddedResource Include="Assets\A.png"/>
+        <EmbeddedResource Include="Assets\B.png"/>
+        <EmbeddedResource Include="Assets\C.png"/>
+        <EmbeddedResource Include="Assets\D.png"/>
+        <EmbeddedResource Include="Assets\S.png"/>
+        <EmbeddedResource Include="Assets\SS.png"/>
+        <EmbeddedResource Include="Assets\SSS.png"/>
+        <EmbeddedResource Include="Assets\GaugeDefault.png"/>
+        <EmbeddedResource Include="Assets\MissingRank.png"/>
+        <EmbeddedResource Include="Data\TrackedDuties.json"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="NAudio" Version="2.2.1"/>
+        <PackageReference Include="NAudio.Vorbis" Version="1.5.0"/>
+        <Reference Include="Lumina">
+            <HintPath>$(DalamudLibPath)Lumina.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="Lumina.Excel">
+            <HintPath>$(DalamudLibPath)Lumina.Excel.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <PackageReference Update="DalamudPackager" Version="11.0.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\KamiLib\KamiLib.csproj"/>
     </ItemGroup>
     <PropertyGroup>
         <NoWarn>CA1416</NoWarn>  <!-- Validate platform compatibility -->

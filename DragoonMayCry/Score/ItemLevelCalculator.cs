@@ -79,7 +79,7 @@ namespace DragoonMayCry.Score
 
                 uint itemLevel = item.LevelItem.Value.RowId;
                 var isItemSynced =
-                    (iLvlSyncForInstance > 0 && itemLevel > iLvlSyncForInstance) ||
+                    (isLvlSync && iLvlSyncForInstance > 0 && itemLevel > iLvlSyncForInstance) ||
                     (iLvlSyncForContentLvl > 0 && itemLevel > iLvlSyncForContentLvl);
                 if (isItemSynced)
                 {

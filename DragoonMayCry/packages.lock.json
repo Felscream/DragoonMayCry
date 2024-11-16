@@ -118,10 +118,7 @@
         "contentHash": "okurQJO6NRE/apDIP23ajJ0hpiNmJ+f0BwOlB/cSqTLQlw5upkf+5+96+iG2Jw40G1fCVCyPz/FhIABUjMR+RQ=="
       },
       "kamilib": {
-        "type": "Project",
-        "dependencies": {
-          "DalamudPackager": "[11.0.0, )"
-        }
+        "type": "Project"
       }
     }
   }
