@@ -73,7 +73,8 @@
             {
                 "Type": 0,
                 "Subcategories": [
-                    "Main story quest"
+                    "Main story quest",
+                    "Unreal"
                 ]
             },
             {
@@ -187,6 +188,22 @@
                 "Category": 1,
                 "Subcategory": "AAC Light-heavyweight",
                 "TexPath": "ui/icon/112000/112574_hr1.tex"
+            },
+            "1239": {
+                "Name": "The Jade Stoa",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0,
+                "Subcategory": "Unreal",
+                "TexPath": "ui/icon/112000/112590_hr1.tex"
+            },
+            "1243": {
+                "Name": "The Minstrel's Ballad: Sphene's Burden",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0,
+                "Subcategory": "Main story quest",
+                "TexPath": "ui/icon/112000/112588_hr1.tex"
             }
         }
     }

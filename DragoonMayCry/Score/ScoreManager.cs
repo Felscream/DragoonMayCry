@@ -30,8 +30,7 @@ namespace DragoonMayCry.Score
         }
 
 
-
-        public EventHandler<double>? OnScoring;
+        public EventHandler<double>? Scoring;
         public EventHandler<StyleScoring>? StyleScoringChange;
         public ScoreRank CurrentScoreRank { get; private set; }
         private readonly PlayerState playerState;
@@ -62,9 +61,9 @@ namespace DragoonMayCry.Score
             this.rankHandler.StyleRankChange += OnRankChange!;
 
             playerActionTracker.DamageActionUsed += AddScore;
-            playerActionTracker.OnGcdClip += OnGcdClip;
+            playerActionTracker.GcdClip += OnGcdClip;
             playerActionTracker.UsingLimitBreak += OnLimitBreakCast;
-            playerActionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
+            playerActionTracker.LimitBreakCanceled += OnLimitBreakCanceled;
 
             Service.Framework.Update += UpdateScore;
             Service.ClientState.Logout += ResetScore;
@@ -100,9 +99,10 @@ namespace DragoonMayCry.Score
             {
                 CurrentScoreRank.Score =
                     Math.Clamp(CurrentScoreRank.Score
-                    + (float)(framework.UpdateDelta.TotalSeconds * CurrentScoreRank.StyleScoring.ReductionPerSecond * 100),
-                    0,
-                    CurrentScoreRank.StyleScoring.Threshold * 1.5f);
+                               + (float)(framework.UpdateDelta.TotalSeconds *
+                                         CurrentScoreRank.StyleScoring.ReductionPerSecond * 100),
+                               0,
+                               CurrentScoreRank.StyleScoring.Threshold * 1.5f);
             }
             else
             {
@@ -113,12 +113,14 @@ namespace DragoonMayCry.Score
                 {
                     scoreReduction *= 1.5f;
                 }
-                CurrentScoreRank.Score -= scoreReduction;
 
+                CurrentScoreRank.Score -= scoreReduction;
             }
+
             CurrentScoreRank.Score = Math.Clamp(
                 CurrentScoreRank.Score, 0, CurrentScoreRank.StyleScoring.Threshold * 1.2f);
         }
+
         private void AddScore(object? sender, float val)
         {
             var points = val * CurrentScoreRank.StyleScoring.PointCoefficient;
@@ -133,11 +135,13 @@ namespace DragoonMayCry.Score
                 CurrentScoreRank.Score = Math.Min(
                     CurrentScoreRank.Score, CurrentScoreRank.StyleScoring.Threshold);
             }
-            OnScoring?.Invoke(this, points);
+
+            Scoring?.Invoke(this, points);
         }
 
         private bool CanDisableGcdClippingRestrictions() => pointsReductionStopwatch.IsRunning
-            && pointsReductionStopwatch.ElapsedMilliseconds > PointsReductionDuration;
+                                                            && pointsReductionStopwatch.ElapsedMilliseconds >
+                                                            PointsReductionDuration;
 
         private void OnInstanceChange(object send, bool value)
         {
@@ -171,16 +175,17 @@ namespace DragoonMayCry.Score
 
         private void OnRankChange(object sender, RankChangeData data)
         {
-            if (!jobScoringTable.ContainsKey(data.NewRank))
+            if (!jobScoringTable.TryGetValue(data.NewRank, out var nextStyleScoring))
             {
                 return;
             }
 
-            var nextStyleScoring = jobScoringTable[data.NewRank];
             if ((int)CurrentScoreRank.Rank < (int)data.NewRank)
             {
-                CurrentScoreRank.Score = (float)Math.Clamp((CurrentScoreRank.Score - CurrentScoreRank.StyleScoring.Threshold) %
-                                                           nextStyleScoring.Threshold, 0, nextStyleScoring.Threshold * 0.3f); ;
+                CurrentScoreRank.Score = (float)Math.Clamp(
+                    (CurrentScoreRank.Score - CurrentScoreRank.StyleScoring.Threshold) %
+                    nextStyleScoring.Threshold, 0, nextStyleScoring.Threshold * 0.3f);
+                ;
             }
             else if (data.IsBlunder)
             {
@@ -202,6 +207,11 @@ namespace DragoonMayCry.Score
         private void DisablePointsGainedReduction()
         {
             pointsReductionStopwatch.Reset();
+        }
+
+        private void ResetScore(int type, int code)
+        {
+            ResetScore();
         }
 
         private void ResetScore()

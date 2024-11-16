@@ -51,7 +51,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             rankHandler = styleRankHandler;
             rankHandler.StyleRankChange += OnRankChange;
             actionTracker.UsingLimitBreak += OnLimitBreak;
-            actionTracker.OnLimitBreakEffect += OnLimitBreakEffect;
+            actionTracker.LimitBreakEffect += OnLimitBreakEffect;
 
             dmcAnnouncer = new DmCAnnouncer();
             dmc5Announcer = new DmC5Announcer();

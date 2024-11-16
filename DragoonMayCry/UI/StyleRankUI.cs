@@ -66,7 +66,7 @@ namespace DragoonMayCry.UI
             this.styleRankHandler = styleRankHandler;
             this.scoreManager = scoreManager;
             this.finalRankCalculator = finalRankCalculator;
-            this.scoreManager.OnScoring += OnScoring!;
+            this.scoreManager.Scoring += OnScoring!;
             this.finalRankCalculator.FinalRankCalculated += OnFinalRankCalculated!;
             this.playerState = PlayerState.GetInstance();
             this.playerState.RegisterCombatStateChangeHandler(OnCombatChange!);

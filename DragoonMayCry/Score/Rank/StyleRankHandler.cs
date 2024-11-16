@@ -1,4 +1,3 @@
-
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.State;
@@ -22,7 +21,6 @@ namespace DragoonMayCry.Score.Rank
                 NewRank = newRank;
                 IsBlunder = isBlunder;
             }
-
         }
 
         public EventHandler<RankChangeData>? StyleRankChange;
@@ -47,10 +45,10 @@ namespace DragoonMayCry.Score.Rank
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             playerState.RegisterDeathStateChangeHandler(OnDeath);
             playerState.RegisterDamageDownHandler(OnDamageDown);
-            playerActionTracker.OnGcdDropped += OnGcdDropped;
-            playerActionTracker.OnLimitBreakCanceled += OnLimitBreakCanceled;
+            playerActionTracker.GcdDropped += OnGcdDropped;
+            playerActionTracker.LimitBreakCanceled += OnLimitBreakCanceled;
             playerActionTracker.UsingLimitBreak += OnLimitBreak;
-            playerActionTracker.OnLimitBreakEffect += OnLimitBreakEffect;
+            playerActionTracker.LimitBreakEffect += OnLimitBreakEffect;
             CurrentStyle = Styles.Head!;
         }
 
@@ -77,7 +75,6 @@ namespace DragoonMayCry.Score.Rank
                 {
                     ResetRank();
                 }
-
             }
             else if (CurrentStyle.Next != null)
             {
@@ -94,8 +91,10 @@ namespace DragoonMayCry.Score.Rank
                 {
                     StyleRankChange?.Invoke(this, new(CurrentStyle!.Value, CurrentStyle.Value, droppedGcd));
                 }
+
                 return;
             }
+
             CurrentStyle = CurrentStyle.Previous;
             StyleRankChange?.Invoke(this, new(CurrentStyle.Next!.Value, CurrentStyle.Value, droppedGcd));
         }
@@ -108,7 +107,6 @@ namespace DragoonMayCry.Score.Rank
 
         private void ForceRankTo(StyleType type, bool isBlunder)
         {
-
             if (CurrentStyle?.Value == type || isBlunder && CurrentStyle?.Value < type)
             {
                 return;
@@ -118,6 +116,7 @@ namespace DragoonMayCry.Score.Rank
             {
                 CurrentStyle = Styles.Head!;
             }
+
             var tempRank = CurrentStyle;
             do
             {
@@ -129,7 +128,8 @@ namespace DragoonMayCry.Score.Rank
                 {
                     CurrentStyle = Styles.Head!;
                 }
-            } while (CurrentStyle.Value != type && CurrentStyle.Value != tempRank.Value);
+            }
+            while (CurrentStyle.Value != type && CurrentStyle.Value != tempRank.Value);
 
             StyleRankChange?.Invoke(this, new(tempRank.Value, CurrentStyle.Value, isBlunder));
         }
@@ -157,8 +157,6 @@ namespace DragoonMayCry.Score.Rank
             {
                 ForceRankTo(StyleType.B, true);
             }
-
-
         }
 
         private void OnLimitBreakCanceled(object? sender, EventArgs args)
@@ -167,6 +165,7 @@ namespace DragoonMayCry.Score.Rank
             {
                 return;
             }
+
             ForceRankTo(StyleType.D, true);
         }
 

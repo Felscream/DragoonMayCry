@@ -1,24 +1,25 @@
 using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using KamiLib.Caching;
-using Lumina.Excel.GeneratedSheets;
 using System;
+using Lumina.Excel;
+using Lumina.Excel.Sheets;
 
 namespace DragoonMayCry.Score
 {
     public unsafe class ItemLevelCalculator
     {
         private readonly InventoryManager* inventoryManager;
-        private readonly LuminaCache<Item> itemCache;
-        private readonly LuminaCache<TerritoryType> territoryCache;
-        private readonly LuminaCache<ParamGrow> growthCache;
+        private readonly ExcelSheet<Item> itemSheet;
+        private readonly ExcelSheet<TerritoryType> territorySheet;
+        private readonly ExcelSheet<ParamGrow> growthSheet;
 
         public ItemLevelCalculator()
         {
             inventoryManager = InventoryManager.Instance();
-            itemCache = LuminaCache<Item>.Instance;
-            territoryCache = LuminaCache<TerritoryType>.Instance;
-            growthCache = LuminaCache<ParamGrow>.Instance;
+            itemSheet = Service.DataManager.GetExcelSheet<Item>();
+            territorySheet = Service.DataManager.GetExcelSheet<TerritoryType>();
+            growthSheet = Service.DataManager.GetExcelSheet<ParamGrow>();
         }
 
         public int CalculateCurrentItemLevel()
@@ -37,13 +38,13 @@ namespace DragoonMayCry.Score
             var territory = Service.ClientState.TerritoryType;
 
             // The iLvl sync for a specific instance ex: UCOB is 345, UWU is 375
-            var iLvlSyncForInstance = territoryCache.GetRow(territory)?.ContentFinderCondition?.Value?.ItemLevelSync;
+            var iLvlSyncForInstance = territorySheet.GetRow(territory).ContentFinderCondition.Value.ItemLevelSync;
 
             // The iLvl sync in general for the content lvl. ex : at lvl 70 it 400, at lvl 90 it is 660
             ushort? iLvlSyncForContentLvl = 0;
             if (isLvlSync)
             {
-                iLvlSyncForContentLvl = growthCache.GetRow(playerCharacter.Level)?.ItemLevelSync;
+                iLvlSyncForContentLvl = growthSheet.GetRow(playerCharacter.Level).ItemLevelSync;
             }
 
             var equippedItems = inventoryManager->GetInventoryContainer(InventoryType.EquippedItems);
@@ -64,21 +65,22 @@ namespace DragoonMayCry.Score
                     continue;
                 }
 
-                var item = itemCache.GetRow(itemId);
-                if (item == null || item.RowId == 0)
+                var item = itemSheet.GetRow(itemId);
+                if (item.RowId == 0)
                 {
                     continue;
                 }
 
-                var itemEquipSlotCategory = item.EquipSlotCategory.Value;
-                if (itemEquipSlotCategory == null || itemEquipSlotCategory.SoulCrystal == 1)
+                var itemEquipSlotCategory = item.EquipSlotCategory;
+                if (itemEquipSlotCategory.Value.SoulCrystal == 1)
                 {
                     continue;
                 }
 
-                uint itemLevel = item.LevelItem?.Value?.RowId ?? 0;
+                uint itemLevel = item.LevelItem.Value.RowId;
                 var isItemSynced =
-                    iLvlSyncForInstance > 0 && itemLevel > iLvlSyncForInstance || iLvlSyncForContentLvl > 0 && itemLevel > iLvlSyncForContentLvl;
+                    (iLvlSyncForInstance > 0 && itemLevel > iLvlSyncForInstance) ||
+                    (iLvlSyncForContentLvl > 0 && itemLevel > iLvlSyncForContentLvl);
                 if (isItemSynced)
                 {
                     if (iLvlSyncForInstance > 0 && iLvlSyncForContentLvl > 0)
@@ -95,28 +97,31 @@ namespace DragoonMayCry.Score
 
                 totalILvl += itemLevel;
                 itemCount++;
-                if (itemEquipSlotCategory.Head == -1)
-                {
-                    totalILvl += itemLevel;
-                    itemCount++;
-                }
-                if (itemEquipSlotCategory.Legs == -1)
-                {
-                    totalILvl += itemLevel;
-                    itemCount++;
-                }
-                if (itemEquipSlotCategory.Feet == -1)
+                if (itemEquipSlotCategory.Value.Head == -1)
                 {
                     totalILvl += itemLevel;
                     itemCount++;
                 }
 
-                if (itemEquipSlotCategory.Gloves == -1)
+                if (itemEquipSlotCategory.Value.Legs == -1)
                 {
                     totalILvl += itemLevel;
                     itemCount++;
                 }
-                if (itemEquipSlotCategory.OffHand == -1)
+
+                if (itemEquipSlotCategory.Value.Feet == -1)
+                {
+                    totalILvl += itemLevel;
+                    itemCount++;
+                }
+
+                if (itemEquipSlotCategory.Value.Gloves == -1)
+                {
+                    totalILvl += itemLevel;
+                    itemCount++;
+                }
+
+                if (itemEquipSlotCategory.Value.OffHand == -1)
                 {
                     totalILvl += itemLevel;
                     itemCount++;

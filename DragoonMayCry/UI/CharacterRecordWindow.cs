@@ -7,13 +7,14 @@ using DragoonMayCry.Record.Model;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ImGuiNET;
 using KamiLib.Caching;
-using Lumina.Excel.GeneratedSheets2;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using Lumina.Excel;
+using Lumina.Excel.Sheets;
 using PlayerState = DragoonMayCry.State.PlayerState;
 
 namespace DragoonMayCry.UI
@@ -28,7 +29,7 @@ namespace DragoonMayCry.UI
         private readonly HowItWorksWindow howItWorksWindow;
 
         private Dictionary<JobId, JobRecord> characterRecords = new();
-        private readonly LuminaCache<ContentFinderCondition> contentFinder;
+        private readonly ExcelSheet<ContentFinderCondition> contentFinder;
         private readonly Extension[] extensions;
         private readonly List<String> extensionValues;
         private readonly List<JobId> jobs;
@@ -55,7 +56,7 @@ namespace DragoonMayCry.UI
             "DragoonMayCry - Character records")
         {
             textureProvider = Service.TextureProvider;
-            contentFinder = LuminaCache<ContentFinderCondition>.Instance;
+            contentFinder = Service.DataManager.GetExcelSheet<ContentFinderCondition>();
             this.configWindow = configWindow;
             this.howItWorksWindow = howItWorksWindow;
 
@@ -407,14 +408,14 @@ namespace DragoonMayCry.UI
         private ContentFinderCondition? GetContent(DisplayedDuty displayedDuty)
         {
             var contentFinderCondition =
-                contentFinder.FirstOrDefault(content => content.TerritoryType.Row == displayedDuty.DutyId);
-            return contentFinderCondition ?? null;
+                contentFinder.FirstOrDefault(content => content.TerritoryType.RowId == displayedDuty.DutyId);
+            return contentFinderCondition;
         }
 
         private string GetTexturePath(DisplayedDuty displayed)
         {
             var content = GetContent(displayed);
-            if (content == null || !UIState.IsInstanceContentUnlocked(content.Content.Row))
+            if (content == null || !UIState.IsInstanceContentUnlocked(content.Value.Content.RowId))
             {
                 return HiddenDutyTexPath;
             }
@@ -495,12 +496,12 @@ namespace DragoonMayCry.UI
         private string GetDutyName(DisplayedDuty displayed)
         {
             var content = GetContent(displayed);
-            if (content == null || !UIState.IsInstanceContentUnlocked(content.Content.Row))
+            if (content == null || !UIState.IsInstanceContentUnlocked(content.Value.Content.RowId))
             {
                 return "???";
             }
 
-            var name = content?.Name ?? displayed.Duty.Name;
+            var name = content?.Name.ToString() ?? displayed.Duty.Name;
             return string.Concat(name[0].ToString().ToUpper(), name.AsSpan(1));
         }
 
