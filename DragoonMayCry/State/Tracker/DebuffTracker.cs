@@ -1,15 +1,16 @@
 using Dalamud.Game.ClientState.Statuses;
 using DragoonMayCry.Data;
 using System.Collections.Generic;
+
 namespace DragoonMayCry.State.Tracker
 {
     internal class DebuffTracker : StateTracker<bool>
     {
         private readonly Dictionary<ushort, ISet<uint>> debuffInstanceBlacklist = new()
         {
-            { 937, new HashSet<uint> {2935} }, // Sustained damage on P9S is applied after a TB
-            { 939, new HashSet<uint> {2935} }, // Failed tower soak on P10S, may not be the player's fault
-            { 63, new HashSet<uint> {202} }, // Ifrit ex
+            { 937, new HashSet<uint> { 2935 } }, // Sustained damage on P9S is applied after a TB
+            { 939, new HashSet<uint> { 2935 } }, // Failed tower soak on P10S, may not be the player's fault
+            { 63, new HashSet<uint> { 202 } },   // Ifrit ex
         };
 
         private bool hasDamageDown;
@@ -20,6 +21,7 @@ namespace DragoonMayCry.State.Tracker
             {
                 return;
             }
+
             var player = playerState.Player;
             if (player == null || playerState.IsDead)
             {
@@ -30,7 +32,6 @@ namespace DragoonMayCry.State.Tracker
 
             for (var i = 0; i < statuses.Length; i++)
             {
-
                 var status = statuses[i];
                 if (StatusIndicatesFailedMechanic(status))
                 {
@@ -39,6 +40,7 @@ namespace DragoonMayCry.State.Tracker
                         hasDamageDown = true;
                         OnChange?.Invoke(this, hasDamageDown);
                     }
+
                     return;
                 }
             }
@@ -60,13 +62,17 @@ namespace DragoonMayCry.State.Tracker
             }
 
             var territory = Service.ClientState.TerritoryType;
-            if (debuffInstanceBlacklist.ContainsKey(territory) && debuffInstanceBlacklist[territory].Contains(status.StatusId))
+            if (debuffInstanceBlacklist.ContainsKey(territory) &&
+                debuffInstanceBlacklist[territory].Contains(status.StatusId))
             {
                 return false;
             }
 
 
-            return DebuffIds.DamageDownIds.Contains(status.StatusId) || DebuffIds.SustainedDamageIds.Contains(status.StatusId) || DebuffIds.VulnerabilityUpIds.Contains(status.StatusId);
+            return DebuffIds.DamageDownIds.Contains(status.StatusId) ||
+                   DebuffIds.SustainedDamageIds.Contains(status.StatusId) ||
+                   DebuffIds.VulnerabilityUpIds.Contains(status.StatusId) ||
+                   DebuffIds.ParalysisIds.Contains(status.StatusId);
         }
     }
 }

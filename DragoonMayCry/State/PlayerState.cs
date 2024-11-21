@@ -9,6 +9,7 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
 using CSFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 using DalamudGameObject = Dalamud.Game.ClientState.Objects.Types.IGameObject;
@@ -19,19 +20,26 @@ namespace DragoonMayCry.State
     public unsafe class PlayerState : IDisposable
     {
         public bool IsInCombat => CheckCondition([ConditionFlag.InCombat]);
-        public bool IsInsideInstance => CheckCondition([ConditionFlag.BoundByDuty, ConditionFlag.BoundByDuty56, ConditionFlag.BoundByDuty95]);
+
+        public bool IsInsideInstance =>
+            CheckCondition([ConditionFlag.BoundByDuty, ConditionFlag.BoundByDuty56, ConditionFlag.BoundByDuty95]);
+
         public bool IsDead => Player != null && Player.IsDead;
         public bool IsLoggedIn => Player != null;
         public IPlayerCharacter? Player => Service.ClientState.LocalPlayer;
         private ICondition Condition => Service.Condition;
-        private static RaptureAtkModule* RaptureAtkModule => CSFramework.Instance()->GetUIModule()->GetRaptureAtkModule();
+
+        private static RaptureAtkModule* RaptureAtkModule =>
+            CSFramework.Instance()->GetUIModule()->GetRaptureAtkModule();
 
         private bool CheckCondition(ConditionFlag[] conditionFlags) => conditionFlags.Any(x => Condition[x]);
 
-        private readonly ConditionFlag[] unableToAct = new ConditionFlag[] { ConditionFlag.Transformed, ConditionFlag.Swimming,
+        private readonly ConditionFlag[] unableToAct = new ConditionFlag[]
+        {
+            ConditionFlag.Transformed, ConditionFlag.Swimming,
             ConditionFlag.Diving, ConditionFlag.WatchingCutscene,
-            ConditionFlag.OccupiedInCutSceneEvent, ConditionFlag.WatchingCutscene78 };
-
+            ConditionFlag.OccupiedInCutSceneEvent, ConditionFlag.WatchingCutscene78
+        };
 
 
         private readonly InCombatStateTracker inCombatStateTracker;
@@ -43,6 +51,7 @@ namespace DragoonMayCry.State
         private readonly PvpStateTracker pvpStateTracker;
         private readonly IClientState clientState;
         private static PlayerState? Instance;
+
         private PlayerState()
         {
             inCombatStateTracker = new();
@@ -90,6 +99,7 @@ namespace DragoonMayCry.State
             {
                 return false;
             }
+
             return IsCombatJob() && Plugin.IsEnabledForCurrentJob();
         }
 
@@ -168,11 +178,13 @@ namespace DragoonMayCry.State
                 {
                     continue;
                 }
+
                 if (DebuffIds.IsIncapacitatingDebuff(status.StatusId))
                 {
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -183,10 +195,11 @@ namespace DragoonMayCry.State
                 return false;
 
             var targets = Service.ObjectTable.Where(o =>
-                ObjectKind.BattleNpc.Equals(o.ObjectKind)
-                && o != Player
-                && CanAttack(o)
-             ).ToList();
+                                                        ObjectKind.BattleNpc.Equals(o.ObjectKind)
+                                                        && !o.Equals(Player)
+                                                        && CanAttack(o)
+                                                        && IsKillable(o)
+            ).ToList();
 
             var enemyList = GetEnemyListObjectIds();
             for (var i = 0; i < targets.Count; i++)
@@ -196,18 +209,31 @@ namespace DragoonMayCry.State
                     return true;
                 }
             }
+
             return false;
         }
 
-        private bool CanAttack(DalamudGameObject o)
+        private static bool IsKillable(DalamudGameObject o)
         {
-            var address = (GameObject*)o.Address;
-            if (address == null)
+            var character = (Character*)o.Address;
+            if (character == null)
             {
                 return false;
             }
-            return address->GetIsTargetable()
-                && ActionManager.CanUseActionOnTarget(142, address);
+
+            return character->GetIsTargetable() && character->Health > 1;
+        }
+
+        private static bool CanAttack(DalamudGameObject o)
+        {
+            var go = (GameObject*)o.Address;
+            if (go == null)
+            {
+                return false;
+            }
+
+            return go->GetIsTargetable()
+                   && ActionManager.CanUseActionOnTarget(142, go);
         }
 
         private ISet<uint> GetEnemyListObjectIds()
@@ -224,6 +250,7 @@ namespace DragoonMayCry.State
                 var id = (uint)numArray->IntArray[8 + (i * 6)];
                 enemyIdSet.Add(id);
             }
+
             return enemyIdSet;
         }
 

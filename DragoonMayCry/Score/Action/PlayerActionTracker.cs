@@ -202,6 +202,11 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
+            if (target->Character.Health < 2)
+            {
+                return;
+            }
+
             var kind = GetHitType(hitType);
             if (!validHitTypes.Contains(kind) ||
                 dealer->Character.GetGameObjectId() == target->Character.GetGameObjectId())
@@ -248,6 +253,11 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
+            if (!playerState.CanTargetEnemy())
+            {
+                return;
+            }
+
             var actionId = Marshal.ReadInt32(effectHeader, 0x8);
 
             if (spellCastId == actionId)
@@ -261,12 +271,6 @@ namespace DragoonMayCry.Score.Action
             if (type == PlayerActionType.LimitBreak)
             {
                 StartLimitBreakUse((uint)actionId);
-            }
-
-
-            if (jobActionModule == null)
-            {
-                return;
             }
 
             var bonusPoints = jobActionModule?.OnAction((uint)actionId);
@@ -335,11 +339,9 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-            var canTargetEnemy = playerState.CanTargetEnemy();
-
             if (limitBreakCast != null)
             {
-                if (canTargetEnemy)
+                if (playerState.CanTargetEnemy())
                 {
                     combatWastedGcd += (float)limitBreakStopwatch.Elapsed.TotalSeconds;
                 }

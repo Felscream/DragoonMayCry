@@ -28,10 +28,12 @@ namespace DragoonMayCry.Score.Rank
 
         private FinalRank DetermineFinalRank(float wastedGcd, ushort instanceId = 0)
         {
-            var uptimePercentage = Math.Max(combatTimer.Elapsed.TotalSeconds - wastedGcd, 0) / Math.Max(combatTimer.Elapsed.TotalSeconds, 0.1);
+            var uptimePercentage = Math.Max(combatTimer.Elapsed.TotalSeconds - wastedGcd, 0) /
+                                   Math.Max(combatTimer.Elapsed.TotalSeconds, 0.1);
 
 #if DEBUG
-            Service.Log.Debug($"uptime % {uptimePercentage} wasted GCD {wastedGcd} s");
+            Service.Log.Debug(
+                $"uptime % {uptimePercentage} fight time {combatTimer.Elapsed.TotalSeconds} wasted GCD {wastedGcd} s");
 #endif
             var rank = StyleType.D;
             if (Plugin.IsEmdModeEnabled())
@@ -71,18 +73,21 @@ namespace DragoonMayCry.Score.Rank
             {
                 return;
             }
+
             FinalRank = DetermineFinalRank(wastedGcd);
             FinalRankCalculated?.Invoke(this, FinalRank.Rank);
             PrintFinalRank(FinalRank);
         }
 
-        private void OnDutyCompletedWastedGcd(object? sender, PlayerActionTracker.DutyCompletionStats dutyCompletionStats)
+        private void OnDutyCompletedWastedGcd(
+            object? sender, PlayerActionTracker.DutyCompletionStats dutyCompletionStats)
         {
             combatTimer.Stop();
             if (!CanDisplayFinalRank())
             {
                 return;
             }
+
             FinalRank = DetermineFinalRank(dutyCompletionStats.WastedGcd, dutyCompletionStats.InstanceId);
             DutyCompletedFinalRank?.Invoke(this, FinalRank);
         }
@@ -93,6 +98,7 @@ namespace DragoonMayCry.Score.Rank
             {
                 return;
             }
+
             var minutes = $"{finalRank.KillTime.Minutes}";
             minutes = minutes.PadLeft(2, '0');
             var seconds = $"{finalRank.KillTime.Seconds}";
@@ -103,10 +109,10 @@ namespace DragoonMayCry.Score.Rank
         public bool CanDisplayFinalRank()
         {
             return JobHelper.IsCombatJob(playerState.GetCurrentJob())
-                && !playerState.IsInPvp()
-                && Plugin.IsEnabledForCurrentJob()
-                && (playerState.IsInsideInstance
-                        || Plugin.Configuration!.ActiveOutsideInstance);
+                   && !playerState.IsInPvp()
+                   && Plugin.IsEnabledForCurrentJob()
+                   && (playerState.IsInsideInstance
+                       || Plugin.Configuration!.ActiveOutsideInstance);
         }
 
         private static StyleType GetFinalRank(double uptimePercentage)
