@@ -388,7 +388,7 @@ namespace DragoonMayCry.UI
                 ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.86f, 0.86f, 0.86f, 1));
                 var text = $"x {hitCounter.HitCount}";
                 var textSize = ImGui.CalcTextSize(text);
-                ImGui.SetCursorPosX(scaledSize.X - textSize.X - 8f);
+                ImGui.SetCursorPosX(scaledSize.X - textSize.X - 8f * scaling);
                 ImGui.TextUnformatted(text);
                 ImGui.PopStyleColor();
                 font.Pop();

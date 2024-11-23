@@ -77,6 +77,7 @@ namespace DragoonMayCry.UI
 
         public void Dispose()
         {
+            styleRankUi.Dispose();
             pluginInterface.UiBuilder.Draw -= DrawUI;
             pluginInterface.UiBuilder.OpenMainUi -= ToggleCharacterRecords;
             pluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUI;
