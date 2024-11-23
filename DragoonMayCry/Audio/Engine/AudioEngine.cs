@@ -26,8 +26,13 @@ namespace DragoonMayCry.Audio.Engine
 
         public AudioEngine()
         {
-            sfxOutputDevice = new WasapiOut();
-            bgmOutputDevice = new WasapiOut(AudioClientShareMode.Shared, 20);
+            deviceEnumerator = new MMDeviceEnumerator();
+            sfxOutputDevice = new WasapiOut(deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console),
+                                            AudioClientShareMode.Shared,
+                                            true, 200);
+            bgmOutputDevice = new WasapiOut(deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console),
+                                            AudioClientShareMode.Shared,
+                                            true, 20);
 
             announcerSfx = new Dictionary<SoundId, CachedSound>();
             bgmStems = new Dictionary<BgmId, CachedSound>();
@@ -52,7 +57,7 @@ namespace DragoonMayCry.Audio.Engine
             sfxOutputDevice.Play();
             bgmOutputDevice.Play();
 
-            deviceEnumerator = new MMDeviceEnumerator();
+
             notificationClient = new DeviceNotificationClient();
             notificationClient.OnDefaultOutputDeviceChanged += OnDefaultDeviceChanged;
             deviceEnumerator.RegisterEndpointNotificationCallback(notificationClient);
@@ -86,6 +91,7 @@ namespace DragoonMayCry.Audio.Engine
                     Service.Log.Error($"Could not find any file at {entry.Value}");
                     continue;
                 }
+
                 if (!announcerSfx.ContainsKey(entry.Key))
                 {
                     announcerSfx.Add(entry.Key, new(entry.Value));
@@ -107,13 +113,15 @@ namespace DragoonMayCry.Audio.Engine
             sfxMixer.AddMixerInput(input);
         }
 
-        private ExposedFadeInOutSampleProvider AddBGMMixerInput(ISampleProvider input, double fadeInDuration, double fadeOutDelay, double fadeOutDuration)
+        private ExposedFadeInOutSampleProvider AddBGMMixerInput(
+            ISampleProvider input, double fadeInDuration, double fadeOutDelay, double fadeOutDuration)
         {
             var fadingInput = new ExposedFadeInOutSampleProvider(input);
             if (fadeInDuration > 0)
             {
                 fadingInput.BeginFadeIn(fadeInDuration);
             }
+
             if (fadeOutDuration > 0)
             {
                 fadingInput.BeginFadeOut(fadeOutDuration, fadeOutDelay);
@@ -129,6 +137,7 @@ namespace DragoonMayCry.Audio.Engine
             {
                 return;
             }
+
             AddSFXMixerInput(new CachedSoundSampleProvider(announcerSfx[trigger]));
         }
 
@@ -149,13 +158,15 @@ namespace DragoonMayCry.Audio.Engine
             sfxMixer.AddMixerInput(sample);
         }
 
-        public ISampleProvider? PlayBgm(BgmId id, double fadeInDuration = 0d, double fadeOutDelay = 0, double fadeOutDuration = 0)
+        public ISampleProvider? PlayBgm(
+            BgmId id, double fadeInDuration = 0d, double fadeOutDelay = 0, double fadeOutDuration = 0)
         {
             if (!bgmStems.ContainsKey(id))
             {
                 Service.Log.Warning($"No BGM registered for {id}");
                 return null;
             }
+
             ISampleProvider sample = new CachedSoundSampleProvider(bgmStems[id]);
 
             return AddBGMMixerInput(sample, fadeInDuration, fadeOutDelay, fadeOutDuration);
@@ -235,6 +246,7 @@ namespace DragoonMayCry.Audio.Engine
             {
                 return;
             }
+
             bgmMixer.RemoveMixerInput(sample);
         }
 
@@ -250,6 +262,7 @@ namespace DragoonMayCry.Audio.Engine
                 RemoveAllBgm();
                 return;
             }
+
             var inputs = new List<ISampleProvider>(bgmMixer.MixerInputs);
             foreach (var input in inputs)
             {
@@ -274,18 +287,20 @@ namespace DragoonMayCry.Audio.Engine
 
         public void Dispose()
         {
-            deviceEnumerator.UnregisterEndpointNotificationCallback(notificationClient);
-            deviceEnumerator.Dispose();
             sfxMixer.RemoveAllMixerInputs();
             bgmMixer.RemoveAllMixerInputs();
             sfxOutputDevice.Dispose();
             bgmOutputDevice.Dispose();
+            deviceEnumerator.UnregisterEndpointNotificationCallback(notificationClient);
+            deviceEnumerator.Dispose();
         }
 
         class DeviceNotificationClient : NAudio.CoreAudioApi.Interfaces.IMMNotificationClient
         {
             public delegate void DefaultDeviceChanged();
+
             public DefaultDeviceChanged? OnDefaultOutputDeviceChanged;
+
             public void OnDeviceStateChanged(string deviceId, DeviceState newState)
             {
                 return;
