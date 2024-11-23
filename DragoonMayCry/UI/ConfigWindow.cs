@@ -90,6 +90,8 @@ public class ConfigWindow : Window
                    })
                    .AddConfigCheckbox("Output final rank to chat", configuration.EnabledFinalRankChatLogging,
                                       "The message will be sent in the echo channel")
+                   .AddConfigCheckbox("Enable hit counter", configuration.EnableHitCounter,
+                                      "Not compatible with FlyTextFilter")
                    .AddSliderInt("Rank display scale", configuration.RankDisplayScale, 50, 200, 150f)
                    .AddButton("Open job configuration", () => jobConfigurationWindow.Toggle())
                    .Draw();

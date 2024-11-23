@@ -29,14 +29,16 @@ namespace DragoonMayCry.UI
         private readonly Stopwatch hideRankUiStopwatch;
         private const float TimeToResetScoreAfterCombat = 10000;
 
-        public PluginUI(ScoreProgressBar scoreProgressBar,
+        public PluginUI(
+            ScoreProgressBar scoreProgressBar,
             StyleRankHandler styleRankHandler,
             ScoreManager scoreManager,
             FinalRankCalculator finalRankCalculator,
             StyleAnnouncerService styleAnnouncerService,
             DynamicBgmService dynamicBgmService,
             PlayerActionTracker playerActionTracker,
-            RecordService recordService)
+            RecordService recordService,
+            HitCounter hitCounter)
         {
             this.finalRankCalculator = finalRankCalculator;
             JobConfigurationWindow = new(Plugin.Configuration!);
@@ -44,8 +46,6 @@ namespace DragoonMayCry.UI
             JobConfigurationWindow.EnabledForJobChange += dynamicBgmService.OnJobEnableChange;
 
             HowItWorksWindow = new HowItWorksWindow();
-
-
 
             ConfigWindow = new ConfigWindow(Plugin.Configuration!, JobConfigurationWindow);
             ConfigWindow.ActiveOutsideInstanceChange += Plugin.OnActiveOutsideInstanceConfChange;
@@ -56,7 +56,8 @@ namespace DragoonMayCry.UI
 
             CharacterRecordWindow = new(recordService, ConfigWindow, HowItWorksWindow);
 
-            styleRankUi = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator, playerActionTracker);
+            styleRankUi = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator,
+                                          playerActionTracker, hitCounter);
 
             KamiCommon.WindowManager.AddWindow(JobConfigurationWindow);
             KamiCommon.WindowManager.AddWindow(ConfigWindow);
@@ -72,15 +73,13 @@ namespace DragoonMayCry.UI
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
 
             hideRankUiStopwatch = new Stopwatch();
-
-
         }
+
         public void Dispose()
         {
             pluginInterface.UiBuilder.Draw -= DrawUI;
             pluginInterface.UiBuilder.OpenMainUi -= ToggleCharacterRecords;
             pluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUI;
-
             windowSystem.RemoveAllWindows();
         }
 
@@ -97,7 +96,6 @@ namespace DragoonMayCry.UI
             {
                 styleRankUi.Draw();
             }
-
         }
 
         private bool CanDrawStyleRank()
@@ -117,6 +115,7 @@ namespace DragoonMayCry.UI
                 hideRankUiStopwatch.Reset();
                 return;
             }
+
             if (!enteringCombat)
             {
                 hideRankUiStopwatch.Restart();

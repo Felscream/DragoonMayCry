@@ -19,7 +19,7 @@ using Vector4 = FFXIVClientStructs.FFXIV.Common.Math.Vector4;
 
 namespace DragoonMayCry.UI
 {
-    public sealed class StyleRankUI
+    public sealed class StyleRankUI : IDisposable
     {
         public static readonly Dictionary<StyleType, StyleUi> styleUis =
             new()
@@ -40,10 +40,15 @@ namespace DragoonMayCry.UI
         private readonly PlayerState playerState;
         private readonly FinalRankCalculator finalRankCalculator;
         private readonly PlayerActionTracker playerActionTracker;
+        private readonly HitCounter hitCounter;
+        private readonly Fonts fonts;
 
         private readonly Vector2 rankPosition = new(8, 8);
         private readonly Vector2 rankSize = new(130, 130);
         private readonly Vector2 rankTransitionStartPosition = new(83, 83);
+        private readonly Vector2 hitCounterPosition = new(16, 125);
+        private readonly Vector2 hitCounterSize = new(120, 32);
+
         private StyleType currentStyle = StyleType.NoStyle;
         private StyleType previousStyle = StyleType.NoStyle;
         private bool isInCombat;
@@ -55,12 +60,14 @@ namespace DragoonMayCry.UI
         private readonly Stopwatch demotionStopwatch;
 
         private readonly float shakeDuration = 300;
-        private readonly float shakeIntensity = 6f;
+        private readonly float rankShakeIntensity = 6f;
+        private readonly float hitCounterShakeIntensity = 1.5f;
         private readonly string gaugeDefault = "DragoonMayCry.Assets.GaugeDefault.png";
 
         public StyleRankUI(
             ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager,
-            FinalRankCalculator finalRankCalculator, PlayerActionTracker playerActionTracker)
+            FinalRankCalculator finalRankCalculator, PlayerActionTracker playerActionTracker,
+            HitCounter hitCounter)
         {
             this.scoreProgressBar = scoreProgressBar;
             this.styleRankHandler = styleRankHandler;
@@ -72,6 +79,8 @@ namespace DragoonMayCry.UI
             this.playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             this.playerActionTracker = playerActionTracker;
             this.playerActionTracker.ActionFlyTextCreated += OnActionFlyTextCreated!;
+            this.hitCounter = hitCounter;
+            fonts = new Fonts();
 
             this.styleRankHandler.StyleRankChange += OnRankChange!;
 
@@ -108,8 +117,8 @@ namespace DragoonMayCry.UI
                                   : ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize;
             UpdateRankTransitionAnimation();
             UpdateFinalRankTransitionAnimation();
+            ImGui.SetNextWindowSize(new Vector2(0, 0), ImGuiCond.Always);
 
-            ImGui.SetNextWindowSize(Vector2.Zero, ImGuiCond.Always);
             if (!Plugin.Configuration.LockScoreWindow)
             {
                 DrawMock(windowFlags);
@@ -138,6 +147,11 @@ namespace DragoonMayCry.UI
                                            .TryGetWrap(out var gauge, out var _))
                 {
                     DrawProgressGauge(gauge, scoreProgressBar.Progress, style.GaugeColor);
+                }
+
+                if (Plugin.Configuration!.EnableHitCounter && hitCounter.HitCount > 1)
+                {
+                    DrawHitCounter(style);
                 }
             }
 
@@ -207,12 +221,6 @@ namespace DragoonMayCry.UI
             shakeStopwatch.Restart();
         }
 
-        private void DrawScore()
-        {
-            var score = scoreManager.CurrentScoreRank.Score;
-            ImGui.Text($"{score}");
-        }
-
         private void DrawProgressGauge(IDalamudTextureWrap gauge, float progress, Vector3 color)
         {
             var textureToElementScale = 0.39f;
@@ -272,7 +280,7 @@ namespace DragoonMayCry.UI
                     MathFunctionsUtils.InCube(scoreProgressBar.Progress) * 1.5f;
                 if (shakeStopwatch.IsRunning)
                 {
-                    intensity = shakeIntensity;
+                    intensity = rankShakeIntensity;
                 }
 
                 var offset = new Vector2(
@@ -367,6 +375,41 @@ namespace DragoonMayCry.UI
             return new(color, 1);
         }
 
+        private void DrawHitCounter(StyleUi style)
+        {
+            var position = GetHitCounterPosition();
+            var scaling = Plugin.Configuration!.RankDisplayScale.Value / 100f;
+            var scaledSize = hitCounterSize * scaling;
+            ImGui.SetCursorPos(position * scaling);
+            if (ImGui.BeginChild("Hit Counter", scaledSize, false, ImGuiWindowFlags.NoScrollbar))
+            {
+                var font = fonts.GetHitCountFontByScale();
+                font.Push();
+                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.86f, 0.86f, 0.86f, 1));
+                var text = $"x {hitCounter.HitCount}";
+                var textSize = ImGui.CalcTextSize(text);
+                ImGui.SetCursorPosX(scaledSize.X - textSize.X - 8f);
+                ImGui.TextUnformatted(text);
+                ImGui.PopStyleColor();
+                font.Pop();
+                ImGui.EndChild();
+            }
+        }
+
+        private Vector2 GetHitCounterPosition()
+        {
+            if (shakeStopwatch.IsRunning)
+            {
+                var offset = new Vector2(
+                    random.NextSingle() * hitCounterShakeIntensity * 2 - hitCounterShakeIntensity / 2,
+                    random.NextSingle() * hitCounterShakeIntensity * 2 - hitCounterShakeIntensity / 2);
+
+                return hitCounterPosition + offset;
+            }
+
+            return hitCounterPosition;
+        }
+
         private void OnRankChange(object send, StyleRankHandler.RankChangeData data)
         {
             if (currentStyle < data.NewRank)
@@ -435,6 +478,11 @@ namespace DragoonMayCry.UI
         {
             currentStyle = finalRank;
             finalRankTransition.Start();
+        }
+
+        public void Dispose()
+        {
+            fonts.Dispose();
         }
     }
 }

@@ -24,6 +24,7 @@ public class DmcConfigurationOne : IPluginConfiguration
     public Setting<bool> EnableDynamicBgm = new(false);
     public Setting<bool> EnableMuffledEffectOnDeath = new(false);
     public Setting<bool> EnabledFinalRankChatLogging = new(true);
+    public Setting<bool> EnableHitCounter = new(true);
 
     public Setting<bool> LockScoreWindow { get; set; } = new(true);
 

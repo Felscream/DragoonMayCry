@@ -26,14 +26,15 @@ namespace DragoonMayCry;
 
 public unsafe class Plugin : IDalamudPlugin
 {
-    [PluginService] public static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
+    [PluginService]
+    public static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
+
     public static DmcConfigurationOne? Configuration { get; private set; }
-    public static bool MultiHitLoaded { get; private set; }
 
     private const string CommandName = "/dmc";
 
     private static ScoreManager? ScoreManager;
-    private readonly PluginUI PluginUi;
+    private readonly PluginUI pluginUi;
     private static PlayerState? PlayerState;
     private static ScoreProgressBar? ScoreProgressBar;
     private static PlayerActionTracker? PlayerActionTracker;
@@ -43,7 +44,10 @@ public unsafe class Plugin : IDalamudPlugin
     private static DynamicBgmService? BgmService;
     private static RecordService? RecordService;
     public static StyleAnnouncerService? StyleAnnouncerService;
+
+    private readonly HitCounter hitCounter;
     private static JobId CurrentJob = JobId.OTHER;
+
     public Plugin()
     {
         PluginInterface.Create<Service>();
@@ -66,9 +70,13 @@ public unsafe class Plugin : IDalamudPlugin
 
         ScoreProgressBar = new(ScoreManager, StyleRankHandler, PlayerActionTracker, PlayerState);
         FinalRankCalculator = new(PlayerState, PlayerActionTracker);
+
         RecordService = new(FinalRankCalculator);
         RecordService.Initialize();
-        PluginUi = new(ScoreProgressBar, StyleRankHandler, ScoreManager, FinalRankCalculator, StyleAnnouncerService, BgmService, PlayerActionTracker, RecordService);
+
+        hitCounter = new HitCounter(PlayerActionTracker, StyleRankHandler);
+        pluginUi = new(ScoreProgressBar, StyleRankHandler, ScoreManager, FinalRankCalculator, StyleAnnouncerService,
+                       BgmService, PlayerActionTracker, RecordService, hitCounter);
 
 
         ScoreProgressBar.DemotionApplied += StyleRankHandler.OnDemotion;
@@ -91,31 +99,32 @@ public unsafe class Plugin : IDalamudPlugin
     {
         // A warning appears if PlayerState#IsCombatJob is used directly
         return JobHelper.IsCombatJob(CurrentJob)
-        && PlayerState!.IsInCombat
-        && !PlayerState.IsInPvp()
-        && IsEnabledForCurrentJob()
-        && (PlayerState.IsInsideInstance
-                    || Configuration!.ActiveOutsideInstance);
+               && PlayerState!.IsInCombat
+               && !PlayerState.IsInPvp()
+               && IsEnabledForCurrentJob()
+               && (PlayerState.IsInsideInstance
+                   || Configuration!.ActiveOutsideInstance);
     }
 
     public static bool IsMultiHitLoaded()
     {
-        return PluginInterface.InstalledPlugins.FirstOrDefault(plugin => plugin.IsLoaded && plugin.InternalName == "MultiHit") != null;
+        return PluginInterface.InstalledPlugins.FirstOrDefault(
+                   plugin => plugin.IsLoaded && plugin.InternalName == "MultiHit") != null;
     }
 
     public static bool CanHandleEvents()
     {
         return JobHelper.IsCombatJob(CurrentJob)
-                && !PlayerState!.IsInPvp()
-                && IsEnabledForCurrentJob()
-                && (PlayerState.IsInsideInstance
-                    || Configuration!.ActiveOutsideInstance);
+               && !PlayerState!.IsInPvp()
+               && IsEnabledForCurrentJob()
+               && (PlayerState.IsInsideInstance
+                   || Configuration!.ActiveOutsideInstance);
     }
 
     public static bool IsEnabledForCurrentJob()
     {
         return Configuration != null && Configuration!.JobConfiguration.ContainsKey(CurrentJob)
-                && Configuration.JobConfiguration[CurrentJob].EnableDmc;
+                                     && Configuration.JobConfiguration[CurrentJob].EnableDmc;
     }
 
     public void Dispose()
@@ -127,7 +136,7 @@ public unsafe class Plugin : IDalamudPlugin
         PlayerActionTracker?.Dispose();
         ScoreManager?.Dispose();
         PlayerState?.Dispose();
-        PluginUi?.Dispose();
+        pluginUi?.Dispose();
         Service.CommandManager.RemoveHandler(CommandName);
     }
 
@@ -135,11 +144,11 @@ public unsafe class Plugin : IDalamudPlugin
     {
         if (args.Contains("conf"))
         {
-            PluginUi?.ToggleConfigUI();
+            pluginUi?.ToggleConfigUI();
         }
         else
         {
-            PluginUi?.ToggleCharacterRecords();
+            pluginUi?.ToggleCharacterRecords();
         }
     }
 
@@ -149,6 +158,7 @@ public unsafe class Plugin : IDalamudPlugin
         {
             return;
         }
+
         ScoreProgressBar?.Reset();
         ScoreManager?.Reset();
         FinalRankCalculator?.Reset();
@@ -185,7 +195,8 @@ public unsafe class Plugin : IDalamudPlugin
             var version = versionCheck.Version;
             var config = version switch
             {
-                0 => JsonSerializer.Deserialize<DmcConfiguration>(configText)?.MigrateToOne() ?? new DmcConfigurationOne(),
+                0 => JsonSerializer.Deserialize<DmcConfiguration>(configText)?.MigrateToOne() ??
+                     new DmcConfigurationOne(),
                 1 => JsonConvert.DeserializeObject<DmcConfigurationOne>(configText) ?? new DmcConfigurationOne(),
                 _ => new DmcConfigurationOne()
             };
@@ -197,6 +208,7 @@ public unsafe class Plugin : IDalamudPlugin
             {
                 Service.Log.Debug(e.StackTrace);
             }
+
             Service.Log.Warning("Your configuration migration failed, it has been reinitialized");
             return new DmcConfigurationOne();
         }
