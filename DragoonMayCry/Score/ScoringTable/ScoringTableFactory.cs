@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace DragoonMayCry.Score.Table
 {
-    class ScoringTableFactory
+    internal class ScoringTableFactory
     {
         public static readonly Dictionary<StyleType, StyleScoring>
             DefaultScoringTable = new()
@@ -57,6 +57,5 @@ namespace DragoonMayCry.Score.Table
 
             return meleeScoringTable.GetScoringTable(ilvl);
         }
-
     }
 }

@@ -121,6 +121,7 @@ namespace DragoonMayCry.UI
                 entry.Value.RandomizeAnnouncement = new(targetConfiguration.RandomizeAnnouncement);
                 entry.Value.Bgm = new(targetConfiguration.Bgm.Value);
                 entry.Value.GcdDropThreshold = new(targetConfiguration.GcdDropThreshold.Value);
+                entry.Value.ScoreMultiplier = new(targetConfiguration.ScoreMultiplier.Value);
             }
 
             KamiCommon.SaveConfiguration();

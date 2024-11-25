@@ -13,14 +13,14 @@
                 "LvlSync": 70,
                 "Difficulty": 1,
                 "Category": 2,
-                "TexPath": "ui/icon/112000/112261_hr1.tex"
+                "IconId": "112261"
             },
             "777": {
                 "Name": "The Weapon's Refrain",
                 "LvlSync": 70,
                 "Difficulty": 1,
                 "Category": 2,
-                "TexPath": "ui/icon/112000/112296_hr1.tex"
+                "IconId": "112296"
             }
         }
     },
@@ -38,7 +38,7 @@
                 "LvlSync": 80,
                 "Difficulty": 1,
                 "Category": 2,
-                "TexPath": "ui/icon/112000/112374_hr1.tex"
+                "IconId": "112374"
             }
         }
     },
@@ -56,14 +56,14 @@
                 "LvlSync": 90,
                 "Difficulty": 1,
                 "Category": 2,
-                "TexPath": "ui/icon/112000/112469_hr1.tex"
+                "IconId": "112469"
             },
             "1122": {
                 "Name": "The Omega Protocol",
                 "LvlSync": 90,
                 "Difficulty": 1,
                 "Category": 2,
-                "TexPath": "ui/icon/112000/112518_hr1.tex"
+                "IconId": "112518"
             }
         }
     },
@@ -91,7 +91,7 @@
                 "Difficulty": 0,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "TexPath": "ui/icon/112000/112562_hr1.tex"
+                "IconId": "112562"
             },
             "1196": {
                 "Name": "Worqor Lar Dor",
@@ -99,7 +99,7 @@
                 "Difficulty": 1,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "TexPath": "ui/icon/112000/112563_hr1.tex"
+                "IconId": "112563"
             },
             "1200": {
                 "Name": "Everkeep",
@@ -107,7 +107,7 @@
                 "Difficulty": 0,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "TexPath": "ui/icon/112000/112564_hr1.tex"
+                "IconId": "112564"
             },
             "1201": {
                 "Name": "Everkeep",
@@ -115,7 +115,7 @@
                 "Difficulty": 1,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "TexPath": "ui/icon/112000/112565_hr1.tex"
+                "IconId": "112565"
             },
             "1202": {
                 "Name": "The Interphos",
@@ -123,7 +123,7 @@
                 "Difficulty": 0,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "TexPath": "ui/icon/112000/112566_hr1.tex"
+                "IconId": "112566"
             },
             "1225": {
                 "Name": "AAC Light-heavyweight M1",
@@ -131,7 +131,7 @@
                 "Difficulty": 0,
                 "Category": 1,
                 "Subcategory": "AAC Light-heavyweight",
-                "TexPath": "ui/icon/112000/112567_hr1.tex"
+                "IconId": "112567"
             },
             "1226": {
                 "Name": "AAC Light-heavyweight M1",
@@ -139,7 +139,7 @@
                 "Difficulty": 1,
                 "Category": 1,
                 "Subcategory": "AAC Light-heavyweight",
-                "TexPath": "ui/icon/112000/112568_hr1.tex"
+                "IconId": "112568"
             },
             "1227": {
                 "Name": "AAC Light-heavyweight M2",
@@ -147,7 +147,7 @@
                 "Difficulty": 0,
                 "Category": 1,
                 "Subcategory": "AAC Light-heavyweight",
-                "TexPath": "ui/icon/112000/112569_hr1.tex"
+                "IconId": "112569"
             },
             "1228": {
                 "Name": "AAC Light-heavyweight M2",
@@ -155,7 +155,7 @@
                 "Difficulty": 1,
                 "Category": 1,
                 "Subcategory": "AAC Light-heavyweight",
-                "TexPath": "ui/icon/112000/112570_hr1.tex"
+                "IconId": "112570"
             },
             "1229": {
                 "Name": "AAC Light-heavyweight M3",
@@ -163,7 +163,7 @@
                 "Difficulty": 0,
                 "Category": 1,
                 "Subcategory": "AAC Light-heavyweight",
-                "TexPath": "ui/icon/112000/112571_hr1.tex"
+                "IconId": "112571"
             },
             "1230": {
                 "Name": "AAC Light-heavyweight M3",
@@ -171,7 +171,7 @@
                 "Difficulty": 1,
                 "Category": 1,
                 "Subcategory": "AAC Light-heavyweight",
-                "TexPath": "ui/icon/112000/112572_hr1.tex"
+                "IconId": "112572"
             },
             "1231": {
                 "Name": "AAC Light-heavyweight M4",
@@ -179,7 +179,7 @@
                 "Difficulty": 0,
                 "Category": 1,
                 "Subcategory": "AAC Light-heavyweight",
-                "TexPath": "ui/icon/112000/112573_hr1.tex"
+                "IconId": "112573"
             },
             "1232": {
                 "Name": "AAC Light-heavyweight M4",
@@ -187,7 +187,7 @@
                 "Difficulty": 1,
                 "Category": 1,
                 "Subcategory": "AAC Light-heavyweight",
-                "TexPath": "ui/icon/112000/112574_hr1.tex"
+                "IconId": "112574"
             },
             "1239": {
                 "Name": "The Jade Stoa",
@@ -195,7 +195,7 @@
                 "Difficulty": 1,
                 "Category": 0,
                 "Subcategory": "Unreal",
-                "TexPath": "ui/icon/112000/112590_hr1.tex"
+                "IconId": "112590"
             },
             "1243": {
                 "Name": "The Minstrel's Ballad: Sphene's Burden",
@@ -203,7 +203,7 @@
                 "Difficulty": 1,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "TexPath": "ui/icon/112000/112588_hr1.tex"
+                "IconId": "112588"
             }
         }
     }

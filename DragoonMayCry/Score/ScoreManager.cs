@@ -43,6 +43,7 @@ namespace DragoonMayCry.Score
         private bool isCastingLb;
         private Dictionary<StyleType, StyleScoring> jobScoringTable;
         private readonly Stopwatch pointsReductionStopwatch;
+        private float scoreMultiplier = 1f;
 
         public ScoreManager(StyleRankHandler styleRankHandler, PlayerActionTracker playerActionTracker)
         {
@@ -123,7 +124,7 @@ namespace DragoonMayCry.Score
 
         private void AddScore(object? sender, float val)
         {
-            var points = val * CurrentScoreRank.StyleScoring.PointCoefficient;
+            var points = val * CurrentScoreRank.StyleScoring.PointCoefficient * scoreMultiplier;
             if (AreGcdClippingRestrictionsActive())
             {
                 points *= PointReductionFactor;
@@ -155,8 +156,21 @@ namespace DragoonMayCry.Score
             if (enteringCombat)
             {
                 jobScoringTable = GetJobScoringTable();
+                scoreMultiplier = GetScoreMultiplier();
                 ResetScore();
             }
+        }
+
+        private float GetScoreMultiplier()
+        {
+            var currentJob = playerState.GetCurrentJob();
+            var multiplier = 1f;
+            if (Plugin.Configuration!.JobConfiguration.TryGetValue(currentJob, out var jobConfiguration))
+            {
+                multiplier = Math.Max(0.25f, Math.Min(3, jobConfiguration.ScoreMultiplier.Value));
+            }
+
+            return multiplier;
         }
 
         private void OnLimitBreakCast(object? sender, PlayerActionTracker.LimitBreakEvent e)

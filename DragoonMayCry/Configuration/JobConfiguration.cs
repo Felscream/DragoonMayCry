@@ -21,5 +21,6 @@ namespace DragoonMayCry.Configuration
         public Setting<bool> EstinienMustDie = new(false);
         public Setting<float> GcdDropThreshold = new(0.2f);
         public Setting<bool> RandomizeAnnouncement = new(false);
+        public Setting<float> ScoreMultiplier = new(1.0f);
     }
 }

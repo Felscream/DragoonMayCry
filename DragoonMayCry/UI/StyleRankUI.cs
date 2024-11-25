@@ -24,13 +24,13 @@ namespace DragoonMayCry.UI
         public static readonly Dictionary<StyleType, StyleUi> styleUis =
             new()
             {
-                { StyleType.D, new("DragoonMayCry.Assets.D.png", new(223, 152, 30)) },
-                { StyleType.C, new("DragoonMayCry.Assets.C.png", new Vector3(95, 160, 213)) },
-                { StyleType.B, new("DragoonMayCry.Assets.B.png", new Vector3(95, 160, 213)) },
-                { StyleType.A, new("DragoonMayCry.Assets.A.png", new Vector3(95, 160, 213)) },
-                { StyleType.S, new("DragoonMayCry.Assets.S.png", new Vector3(233, 216, 95)) },
-                { StyleType.SS, new("DragoonMayCry.Assets.SS.png", new Vector3(233, 216, 95)) },
-                { StyleType.SSS, new("DragoonMayCry.Assets.SSS.png", new Vector3(233, 216, 95)) },
+                { StyleType.D, new("DragoonMayCry.Assets.D.png", new(223, 152, 30), 121514) },
+                { StyleType.C, new("DragoonMayCry.Assets.C.png", new Vector3(95, 160, 213), 121583) },
+                { StyleType.B, new("DragoonMayCry.Assets.B.png", new Vector3(95, 160, 213), 121533) },
+                { StyleType.A, new("DragoonMayCry.Assets.A.png", new Vector3(95, 160, 213), 121532) },
+                { StyleType.S, new("DragoonMayCry.Assets.S.png", new Vector3(233, 216, 95), 121581) },
+                { StyleType.SS, new("DragoonMayCry.Assets.SS.png", new Vector3(233, 216, 95), 121531) },
+                { StyleType.SSS, new("DragoonMayCry.Assets.SSS.png", new Vector3(233, 216, 95), 121511) },
             };
 
         private readonly ScoreProgressBar scoreProgressBar;
@@ -45,6 +45,7 @@ namespace DragoonMayCry.UI
 
         private readonly Vector2 rankPosition = new(8, 8);
         private readonly Vector2 rankSize = new(130, 130);
+        private readonly Vector2 goldSaucerEditionSize = new(130, 80);
         private readonly Vector2 rankTransitionStartPosition = new(83, 83);
         private readonly Vector2 hitCounterPosition = new(16, 125);
         private readonly Vector2 hitCounterSize = new(120, 32);
@@ -134,17 +135,16 @@ namespace DragoonMayCry.UI
                 }
 
                 var style = styleUis[currentStyle];
-                if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), style.IconPath)
-                           .TryGetWrap(out var rankIcon, out var _))
+                if (TryGetRankTexture(style, out var rankIcon))
                 {
                     DrawCurrentRank(rankIcon);
                 }
 
                 // Stolen from https://github.com/marconsou/mp-tick-bar
-                if ((isInCombat) && Service.TextureProvider
-                                           .GetFromManifestResource(Assembly.GetExecutingAssembly(),
-                                                                    gaugeDefault)
-                                           .TryGetWrap(out var gauge, out var _))
+                if (Plugin.Configuration!.EnableProgressGauge && isInCombat && Service.TextureProvider
+                        .GetFromManifestResource(Assembly.GetExecutingAssembly(),
+                                                 gaugeDefault)
+                        .TryGetWrap(out var gauge, out var _))
                 {
                     DrawProgressGauge(gauge, scoreProgressBar.Progress, style.GaugeColor);
                 }
@@ -164,6 +164,26 @@ namespace DragoonMayCry.UI
             {
                 demotionStopwatch.Reset();
             }
+        }
+
+        private bool TryGetRankTexture(StyleUi style, out IDalamudTextureWrap texture)
+        {
+            texture = null!;
+            if (Plugin.Configuration!.GoldSaucerEdition
+                && Service.TextureProvider.TryGetFromGameIcon(style.GoldSaucerEditionIconId, out var tex)
+                && tex.TryGetWrap(out var gsIcon, out var _))
+            {
+                texture = gsIcon;
+                return true;
+            }
+            else if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), style.IconPath)
+                            .TryGetWrap(out var rankIcon, out var _))
+            {
+                texture = rankIcon;
+                return true;
+            }
+
+            return false;
         }
 
         private void UpdateFinalRankTransitionAnimation()
@@ -206,10 +226,11 @@ namespace DragoonMayCry.UI
                     ImGui.Image(rankIcon.ImGuiHandle, rankSize * Plugin.Configuration!.RankDisplayScale.Value / 100f);
                 }
 
-                if (Service.TextureProvider
-                           .GetFromManifestResource(Assembly.GetExecutingAssembly(),
-                                                    gaugeDefault)
-                           .TryGetWrap(out var gauge, out var _))
+                if (Plugin.Configuration!.EnableProgressGauge && Service.TextureProvider
+                                                                        .GetFromManifestResource(
+                                                                            Assembly.GetExecutingAssembly(),
+                                                                            gaugeDefault)
+                                                                        .TryGetWrap(out var gauge, out var _))
                 {
                     DrawProgressGauge(gauge, progress, new(255, 255, 255));
                 }
@@ -236,11 +257,12 @@ namespace DragoonMayCry.UI
 
         private void DrawCurrentRank(IDalamudTextureWrap rankIcon)
         {
+            var textureSize = Plugin.Configuration!.GoldSaucerEdition ? goldSaucerEditionSize : rankSize;
             var scale = Plugin.Configuration!.RankDisplayScale.Value / 100f;
             var currentAnimation = isInCombat ? rankTransition : finalRankTransition;
             var pos = ComputeRankPosition(currentAnimation);
             var animationTransitionValue = GetAnimationTransitionValue(currentAnimation);
-            var size = rankSize * (float)animationTransitionValue;
+            var size = textureSize * (float)animationTransitionValue;
 
 
             var textureUv0 = Vector2.Zero;
@@ -292,6 +314,11 @@ namespace DragoonMayCry.UI
             else if (currentAnimation.IsRunning)
             {
                 pos = GetPositionByAnimation(currentAnimation);
+            }
+
+            if (Plugin.Configuration!.GoldSaucerEdition)
+            {
+                pos.Y += 40;
             }
 
             return pos * Plugin.Configuration!.RankDisplayScale.Value / 100f;

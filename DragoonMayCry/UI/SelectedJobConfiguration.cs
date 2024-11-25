@@ -98,7 +98,6 @@ namespace DragoonMayCry.UI
                    .BeginDisabled(configuration.EstinienMustDie)
                    .AddAction(() =>
                    {
-                       var curPos = ImGui.GetCursorPos();
                        ImGui.SetNextItemWidth(200f);
 
                        if (ImGui.InputFloat("GCD clip / drop threshold", ref configuration.GcdDropThreshold.Value,
@@ -111,6 +110,24 @@ namespace DragoonMayCry.UI
 
                        ImGui.EndDisabled();
                        ImGuiComponents.HelpMarker("In seconds.\nOnly used if 'Estinien Must Die' is disabled");
+                   })
+                   .AddAction(() =>
+                   {
+                       ImGui.SetNextItemWidth(200f);
+
+                       if (ImGui.InputFloat("Score multiplier", ref configuration.ScoreMultiplier.Value,
+                                            0.01f, 0.1f))
+                       {
+                           configuration.ScoreMultiplier.Value =
+                               Math.Min(3f, Math.Max(0.25f, configuration.ScoreMultiplier.Value));
+                           KamiCommon.SaveConfiguration();
+                       }
+
+                       ImGuiComponents.HelpMarker(
+                           "Values above 1.0 will make it easier to reach the next rank" +
+                           "\nValues below 1.0 will make it take longer to reach the next rank" +
+                           "\nValues above 1.0 may cause unexpected behaviour with the dynamic background music." +
+                           "\nAlso affects 'Estinien Must Die'.");
                    })
                    .AddAction(() =>
                    {

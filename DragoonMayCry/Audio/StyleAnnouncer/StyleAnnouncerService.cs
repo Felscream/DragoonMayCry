@@ -338,7 +338,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             var newRank = data.NewRank;
             var previousRank = data.PreviousRank;
 
-            if (data.IsBlunder && previousRank != StyleType.NoStyle)
+            if (data.IsBlunder && previousRank != StyleType.NoStyle && !Plugin.Configuration!.DisableAnnouncerBlunder)
             {
                 var sfx = SelectRandomSfx(announcer.GetBlunderVariations());
                 PlayAnnouncer(sfx, Plugin.Configuration!.ForceSoundEffectsOnBlunder);

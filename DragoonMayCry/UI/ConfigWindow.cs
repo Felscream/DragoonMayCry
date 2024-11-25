@@ -92,14 +92,16 @@ public class ConfigWindow : Window
                                       "The message will be sent in the echo channel")
                    .AddConfigCheckbox("Enable hit counter", configuration.EnableHitCounter,
                                       "Not compatible with FlyTextFilter")
+                   .AddConfigCheckbox("Enable progress gauge", configuration.EnableProgressGauge)
+                   .AddConfigCheckbox("Gold Saucer Edition", configuration.GoldSaucerEdition)
                    .AddSliderInt("Rank display scale", configuration.RankDisplayScale, 50, 200, 150f)
                    .AddButton("Open job configuration", () => jobConfigurationWindow.Toggle())
                    .Draw();
 
-            var announcerValues = Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>().ToList();
             InfoBox.Instance.AddTitle("Announcer")
                    .AddConfigCheckbox("Enable announcer", configuration.PlaySoundEffects)
                    .AddConfigCheckbox("Force announcer on blunders", configuration.ForceSoundEffectsOnBlunder)
+                   .AddConfigCheckbox("Disable announcer on blunders", configuration.DisableAnnouncerBlunder)
                    .AddAction(() =>
                    {
                        var cursorPos = ImGui.GetCursorPos();

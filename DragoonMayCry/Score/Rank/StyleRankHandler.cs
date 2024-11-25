@@ -8,19 +8,11 @@ namespace DragoonMayCry.Score.Rank
 {
     public class StyleRankHandler : IResettable
     {
-        public struct RankChangeData
+        public struct RankChangeData(StyleType previousRank, StyleType newRank, bool isBlunder)
         {
-            public StyleType PreviousRank;
-            public StyleType NewRank;
-            public bool IsBlunder;
-
-            public RankChangeData(
-                StyleType previousRank, StyleType newRank, bool isBlunder)
-            {
-                PreviousRank = previousRank;
-                NewRank = newRank;
-                IsBlunder = isBlunder;
-            }
+            public readonly StyleType PreviousRank = previousRank;
+            public readonly StyleType NewRank = newRank;
+            public readonly bool IsBlunder = isBlunder;
         }
 
         public EventHandler<RankChangeData>? StyleRankChange;

@@ -1,4 +1,5 @@
 using DragoonMayCry.Score.Action;
+using DragoonMayCry.Score.Model;
 using DragoonMayCry.State;
 
 namespace DragoonMayCry.Score.Rank;
@@ -31,7 +32,7 @@ public class HitCounter
 
     private void OnRankChange(object? sender, StyleRankHandler.RankChangeData rankChangeData)
     {
-        if (rankChangeData.NewRank > rankChangeData.PreviousRank)
+        if (rankChangeData.NewRank > rankChangeData.PreviousRank || rankChangeData.NewRank > StyleType.A)
         {
             return;
         }

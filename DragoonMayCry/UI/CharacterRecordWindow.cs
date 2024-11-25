@@ -13,6 +13,8 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using Dalamud.Interface.Textures;
+using Dalamud.Interface.Textures.TextureWraps;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using PlayerState = DragoonMayCry.State.PlayerState;
@@ -33,7 +35,7 @@ namespace DragoonMayCry.UI
         private readonly Extension[] extensions;
         private readonly List<String> extensionValues;
         private readonly List<JobId> jobs;
-        private const string HiddenDutyTexPath = "ui/icon/112000/112036_hr1.tex";
+        private const uint HiddenDutyIconId = 112056;
         private const string MissingRankTexPath = "DragoonMayCry.Assets.MissingRank.png";
         private const string DefaultKillTime = "--:--";
         private ExtensionCategory[] categories = [];
@@ -279,10 +281,10 @@ namespace DragoonMayCry.UI
                         var scaledDutyTextureSize = dutyTextureSize * 1.4f;
 
                         CenterText(GetDutyName(displayedDuties[i]), scaledDutyTextureSize);
-                        if (textureProvider.GetFromGame(GetTexturePath(displayedDuties[i]))
-                                           .TryGetWrap(out var tex, out var _))
+
+                        if (TryGetTexture(displayedDuties[i], out var texture))
                         {
-                            ImGui.Image(tex.ImGuiHandle, scaledDutyTextureSize);
+                            ImGui.Image(texture.ImGuiHandle, scaledDutyTextureSize);
                         }
 
                         #endregion
@@ -412,15 +414,26 @@ namespace DragoonMayCry.UI
             return contentFinderCondition;
         }
 
-        private string GetTexturePath(DisplayedDuty displayed)
+        private bool TryGetTexture(DisplayedDuty displayed, out IDalamudTextureWrap texture)
         {
             var content = GetContent(displayed);
+            var iconToDisplay = displayed.Duty.IconId;
             if (content == null || !UIState.IsInstanceContentUnlocked(content.Value.Content.RowId))
             {
-                return HiddenDutyTexPath;
+                iconToDisplay = HiddenDutyIconId;
             }
 
-            return displayed.Duty.TexPath;
+            texture = null!;
+            if (Service.TextureProvider.TryGetFromGameIcon(iconToDisplay, out var tex))
+            {
+                if (tex.TryGetWrap(out var wrap, out var _))
+                {
+                    texture = wrap;
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void CenterText(string text, Vector2 availableSpace)
