@@ -412,7 +412,7 @@ namespace DragoonMayCry.UI
             {
                 var font = fonts.GetHitCountFontByScale();
                 font.Push();
-                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.86f, 0.86f, 0.86f, 1));
+                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.92f, 0.92f, 0.92f, 1));
                 var text = $"x {hitCounter.HitCount}";
                 var textSize = ImGui.CalcTextSize(text);
                 ImGui.SetCursorPosX(scaledSize.X - textSize.X - 8f * scaling);
