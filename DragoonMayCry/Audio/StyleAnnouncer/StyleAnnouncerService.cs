@@ -338,10 +338,12 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             var newRank = data.NewRank;
             var previousRank = data.PreviousRank;
 
-            if (data.IsBlunder && previousRank != StyleType.NoStyle && !Plugin.Configuration!.DisableAnnouncerBlunder)
+            if (data.IsBlunder && previousRank != StyleType.NoStyle)
             {
-                var sfx = SelectRandomSfx(announcer.GetBlunderVariations());
-                PlayAnnouncer(sfx, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
+                if(!Plugin.Configuration!.DisableAnnouncerBlunder){
+                    var sfx = SelectRandomSfx(announcer.GetBlunderVariations());
+                    PlayAnnouncer(sfx, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
+                }
                 return;
             }
 
