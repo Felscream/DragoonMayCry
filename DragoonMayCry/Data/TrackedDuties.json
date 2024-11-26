@@ -82,6 +82,10 @@
                 "Subcategories": [
                     "AAC Light-heavyweight"
                 ]
+            },
+            {
+                "Type": 2,
+                "Subcategories": []
             }
         ],
         "Instances": {
@@ -188,6 +192,13 @@
                 "Category": 1,
                 "Subcategory": "AAC Light-heavyweight",
                 "IconId": "112574"
+            },
+            "1238": {
+                "Name": "Futures Rewritten (Ultimate)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 2,
+                "IconId": "112587"
             },
             "1239": {
                 "Name": "The Jade Stoa",

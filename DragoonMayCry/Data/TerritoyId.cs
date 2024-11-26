@@ -45,11 +45,11 @@ namespace DragoonMayCry.Data
             782,
             783,
             784,
-            785, // heaven-on-high
-            792, // GS belah'dia
-            899, // GS nym
-            920, // Bozjan southern front
-            975, // Zadnor
+            785,  // heaven-on-high
+            792,  // GS belah'dia
+            899,  // GS nym
+            920,  // Bozjan southern front
+            975,  // Zadnor
             1098, // GS Sylphstep
             1099,
             1100,
@@ -61,6 +61,7 @@ namespace DragoonMayCry.Data
             1106,
             1107,
             1108, // Eureka Orthos
+            1124,
         ];
     }
 }
