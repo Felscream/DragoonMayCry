@@ -32,6 +32,7 @@ namespace DragoonMayCry.Score.Action
             public float GracePeriod { get; set; } = gracePeriod;
             public bool IsTankLb { get; set; } = isTankLb;
             public uint ActionId { get; set; } = id;
+            public uint TargetHit { get; set; } = 0;
         }
 
         private readonly HashSet<FlyTextKind> validTextKind = new()
@@ -190,15 +191,20 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-            if (dealer->GetGameObjectId() != playerState.Player.GameObjectId &&
-                dealer->CompanionOwnerId != playerState.Player.GameObjectId)
+            if (dealer->EntityId != playerState.Player.EntityId &&
+                dealer->CompanionOwnerId != playerState.Player.EntityId)
             {
                 return;
             }
 
             if (limitBreakCast != null && limitBreakCast.ActionId == (uint)actionId)
             {
-                LimitBreakEffect?.Invoke(this, EventArgs.Empty);
+                limitBreakCast.TargetHit++;
+                if (limitBreakCast.TargetHit < 2)
+                {
+                    LimitBreakEffect?.Invoke(this, EventArgs.Empty);
+                }
+
                 return;
             }
 
@@ -677,7 +683,11 @@ namespace DragoonMayCry.Score.Action
 
             if (limitBreakCast != null && actionId == limitBreakCast.ActionId)
             {
-                LimitBreakEffect?.Invoke(this, EventArgs.Empty);
+                limitBreakCast.TargetHit++;
+                if (limitBreakCast.TargetHit < 2)
+                {
+                    LimitBreakEffect?.Invoke(this, EventArgs.Empty);
+                }
             }
             else
             {

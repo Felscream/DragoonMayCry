@@ -71,7 +71,8 @@ namespace DragoonMayCry.Score.Rank
             else if (CurrentStyle.Next != null)
             {
                 CurrentStyle = CurrentStyle.Next;
-                StyleRankChange?.Invoke(this, new(CurrentStyle.Previous!.Value, CurrentStyle.Value, false));
+                StyleRankChange?.Invoke(
+                    this, new RankChangeData(CurrentStyle.Previous!.Value, CurrentStyle.Value, false));
             }
         }
 
@@ -81,20 +82,21 @@ namespace DragoonMayCry.Score.Rank
             {
                 if (droppedGcd)
                 {
-                    StyleRankChange?.Invoke(this, new(CurrentStyle!.Value, CurrentStyle.Value, droppedGcd));
+                    StyleRankChange?.Invoke(
+                        this, new RankChangeData(CurrentStyle!.Value, CurrentStyle.Value, droppedGcd));
                 }
 
                 return;
             }
 
             CurrentStyle = CurrentStyle.Previous;
-            StyleRankChange?.Invoke(this, new(CurrentStyle.Next!.Value, CurrentStyle.Value, droppedGcd));
+            StyleRankChange?.Invoke(this, new RankChangeData(CurrentStyle.Next!.Value, CurrentStyle.Value, droppedGcd));
         }
 
         private void ResetRank()
         {
             CurrentStyle = Styles.Head!;
-            StyleRankChange?.Invoke(this, new(CurrentStyle.Value, CurrentStyle.Value, false));
+            StyleRankChange?.Invoke(this, new RankChangeData(CurrentStyle.Value, CurrentStyle.Value, false));
         }
 
         private void ForceRankTo(StyleType type, bool isBlunder)
@@ -110,20 +112,9 @@ namespace DragoonMayCry.Score.Rank
             }
 
             var tempRank = CurrentStyle;
-            do
-            {
-                if (CurrentStyle?.Next != null)
-                {
-                    CurrentStyle = CurrentStyle.Next;
-                }
-                else
-                {
-                    CurrentStyle = Styles.Head!;
-                }
-            }
-            while (CurrentStyle.Value != type && CurrentStyle.Value != tempRank.Value);
+            CurrentStyle = Styles.Find(type) ?? CurrentStyle;
 
-            StyleRankChange?.Invoke(this, new(tempRank.Value, CurrentStyle.Value, isBlunder));
+            StyleRankChange?.Invoke(this, new RankChangeData(tempRank.Value, CurrentStyle.Value, isBlunder));
         }
 
         private void OnCombatChange(object send, bool enteringCombat)
