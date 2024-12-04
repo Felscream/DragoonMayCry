@@ -31,7 +31,7 @@ namespace DragoonMayCry.UI
 
         public EventHandler<JobAnnouncerType>? JobAnnouncerTypeChange;
         public EventHandler<JobId>? EnabledForJobChange;
-        private readonly DmcConfigurationOne configuration;
+        private readonly DmcConfiguration configuration;
 
         private readonly IList<AnnouncerType> announcersPreview =
             Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>()
@@ -52,7 +52,7 @@ namespace DragoonMayCry.UI
         private ISelectable selected;
         private readonly IList<ISelectable> selectableJobConfiguration = new List<ISelectable>();
 
-        public JobConfigurationWindow(DmcConfigurationOne configuration) : base(
+        public JobConfigurationWindow(DmcConfiguration configuration) : base(
             "DragoonMayCry - Job configuration##DmCJobConfiguration",
             ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
         {

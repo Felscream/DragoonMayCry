@@ -1,43 +1,84 @@
 using Dalamud.Configuration;
+using DragoonMayCry.Audio.StyleAnnouncer;
+using DragoonMayCry.Data;
 using KamiLib.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
+using System.Net.Http.Headers;
 
-namespace DragoonMayCry.Configuration
+namespace DragoonMayCry.Configuration;
+
+[Serializable]
+public class DmcConfiguration : IPluginConfiguration
 {
-    internal class DmcConfiguration : IPluginConfiguration
+    public int Version { get; set; } = 2;
+    public Setting<bool> ActiveOutsideInstance = new(false);
+    public Setting<int> SfxVolume = new(80);
+    public Setting<int> BgmVolume = new(80);
+    public Setting<bool> PlaySoundEffects = new(true);
+    public Setting<bool> ForceSoundEffectsOnBlunder = new(false);
+    public Setting<int> PlaySfxEveryOccurrences = new(3);
+    public Setting<bool> ApplyGameVolumeSfx = new(true);
+    public Setting<bool> ApplyGameVolumeBgm = new(false);
+    public Setting<bool> EnableDynamicBgm = new(false);
+    public Setting<bool> EnableMuffledEffectOnDeath = new(false);
+    public Setting<bool> EnabledFinalRankChatLogging = new(true);
+    public Setting<bool> EnableHitCounter = new(true);
+    public Setting<bool> EnableProgressGauge = new(true);
+    public Setting<bool> GoldSaucerEdition = new(false);
+    public Setting<bool> DisableAnnouncerBlunder = new(false);
+
+    public Setting<bool> LockScoreWindow { get; set; } = new(true);
+
+    // deprecated
+    public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);
+    public Setting<int> RankDisplayScale = new(100);
+
+    public readonly Dictionary<JobId, JobConfiguration> JobConfiguration = new()
     {
-        public int Version { get; set; } = 0;
-        public int SfxVolume = 80;
-        public bool PlaySoundEffects = true;
-        public bool ForceSoundEffectsOnBlunder = false;
-        public int PlaySfxEveryOccurrences = 3;
-        public bool ApplyGameVolume = true;
-        public bool ActiveOutsideInstance = false;
+        { JobId.AST, new JobConfiguration() },
+        { JobId.BLM, new JobConfiguration() },
+        { JobId.BRD, new JobConfiguration() },
+        { JobId.DNC, new JobConfiguration() },
+        { JobId.DRG, new JobConfiguration() },
+        { JobId.DRK, new JobConfiguration() },
+        { JobId.GNB, new JobConfiguration() },
+        { JobId.MCH, new JobConfiguration() },
+        { JobId.MNK, new JobConfiguration() },
+        { JobId.NIN, new JobConfiguration() },
+        { JobId.PCT, new JobConfiguration() },
+        { JobId.PLD, new JobConfiguration() },
+        { JobId.RDM, new JobConfiguration() },
+        { JobId.RPR, new JobConfiguration() },
+        { JobId.SAM, new JobConfiguration() },
+        { JobId.SCH, new JobConfiguration() },
+        { JobId.SGE, new JobConfiguration() },
+        { JobId.SMN, new JobConfiguration() },
+        { JobId.VPR, new JobConfiguration() },
+        { JobId.WAR, new JobConfiguration() },
+        { JobId.WHM, new JobConfiguration() },
+    };
 
-        public StyleRankUiConfiguration StyleRankUiConfiguration = new();
-
-
-        // the below exist just to make saving less cumbersome
-        public void Save()
+    public DmcConfiguration MigrateToVersionTwo()
+    {
+        foreach (var entry in JobConfiguration)
         {
-            Plugin.PluginInterface.SavePluginConfig(this);
+#pragma warning disable CS0618 // Type or member is obsolete
+            entry.Value.DifficultyMode = entry.Value.EstinienMustDie
+#pragma warning restore CS0618 // Type or member is obsolete
+                                             ? new Setting<DifficultyMode>(DifficultyMode.EstinienMustDie)
+                                             : new Setting<DifficultyMode>(DifficultyMode.WyrmHunter);
         }
 
-        public DmcConfigurationOne MigrateToOne()
-        {
-            var configOne = new DmcConfigurationOne();
-            configOne.SfxVolume = new(SfxVolume);
-            configOne.PlaySoundEffects = new(PlaySoundEffects);
-            configOne.ForceSoundEffectsOnBlunder = new(ForceSoundEffectsOnBlunder);
-            configOne.PlaySfxEveryOccurrences = new(PlaySfxEveryOccurrences);
-            configOne.ApplyGameVolumeSfx = new(ApplyGameVolume);
-            configOne.ActiveOutsideInstance = new(ActiveOutsideInstance);
-            configOne.LockScoreWindow = new(StyleRankUiConfiguration.LockScoreWindow);
-            return configOne;
-        }
+        Version = 2;
+        return this;
+    }
+
+    public void Save()
+    {
+        File.WriteAllText(Plugin.PluginInterface.ConfigFile.FullName,
+                          JsonConvert.SerializeObject(this, Formatting.Indented));
     }
 }

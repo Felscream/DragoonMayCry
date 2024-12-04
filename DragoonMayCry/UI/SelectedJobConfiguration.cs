@@ -68,9 +68,14 @@ namespace DragoonMayCry.UI
                 return Colors.Grey;
             }
 
-            if (configuration.EstinienMustDie)
+            if (configuration.DifficultyMode == DifficultyMode.EstinienMustDie)
             {
                 return Colors.SoftRed;
+            }
+
+            if (configuration.DifficultyMode == DifficultyMode.Sprout)
+            {
+                return Colors.SoftGreen;
             }
 
             return Colors.White;
@@ -93,9 +98,16 @@ namespace DragoonMayCry.UI
                        ConfigWindow.AddLabel("Enable DragoonMayCry", cursorPos);
                    })
                    .BeginDisabled(PlayerState.GetInstance().IsInCombat)
-                   .AddConfigCheckbox($"Estinien Must Die", configuration.EstinienMustDie, "You have no leeway",
-                                      $"EMD-{job}")
-                   .BeginDisabled(configuration.EstinienMustDie)
+                   .AddConfigCombo(Enum.GetValues(typeof(DifficultyMode)).Cast<DifficultyMode>().ToList(),
+                                   configuration.DifficultyMode, mode => mode.GetLabel(),
+                                   "Difficulty", 200f)
+                   .StartConditional(configuration.DifficultyMode == DifficultyMode.EstinienMustDie)
+                   .AddHelpMarker("You have no leeway")
+                   .EndConditional()
+                   .StartConditional(configuration.DifficultyMode == DifficultyMode.Sprout)
+                   .AddHelpMarker("The style gauge will decay faster if you drop your GCD instead of being demoted.")
+                   .EndConditional()
+                   .BeginDisabled(configuration.DifficultyMode == DifficultyMode.EstinienMustDie)
                    .AddAction(() =>
                    {
                        ImGui.SetNextItemWidth(200f);

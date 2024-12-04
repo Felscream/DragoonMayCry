@@ -9,6 +9,7 @@ using DragoonMayCry.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using DragoonMayCry.Configuration;
 using static DragoonMayCry.Score.Rank.StyleRankHandler;
 
 namespace DragoonMayCry.Score
@@ -40,6 +41,9 @@ namespace DragoonMayCry.Score
 
         private const int PointsReductionDuration = 8300; //milliseconds
         private const float PointReductionFactor = 0.8f;
+        private const float PointsDecayMultiplierMalus = 4f;
+
+        private float pointsDecayMultiplier = 1f;
         private bool isCastingLb;
         private Dictionary<StyleType, StyleScoring> jobScoringTable;
         private readonly Stopwatch pointsReductionStopwatch;
@@ -50,7 +54,7 @@ namespace DragoonMayCry.Score
             pointsReductionStopwatch = new Stopwatch();
 
             playerState = PlayerState.GetInstance();
-            playerState.RegisterJobChangeHandler(((sender, ids) => ResetScore()));
+            playerState.RegisterJobChangeHandler(((_, _) => ResetScore()));
             playerState.RegisterInstanceChangeHandler(OnInstanceChange!);
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             playerState.RegisterJobChangeHandler(OnJobChange);
@@ -65,6 +69,7 @@ namespace DragoonMayCry.Score
             playerActionTracker.GcdClip += OnGcdClip;
             playerActionTracker.UsingLimitBreak += OnLimitBreakCast;
             playerActionTracker.LimitBreakCanceled += OnLimitBreakCanceled;
+            playerActionTracker.GcdDropped += OnGcdDropped;
 
             Service.Framework.Update += UpdateScore;
             Service.ClientState.Logout += ResetScore;
@@ -76,6 +81,19 @@ namespace DragoonMayCry.Score
             CurrentScoreRank = new(0, styleRank, jobScoringTable[styleRank]);
 
             ResetScore();
+        }
+
+        // Increase score decay overtime if GCD is dropped in Sprout mode, do nothing otherwise
+        private void OnGcdDropped(object? sender, EventArgs e)
+        {
+            var currentJob = playerState.GetCurrentJob();
+            if (!Plugin.Configuration!.JobConfiguration.TryGetValue(currentJob, out var jobConfiguration) ||
+                jobConfiguration.DifficultyMode != DifficultyMode.Sprout)
+            {
+                return;
+            }
+
+            pointsDecayMultiplier = PointsDecayMultiplierMalus;
         }
 
         public void Dispose()
@@ -109,7 +127,7 @@ namespace DragoonMayCry.Score
             {
                 var scoreReduction =
                     (float)(framework.UpdateDelta.TotalSeconds *
-                            CurrentScoreRank.StyleScoring.ReductionPerSecond);
+                            CurrentScoreRank.StyleScoring.ReductionPerSecond * pointsDecayMultiplier);
                 if (AreGcdClippingRestrictionsActive())
                 {
                     scoreReduction *= 1.5f;
@@ -124,6 +142,7 @@ namespace DragoonMayCry.Score
 
         private void AddScore(object? sender, float val)
         {
+            pointsDecayMultiplier = 1f;
             var points = val * CurrentScoreRank.StyleScoring.PointCoefficient * scoreMultiplier;
             if (AreGcdClippingRestrictionsActive())
             {
@@ -140,9 +159,10 @@ namespace DragoonMayCry.Score
             Scoring?.Invoke(this, points);
         }
 
-        private bool CanDisableGcdClippingRestrictions() => pointsReductionStopwatch.IsRunning
-                                                            && pointsReductionStopwatch.ElapsedMilliseconds >
-                                                            PointsReductionDuration;
+        private bool CanDisableGcdClippingRestrictions() => pointsReductionStopwatch is
+        {
+            IsRunning: true, ElapsedMilliseconds: > PointsReductionDuration
+        };
 
         private void OnInstanceChange(object send, bool value)
         {
@@ -151,6 +171,7 @@ namespace DragoonMayCry.Score
 
         private void OnCombatChange(object send, bool enteringCombat)
         {
+            pointsDecayMultiplier = 1f;
             DisablePointsGainedReduction();
             isCastingLb = false;
             if (enteringCombat)
@@ -176,6 +197,7 @@ namespace DragoonMayCry.Score
         private void OnLimitBreakCast(object? sender, PlayerActionTracker.LimitBreakEvent e)
         {
             isCastingLb = e.IsCasting;
+            pointsDecayMultiplier = 1f;
         }
 
         private void OnLimitBreakCanceled(object? sender, EventArgs e)
@@ -196,10 +218,9 @@ namespace DragoonMayCry.Score
 
             if ((int)CurrentScoreRank.Rank < (int)data.NewRank)
             {
-                CurrentScoreRank.Score = (float)Math.Clamp(
+                CurrentScoreRank.Score = Math.Clamp(
                     (CurrentScoreRank.Score - CurrentScoreRank.StyleScoring.Threshold) %
                     nextStyleScoring.Threshold, 0, nextStyleScoring.Threshold * 0.3f);
-                ;
             }
             else if (data.IsBlunder)
             {
@@ -230,7 +251,8 @@ namespace DragoonMayCry.Score
 
         private void ResetScore()
         {
-            CurrentScoreRank = new(0, StyleType.NoStyle, jobScoringTable[StyleType.NoStyle]);
+            CurrentScoreRank = new ScoreRank(0, StyleType.NoStyle, jobScoringTable[StyleType.NoStyle]);
+            pointsDecayMultiplier = 1f;
         }
 
         private bool AreGcdClippingRestrictionsActive()
@@ -265,6 +287,7 @@ namespace DragoonMayCry.Score
             isCastingLb = false;
             ResetScore();
             DisablePointsGainedReduction();
+            pointsDecayMultiplier = 1f;
         }
     }
 }

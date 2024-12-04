@@ -1,3 +1,4 @@
+using System;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using KamiLib.Configuration;
 
@@ -15,12 +16,28 @@ namespace DragoonMayCry.Configuration
             Randomize = 4
         }
 
-        public Setting<bool> EnableDmc = new(true);
-        public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);
-        public Setting<BgmConfiguration> Bgm = new(BgmConfiguration.Off);
+        public Setting<bool> EnableDmc;
+        public Setting<AnnouncerType> Announcer;
+        public Setting<BgmConfiguration> Bgm;
+
+        [Obsolete("This property is obsolete, use DifficultyMode instead.")]
         public Setting<bool> EstinienMustDie = new(false);
-        public Setting<float> GcdDropThreshold = new(0.2f);
-        public Setting<bool> RandomizeAnnouncement = new(false);
-        public Setting<float> ScoreMultiplier = new(1.0f);
+
+        public Setting<float> GcdDropThreshold;
+        public Setting<bool> RandomizeAnnouncement;
+        public Setting<float> ScoreMultiplier;
+        public Setting<DifficultyMode> DifficultyMode;
+
+        public JobConfiguration()
+        {
+            EnableDmc = new Setting<bool>(true);
+            Announcer = new Setting<AnnouncerType>(AnnouncerType.DmC5);
+            Bgm = new Setting<BgmConfiguration>(BgmConfiguration.Off);
+            EstinienMustDie = new Setting<bool>(false);
+            GcdDropThreshold = new Setting<float>(0.2f);
+            RandomizeAnnouncement = new Setting<bool>(false);
+            ScoreMultiplier = new Setting<float>(1.0f);
+            DifficultyMode = new Setting<DifficultyMode>(Configuration.DifficultyMode.WyrmHunter);
+        }
     }
 }
