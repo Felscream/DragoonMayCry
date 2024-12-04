@@ -15,6 +15,7 @@ using System.Numerics;
 using System.Reflection;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Textures.TextureWraps;
+using DragoonMayCry.Configuration;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using PlayerState = DragoonMayCry.State.PlayerState;
@@ -265,8 +266,9 @@ namespace DragoonMayCry.UI
                 {
                     ImGui.TableSetupColumn("Duty", ImGuiTableColumnFlags.WidthFixed, 540f);
                     ImGui.TableSetupColumn(
-                        "Normal", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoHeaderWidth, 180f);
-                    ImGui.TableSetupColumn("Estinien Must Die",
+                        DifficultyMode.WyrmHunter.GetLabel(),
+                        ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoHeaderWidth, 180f);
+                    ImGui.TableSetupColumn(DifficultyMode.EstinienMustDie.GetLabel(),
                                            ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoHeaderWidth,
                                            180f);
                     ImGui.TableHeadersRow();
