@@ -33,7 +33,6 @@ namespace DragoonMayCry.Configuration
             EnableDmc = new Setting<bool>(true);
             Announcer = new Setting<AnnouncerType>(AnnouncerType.DmC5);
             Bgm = new Setting<BgmConfiguration>(BgmConfiguration.Off);
-            EstinienMustDie = new Setting<bool>(false);
             GcdDropThreshold = new Setting<float>(0.2f);
             RandomizeAnnouncement = new Setting<bool>(false);
             ScoreMultiplier = new Setting<float>(1.0f);

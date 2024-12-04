@@ -116,7 +116,7 @@ namespace DragoonMayCry.UI
                                             0.01f, 0.1f))
                        {
                            configuration.GcdDropThreshold.Value =
-                               Math.Min(1, Math.Max(0, configuration.GcdDropThreshold.Value));
+                               Math.Min(2.5f, Math.Max(0f, configuration.GcdDropThreshold.Value));
                            KamiCommon.SaveConfiguration();
                        }
 
