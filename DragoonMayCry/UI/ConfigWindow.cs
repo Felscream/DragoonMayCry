@@ -23,11 +23,11 @@ public class ConfigWindow : Window
     public EventHandler<int>? BgmVolumeChange;
     public EventHandler<bool>? MuffledOnDeathChange;
 
-    private readonly DmcConfigurationOne configuration;
+    private readonly DmcConfiguration configuration;
     private readonly JobConfigurationWindow jobConfigurationWindow;
     private readonly Setting<int> decay = new(0);
 
-    public ConfigWindow(DmcConfigurationOne configuration, JobConfigurationWindow jobConfiguration) : base(
+    public ConfigWindow(DmcConfiguration configuration, JobConfigurationWindow jobConfiguration) : base(
         "DragoonMayCry - Configuration")
     {
         Size = new Vector2(525, 470);

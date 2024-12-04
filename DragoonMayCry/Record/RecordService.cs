@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using DragoonMayCry.Configuration;
 
 namespace DragoonMayCry.Record
 {
@@ -29,6 +30,7 @@ namespace DragoonMayCry.Record
         private Dictionary<JobId, JobRecord>? characterRecords;
         private Dictionary<ushort, TrackableDuty> trackableDuties = new();
         private bool ready = false;
+
         public RecordService(FinalRankCalculator finalRankCalculator)
         {
             pluginInterface = Plugin.PluginInterface;
@@ -50,6 +52,7 @@ namespace DragoonMayCry.Record
             {
                 return;
             }
+
             var assembly = Assembly.GetExecutingAssembly();
             try
             {
@@ -70,6 +73,7 @@ namespace DragoonMayCry.Record
                 {
                     Service.Log.Debug(e.StackTrace);
                 }
+
                 Service.Log.Warning("Could not retrieve trackable instances, no new record will be tracked");
                 Extensions = [];
                 ready = false;
@@ -98,6 +102,7 @@ namespace DragoonMayCry.Record
             {
                 return;
             }
+
             characterId = clientState.LocalContentId;
             characterRecords = LoadCharacterRecords(characterId);
         }
@@ -121,16 +126,18 @@ namespace DragoonMayCry.Record
                 {
                     Service.Log.Debug(e.StackTrace);
                 }
+
                 var recordBackUp = $"{recordDirectoryPath}/{characterId}_back.json";
                 File.Move(characterRecordPath, recordBackUp);
-                Service.Log.Warning($"This character records are unreadable. They have been backed up here {recordBackUp}. New empty records will be used.");
+                Service.Log.Warning(
+                    $"This character records are unreadable. They have been backed up here {recordBackUp}. New empty records will be used.");
                 return [];
             }
         }
 
-        private string GetCharacterRecordsPath(ulong characterId)
+        private string GetCharacterRecordsPath(ulong charId)
         {
-            return $"{recordDirectoryPath}/{characterId}.json";
+            return $"{recordDirectoryPath}/{charId}.json";
         }
 
         private void OnLogin()
@@ -158,7 +165,7 @@ namespace DragoonMayCry.Record
             }
 
             var currentJob = playerState.GetCurrentJob();
-            if (currentJob == JobId.OTHER)
+            if (!CanTrackJobRecord(currentJob))
             {
                 return;
             }
@@ -178,13 +185,20 @@ namespace DragoonMayCry.Record
             CharacterRecordsChanged?.Invoke(this, characterRecords);
         }
 
+        private static bool CanTrackJobRecord(JobId currentJob)
+        {
+            return currentJob != JobId.OTHER
+                   && Plugin.IsEnabledForCurrentJob()
+                   && Plugin.Configuration!.JobConfiguration[currentJob].DifficultyMode != DifficultyMode.Sprout;
+        }
+
         private bool IsInvalidEntry(FinalRank finalRank)
         {
             var playerLevel = playerState.Player != null ? playerState.Player.Level : int.MaxValue;
             return !ready
-                    || !trackableDuties.ContainsKey(finalRank.InstanceId)
-                    || !Plugin.IsEnabledForCurrentJob()
-                    || trackableDuties[finalRank.InstanceId].LvlSync < playerLevel;
+                   || !trackableDuties.ContainsKey(finalRank.InstanceId)
+                   || !Plugin.IsEnabledForCurrentJob()
+                   || trackableDuties[finalRank.InstanceId].LvlSync < playerLevel;
         }
 
         private JobRecord GetJobRecord(FinalRank finalRank, JobId currentJob, bool emdEnabled)
@@ -212,9 +226,9 @@ namespace DragoonMayCry.Record
         private static bool IsBetterRecord(FinalRank finalRank, Dictionary<ushort, DutyRecord> targetDifficulty)
         {
             return !targetDifficulty.ContainsKey(finalRank.InstanceId)
-                || targetDifficulty[finalRank.InstanceId].Result < finalRank.Rank
-                || (targetDifficulty[finalRank.InstanceId].Result == finalRank.Rank
-                    && targetDifficulty[finalRank.InstanceId].KillTime > finalRank.KillTime);
+                   || targetDifficulty[finalRank.InstanceId].Result < finalRank.Rank
+                   || (targetDifficulty[finalRank.InstanceId].Result == finalRank.Rank
+                       && targetDifficulty[finalRank.InstanceId].KillTime > finalRank.KillTime);
         }
 
         private void SaveCharacterRecords()
@@ -223,6 +237,7 @@ namespace DragoonMayCry.Record
             {
                 return;
             }
+
             var characterRecordsPath = GetCharacterRecordsPath(characterId);
             Directory.CreateDirectory(recordDirectoryPath);
             File.WriteAllText(characterRecordsPath, JsonConvert.SerializeObject(characterRecords));

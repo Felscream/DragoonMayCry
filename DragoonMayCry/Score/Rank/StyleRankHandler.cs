@@ -3,6 +3,7 @@ using DragoonMayCry.Score.Model;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using System;
+using DragoonMayCry.Configuration;
 
 namespace DragoonMayCry.Score.Rank
 {
@@ -128,6 +129,14 @@ namespace DragoonMayCry.Score.Rank
         private void OnGcdDropped(object? sender, EventArgs args)
         {
             if (playerState.IsDead)
+            {
+                return;
+            }
+
+            // Do not demote if Sprout mode is active for current job
+            var currentJob = playerState.GetCurrentJob();
+            if (Plugin.Configuration!.JobConfiguration.TryGetValue(currentJob, out var jobConfiguration) &&
+                jobConfiguration.DifficultyMode == DifficultyMode.Sprout)
             {
                 return;
             }

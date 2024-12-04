@@ -20,7 +20,7 @@ namespace DragoonMayCry.Score
         public EventHandler? Promotion;
 
         private const float TimeBetweenRankChanges = 1f;
-        private const float PromotionSafeguardDuration = 3f;
+        private const float RankChangeSafeguardDuration = 3f;
         private const float DemotionTimerDuration = 5000f;
         private const float InterpolationWeight = 0.09f;
         private readonly ScoreManager scoreManager;
@@ -29,7 +29,7 @@ namespace DragoonMayCry.Score
         private readonly PlayerState playerState;
         private readonly Stopwatch demotionApplicationStopwatch;
         private float interpolatedScore = 0;
-        private double lastPromotionTime = 0;
+        private double lastRankChange = 0;
         private float demotionThreshold = 0;
         private bool isCastingLb;
 
@@ -82,7 +82,7 @@ namespace DragoonMayCry.Score
                     return;
                 }
 
-                if (GetTimeSinceLastPromotion() > TimeBetweenRankChanges)
+                if (GetTimeSinceLastRankChange() > TimeBetweenRankChanges)
                 {
                     Promotion?.Invoke(this, EventArgs.Empty);
                 }
@@ -135,7 +135,7 @@ namespace DragoonMayCry.Score
         {
             return demotionApplicationStopwatch.IsRunning
                    && (Progress >= demotionThreshold
-                       || GetTimeSinceLastPromotion() < PromotionSafeguardDuration);
+                       || GetTimeSinceLastRankChange() < RankChangeSafeguardDuration);
         }
 
         private bool CanStartDemotionTimer()
@@ -144,7 +144,7 @@ namespace DragoonMayCry.Score
                    && !playerState.IsIncapacitated()
                    && styleRankHandler.CurrentStyle.Value > StyleType.D
                    && !demotionApplicationStopwatch.IsRunning
-                   && GetTimeSinceLastPromotion() > PromotionSafeguardDuration
+                   && GetTimeSinceLastRankChange() > RankChangeSafeguardDuration
                    && playerState.CanTargetEnemy();
         }
 
@@ -157,10 +157,7 @@ namespace DragoonMayCry.Score
         private void OnRankChange(object? sender, StyleRankHandler.RankChangeData data)
         {
             interpolatedScore = 0;
-            if (data.PreviousRank < data.NewRank)
-            {
-                lastPromotionTime = ImGui.GetTime();
-            }
+            lastRankChange = ImGui.GetTime();
 
             if (demotionApplicationStopwatch.IsRunning)
             {
@@ -191,7 +188,7 @@ namespace DragoonMayCry.Score
         {
             isCastingLb = false;
             interpolatedScore = 0;
-            lastPromotionTime = 0;
+            lastRankChange = 0;
             if (demotionApplicationStopwatch.IsRunning)
             {
                 DemotionCanceled?.Invoke(this, EventArgs.Empty);
@@ -199,14 +196,14 @@ namespace DragoonMayCry.Score
             }
         }
 
-        private double GetTimeSinceLastPromotion()
+        private double GetTimeSinceLastRankChange()
         {
-            if (lastPromotionTime == 0)
+            if (lastRankChange == 0)
             {
                 return float.MaxValue;
             }
 
-            return ImGui.GetTime() - lastPromotionTime;
+            return ImGui.GetTime() - lastRankChange;
         }
 
         private void OnStyleScoringChange(object? sender, StyleScoring styleScoring)
@@ -217,7 +214,7 @@ namespace DragoonMayCry.Score
         public void Reset()
         {
             Progress = 0;
-            lastPromotionTime = 0;
+            lastRankChange = 0;
             isCastingLb = false;
             interpolatedScore = 0;
             if (demotionApplicationStopwatch.IsRunning)

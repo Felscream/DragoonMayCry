@@ -29,7 +29,7 @@ public unsafe class Plugin : IDalamudPlugin
     [PluginService]
     public static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
 
-    public static DmcConfigurationOne? Configuration { get; private set; }
+    public static DmcConfiguration? Configuration { get; private set; }
 
     private const string CommandName = "/dmc";
 
@@ -74,7 +74,7 @@ public unsafe class Plugin : IDalamudPlugin
         RecordService = new(FinalRankCalculator);
         RecordService.Initialize();
 
-        hitCounter = new HitCounter(PlayerActionTracker, StyleRankHandler);
+        hitCounter = new HitCounter(PlayerActionTracker);
         pluginUi = new(ScoreProgressBar, StyleRankHandler, ScoreManager, FinalRankCalculator, StyleAnnouncerService,
                        BgmService, PlayerActionTracker, RecordService, hitCounter);
 
@@ -172,15 +172,15 @@ public unsafe class Plugin : IDalamudPlugin
             return false;
         }
 
-        return Configuration.JobConfiguration[CurrentJob].EstinienMustDie;
+        return Configuration.JobConfiguration[CurrentJob].DifficultyMode == DifficultyMode.EstinienMustDie;
     }
 
-    private static DmcConfigurationOne InitConfig()
+    private static DmcConfiguration InitConfig()
     {
         var configFile = PluginInterface.ConfigFile.FullName;
         if (!File.Exists(configFile))
         {
-            return new DmcConfigurationOne();
+            return new DmcConfiguration();
         }
 
         var configText = File.ReadAllText(configFile);
@@ -189,16 +189,16 @@ public unsafe class Plugin : IDalamudPlugin
             var versionCheck = JsonSerializer.Deserialize<BaseConfiguration>(configText);
             if (versionCheck is null)
             {
-                return new DmcConfigurationOne();
+                return new DmcConfiguration();
             }
 
             var version = versionCheck.Version;
             var config = version switch
             {
-                0 => JsonSerializer.Deserialize<DmcConfiguration>(configText)?.MigrateToOne() ??
-                     new DmcConfigurationOne(),
-                1 => JsonConvert.DeserializeObject<DmcConfigurationOne>(configText) ?? new DmcConfigurationOne(),
-                _ => new DmcConfigurationOne()
+                1 => JsonConvert.DeserializeObject<DmcConfiguration>(configText)?.MigrateToVersionTwo() ??
+                     new DmcConfiguration(),
+                2 => JsonConvert.DeserializeObject<DmcConfiguration>(configText) ?? new DmcConfiguration(),
+                _ => new DmcConfiguration()
             };
             return config;
         }
@@ -210,7 +210,7 @@ public unsafe class Plugin : IDalamudPlugin
             }
 
             Service.Log.Warning("Your configuration migration failed, it has been reinitialized");
-            return new DmcConfigurationOne();
+            return new DmcConfiguration();
         }
     }
 
