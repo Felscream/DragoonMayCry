@@ -62,6 +62,7 @@ namespace DragoonMayCry.Data
             2653,
             2656,
             2953, // stun in tower of babil
+            4163, // stun in FRU (rewind)
         ];
 
         public static bool IsIncapacitatingDebuff(uint debuffId)
