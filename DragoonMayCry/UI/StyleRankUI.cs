@@ -386,7 +386,7 @@ namespace DragoonMayCry.UI
             var color = normalizedColor;
             if (!CanRetrieveStyleDisplay(previousStyle))
             {
-                return new(color, 1);
+                return new Vector4(color, 1);
             }
 
             var style = styleUis[previousStyle];
@@ -399,7 +399,7 @@ namespace DragoonMayCry.UI
                                      (float)rankTransition.Value);
             }
 
-            return new(color, 1);
+            return new Vector4(color, 1);
         }
 
         private void DrawHitCounter(StyleUi style)

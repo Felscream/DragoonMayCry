@@ -80,7 +80,7 @@ public class ConfigWindow : Window
                    .AddAction(() =>
                    {
                        var cursorPos = ImGui.GetCursorPos();
-                       if (ImGui.Checkbox("", ref configuration.ActiveOutsideInstance.Value))
+                       if (ImGui.Checkbox("##", ref configuration.ActiveOutsideInstance.Value))
                        {
                            KamiCommon.SaveConfiguration();
                            ActiveOutsideInstanceChange?.Invoke(this, configuration.ActiveOutsideInstance.Value);

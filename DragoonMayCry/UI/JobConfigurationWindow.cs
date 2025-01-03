@@ -78,7 +78,7 @@ namespace DragoonMayCry.UI
                    .AddTitle("Announcer Preview")
                    .AddConfigCombo(announcersPreview, selectedAnnouncerPreview,
                                    StyleAnnouncerService.GetAnnouncerTypeLabel,
-                                   "", 150)
+                                   "##", 150)
                    .SameLine().AddIconButton("preview", Dalamud.Interface.FontAwesomeIcon.Play,
                                              () => Plugin.StyleAnnouncerService?.PlayRandomAnnouncerLine(
                                                  selectedAnnouncerPreview.Value))
@@ -139,7 +139,7 @@ namespace DragoonMayCry.UI
 
         private void DrawSelectables()
         {
-            if (ImGui.BeginListBox("", new Vector2(-1, -1)))
+            if (ImGui.BeginListBox("##", new Vector2(-1, -1)))
             {
                 foreach (var item in selectableJobConfiguration)
                 {

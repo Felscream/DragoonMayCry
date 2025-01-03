@@ -88,7 +88,7 @@ namespace DragoonMayCry.UI
                    {
                        var cursorPos = ImGui.GetCursorPos();
                        var enabled = configuration.EnableDmc.Value;
-                       if (ImGui.Checkbox("", ref enabled))
+                       if (ImGui.Checkbox("##", ref enabled))
                        {
                            configuration.EnableDmc.Value = enabled;
                            KamiCommon.SaveConfiguration();
