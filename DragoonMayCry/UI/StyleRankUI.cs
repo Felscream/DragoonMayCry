@@ -21,10 +21,10 @@ namespace DragoonMayCry.UI
 {
     public sealed class StyleRankUI : IDisposable
     {
-        public static readonly Dictionary<StyleType, StyleUi> styleUis =
+        public static readonly Dictionary<StyleType, StyleUi> StyleUis =
             new()
             {
-                { StyleType.D, new("DragoonMayCry.Assets.D.png", new(223, 152, 30), 121514) },
+                { StyleType.D, new("DragoonMayCry.Assets.D.png", new Vector3(223, 152, 30), 121514) },
                 { StyleType.C, new("DragoonMayCry.Assets.C.png", new Vector3(95, 160, 213), 121583) },
                 { StyleType.B, new("DragoonMayCry.Assets.B.png", new Vector3(95, 160, 213), 121533) },
                 { StyleType.A, new("DragoonMayCry.Assets.A.png", new Vector3(95, 160, 213), 121532) },
@@ -60,11 +60,30 @@ namespace DragoonMayCry.UI
         private readonly Stopwatch shakeStopwatch;
         private readonly Stopwatch demotionStopwatch;
 
-        private readonly float shakeDuration = 300;
-        private readonly float rankShakeIntensity = 6f;
-        private readonly float hitCounterShakeIntensity = 1.5f;
-        private readonly string gaugeDefault = "DragoonMayCry.Assets.GaugeDefault.png";
+        private const float ShakeDuration = 300;
+        private const float RankShakeIntensity = 6f;
+        private const float HitCounterShakeIntensity = 1.5f;
+        private const string GaugeDefault = "DragoonMayCry.Assets.GaugeDefault.png";
 
+        private const ImGuiWindowFlags UnlockedWindowFlags = ImGuiWindowFlags.NoCollapse |
+                                                             ImGuiWindowFlags.NoDocking |
+                                                             ImGuiWindowFlags.NoDecoration |
+                                                             ImGuiWindowFlags.NoResize |
+                                                             ImGuiWindowFlags.NoScrollbar |
+                                                             ImGuiWindowFlags.NoScrollWithMouse |
+                                                             ImGuiWindowFlags.NoTitleBar;
+                                                             
+        
+        private const ImGuiWindowFlags LockedWindowFlags = UnlockedWindowFlags |
+                                                           ImGuiWindowFlags.NoMove |
+                                                           ImGuiWindowFlags.NoBackground |
+                                                           ImGuiWindowFlags.NoMouseInputs |
+                                                           ImGuiWindowFlags.NoFocusOnAppearing |
+                                                           ImGuiWindowFlags.NoBringToFrontOnFocus |
+                                                           ImGuiWindowFlags.NoNavInputs |
+                                                           ImGuiWindowFlags.NoNavFocus |
+                                                           ImGuiWindowFlags.NoNav |
+                                                           ImGuiWindowFlags.NoInputs;
         public StyleRankUI(
             ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager,
             FinalRankCalculator finalRankCalculator, PlayerActionTracker playerActionTracker,
@@ -85,77 +104,46 @@ namespace DragoonMayCry.UI
 
             this.styleRankHandler.StyleRankChange += OnRankChange!;
 
-            rankTransition = new OutCubic(new(1500000));
-            finalRankTransition = new EaseOutBack(new(3000000));
+            rankTransition = new OutCubic(new TimeSpan(1500000));
+            finalRankTransition = new EaseOutBack(new TimeSpan(3000000));
             shakeStopwatch = new Stopwatch();
             demotionStopwatch = new Stopwatch();
 
             this.scoreProgressBar.DemotionCanceled += OnDemotionCanceled;
             this.scoreProgressBar.DemotionStart += OnDemotionStarted;
 
-            random = new();
+            random = new Random();
         }
 
         public void Draw()
         {
-            var windowFlags = Plugin.Configuration!.LockScoreWindow
-                                  ? ImGuiWindowFlags.NoTitleBar |
-                                    ImGuiWindowFlags.NoResize |
-                                    ImGuiWindowFlags.NoMove |
-                                    ImGuiWindowFlags.NoScrollbar |
-                                    ImGuiWindowFlags.NoScrollWithMouse |
-                                    ImGuiWindowFlags.NoCollapse |
-                                    ImGuiWindowFlags.NoDecoration |
-                                    ImGuiWindowFlags.NoBackground |
-                                    ImGuiWindowFlags.NoMouseInputs |
-                                    ImGuiWindowFlags.NoFocusOnAppearing |
-                                    ImGuiWindowFlags.NoBringToFrontOnFocus |
-                                    ImGuiWindowFlags.NoNavInputs |
-                                    ImGuiWindowFlags.NoNavFocus |
-                                    ImGuiWindowFlags.NoNav |
-                                    ImGuiWindowFlags.NoInputs |
-                                    ImGuiWindowFlags.NoDocking
-                                  : ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize;
+            var windowFlags = Plugin.Configuration!.LockScoreWindow? LockedWindowFlags : UnlockedWindowFlags;
             UpdateRankTransitionAnimation();
             UpdateFinalRankTransitionAnimation();
-            ImGui.SetNextWindowSize(new Vector2(0, 0), ImGuiCond.Always);
 
             if (!Plugin.Configuration.LockScoreWindow)
             {
-                DrawMock(windowFlags);
+                if (Plugin.Configuration.SplitLayout)
+                {
+                    DrawSplitMock(windowFlags);
+                }
+                else
+                {
+                    DrawCompactMock(windowFlags);
+                }
                 return;
             }
-
-
-            if (ImGui.Begin("DmC", windowFlags))
+            
+            if (Plugin.Configuration.SplitLayout)
             {
-                if (!CanRetrieveStyleDisplay(currentStyle))
-                {
-                    return;
-                }
-
-                var style = styleUis[currentStyle];
-                if (TryGetRankTexture(style, out var rankIcon))
-                {
-                    DrawCurrentRank(rankIcon);
-                }
-
-                // Stolen from https://github.com/marconsou/mp-tick-bar
-                if (Plugin.Configuration!.EnableProgressGauge && isInCombat && Service.TextureProvider
-                        .GetFromManifestResource(Assembly.GetExecutingAssembly(),
-                                                 gaugeDefault)
-                        .TryGetWrap(out var gauge, out var _))
-                {
-                    DrawProgressGauge(gauge, scoreProgressBar.Progress, style.GaugeColor);
-                }
-
-                if (Plugin.Configuration!.EnableHitCounter && hitCounter.HitCount > 1)
-                {
-                    DrawHitCounter(style);
-                }
+                DrawSplit(windowFlags);
             }
-
-            if (shakeStopwatch.IsRunning && shakeStopwatch.ElapsedMilliseconds > shakeDuration)
+            else
+            {
+                DrawCompact(windowFlags);
+            }
+            
+            if (shakeStopwatch.IsRunning && shakeStopwatch.ElapsedMilliseconds > ShakeDuration)
             {
                 shakeStopwatch.Reset();
             }
@@ -166,7 +154,66 @@ namespace DragoonMayCry.UI
             }
         }
 
-        private bool TryGetRankTexture(StyleUi style, out IDalamudTextureWrap texture)
+        private void DrawCompact(ImGuiWindowFlags windowFlags)
+        {
+            if (!CanRetrieveStyleDisplay(currentStyle))
+            {
+                return;
+            }
+            
+            if (ImGui.Begin("##DmC", windowFlags))
+            {
+                var style = StyleUis[currentStyle];
+                if (TryGetRankTexture(style, out var rankIcon))
+                {
+                    DrawCurrentRank(rankIcon, Plugin.Configuration!.RankDisplayScale.Value);
+                }
+
+                // Stolen from https://github.com/marconsou/mp-tick-bar
+                if (Plugin.Configuration!.EnableProgressGauge && isInCombat && Service.TextureProvider
+                        .GetFromManifestResource(Assembly.GetExecutingAssembly(),
+                                                 GaugeDefault)
+                        .TryGetWrap(out var gauge, out var _))
+                {
+                    DrawProgressGauge(gauge, scoreProgressBar.Progress, style.GaugeColor, Plugin.Configuration!.RankDisplayScale.Value);
+                }
+
+                DrawHitCounter(Plugin.Configuration!.RankDisplayScale.Value);
+            }
+        }
+
+        private void DrawSplit(ImGuiWindowFlags windowFlags)
+        {
+            if (!CanRetrieveStyleDisplay(currentStyle))
+            {
+                return;
+            }
+            
+            var style = StyleUis[currentStyle];
+            ImGui.SetNextWindowSize(new Vector2(0, 0), ImGuiCond.Always);
+            if (ImGui.Begin("##StyleIcon", windowFlags))
+            {
+                if (TryGetRankTexture(style, out var rankIcon))
+                {
+                    DrawCurrentRank(rankIcon, Plugin.Configuration!.SplitLayoutRankDisplayScale.Value);
+                    DrawHitCounter(Plugin.Configuration!.SplitLayoutRankDisplayScale.Value);
+                }
+            }
+
+            ImGui.SetNextWindowSize(new Vector2(0, 0), ImGuiCond.Always);
+            if (ImGui.Begin("##StyleProgress", windowFlags))
+            {
+                if (Plugin.Configuration!.EnableProgressGauge && isInCombat && Service.TextureProvider
+                        .GetFromManifestResource(Assembly.GetExecutingAssembly(),
+                                                 GaugeDefault)
+                        .TryGetWrap(out var gauge, out var _))
+                {
+                    DrawProgressGauge(gauge, scoreProgressBar.Progress, style.GaugeColor, Plugin.Configuration.SplitLayoutProgressGaugeScale.Value);
+                }
+            }
+        }
+
+        private static bool TryGetRankTexture(StyleUi style, out IDalamudTextureWrap texture)
         {
             texture = null!;
             if (Plugin.Configuration!.GoldSaucerEdition
@@ -212,13 +259,14 @@ namespace DragoonMayCry.UI
             }
         }
 
-        private void DrawMock(ImGuiWindowFlags windowFlags)
+        private void DrawCompactMock(ImGuiWindowFlags windowFlags)
         {
-            if (ImGui.Begin("DmC", windowFlags))
+            ImGui.SetNextWindowSize(new Vector2(0, 0), ImGuiCond.Always);
+            if (ImGui.Begin("##DmC", windowFlags))
             {
                 var iconPath = CanRetrieveStyleDisplay(currentStyle)
-                                   ? styleUis[currentStyle].IconPath!
-                                   : styleUis[StyleType.S].IconPath;
+                                   ? StyleUis[currentStyle].IconPath!
+                                   : StyleUis[StyleType.S].IconPath;
                 var progress = scoreProgressBar.Progress;
                 if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), iconPath)
                            .TryGetWrap(out var rankIcon, out var _))
@@ -229,10 +277,40 @@ namespace DragoonMayCry.UI
                 if (Plugin.Configuration!.EnableProgressGauge && Service.TextureProvider
                                                                         .GetFromManifestResource(
                                                                             Assembly.GetExecutingAssembly(),
-                                                                            gaugeDefault)
+                                                                            GaugeDefault)
                                                                         .TryGetWrap(out var gauge, out var _))
                 {
-                    DrawProgressGauge(gauge, progress, new(255, 255, 255));
+                    DrawProgressGauge(gauge, progress, new Vector3(255, 255, 255), Plugin.Configuration!.RankDisplayScale.Value);
+                }
+            }
+        }
+        
+        private void DrawSplitMock(ImGuiWindowFlags windowFlags)
+        {
+            
+            var iconPath = CanRetrieveStyleDisplay(currentStyle)
+                               ? StyleUis[currentStyle].IconPath!
+                               : StyleUis[StyleType.S].IconPath;
+            var progress = scoreProgressBar.Progress;
+            
+            ImGui.SetNextWindowSize(new Vector2(0, 0), ImGuiCond.Always);
+            if (ImGui.Begin("##StyleIcon", windowFlags))
+            {
+                if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), iconPath)
+                           .TryGetWrap(out var rankIcon, out var _))
+                {
+                    ImGui.Image(rankIcon.ImGuiHandle, rankSize * Plugin.Configuration!.SplitLayoutRankDisplayScale.Value / 100f);
+                }
+            }
+
+            ImGui.SetNextWindowSize(new Vector2(0, 0), ImGuiCond.Always);
+            if (Plugin.Configuration!.EnableProgressGauge && ImGui.Begin("##StyleProgress", windowFlags))
+            {
+                if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(),
+                                                                    GaugeDefault)
+                                                                    .TryGetWrap(out var gauge, out var _))
+                {
+                    DrawProgressGauge(gauge, progress, new Vector3(255, 255, 255), Plugin.Configuration!.SplitLayoutProgressGaugeScale.Value);
                 }
             }
         }
@@ -242,23 +320,23 @@ namespace DragoonMayCry.UI
             shakeStopwatch.Restart();
         }
 
-        private void DrawProgressGauge(IDalamudTextureWrap gauge, float progress, Vector3 color)
+        private void DrawProgressGauge(IDalamudTextureWrap gauge, float progress, Vector3 color, int scale)
         {
-            var textureToElementScale = 0.39f;
+            const float textureToElementScale = 0.39f;
             var gaugeWidth = gauge.Width * textureToElementScale;
             var gaugeHeight = (gauge.Height / 6.0f) * textureToElementScale;
-            var offsetX = 10f;
-            var offsetY = 150f;
-            RenderBackgroundUiElement(gauge, offsetX, offsetY, gaugeWidth, gaugeHeight, textureToElementScale, true);
+            const float offsetX = 10f;
+            var offsetY = Plugin.Configuration!.SplitLayout ? 10f : 150f;
+            RenderBackgroundUiElement(gauge, offsetX, offsetY, gaugeWidth, gaugeHeight, textureToElementScale, true, scale);
             RenderBarUiElement(gauge, offsetX, offsetY, gaugeWidth,
-                               gaugeHeight, textureToElementScale, progress, color);
-            RenderBackgroundUiElement(gauge, offsetX, offsetY, gaugeWidth, gaugeHeight, textureToElementScale, false);
+                               gaugeHeight, textureToElementScale, progress, color, scale);
+            RenderBackgroundUiElement(gauge, offsetX, offsetY, gaugeWidth, gaugeHeight, textureToElementScale, false, scale);
         }
 
-        private void DrawCurrentRank(IDalamudTextureWrap rankIcon)
+        private void DrawCurrentRank(IDalamudTextureWrap rankIcon, int scale)
         {
             var textureSize = Plugin.Configuration!.GoldSaucerEdition ? goldSaucerEditionSize : rankSize;
-            var scale = Plugin.Configuration!.RankDisplayScale.Value / 100f;
+            var normalizedScale = scale / 100f;
             var currentAnimation = isInCombat ? rankTransition : finalRankTransition;
             var pos = ComputeRankPosition(currentAnimation);
             var animationTransitionValue = GetAnimationTransitionValue(currentAnimation);
@@ -278,7 +356,7 @@ namespace DragoonMayCry.UI
             var color = new System.Numerics.Vector4(1, 1, 1, alpha);
 
             ImGui.SetCursorPos(pos);
-            ImGui.Image(rankIcon.ImGuiHandle, size * scale, textureUv0, textureUv1, color);
+            ImGui.Image(rankIcon.ImGuiHandle, size * normalizedScale, textureUv0, textureUv1, color);
         }
 
         private float GetAnimationTransitionValue(Easing currentAnimation)
@@ -302,7 +380,7 @@ namespace DragoonMayCry.UI
                     MathFunctionsUtils.InCube(scoreProgressBar.Progress) * 1.5f;
                 if (shakeStopwatch.IsRunning)
                 {
-                    intensity = rankShakeIntensity;
+                    intensity = RankShakeIntensity;
                 }
 
                 var offset = new Vector2(
@@ -338,15 +416,15 @@ namespace DragoonMayCry.UI
             return transitionPosition;
         }
 
-        private void RenderBackgroundUiElement(
+        private static void RenderBackgroundUiElement(
             IDalamudTextureWrap texture, float offsetX, float offsetY, float gaugeWidth, float gaugeHeight,
-            float textureToElementScale, bool isBackground)
+            float textureToElementScale, bool isBackground, int scale)
         {
-            var scale = Plugin.Configuration!.RankDisplayScale.Value / 100f;
-            var x = offsetX * scale;
-            var y = offsetY * scale;
-            var width = gaugeWidth * scale;
-            var height = gaugeHeight * scale;
+            var normalizedScale = scale / 100f;
+            var x = offsetX * normalizedScale;
+            var y = offsetY * normalizedScale;
+            var width = gaugeWidth * normalizedScale;
+            var height = gaugeHeight * normalizedScale;
             var textureElementHeight =
                 gaugeHeight / textureToElementScale;
             var textureX = 0.0f;
@@ -360,14 +438,14 @@ namespace DragoonMayCry.UI
 
         private void RenderBarUiElement(
             IDalamudTextureWrap texture, float offsetX, float offsetY, float gaugeWidth, float gaugeHeight,
-            float textureToElementScale, double progress, Vector3 rankColor)
+            float textureToElementScale, double progress, Vector3 rankColor, int scale)
         {
-            var scale = Plugin.Configuration!.RankDisplayScale.Value / 100f;
+            var normalizedScale = scale / 100f;
             var barTextureOffsetX = 12.0f * textureToElementScale;
-            var x = (offsetX + barTextureOffsetX) * scale;
-            var y = offsetY * scale;
-            var width = (float)((gaugeWidth - (barTextureOffsetX * 2.0f)) * progress) * scale;
-            var height = gaugeHeight * scale;
+            var x = (offsetX + barTextureOffsetX) * normalizedScale;
+            var y = offsetY * normalizedScale;
+            var width = (float)((gaugeWidth - (barTextureOffsetX * 2.0f)) * progress) * normalizedScale;
+            var height = gaugeHeight * normalizedScale;
             var textureElementX = barTextureOffsetX / textureToElementScale;
             var textureElementHeight = gaugeHeight / textureToElementScale;
             var textureX = textureElementX / texture.Width;
@@ -389,7 +467,7 @@ namespace DragoonMayCry.UI
                 return new Vector4(color, 1);
             }
 
-            var style = styleUis[previousStyle];
+            var style = StyleUis[previousStyle];
 
             if (rankTransition.IsRunning)
             {
@@ -402,15 +480,20 @@ namespace DragoonMayCry.UI
             return new Vector4(color, 1);
         }
 
-        private void DrawHitCounter(StyleUi style)
+        private void DrawHitCounter(int scale)
         {
+            if (!Plugin.Configuration!.EnableHitCounter || hitCounter.HitCount < 2)
+            {
+                return;
+            }
+            
             var position = GetHitCounterPosition();
-            var scaling = Plugin.Configuration!.RankDisplayScale.Value / 100f;
+            var scaling = scale / 100f;
             var scaledSize = hitCounterSize * scaling;
             ImGui.SetCursorPos(position * scaling);
             if (ImGui.BeginChild("Hit Counter", scaledSize, false, ImGuiWindowFlags.NoScrollbar))
             {
-                var font = fonts.GetHitCountFontByScale();
+                var font = fonts.GetHitCountFontByScale(scale);
                 font.Push();
                 ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.92f, 0.92f, 0.92f, 1));
                 var text = $"x {hitCounter.HitCount}";
@@ -428,8 +511,8 @@ namespace DragoonMayCry.UI
             if (shakeStopwatch.IsRunning)
             {
                 var offset = new Vector2(
-                    random.NextSingle() * hitCounterShakeIntensity * 2 - hitCounterShakeIntensity / 2,
-                    random.NextSingle() * hitCounterShakeIntensity * 2 - hitCounterShakeIntensity / 2);
+                    random.NextSingle() * HitCounterShakeIntensity * 2 - HitCounterShakeIntensity / 2,
+                    random.NextSingle() * HitCounterShakeIntensity * 2 - HitCounterShakeIntensity / 2);
 
                 return hitCounterPosition + offset;
             }
@@ -485,9 +568,9 @@ namespace DragoonMayCry.UI
             return Math.Clamp(1 - (1 / duration) * t, 0, 1);
         }
 
-        private bool CanRetrieveStyleDisplay(StyleType type)
+        private static bool CanRetrieveStyleDisplay(StyleType type)
         {
-            return styleUis.ContainsKey(type);
+            return StyleUis.ContainsKey(type);
         }
 
         private void OnDemotionStarted(object? sender, float duration)

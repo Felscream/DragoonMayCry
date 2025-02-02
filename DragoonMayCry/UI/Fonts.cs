@@ -52,9 +52,9 @@ public class Fonts : IDisposable
         );
     }
 
-    public IFontHandle GetHitCountFontByScale()
+    public IFontHandle GetHitCountFontByScale(int scale)
     {
-        return Plugin.Configuration!.RankDisplayScale.Value switch
+        return scale switch
         {
             > 160 => dmcFont56,
             > 130 => dmcFont42,

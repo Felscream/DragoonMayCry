@@ -467,7 +467,7 @@ namespace DragoonMayCry.UI
 
             if (difficultyRecord.TryGetValue(dutyId, out var dutyRecord))
             {
-                if (StyleRankUI.styleUis.TryGetValue(dutyRecord.Result, out var style))
+                if (StyleRankUI.StyleUis.TryGetValue(dutyRecord.Result, out var style))
                 {
                     rankIconPath = style.IconPath;
                 }
