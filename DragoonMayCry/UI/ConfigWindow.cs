@@ -77,6 +77,7 @@ public class ConfigWindow : Window
         {
             InfoBox.Instance.AddTitle("General")
                    .AddConfigCheckbox("Lock rank window", configuration.LockScoreWindow)
+                   .AddConfigCheckbox("Split rank layout", configuration.SplitLayout)
                    .AddAction(() =>
                    {
                        var cursorPos = ImGui.GetCursorPos();

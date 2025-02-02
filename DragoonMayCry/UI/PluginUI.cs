@@ -65,9 +65,9 @@ namespace DragoonMayCry.UI
             KamiCommon.WindowManager.AddWindow(CharacterRecordWindow);
 
             pluginInterface = Plugin.PluginInterface;
-            pluginInterface.UiBuilder.Draw += DrawUI;
+            pluginInterface.UiBuilder.Draw += DrawUi;
             pluginInterface.UiBuilder.OpenMainUi += ToggleCharacterRecords;
-            pluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUI;
+            pluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
 
             this.playerState = PlayerState.GetInstance();
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
@@ -78,13 +78,13 @@ namespace DragoonMayCry.UI
         public void Dispose()
         {
             styleRankUi.Dispose();
-            pluginInterface.UiBuilder.Draw -= DrawUI;
+            pluginInterface.UiBuilder.Draw -= DrawUi;
             pluginInterface.UiBuilder.OpenMainUi -= ToggleCharacterRecords;
-            pluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUI;
+            pluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUi;
             windowSystem.RemoveAllWindows();
         }
 
-        private void DrawUI()
+        private void DrawUi()
         {
             if (hideRankUiStopwatch.IsRunning &&
                 hideRankUiStopwatch.ElapsedMilliseconds > TimeToResetScoreAfterCombat)
@@ -127,7 +127,7 @@ namespace DragoonMayCry.UI
             }
         }
 
-        public void ToggleConfigUI()
+        public void ToggleConfigUi()
         {
             if (KamiCommon.WindowManager.GetWindowOfType<ConfigWindow>() is { } window)
             {

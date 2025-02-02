@@ -144,7 +144,7 @@ public unsafe class Plugin : IDalamudPlugin
     {
         if (args.Contains("conf"))
         {
-            pluginUi?.ToggleConfigUI();
+            pluginUi?.ToggleConfigUi();
         }
         else
         {

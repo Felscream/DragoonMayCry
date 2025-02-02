@@ -29,6 +29,7 @@ public class DmcConfiguration : IPluginConfiguration
     public Setting<bool> EnableProgressGauge = new(true);
     public Setting<bool> GoldSaucerEdition = new(false);
     public Setting<bool> DisableAnnouncerBlunder = new(false);
+    public Setting<bool> SplitLayout = new(false);
 
     public Setting<bool> LockScoreWindow { get; set; } = new(true);
 
