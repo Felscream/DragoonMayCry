@@ -29,13 +29,13 @@ public class DmcConfiguration : IPluginConfiguration
     public Setting<bool> EnableProgressGauge = new(true);
     public Setting<bool> GoldSaucerEdition = new(false);
     public Setting<bool> DisableAnnouncerBlunder = new(false);
-    public Setting<bool> SplitLayout = new(false);
-
     public Setting<bool> LockScoreWindow { get; set; } = new(true);
-
     // deprecated
     public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);
     public Setting<int> RankDisplayScale = new(100);
+    public Setting<bool> SplitLayout = new(false);
+    public Setting<int> SplitLayoutRankDisplayScale = new(100);
+    public Setting<int> SplitLayoutProgressGaugeScale = new(100);
 
     public readonly Dictionary<JobId, JobConfiguration> JobConfiguration = new()
     {

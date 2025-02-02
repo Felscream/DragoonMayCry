@@ -78,6 +78,7 @@ public class ConfigWindow : Window
             InfoBox.Instance.AddTitle("General")
                    .AddConfigCheckbox("Lock rank window", configuration.LockScoreWindow)
                    .AddConfigCheckbox("Split rank layout", configuration.SplitLayout)
+                   .AddConfigCheckbox("Enable progress gauge", configuration.EnableProgressGauge)
                    .AddAction(() =>
                    {
                        var cursorPos = ImGui.GetCursorPos();
@@ -93,9 +94,14 @@ public class ConfigWindow : Window
                                       "The message will be sent in the echo channel")
                    .AddConfigCheckbox("Enable hit counter", configuration.EnableHitCounter,
                                       "Not compatible with FlyTextFilter")
-                   .AddConfigCheckbox("Enable progress gauge", configuration.EnableProgressGauge)
                    .AddConfigCheckbox("Gold Saucer Edition", configuration.GoldSaucerEdition)
+                   .StartConditional(!configuration.SplitLayout)
                    .AddSliderInt("Rank display scale", configuration.RankDisplayScale, 50, 200, 150f)
+                   .EndConditional()
+                   .StartConditional(configuration.SplitLayout)
+                   .AddSliderInt("Rank icon display scale", configuration.SplitLayoutRankDisplayScale, 50, 200, 150f)
+                   .AddSliderInt("Rank progress display scale", configuration.SplitLayoutProgressGaugeScale, 50, 200, 150f)
+                   .EndConditional()
                    .AddButton("Open job configuration", () => jobConfigurationWindow.Toggle())
                    .Draw();
 
