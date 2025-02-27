@@ -10,7 +10,6 @@ using KamiLib;
 using KamiLib.Configuration;
 using KamiLib.Drawing;
 using System;
-using System.Linq;
 using System.Numerics;
 
 namespace DragoonMayCry.UI;

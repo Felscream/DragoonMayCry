@@ -19,6 +19,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Dalamud.Utility;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 using PlayerState = DragoonMayCry.State.PlayerState;
 
@@ -91,6 +92,16 @@ public unsafe class Plugin : IDalamudPlugin
         {
             HelpMessage = "opens configuration menu"
         });
+        
+        Service.CommandManager.AddHandler("/dmc bgm", new CommandInfo(OnCommand)
+        {
+            HelpMessage = "toggles dynamic background music on/off"
+        });
+        
+        Service.CommandManager.AddHandler("/dmc job", new CommandInfo(OnCommand)
+        {
+            HelpMessage = "toggles DmC on/off for the current job"
+        });
 
         AssetsManager.VerifyAndUpdateAssets();
     }
@@ -145,8 +156,23 @@ public unsafe class Plugin : IDalamudPlugin
         if (args.Contains("conf"))
         {
             pluginUi?.ToggleConfigUi();
+        } 
+        else if (args.Contains("bgm") && Configuration != null && BgmService != null)
+        {
+            Configuration.EnableDynamicBgm.Value = !Configuration.EnableDynamicBgm.Value;
+            KamiCommon.SaveConfiguration();
+            BgmService.ToggleDynamicBgm(this, Configuration.EnableDynamicBgm);
+        } 
+        else if(args.Contains("job") && Configuration?.JobConfiguration != null && BgmService != null)
+        {
+            if (Configuration.JobConfiguration.TryGetValue(CurrentJob, out var jobConfig))
+            {
+                jobConfig.EnableDmc.Value = !jobConfig.EnableDmc;
+                KamiCommon.SaveConfiguration();
+                BgmService.OnJobEnableChange(this, CurrentJob);
+            }
         }
-        else
+        else if(args.IsNullOrEmpty())
         {
             pluginUi?.ToggleCharacterRecords();
         }
