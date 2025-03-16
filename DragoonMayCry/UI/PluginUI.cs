@@ -47,6 +47,7 @@ namespace DragoonMayCry.UI
             JobConfigurationWindow.EnabledForJobChange += dynamicBgmService.OnJobEnableChange;
 
             BgmDutyBlacklistWindow = new BgmDutyBlacklistConfigurationWindow(Plugin.Configuration!);
+            BgmDutyBlacklistWindow.BgmBlacklistChanged += dynamicBgmService.OnBgmBlacklistChanged;
             
             HowItWorksWindow = new HowItWorksWindow();
 

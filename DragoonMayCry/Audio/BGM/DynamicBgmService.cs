@@ -209,8 +209,8 @@ namespace DragoonMayCry.Audio.BGM
                    && Plugin.Configuration.JobConfiguration.ContainsKey(job)
                    && Plugin.Configuration.JobConfiguration[job].EnableDmc
                    && Plugin.Configuration.JobConfiguration[job].Bgm.Value != JobConfiguration.BgmConfiguration.Off
-                   && !TerritoryIds.NoBgmInstances.Contains(currentTerritory);
-            //&& !IsCurrentDutyBlacklisted();
+                   && !TerritoryIds.NoBgmInstances.Contains(currentTerritory)
+                   && !IsCurrentDutyBlacklisted();
         }
 
         private bool IsCurrentDutyBlacklisted()
@@ -430,6 +430,26 @@ namespace DragoonMayCry.Audio.BGM
                 bgmFsm.Disable();
                 ResetGameBgm();
                 audioService.RemoveDeathEffect();
+            }
+        }
+
+        public void OnBgmBlacklistChanged(object? sender, EventArgs e)
+        {
+            var currentJob = playerState.GetCurrentJob();
+            if (bgmFsm.IsActive && !CanPlayDynamicBgm(playerState.IsInsideInstance, currentJob))
+            {
+                bgmFsm.Disable();
+                ResetGameBgm();
+                audioService.RemoveDeathEffect();
+            } 
+            else if (!bgmFsm.IsActive && CanPlayDynamicBgm(playerState.IsInsideInstance, currentJob))
+            {
+                DisableGameBgm();
+                PrepareBgm(currentJob);
+                if (playerState.IsDead)
+                {
+                    audioService.ApplyDeathEffect();
+                }
             }
         }
 
