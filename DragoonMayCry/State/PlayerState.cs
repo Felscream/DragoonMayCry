@@ -4,6 +4,7 @@ using Dalamud.Plugin.Services;
 using DragoonMayCry.Data;
 using DragoonMayCry.State.Tracker;
 using DragoonMayCry.Util;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using System;
@@ -262,6 +263,11 @@ namespace DragoonMayCry.State
         public uint GetCurrentTerritoryId()
         {
             return clientState.TerritoryType;
+        }
+
+        public uint GetCurrentContentId()
+        {
+            return GameMain.Instance()->CurrentContentFinderConditionId;
         }
     }
 }

@@ -98,17 +98,15 @@ namespace DragoonMayCry.UI
                                      ImGuiWindowFlags.NoDecoration))
                 {
                     DrawSelectables();
+                    ImGui.EndChild();
                 }
-
-                ImGui.EndChild();
+                
                 ImGui.TableNextColumn();
                 if (ImGui.BeginChild("##SelectedJob", Vector2.Zero, false, ImGuiWindowFlags.NoDecoration))
                 {
                     selected.Contents.Draw();
+                    ImGui.EndChild();
                 }
-
-                ImGui.EndChild();
-
                 ImGui.EndTable();
             }
         }

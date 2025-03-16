@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace DragoonMayCry.Data
 {
-    public class TerritoryIds
+    public abstract class TerritoryIds
     {
 #pragma warning disable CA2211 // Non-constant fields should not be visible
         public static HashSet<uint> NoBgmInstances =

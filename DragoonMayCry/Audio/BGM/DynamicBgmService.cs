@@ -203,13 +203,20 @@ namespace DragoonMayCry.Audio.BGM
         private bool CanPlayDynamicBgm(bool isInInstance, JobId job)
         {
             return playerState.Player != null
-                    && !playerState.IsInPvp()
-                    && isInInstance
-                    && Plugin.Configuration!.EnableDynamicBgm
-                    && Plugin.Configuration.JobConfiguration.ContainsKey(job)
-                    && Plugin.Configuration.JobConfiguration[job].EnableDmc
-                    && Plugin.Configuration.JobConfiguration[job].Bgm.Value != JobConfiguration.BgmConfiguration.Off
-                    && !TerritoryIds.NoBgmInstances.Contains(currentTerritory);
+                   && !playerState.IsInPvp()
+                   && isInInstance
+                   && Plugin.Configuration!.EnableDynamicBgm
+                   && Plugin.Configuration.JobConfiguration.ContainsKey(job)
+                   && Plugin.Configuration.JobConfiguration[job].EnableDmc
+                   && Plugin.Configuration.JobConfiguration[job].Bgm.Value != JobConfiguration.BgmConfiguration.Off
+                   && !TerritoryIds.NoBgmInstances.Contains(currentTerritory);
+            //&& !IsCurrentDutyBlacklisted();
+        }
+
+        private bool IsCurrentDutyBlacklisted()
+        {
+            return Plugin.Configuration != null
+                   && Plugin.Configuration.DynamicBgmBlacklistDuties.Value.Contains(playerState.GetCurrentContentId());
         }
 
         private void OnAssetsAvailable(object? sender, bool loaded)

@@ -2,6 +2,7 @@ using Dalamud.Game.ClientState.Objects;
 using Dalamud.Interface;
 using Dalamud.IoC;
 using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Client.Game;
 
 namespace DragoonMayCry
 {
