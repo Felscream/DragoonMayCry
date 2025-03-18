@@ -19,5 +19,6 @@ public class HitCounter
 
         playerState = PlayerState.GetInstance();
         playerState.RegisterCombatStateChangeHandler((_, _) => HitCount = 0);
+        playerState.RegisterDeathStateChangeHandler((_, _) => HitCount = 0);
     }
 }

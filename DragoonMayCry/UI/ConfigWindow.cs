@@ -24,14 +24,18 @@ public class ConfigWindow : Window
 
     private readonly DmcConfiguration configuration;
     private readonly JobConfigurationWindow jobConfigurationWindow;
+    private readonly BgmDutyBlacklistConfigurationWindow bgmDutyBlacklistConfigurationWindow;
     private readonly Setting<int> decay = new(0);
 
-    public ConfigWindow(DmcConfiguration configuration, JobConfigurationWindow jobConfiguration) : base(
+    public ConfigWindow(
+        DmcConfiguration configuration, JobConfigurationWindow jobConfiguration,
+        BgmDutyBlacklistConfigurationWindow bgmDutyBlacklistConfigurationWindow) : base(
         "DragoonMayCry - Configuration")
     {
         Size = new Vector2(525, 470);
         SizeCondition = ImGuiCond.Appearing;
         jobConfigurationWindow = jobConfiguration;
+        this.bgmDutyBlacklistConfigurationWindow = bgmDutyBlacklistConfigurationWindow;
         this.configuration = configuration;
     }
 
@@ -99,7 +103,8 @@ public class ConfigWindow : Window
                    .EndConditional()
                    .StartConditional(configuration.SplitLayout)
                    .AddSliderInt("Rank icon display scale", configuration.SplitLayoutRankDisplayScale, 50, 200, 150f)
-                   .AddSliderInt("Rank progress display scale", configuration.SplitLayoutProgressGaugeScale, 50, 200, 150f)
+                   .AddSliderInt("Rank progress display scale", configuration.SplitLayoutProgressGaugeScale, 50, 200,
+                                 150f)
                    .EndConditional()
                    .AddButton("Open job configuration", () => jobConfigurationWindow.Toggle())
                    .Draw();
@@ -180,6 +185,7 @@ public class ConfigWindow : Window
                            BgmVolumeChange?.Invoke(this, configuration.BgmVolume.Value);
                        }
                    })
+                   .AddButton("Dynamic BGM duty blacklist", () => bgmDutyBlacklistConfigurationWindow.Toggle())
                    .Draw();
 
 #if DEBUG

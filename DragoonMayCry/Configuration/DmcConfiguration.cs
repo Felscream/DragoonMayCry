@@ -36,6 +36,7 @@ public class DmcConfiguration : IPluginConfiguration
     public Setting<bool> SplitLayout = new(false);
     public Setting<int> SplitLayoutRankDisplayScale = new(100);
     public Setting<int> SplitLayoutProgressGaugeScale = new(100);
+    public Setting<ISet<uint>> DynamicBgmBlacklistDuties = new(new SortedSet<uint>());
 
     public readonly Dictionary<JobId, JobConfiguration> JobConfiguration = new()
     {

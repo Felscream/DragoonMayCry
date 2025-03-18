@@ -155,13 +155,15 @@ public unsafe class Plugin : IDalamudPlugin
     {
         if (args.Contains("conf"))
         {
-            pluginUi?.ToggleConfigUi();
+            PluginUI.ToggleConfigUi();
         } 
         else if (args.Contains("bgm") && Configuration != null && BgmService != null)
         {
             Configuration.EnableDynamicBgm.Value = !Configuration.EnableDynamicBgm.Value;
             KamiCommon.SaveConfiguration();
             BgmService.ToggleDynamicBgm(this, Configuration.EnableDynamicBgm);
+            String bgmState = Configuration.EnableDynamicBgm ? "on" : "off";
+            Service.ChatGui.Print($"[DragoonMayCry] Dynamic BGM turned {bgmState}");
         } 
         else if(args.Contains("job") && Configuration?.JobConfiguration != null && BgmService != null)
         {
@@ -170,11 +172,13 @@ public unsafe class Plugin : IDalamudPlugin
                 jobConfig.EnableDmc.Value = !jobConfig.EnableDmc;
                 KamiCommon.SaveConfiguration();
                 BgmService.OnJobEnableChange(this, CurrentJob);
+                String pluginState = jobConfig.EnableDmc ? "on" : "off";
+                Service.ChatGui.Print($"[DragoonMayCry] DmC turned {pluginState} for {CurrentJob}");
             }
         }
         else if(args.IsNullOrEmpty())
         {
-            pluginUi?.ToggleCharacterRecords();
+            PluginUI.ToggleCharacterRecords();
         }
     }
 

@@ -2,19 +2,24 @@ using System.Collections.Generic;
 
 namespace DragoonMayCry.Data
 {
-    public class TerritoryIds
+    public abstract class TerritoryIds
     {
 #pragma warning disable CA2211 // Non-constant fields should not be visible
         public static HashSet<uint> NoBgmInstances =
 #pragma warning restore CA2211 // Non-constant fields should not be visible
         [
-            561,
-            562,
-            563,
-            564,
-            565,
+            388, // Chochobo races
+            389, //|
+            390, //|
+            391, //_
+            506,
+            561, // POTD 1-50
+            562, //|
+            563, //|
+            564, //|
+            565, //_
             570,
-            593,
+            593, // POTD 50 - 200
             594,
             595,
             596,

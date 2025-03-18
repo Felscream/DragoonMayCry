@@ -21,6 +21,7 @@ namespace DragoonMayCry.UI
         private HowItWorksWindow HowItWorksWindow { get; init; }
         private JobConfigurationWindow JobConfigurationWindow { get; init; }
         private CharacterRecordWindow CharacterRecordWindow { get; init; }
+        private BgmDutyBlacklistConfigurationWindow BgmDutyBlacklistWindow { get; init; }
 
         private readonly StyleRankUI styleRankUi;
         private readonly FinalRankCalculator finalRankCalculator;
@@ -45,9 +46,12 @@ namespace DragoonMayCry.UI
             JobConfigurationWindow.JobAnnouncerTypeChange += styleAnnouncerService.OnAnnouncerTypeChange;
             JobConfigurationWindow.EnabledForJobChange += dynamicBgmService.OnJobEnableChange;
 
+            BgmDutyBlacklistWindow = new BgmDutyBlacklistConfigurationWindow(Plugin.Configuration!);
+            BgmDutyBlacklistWindow.BgmBlacklistChanged += dynamicBgmService.OnBgmBlacklistChanged;
+            
             HowItWorksWindow = new HowItWorksWindow();
 
-            ConfigWindow = new ConfigWindow(Plugin.Configuration!, JobConfigurationWindow);
+            ConfigWindow = new ConfigWindow(Plugin.Configuration!, JobConfigurationWindow, BgmDutyBlacklistWindow);
             ConfigWindow.ActiveOutsideInstanceChange += Plugin.OnActiveOutsideInstanceConfChange;
             ConfigWindow.ToggleDynamicBgmChange += dynamicBgmService.ToggleDynamicBgm;
             ConfigWindow.MuffledOnDeathChange += dynamicBgmService.OnMuffledOnDeathChange;
@@ -63,6 +67,7 @@ namespace DragoonMayCry.UI
             KamiCommon.WindowManager.AddWindow(ConfigWindow);
             KamiCommon.WindowManager.AddWindow(HowItWorksWindow);
             KamiCommon.WindowManager.AddWindow(CharacterRecordWindow);
+            KamiCommon.WindowManager.AddWindow(BgmDutyBlacklistWindow);
 
             pluginInterface = Plugin.PluginInterface;
             pluginInterface.UiBuilder.Draw += DrawUi;
@@ -127,7 +132,7 @@ namespace DragoonMayCry.UI
             }
         }
 
-        public void ToggleConfigUi()
+        public static void ToggleConfigUi()
         {
             if (KamiCommon.WindowManager.GetWindowOfType<ConfigWindow>() is { } window)
             {
@@ -135,7 +140,7 @@ namespace DragoonMayCry.UI
             }
         }
 
-        public void ToggleCharacterRecords()
+        public static void ToggleCharacterRecords()
         {
             if (KamiCommon.WindowManager.GetWindowOfType<CharacterRecordWindow>() is { } window)
             {
