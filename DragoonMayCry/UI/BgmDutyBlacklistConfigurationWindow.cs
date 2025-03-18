@@ -26,12 +26,13 @@ public class BgmDutyBlacklistConfigurationWindow : Window, IDisposable
     private ISet<uint> blacklistedIds;
 
     public BgmDutyBlacklistConfigurationWindow(
-        DmcConfiguration configuration, ImGuiWindowFlags flags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse,
+        DmcConfiguration configuration,
+        ImGuiWindowFlags flags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse,
         bool forceMainWindow = false) : base(
         "DragoonMayCry - Dynamic BGM Duty Blacklist##DmCBlacklistBgmConfiguration", flags,
         forceMainWindow)
     {
-        Size = new Vector2(0, 0);
+        Size = new Vector2(750, 300);
         SizeCondition = ImGuiCond.Appearing;
         this.configuration = configuration;
         contentFinder = Service.DataManager.GetExcelSheet<ContentFinderCondition>();
@@ -81,18 +82,19 @@ public class BgmDutyBlacklistConfigurationWindow : Window, IDisposable
     }
     private void DrawBlacklistedDuties()
     {
-        if (ImGui.BeginChild("##blacklistedItems"))
+        if (ImGui.BeginChild("##blacklistedItems", new Vector2(0, 0)))
         {
             foreach (var blacklistedId in blacklistedIds)
             {
                 var endOfLineX = ImGui.GetContentRegionAvail().X - 20f - ImGui.GetStyle().WindowPadding.X;
-                if (contentFinder.TryGetRow(blacklistedId, out var row))
+                if (contentFinder.TryGetRow(blacklistedId, out var row)
+                    && UIState.IsInstanceContentUnlocked(row.Content.RowId))
                 {
                     var content = ToLightContentFinderCondition(row);
-                    ImGui.TextUnformatted($"{content.Name} - ID {content.RowId}");
+                    ImGui.Text($"{content.Name} - ID {content.RowId}");
                     ImGui.SameLine();
                     ImGui.SetCursorPosX(endOfLineX);
-                    if (ImGuiComponents.IconButton(Dalamud.Interface.FontAwesomeIcon.Trash))
+                    if (ImGuiComponents.IconButton((int)content.RowId, Dalamud.Interface.FontAwesomeIcon.Trash))
                     {
                         RemoveFromBlacklist(content.RowId);
                     }
@@ -111,11 +113,12 @@ public class BgmDutyBlacklistConfigurationWindow : Window, IDisposable
             searchResults = FindContentWithNameOrId(searchInput.Trim().ToLower());
         }
         ImGuiComponents.HelpMarker("You must have unlocked the duty for it to appear in the results.");
-        if (ImGui.BeginChild("##dutySearchResults", new Vector2(380, 200)))
+        if (ImGui.BeginChild("##dutySearchResults", new Vector2(0, 0)))
         {
             foreach (var content in searchResults)
             {
-                if (ImGui.Selectable($"{content.Name} - ID {content.RowId}", idToBlacklist == content.RowId,
+                if (ImGui.Selectable($"{content.Name} - ID {content.RowId}##result-{content.RowId}",
+                                     idToBlacklist == content.RowId,
                                      ImGuiSelectableFlags.AllowDoubleClick))
                 {
                     idToBlacklist = (int)content.RowId;
@@ -133,9 +136,9 @@ public class BgmDutyBlacklistConfigurationWindow : Window, IDisposable
         if (contentFinder.TryGetRow(playerState.GetCurrentContentId(), out var row))
         {
             var content = ToLightContentFinderCondition(row);
-            ImGui.TextUnformatted($"{content.Name} - ID {content.RowId}");
+            ImGui.TextUnformatted($"Current duty : {content.Name} - ID {content.RowId}");
             ImGui.SameLine();
-            if (ImGui.Button("Blacklist current duty"))
+            if (ImGui.Button($"Blacklist current duty##blacklist-add-{content.RowId}"))
             {
                 AddToBlacklist(content.RowId);
             }

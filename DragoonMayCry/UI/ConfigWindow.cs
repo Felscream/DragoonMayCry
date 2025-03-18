@@ -185,7 +185,7 @@ public class ConfigWindow : Window
                            BgmVolumeChange?.Invoke(this, configuration.BgmVolume.Value);
                        }
                    })
-                   .AddButton("Configure dynamic BGM blacklist", () => bgmDutyBlacklistConfigurationWindow.Toggle())
+                   .AddButton("Dynamic BGM duty blacklist", () => bgmDutyBlacklistConfigurationWindow.Toggle())
                    .Draw();
 
 #if DEBUG
