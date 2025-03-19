@@ -3,15 +3,9 @@ using DragoonMayCry.State;
 
 namespace DragoonMayCry.Score.Action.JobModule
 {
-    internal class JobModuleFactory
+    internal class JobModuleFactory(ScoreManager scoreManager)
     {
-        private readonly ScoreManager scoreManager;
-        private readonly PlayerState playerState;
-        public JobModuleFactory(ScoreManager scoreManager)
-        {
-            this.scoreManager = scoreManager;
-            this.playerState = PlayerState.GetInstance();
-        }
+        private readonly PlayerState playerState = PlayerState.GetInstance();
 
         public IJobActionModifier? GetJobActionModule()
         {
@@ -23,7 +17,7 @@ namespace DragoonMayCry.Score.Action.JobModule
                 JobId.SCH => new SCH(scoreManager),
                 JobId.SGE => new SGE(scoreManager),
                 JobId.WHM => new WHM(scoreManager),
-                _ => null
+                _ => null,
             };
         }
     }

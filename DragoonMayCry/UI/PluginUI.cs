@@ -106,6 +106,11 @@ namespace DragoonMayCry.UI
 
         private bool CanDrawStyleRank()
         {
+            if (Plugin.Configuration!.HideInCutscenes && PlayerState.GetInstance().IsInCutscene)
+            {
+                return false;
+            }
+            
             if (!Plugin.Configuration!.LockScoreWindow)
             {
                 return true;
