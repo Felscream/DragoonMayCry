@@ -24,8 +24,11 @@ namespace DragoonMayCry.State
 
         public bool IsInsideInstance =>
             CheckCondition([ConditionFlag.BoundByDuty, ConditionFlag.BoundByDuty56, ConditionFlag.BoundByDuty95]);
-        public bool IsInCutscene => CheckCondition(inCutscene);
-        public bool IsDead => Player != null && Player.IsDead;
+        public bool IsInCutscene => IsLoggedIn && CheckCondition(inCutscene);
+        public bool IsDead => Player is
+        {
+            IsDead: true,
+        };
         public bool IsLoggedIn => Player != null;
         public IPlayerCharacter? Player => Service.ClientState.LocalPlayer;
         private ICondition Condition => Service.Condition;
@@ -43,7 +46,7 @@ namespace DragoonMayCry.State
         ];
 
         private readonly ConditionFlag[] inCutscene =
-            [ConditionFlag.WatchingCutscene, ConditionFlag.WatchingCutscene78];
+            [ConditionFlag.WatchingCutscene, ConditionFlag.WatchingCutscene78, ConditionFlag.OccupiedInCutSceneEvent, ConditionFlag.Occupied38];
 
         private readonly InCombatStateTracker inCombatStateTracker;
         private readonly OnDeathStateTracker onDeathStateTracker;

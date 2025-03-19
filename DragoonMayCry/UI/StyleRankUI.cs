@@ -121,6 +121,7 @@ namespace DragoonMayCry.UI
             UpdateRankTransitionAnimation();
             UpdateFinalRankTransitionAnimation();
 
+            
             if (!Plugin.Configuration.LockScoreWindow)
             {
                 if (Plugin.Configuration.SplitLayout)
