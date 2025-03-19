@@ -93,6 +93,7 @@ public class ConfigWindow : Window
 
                        AddLabel("Active outside instance", cursorPos);
                    })
+                   .AddConfigCheckbox("Hide during cutscenes", configuration.HideInCutscenes)
                    .AddConfigCheckbox("Output final rank to chat", configuration.EnabledFinalRankChatLogging,
                                       "The message will be sent in the echo channel")
                    .AddConfigCheckbox("Enable hit counter", configuration.EnableHitCounter,

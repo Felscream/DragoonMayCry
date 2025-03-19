@@ -4,6 +4,6 @@ namespace DragoonMayCry.Record.Model
     {
         Trials = 0,
         Raids = 1,
-        Ultimates = 2
+        Ultimates = 2,
     }
 }
