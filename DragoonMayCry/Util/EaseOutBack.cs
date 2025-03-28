@@ -15,7 +15,7 @@ namespace DragoonMayCry.Util
             var c1 = 2.70158d;
             var c3 = c1 + 1d;
             double progress = base.Progress;
-            base.Value = 1 + c3 * Math.Pow(progress - 1, 3) + c1 * Math.Pow(progress - 1, 2);
+            ValueUnclamped = 1 + c3 * Math.Pow(progress - 1, 3) + c1 * Math.Pow(progress - 1, 2);
         }
     }
 }
