@@ -364,7 +364,7 @@ namespace DragoonMayCry.UI
         {
             if (currentAnimation.IsRunning)
             {
-                return (float)currentAnimation.Value;
+                return (float)currentAnimation.ValueClamped;
             }
 
             return 1f;
@@ -407,10 +407,10 @@ namespace DragoonMayCry.UI
         {
             var lerpedCoordinatesX = (float)double.Lerp(
                 rankTransitionStartPosition.X, rankPosition.X,
-                currentAnimation.Value);
+                currentAnimation.ValueClamped);
             var lerpedCoordinatesY = (float)double.Lerp(
                 rankTransitionStartPosition.Y, rankPosition.Y,
-                currentAnimation.Value);
+                currentAnimation.ValueClamped);
 
             var transitionPosition =
                 new Vector2(lerpedCoordinatesX, lerpedCoordinatesY);
@@ -475,7 +475,7 @@ namespace DragoonMayCry.UI
                 var normalizedStartingColor =
                     style.GaugeColor / 255;
                 color = Vector3.Lerp(normalizedStartingColor, normalizedColor,
-                                     (float)rankTransition.Value);
+                                     (float)rankTransition.ValueClamped);
             }
 
             return new Vector4(color, 1);
