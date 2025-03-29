@@ -80,8 +80,8 @@
             {
                 "Type": 1,
                 "Subcategories": [
-                    "Light-heavyweight",
-                    "Cruiserweight"
+                    "Cruiserweight",
+                    "Light-heavyweight"
                 ]
             },
             {
@@ -202,7 +202,7 @@
                 "IconId": "112587"
             },
             "1239": {
-                "Name": "The Jade Stoa",
+                "Name": "The Jade Stoa (Unreal)",
                 "LvlSync": 100,
                 "Difficulty": 1,
                 "Category": 0,
@@ -216,6 +216,94 @@
                 "Category": 0,
                 "Subcategory": "Main story quest",
                 "IconId": "112588"
+            },
+            "1256": {
+                "Name": " AAC Cruiserweight M1",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 1,
+                "Subcategory": "Cruiserweight",
+                "IconId": "112597"
+            },
+            "1257": {
+                "Name": " AAC Cruiserweight M1 (Savage)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 1,
+                "Subcategory": "Cruiserweight",
+                "IconId": "112598"
+            },
+            "1258": {
+                "Name": " AAC Cruiserweight M2",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 1,
+                "Subcategory": "Cruiserweight",
+                "IconId": "112599"
+            },
+            "1259": {
+                "Name": " AAC Cruiserweight M2 (Savage)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 1,
+                "Subcategory": "Cruiserweight",
+                "IconId": "112600"
+            },
+            "1260": {
+                "Name": " AAC Cruiserweight M3",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 1,
+                "Subcategory": "Cruiserweight",
+                "IconId": "112601"
+            },
+            "1261": {
+                "Name": " AAC Cruiserweight M3 (Savage)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 1,
+                "Subcategory": "Cruiserweight",
+                "IconId": "112602"
+            },
+            "1262": {
+                "Name": " AAC Cruiserweight M4",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 1,
+                "Subcategory": "Cruiserweight",
+                "IconId": "112603"
+            },
+            "1263": {
+                "Name": " AAC Cruiserweight M4 (Savage)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 1,
+                "Subcategory": "Cruiserweight",
+                "IconId": "112604"
+            },
+            "1270": {
+                "Name": "Recollection",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 0,
+                "Subcategory": "Main story quest",
+                "IconId": "112595"
+            },
+            "1271": {
+                "Name": "Recollection (Extreme)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0,
+                "Subcategory": "Main story quest",
+                "IconId": "112596"
+            },
+            "1272": {
+                "Name": "Hell's Kier (Unreal)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0,
+                "Subcategory": "Unreal",
+                "IconId": "112594"
             }
         }
     }

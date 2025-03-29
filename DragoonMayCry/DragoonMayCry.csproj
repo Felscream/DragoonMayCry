@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
-    <Import Project="Dalamud.Plugin.Bootstrap.targets"/>
-
+<Project Sdk="Dalamud.NET.Sdk/12.0.2">
     <PropertyGroup Label="Target">
         <PlatformTarget>x64</PlatformTarget>
         <TargetFramework>net9.0</TargetFramework>
@@ -35,18 +33,6 @@
     <ItemGroup>
         <PackageReference Include="NAudio" Version="2.2.1"/>
         <PackageReference Include="NAudio.Vorbis" Version="1.5.0"/>
-        <Reference Include="Lumina">
-            <HintPath>$(DalamudLibPath)Lumina.dll</HintPath>
-            <Private>false</Private>
-        </Reference>
-        <Reference Include="Lumina.Excel">
-            <HintPath>$(DalamudLibPath)Lumina.Excel.dll</HintPath>
-            <Private>false</Private>
-        </Reference>
-        <Reference Include="InteropGenerator.Runtime">
-            <HintPath>$(DalamudLibPath)InteropGenerator.Runtime.dll</HintPath>
-        </Reference>
-        <PackageReference Update="DalamudPackager" Version="12.0.0" />
     </ItemGroup>
 
     <ItemGroup>

@@ -19,7 +19,7 @@ using Vector4 = FFXIVClientStructs.FFXIV.Common.Math.Vector4;
 
 namespace DragoonMayCry.UI
 {
-    public sealed class StyleRankUI : IDisposable
+    public sealed class StyleRankUi : IDisposable
     {
         public static readonly Dictionary<StyleType, StyleUi> StyleUis =
             new()
@@ -84,7 +84,7 @@ namespace DragoonMayCry.UI
                                                            ImGuiWindowFlags.NoNavFocus |
                                                            ImGuiWindowFlags.NoNav |
                                                            ImGuiWindowFlags.NoInputs;
-        public StyleRankUI(
+        public StyleRankUi(
             ScoreProgressBar scoreProgressBar, StyleRankHandler styleRankHandler, ScoreManager scoreManager,
             FinalRankCalculator finalRankCalculator, PlayerActionTracker playerActionTracker,
             HitCounter hitCounter)
@@ -95,8 +95,8 @@ namespace DragoonMayCry.UI
             this.finalRankCalculator = finalRankCalculator;
             this.scoreManager.Scoring += OnScoring!;
             this.finalRankCalculator.FinalRankCalculated += OnFinalRankCalculated!;
-            this.playerState = PlayerState.GetInstance();
-            this.playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
+            playerState = PlayerState.GetInstance();
+            playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             this.playerActionTracker = playerActionTracker;
             this.playerActionTracker.ActionFlyTextCreated += OnActionFlyTextCreated!;
             this.hitCounter = hitCounter;
@@ -364,7 +364,7 @@ namespace DragoonMayCry.UI
         {
             if (currentAnimation.IsRunning)
             {
-                return (float)currentAnimation.ValueClamped;
+                return (float)currentAnimation.ValueUnclamped;
             }
 
             return 1f;
@@ -407,10 +407,10 @@ namespace DragoonMayCry.UI
         {
             var lerpedCoordinatesX = (float)double.Lerp(
                 rankTransitionStartPosition.X, rankPosition.X,
-                currentAnimation.ValueClamped);
+                currentAnimation.ValueUnclamped);
             var lerpedCoordinatesY = (float)double.Lerp(
                 rankTransitionStartPosition.Y, rankPosition.Y,
-                currentAnimation.ValueClamped);
+                currentAnimation.ValueUnclamped);
 
             var transitionPosition =
                 new Vector2(lerpedCoordinatesX, lerpedCoordinatesY);
@@ -475,7 +475,7 @@ namespace DragoonMayCry.UI
                 var normalizedStartingColor =
                     style.GaugeColor / 255;
                 color = Vector3.Lerp(normalizedStartingColor, normalizedColor,
-                                     (float)rankTransition.ValueClamped);
+                                     (float)rankTransition.ValueUnclamped);
             }
 
             return new Vector4(color, 1);

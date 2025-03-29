@@ -23,7 +23,7 @@ namespace DragoonMayCry.UI
         private CharacterRecordWindow CharacterRecordWindow { get; init; }
         private BgmDutyBlacklistConfigurationWindow BgmDutyBlacklistWindow { get; init; }
 
-        private readonly StyleRankUI styleRankUi;
+        private readonly StyleRankUi styleRankUi;
         private readonly FinalRankCalculator finalRankCalculator;
         private readonly IDalamudPluginInterface pluginInterface;
         private readonly PlayerState playerState;
@@ -60,7 +60,7 @@ namespace DragoonMayCry.UI
 
             CharacterRecordWindow = new(recordService, ConfigWindow, HowItWorksWindow);
 
-            styleRankUi = new StyleRankUI(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator,
+            styleRankUi = new StyleRankUi(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator,
                                           playerActionTracker, hitCounter);
 
             KamiCommon.WindowManager.AddWindow(JobConfigurationWindow);
