@@ -6,14 +6,12 @@ using DragoonMayCry.Record;
 using DragoonMayCry.Record.Model;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ImGuiNET;
-using KamiLib.Caching;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using Dalamud.Interface.Textures;
 using Dalamud.Interface.Textures.TextureWraps;
 using DragoonMayCry.Configuration;
 using Lumina.Excel;
@@ -25,7 +23,6 @@ namespace DragoonMayCry.UI
     public class CharacterRecordWindow : Window
     {
         private readonly IClientState clientState;
-        private readonly ITextureProvider textureProvider;
         private readonly RecordService recordService;
         private readonly PlayerState playerState;
         private readonly ConfigWindow configWindow;
@@ -40,9 +37,9 @@ namespace DragoonMayCry.UI
         private const string MissingRankTexPath = "DragoonMayCry.Assets.MissingRank.png";
         private const string DefaultKillTime = "--:--";
         private ExtensionCategory[] categories = [];
-        private List<string> subcategories = new();
-        private List<Difficulty> difficulties = new();
-        private List<DisplayedDuty> displayedDuties = new();
+        private List<string> subcategories = [];
+        private List<Difficulty> difficulties = [];
+        private List<DisplayedDuty> displayedDuties = [];
         private JobId selectedJob;
         private int selectedExtensionId = 0;
         private int selectedCategoryId = 0;
@@ -51,14 +48,12 @@ namespace DragoonMayCry.UI
         private readonly Vector2 dutyTextureSize = new(376, 120);
         private readonly Vector2 rankSize = new(130, 130);
 
-        private readonly ImGuiTableFlags tableFlags =
-            ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.ScrollX | ImGuiTableFlags.BordersInnerH;
+        private const ImGuiTableFlags TableFlags = ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.ScrollX | ImGuiTableFlags.BordersInnerH;
 
         public CharacterRecordWindow(
             RecordService recordService, ConfigWindow configWindow, HowItWorksWindow howItWorksWindow) : base(
             "DragoonMayCry - Character records")
         {
-            textureProvider = Service.TextureProvider;
             contentFinder = Service.DataManager.GetExcelSheet<ContentFinderCondition>();
             this.configWindow = configWindow;
             this.howItWorksWindow = howItWorksWindow;
@@ -168,11 +163,11 @@ namespace DragoonMayCry.UI
             ImGui.SetNextItemWidth(75f);
             if (ImGui.BeginCombo("Job", selectedJob.ToString()))
             {
-                for (var i = 0; i < jobs.Count; i++)
+                foreach (var job in jobs)
                 {
-                    if (ImGui.Selectable(jobs[i].ToString(), jobs[i] == selectedJob))
+                    if (ImGui.Selectable(job.ToString(), job == selectedJob))
                     {
-                        selectedJob = jobs[i];
+                        selectedJob = job;
                     }
                 }
 
@@ -181,7 +176,7 @@ namespace DragoonMayCry.UI
 
             #region filters
 
-            if (ImGui.BeginChild("Filters", new System.Numerics.Vector2(1000f, 50f)))
+            if (ImGui.BeginChild("Filters", new Vector2(1000f, 50f)))
             {
                 ImGui.SetNextItemWidth(150f);
                 if (ImGui.BeginCombo("Extension", extensionValues[selectedExtensionId]))
@@ -262,7 +257,7 @@ namespace DragoonMayCry.UI
 
             if (ImGui.BeginChild("Duties"))
             {
-                if (ImGui.BeginTable("duties-table", 3, tableFlags))
+                if (ImGui.BeginTable("duties-table", 3, TableFlags))
                 {
                     ImGui.TableSetupColumn("Duty", ImGuiTableColumnFlags.WidthFixed, 540f);
                     ImGui.TableSetupColumn(
@@ -397,6 +392,7 @@ namespace DragoonMayCry.UI
                                                                              difficulties[selectedDifficultyId])
                                                              .Select(entry => new DisplayedDuty(entry.Key, entry.Value))
                                                              .ToList();
+            displayedDuties.Sort((dutyA, dutyB) => dutyB.DutyId - dutyA.DutyId);
         }
 
         private static string GetDifficultyLabel(Difficulty diff)
@@ -420,7 +416,14 @@ namespace DragoonMayCry.UI
         {
             var content = GetContent(displayed);
             var iconToDisplay = displayed.Duty.IconId;
-            if (content == null || !UIState.IsInstanceContentUnlocked(content.Value.Content.RowId))
+            
+            if (content == null || content.Value.RowId == 0 || content.Value.Content.RowId == 0)
+            {
+                iconToDisplay = characterRecords.Values.Any(record => record.Record.ContainsKey(displayed.DutyId)
+                                                                      || record.EmdRecord.ContainsKey(displayed.DutyId))
+                                    ? displayed.Duty.IconId : HiddenDutyIconId;
+            } 
+            else if (!UIState.IsInstanceContentUnlocked(content.Value.Content.RowId))
             {
                 iconToDisplay = HiddenDutyIconId;
             }
@@ -447,12 +450,11 @@ namespace DragoonMayCry.UI
 
         private static string GetKillTime(ushort dutyId, Dictionary<ushort, DutyRecord> difficultyRecord)
         {
-            if (!difficultyRecord.ContainsKey(dutyId))
+            if (!difficultyRecord.TryGetValue(dutyId, out var dutyResult))
             {
                 return DefaultKillTime;
             }
 
-            var dutyResult = difficultyRecord[dutyId];
             var minutes = $"{dutyResult.KillTime.Minutes}";
             minutes = minutes.PadLeft(2, '0');
             var seconds = $"{dutyResult.KillTime.Seconds}";
@@ -464,10 +466,9 @@ namespace DragoonMayCry.UI
         private void DrawRank(ushort dutyId, Dictionary<ushort, DutyRecord> difficultyRecord)
         {
             var rankIconPath = MissingRankTexPath;
-
             if (difficultyRecord.TryGetValue(dutyId, out var dutyRecord))
             {
-                if (StyleRankUI.StyleUis.TryGetValue(dutyRecord.Result, out var style))
+                if (StyleRankUi.StyleUis.TryGetValue(dutyRecord.Result, out var style))
                 {
                     rankIconPath = style.IconPath;
                 }
@@ -511,7 +512,13 @@ namespace DragoonMayCry.UI
         private string GetDutyName(DisplayedDuty displayed)
         {
             var content = GetContent(displayed);
-            if (content == null || !UIState.IsInstanceContentUnlocked(content.Value.Content.RowId))
+            if (content == null || content.Value.RowId == 0 || content.Value.Content.RowId == 0)
+            {
+                return characterRecords.Values.Any(record => record.Record.ContainsKey(displayed.DutyId)
+                                                             || record.EmdRecord.ContainsKey(displayed.DutyId)) ? displayed.Duty.Name : "???";
+            }
+            
+            if (!UIState.IsInstanceContentUnlocked(content.Value.Content.RowId))
             {
                 return "???";
             }

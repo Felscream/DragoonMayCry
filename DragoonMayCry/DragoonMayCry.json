@@ -2,7 +2,7 @@
     "Author": "Felscream",
     "Name": "DragoonMayCry",
     "Punchline": "A plugin that ranks your performance based on your fundamentals in combat",
-    "Description": "A plugin that tries to add flavour to combat. You score by dealing damage, and lose points if you are not greeding correctly. Now with dynamic BGM.",
+    "Description": "A plugin that tries to add flavour to combat. You score by dealing damage, and lose points if you are not greeding correctly. Now with dynamic BGM. \n#MakeBLMGreatAgain",
     "ApplicableVersion": "any",
     "LoadPriority": 0,
     "InternalName": "DragoonMayCry",
@@ -16,5 +16,5 @@
         "cry",
         "greed"
     ],
-    "DalamudApiLevel": 11
+    "DalamudApiLevel": 12
 }

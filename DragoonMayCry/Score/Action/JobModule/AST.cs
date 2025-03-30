@@ -32,7 +32,8 @@ namespace DragoonMayCry.Score.Action.JobModule
             {
                 return dotRefreshBonus * scoreManager.CurrentScoreRank.StyleScoring.Threshold;
             }
-            else if (playCardIds.Contains(actionId))
+            
+            if (playCardIds.Contains(actionId))
             {
                 return CardUseBonus * scoreManager.CurrentScoreRank.StyleScoring.Threshold;
             }

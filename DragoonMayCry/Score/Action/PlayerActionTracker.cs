@@ -8,7 +8,6 @@ using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using ImGuiNET;
-using KamiLib.Caching;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,21 +26,21 @@ namespace DragoonMayCry.Score.Action
             public readonly bool IsCasting = isCasting;
         }
 
-        public class LimitBreak(float gracePeriod, bool isTankLb, uint id)
+        public class LimitBreak(float gracePeriod, uint id)
         {
             public float GracePeriod { get; set; } = gracePeriod;
-            public bool IsTankLb { get; set; } = isTankLb;
             public uint ActionId { get; set; } = id;
             public uint TargetHit { get; set; } = 0;
         }
 
-        private readonly HashSet<FlyTextKind> validTextKind = new()
-        {
+        private readonly HashSet<FlyTextKind> validTextKind =
+        [
             FlyTextKind.Damage,
             FlyTextKind.DamageCrit,
             FlyTextKind.DamageDh,
             FlyTextKind.DamageCritDh,
-        };
+
+        ];
 
         public EventHandler? GcdDropped;
         public EventHandler<float>? DamageActionUsed;
@@ -132,7 +131,7 @@ namespace DragoonMayCry.Score.Action
             {
                 onActionUsedHook =
                     Service.Hook.HookFromSignature<ActionUsedDelegate>(
-                        "40 ?? 56 57 41 ?? 41 ?? 41 ?? 48 ?? ?? ?? ?? ?? ?? ?? 48", OnActionUsed);
+                        "40 55 53 56 41 54 41 55 41 56 41 57 48 8D AC 24 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 70 ", OnActionUsed);
 
 
                 onActorControlHook =
@@ -196,7 +195,7 @@ namespace DragoonMayCry.Score.Action
             {
                 return;
             }
-
+            
             if (limitBreakCast != null && limitBreakCast.ActionId == (uint)actionId)
             {
                 limitBreakCast.TargetHit++;
@@ -223,9 +222,9 @@ namespace DragoonMayCry.Score.Action
                     if (bonusPoints > 0)
                     {
                         DamageActionUsed?.Invoke(this, bonusPoints);
+                        ResetLimitBreakUse();
                     }
                 }
-
                 return;
             }
 
@@ -258,14 +257,12 @@ namespace DragoonMayCry.Score.Action
             {
                 return;
             }
-
             if (!playerState.CanTargetEnemy())
             {
                 return;
             }
 
             var actionId = Marshal.ReadInt32(effectHeader, 0x8);
-
             if (spellCastId == actionId)
             {
                 spellCastStopwatch.Reset();
@@ -273,7 +270,6 @@ namespace DragoonMayCry.Score.Action
             }
 
             var type = TypeForActionId((uint)actionId);
-
             if (type == PlayerActionType.LimitBreak)
             {
                 StartLimitBreakUse((uint)actionId);
@@ -282,7 +278,9 @@ namespace DragoonMayCry.Score.Action
             var bonusPoints = jobActionModule?.OnAction((uint)actionId);
             if (bonusPoints > 0)
             {
+                
                 DamageActionUsed?.Invoke(this, bonusPoints.Value);
+                ResetLimitBreakUse();
             }
         }
 
@@ -388,6 +386,7 @@ namespace DragoonMayCry.Score.Action
             }
             else if (playerState.CanTargetEnemy())
             {
+                ResetLimitBreakUse();
                 spellCastId = actionId;
                 spellCastStopwatch.Restart();
             }
@@ -492,10 +491,9 @@ namespace DragoonMayCry.Score.Action
 
             var castTime = GetCastTime(actionId);
 
-            // the +3 is just to give enough time to register the gcd clipping just after
-            var gracePeriod = isTankLb ? tankLimitBreakDelays[actionId] : castTime + 3f;
-
-            limitBreakCast = new LimitBreak(gracePeriod, isTankLb, actionId);
+            // the +8 is just to give leeway after the LB effect
+            var gracePeriod = isTankLb ? tankLimitBreakDelays[actionId] : castTime + 8f;
+            limitBreakCast = new LimitBreak(gracePeriod, actionId);
             limitBreakStopwatch.Restart();
 
             UsingLimitBreak?.Invoke(this, new LimitBreakEvent(isTankLb, true));
@@ -507,10 +505,10 @@ namespace DragoonMayCry.Score.Action
             {
                 return animationLock > 0.2f;
             }
-
+            
             if (Plugin.IsEmdModeEnabled())
             {
-                return animationLock != 0.1f;
+                return animationLock > 0.1f;
             }
 
             return animationLock > Plugin.Configuration.JobConfiguration[currentJob].GcdDropThreshold.Value;
@@ -519,18 +517,20 @@ namespace DragoonMayCry.Score.Action
         private void DetectClipping()
         {
             var animationLock = actionManagerL->animationLock;
-            if (lastDetectedClip == actionManagerL->currentSequence
-                || actionManagerL->isGCDRecastActive
-                || animationLock <= 0)
+            
+            
+            if (lastDetectedClip == actionManagerL->currentSequence &&(
+                 actionManagerL->isGCDRecastActive
+                || animationLock <= 0.1))
             {
                 return;
             }
+            
 
-            if (limitBreakCast == null && animationLock != 0.1f)
+            if (limitBreakCast == null)
             {
                 combatWastedGcd += animationLock;
             }
-
             if (IsGcdClipped(animationLock))
             {
                 if (limitBreakCast == null)
@@ -543,10 +543,6 @@ namespace DragoonMayCry.Score.Action
                     {
                         GcdClip?.Invoke(this, animationLock);
                     }
-                }
-                else if (!limitBreakCast.IsTankLb)
-                {
-                    limitBreakCast.GracePeriod += animationLock - 2.9f;
                 }
             }
 
@@ -641,7 +637,7 @@ namespace DragoonMayCry.Score.Action
             ref float yOffset,
             ref bool handled)
         {
-            if (!Plugin.CanRunDmc() || !Plugin.IsMultiHitLoaded() || color == 4278190218)
+            if (!Plugin.CanRunDmc() || color == 4278190218)
             {
                 return;
             }
@@ -702,6 +698,7 @@ namespace DragoonMayCry.Score.Action
                 }
 
                 DamageActionUsed?.Invoke(this, damage);
+                ResetLimitBreakUse();
             }
         }
 
