@@ -3,7 +3,7 @@ using DragoonMayCry.Score.Model;
 using DragoonMayCry.Util;
 using System.Collections.Generic;
 
-namespace DragoonMayCry.Score.Table
+namespace DragoonMayCry.Score.ScoringTable
 {
     internal class ScoringTableFactory
     {
@@ -42,12 +42,14 @@ namespace DragoonMayCry.Score.Table
             {
                 return healerScoringTable.GetScoringTable(ilvl);
             }
-
-            //BLM and PIC damage output comparable to melee
+            
             //MCH raw damage output comparable to casters
-            if ((JobHelper.IsCaster(job) || job == JobId.MCH) && job != JobId.BLM && job != JobId.PCT)
+            if (JobHelper.IsCaster(job) || job == JobId.MCH)
             {
-                return casterScoringTable.GetScoringTable(ilvl);
+                //BLM damage output comparable to melee
+                return job == JobId.BLM ?  
+                           meleeScoringTable.GetScoringTable(ilvl) : 
+                           casterScoringTable.GetScoringTable(ilvl);
             }
 
             if (JobHelper.IsPhysRange(job))

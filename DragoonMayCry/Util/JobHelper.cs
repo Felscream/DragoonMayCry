@@ -33,7 +33,7 @@ namespace DragoonMayCry.Util
 
         private static readonly ISet<JobId> Casters = new HashSet<JobId>
         {
-            JobId.RDM, JobId.SMN
+            JobId.RDM, JobId.SMN, JobId.BLM, JobId.PCT
         };
 
         public static bool IsTank(JobId job)

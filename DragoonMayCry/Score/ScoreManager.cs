@@ -3,13 +3,13 @@ using DragoonMayCry.Data;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Rank;
-using DragoonMayCry.Score.Table;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using DragoonMayCry.Configuration;
+using DragoonMayCry.Score.ScoringTable;
 using static DragoonMayCry.Score.Rank.StyleRankHandler;
 
 namespace DragoonMayCry.Score

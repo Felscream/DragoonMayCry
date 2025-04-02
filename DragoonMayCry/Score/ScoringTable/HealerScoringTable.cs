@@ -2,7 +2,7 @@ using DragoonMayCry.Score.Model;
 using System;
 using System.Collections.Generic;
 
-namespace DragoonMayCry.Score.Table
+namespace DragoonMayCry.Score.ScoringTable
 {
     class HealerScoringTable : ScoringTable
     {
@@ -53,7 +53,7 @@ namespace DragoonMayCry.Score.Table
 
         protected override float GetDpsAtIlvl(int ilvl)
         {
-            return (float)(39.1f * Math.Exp(0.0078f * ilvl));
+            return (float)(33.3f * Math.Exp(0.00807f * ilvl));
         }
     }
 }

@@ -2,7 +2,7 @@ using DragoonMayCry.Score.Model;
 using System;
 using System.Collections.Generic;
 
-namespace DragoonMayCry.Score.Table
+namespace DragoonMayCry.Score.ScoringTable
 {
     public abstract class ScoringTable
     {
@@ -15,7 +15,6 @@ namespace DragoonMayCry.Score.Table
         {
             var scoringTable = new Dictionary<StyleType, StyleScoring>();
             var expectedDpsAtILvl = GetDpsAtIlvl(ilvl);
-
             var coefficientTable = Plugin.IsEmdModeEnabled() ? EmdScoringCoefficient : ScoringCoefficient;
 
 #if DEBUG
