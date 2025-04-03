@@ -36,11 +36,11 @@ namespace DragoonMayCry
         {
             try
             {
-                Task.Run(() => { FetchAudioFiles(); });
+                Task.Run(FetchAudioFiles);
             }
             catch (Exception ex)
             {
-                Service.Log.Error(ex, "An excepion occured while fetching audio files");
+                Service.Log.Error(ex, "An exception occured while fetching audio files");
             }
         }
 
@@ -53,13 +53,7 @@ namespace DragoonMayCry
 
             var configDir = Plugin.PluginInterface.GetPluginConfigDirectory(); ;
             var localAssetDir = GetAssetsDirectory();
-            var areFilesValid = false;
-            if (Directory.Exists(localAssetDir))
-            {
-                areFilesValid = AreLocalFilesValid() && TargetAssetVersion == CurrentDownloadedAssetVersion();
-            }
-
-            if (areFilesValid)
+            if (Directory.Exists(localAssetDir) && AreLocalFilesValid())
             {
                 Status = AssetsStatus.Done;
                 SendAssetsReadyEvent();
@@ -76,7 +70,7 @@ namespace DragoonMayCry
 
             var assetsUri = new Uri($"https://github.com/Felscream/DragoonMayCry/releases/download/v{TargetAssetVersion}/assets.zip");
             var downloadLocation = $"{configDir}/assets-{TargetAssetVersion}.zip";
-            var requiredSpace = RequiredDiskSpaceExtracted + RequiredDiskSpaceCompressed;
+            const long requiredSpace = RequiredDiskSpaceExtracted + RequiredDiskSpaceCompressed;
             var freeDiskSpace = new DriveInfo(configDir).AvailableFreeSpace;
 
             if (freeDiskSpace < requiredSpace)
@@ -126,39 +120,7 @@ namespace DragoonMayCry
 
         private static bool AreLocalFilesValid()
         {
-            var assetDirectory = GetAssetsDirectory();
-            var localAssetsSha1 = GetAssetsSha1(assetDirectory);
-#if DEBUG
-            if (localAssetsSha1 != TargetSha1)
-            {
-                Service.Log.Warning($"Update assets sha1 before commiting, current sha1 {localAssetsSha1} vs target {TargetSha1}");
-            }
-#endif
-            return localAssetsSha1 == TargetSha1;
-        }
-
-        private static String GetAssetsSha1(string folder)
-        {
-            using (var sha1 = SHA1.Create())
-            {
-                var files = Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories)
-                    .OrderBy(f => f)
-                    .ToList();
-
-                using (var ms = new MemoryStream())
-                {
-                    foreach (var file in files)
-                    {
-                        var content = File.ReadAllBytes(file);
-                        var hash = sha1.ComputeHash(content);
-
-                        ms.Write(hash, 0, hash.Length);
-                    }
-
-                    var folderHash = sha1.ComputeHash(ms.ToArray());
-                    return BitConverter.ToString(folderHash).Replace("-", "").ToLowerInvariant();
-                }
-            }
+            return TargetAssetVersion == CurrentDownloadedAssetVersion();
         }
 
         public static string GetAssetsDirectory()
@@ -189,7 +151,7 @@ namespace DragoonMayCry
             Notification notification = new()
             {
                 Content = message,
-                Type = type
+                Type = type,
             };
 
             Service.NotificationManager.AddNotification(notification);
@@ -209,7 +171,7 @@ namespace DragoonMayCry
         }
     }
 
-    class AssetsManifest
+    internal class AssetsManifest
     {
         [JsonProperty("version")]
         public string? Version { get; set; }
