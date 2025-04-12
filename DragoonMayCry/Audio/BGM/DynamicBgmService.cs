@@ -33,7 +33,7 @@ namespace DragoonMayCry.Audio.BGM
         private readonly Dictionary<BgmState, IFsmState> devilTriggerStates;
         private readonly Dictionary<BgmState, IFsmState> crimsonCloudStates;
         private readonly Dictionary<BgmState, IFsmState> subhumanStates;
-        private readonly Dictionary<Bgm, Dictionary<BgmState, IFsmState>> bgmStates = new();
+        private readonly Dictionary<Bgm, Dictionary<BgmState, IFsmState>> bgmFsmStates = new();
         private readonly DynamicBgmFsm bgmFsm;
         private readonly PlayerState playerState;
         private readonly AudioService audioService;
@@ -97,10 +97,10 @@ namespace DragoonMayCry.Audio.BGM
                 { BgmState.CombatPeak, subPeak },
             };
 
-            bgmStates.Add(Bgm.BuryTheLight, buryTheLightStates);
-            bgmStates.Add(Bgm.DevilTrigger, devilTriggerStates);
-            bgmStates.Add(Bgm.CrimsonCloud, crimsonCloudStates);
-            bgmStates.Add(Bgm.Subhuman, subhumanStates);
+            bgmFsmStates.Add(Bgm.BuryTheLight, buryTheLightStates);
+            bgmFsmStates.Add(Bgm.DevilTrigger, devilTriggerStates);
+            bgmFsmStates.Add(Bgm.CrimsonCloud, crimsonCloudStates);
+            bgmFsmStates.Add(Bgm.Subhuman, subhumanStates);
         }
 
         public DynamicBgmFsm GetFsm()
@@ -221,7 +221,7 @@ namespace DragoonMayCry.Audio.BGM
 
         private void OnAssetsAvailable(object? sender, bool loaded)
         {
-            if (!loaded || !bgmStates.ContainsKey(currentBgm))
+            if (!loaded || !bgmFsmStates.ContainsKey(currentBgm))
             {
                 return;
             }
@@ -256,12 +256,12 @@ namespace DragoonMayCry.Audio.BGM
 
             if (configuration == JobConfiguration.BgmConfiguration.Randomize)
             {
-                bgmFsm.loadNewBgm = LoadRandomBgm;
+                bgmFsm.loadNewBgm = LoadNextBgmInQueue;
                 Task.Run(() =>
                 {
                     var loadedBgm = CacheAllBgm();
                     randomBgmQueue = GenerateRandomBgmQueue(loadedBgm);
-                    LoadRandomBgm();
+                    LoadNextBgmInQueue();
                 });
 
                 return;
@@ -269,7 +269,7 @@ namespace DragoonMayCry.Audio.BGM
 
             if (bgmFsm.loadNewBgm != null)
             {
-                bgmFsm.loadNewBgm -= LoadRandomBgm;
+                bgmFsm.loadNewBgm -= LoadNextBgmInQueue;
             }
 
             var selectedBgm = configuration switch
@@ -297,17 +297,34 @@ namespace DragoonMayCry.Audio.BGM
             return randomQueue;
         }
 
-        private void LoadRandomBgm()
+        public string PlayNextBgmInQueue()
+        {
+            var currentJob = playerState.GetCurrentJob();
+            if (!CanPlayDynamicBgm(playerState.IsInsideInstance, currentJob) || playerState.IsInCombat)
+            {
+                return "";
+            }
+
+            if (!bgmFsm.IsActive || Plugin.Configuration!.JobConfiguration[currentJob].Bgm.Value != JobConfiguration.BgmConfiguration.Randomize)
+            {
+                return "";
+            }
+
+            LoadNextBgmInQueue();
+            return GetBgmLabel(currentBgm);
+        }
+
+        private void LoadNextBgmInQueue()
         {
             bgmFsm.ResetToIntro();
-            if (randomBgmQueue.Count == 0)
+            if (randomBgmQueue.Count == 0 || !AssetsManager.IsReady)
             {
                 return;
             }
 
             var selectedBgm = randomBgmQueue.Dequeue();
             randomBgmQueue.Enqueue(selectedBgm);
-            if (!bgmStates.ContainsKey(selectedBgm) || !AssetsManager.IsReady)
+            if (!bgmFsmStates.ContainsKey(selectedBgm))
             {
                 return;
             }
@@ -330,7 +347,7 @@ namespace DragoonMayCry.Audio.BGM
         private void LoadBgm(Bgm bgm)
         {
             audioService.StopBgm();
-            if (!bgmStates.ContainsKey(bgm) || !AssetsManager.IsReady)
+            if (!bgmFsmStates.ContainsKey(bgm) || !AssetsManager.IsReady)
             {
                 return;
             }
@@ -346,7 +363,7 @@ namespace DragoonMayCry.Audio.BGM
         private void PlayDynamicBgm()
         {
             soundFilesLoaded = audioService.LoadRegisteredBgm(currentBgm);
-            bgmFsm.LoadBgmStates(bgmStates[currentBgm]);
+            bgmFsm.LoadBgmStates(bgmFsmStates[currentBgm]);
 
             if (soundFilesLoaded)
             {
@@ -360,12 +377,7 @@ namespace DragoonMayCry.Audio.BGM
 
         private void CacheBgm(Bgm bgm)
         {
-            if (!bgmStates.ContainsKey(bgm))
-            {
-                return;
-            }
-            var currentBgmStates = bgmStates[bgm];
-            if (currentBgmStates == null)
+            if (!bgmFsmStates.TryGetValue(bgm, out var currentBgmStates))
             {
                 return;
             }
@@ -377,20 +389,20 @@ namespace DragoonMayCry.Audio.BGM
         private List<Bgm> CacheAllBgm()
         {
             var bgmList = new List<Bgm>();
-            foreach (var entry in bgmStates)
+            foreach (var states in bgmFsmStates)
             {
-                var bgmParts = entry.Value.SelectMany(entry => entry.Value.GetBgmPaths()).ToDictionary();
+                var bgmParts = states.Value.SelectMany(entry => entry.Value.GetBgmPaths()).ToDictionary();
                 try
                 {
-                    var registered = audioService.RegisterBgmParts(entry.Key, bgmParts);
+                    var registered = audioService.RegisterBgmParts(states.Key, bgmParts);
                     if (registered)
                     {
-                        bgmList.Add(entry.Key);
+                        bgmList.Add(states.Key);
                     }
                 }
                 catch (Exception e)
                 {
-                    Service.Log.Error(e, $"Error while loading [{entry.Key}] with other BGMs");
+                    Service.Log.Error(e, $"Error while loading [{states.Key}] with other BGMs");
                 }
             }
             return bgmList;
@@ -475,6 +487,18 @@ namespace DragoonMayCry.Audio.BGM
                 JobConfiguration.BgmConfiguration.CrimsonCloud => "Crimson Cloud",
                 JobConfiguration.BgmConfiguration.Subhuman => "Subhuman",
                 JobConfiguration.BgmConfiguration.Randomize => "Randomize",
+                _ => "Unknown"
+            };
+        }
+        
+        private static string GetBgmLabel(Bgm bgm)
+        {
+            return bgm switch
+            {
+                Bgm.BuryTheLight => "Bury the Light",
+                Bgm.DevilTrigger => "Devil Trigger",
+                Bgm.CrimsonCloud => "Crimson Cloud",
+                Bgm.Subhuman => "Subhuman",
                 _ => "Unknown"
             };
         }

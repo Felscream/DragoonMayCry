@@ -42,7 +42,7 @@ public unsafe class Plugin : IDalamudPlugin
     private static StyleRankHandler? StyleRankHandler;
     private static FinalRankCalculator? FinalRankCalculator;
     private static AudioService? AudioService;
-    private static DynamicBgmService? BgmService;
+    private static DynamicBgmService? DynamicBgmService;
     private static RecordService? RecordService;
     public static StyleAnnouncerService? StyleAnnouncerService;
 
@@ -64,7 +64,7 @@ public unsafe class Plugin : IDalamudPlugin
         PlayerActionTracker = new();
         StyleRankHandler = new(PlayerActionTracker);
         StyleAnnouncerService = new(StyleRankHandler, PlayerActionTracker);
-        BgmService = new DynamicBgmService(StyleRankHandler);
+        DynamicBgmService = new DynamicBgmService(StyleRankHandler);
         ScoreManager = new(StyleRankHandler, PlayerActionTracker);
 
         PlayerActionTracker.SetJobModuleFactory(new(ScoreManager));
@@ -77,7 +77,7 @@ public unsafe class Plugin : IDalamudPlugin
 
         hitCounter = new HitCounter(PlayerActionTracker);
         pluginUi = new(ScoreProgressBar, StyleRankHandler, ScoreManager, FinalRankCalculator, StyleAnnouncerService,
-                       BgmService, PlayerActionTracker, RecordService, hitCounter);
+                       DynamicBgmService, PlayerActionTracker, RecordService, hitCounter);
 
 
         ScoreProgressBar.DemotionApplied += StyleRankHandler.OnDemotion;
@@ -100,9 +100,13 @@ public unsafe class Plugin : IDalamudPlugin
         
         Service.CommandManager.AddHandler("/dmc job", new CommandInfo(OnCommand)
         {
-            HelpMessage = "toggles DmC on/off for the current job"
+            HelpMessage = "toggles DmC on/off for the current job",
         });
-
+        
+        Service.CommandManager.AddHandler("/dmc next", new CommandInfo(OnCommand)
+        {
+            HelpMessage = "loads the next BGM in the randomized queue outside of combat",
+        });
         AssetsManager.VerifyAndUpdateAssets();
     }
 
@@ -140,7 +144,7 @@ public unsafe class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
-        BgmService?.Dispose();
+        DynamicBgmService?.Dispose();
         AudioService?.Dispose();
         KamiCommon.Dispose();
         ScoreProgressBar?.Dispose();
@@ -153,28 +157,38 @@ public unsafe class Plugin : IDalamudPlugin
 
     private void OnCommand(string command, string args)
     {
-        if (args.Contains("conf"))
+        if (args == "conf")
         {
             PluginUI.ToggleConfigUi();
         } 
-        else if (args.Contains("bgm") && Configuration != null && BgmService != null)
+        else if (args == "bgm" && Configuration != null && DynamicBgmService != null)
         {
             Configuration.EnableDynamicBgm.Value = !Configuration.EnableDynamicBgm.Value;
             KamiCommon.SaveConfiguration();
-            BgmService.ToggleDynamicBgm(this, Configuration.EnableDynamicBgm);
+            DynamicBgmService.ToggleDynamicBgm(this, Configuration.EnableDynamicBgm);
             String bgmState = Configuration.EnableDynamicBgm ? "on" : "off";
             Service.ChatGui.Print($"[DragoonMayCry] Dynamic BGM turned {bgmState}");
         } 
-        else if(args.Contains("job") && Configuration?.JobConfiguration != null && BgmService != null)
+        else if(args == "job" && Configuration?.JobConfiguration != null && DynamicBgmService != null)
         {
             if (Configuration.JobConfiguration.TryGetValue(CurrentJob, out var jobConfig))
             {
                 jobConfig.EnableDmc.Value = !jobConfig.EnableDmc;
                 KamiCommon.SaveConfiguration();
-                BgmService.OnJobEnableChange(this, CurrentJob);
+                DynamicBgmService.OnJobEnableChange(this, CurrentJob);
                 String pluginState = jobConfig.EnableDmc ? "on" : "off";
                 Service.ChatGui.Print($"[DragoonMayCry] DmC turned {pluginState} for {CurrentJob}");
             }
+        } 
+        else if (args == "next" && Configuration != null && DynamicBgmService != null)
+        {
+            var bgm = DynamicBgmService.PlayNextBgmInQueue();
+            var message = "[DragoonMayCry] Cannot play next track in current state.";
+            if (!bgm.IsNullOrEmpty())
+            {
+                message = $"[DragoonMayCry] Loading {bgm}";
+            }
+            Service.ChatGui.Print(message);
         }
         else if(args.IsNullOrEmpty())
         {
@@ -252,37 +266,37 @@ public unsafe class Plugin : IDalamudPlugin
     [Conditional("DEBUG")]
     public static void StartBgm()
     {
-        BgmService?.GetFsm().Start();
+        DynamicBgmService?.GetFsm().Start();
     }
 
     [Conditional("DEBUG")]
     public static void StopBgm()
     {
-        BgmService?.GetFsm().ResetToIntro();
+        DynamicBgmService?.GetFsm().ResetToIntro();
         AudioService.Instance.StopBgm();
     }
 
     [Conditional("DEBUG")]
     public static void SimulateBgmRankChanges(StyleType previous, StyleType newStyle)
     {
-        BgmService?.GetFsm().OnRankChange(null, new StyleRankHandler.RankChangeData(previous, newStyle, false));
+        DynamicBgmService?.GetFsm().OnRankChange(null, new StyleRankHandler.RankChangeData(previous, newStyle, false));
     }
 
     [Conditional("DEBUG")]
     public static void BgmTransitionNext()
     {
-        BgmService?.GetFsm().Promote();
+        DynamicBgmService?.GetFsm().Promote();
     }
 
     [Conditional("DEBUG")]
     public static void BgmEndCombat()
     {
-        BgmService?.GetFsm().LeaveCombat();
+        DynamicBgmService?.GetFsm().LeaveCombat();
     }
 
     [Conditional("DEBUG")]
     public static void BgmDemotion()
     {
-        BgmService?.GetFsm().Demote();
+        DynamicBgmService?.GetFsm().Demote();
     }
 }
