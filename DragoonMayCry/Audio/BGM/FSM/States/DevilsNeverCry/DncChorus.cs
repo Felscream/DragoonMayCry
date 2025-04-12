@@ -28,11 +28,11 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilsNeverCry
 
         private readonly Dictionary<BgmId, int> possibleTransitionTimesToNewState = new()
         {
-            { BgmId.ChorusIntro1, 23700 },
-            { BgmId.Chorus, 13500 },
-            { BgmId.Chorus2, 25630 },
-            { BgmId.Chorus3, 26800 },
-            { BgmId.ChorusTransition1, 3750 },
+            { BgmId.ChorusIntro1, 24500 },
+            { BgmId.Chorus, 13800 },
+            { BgmId.Chorus2, 25800 },
+            { BgmId.Chorus3, 26200 },
+            { BgmId.ChorusTransition1, 3000 },
         };
 
         private readonly Dictionary<BgmId, string> bgmPaths = new()
@@ -41,8 +41,8 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilsNeverCry
             { BgmId.Chorus, DynamicBgmService.GetPathToAudio("DevilsNeverCry\\Chorus\\22.ogg") },
             { BgmId.Chorus2, DynamicBgmService.GetPathToAudio("DevilsNeverCry\\Chorus\\16.ogg") },
             { BgmId.Chorus3, DynamicBgmService.GetPathToAudio("DevilsNeverCry\\Chorus\\26.ogg") },
-            { BgmId.Demotion, DynamicBgmService.GetPathToAudio("DevilsNeverCry\\Chorus\\demote.ogg") },
-            { BgmId.ChorusTransition1, DynamicBgmService.GetPathToAudio("DevilsNeverCry\\Chorus\\chorus_loop.ogg") },
+            { BgmId.Demotion, DynamicBgmService.GetPathToAudio("DevilsNeverCry\\Chorus\\05.ogg") },
+            { BgmId.ChorusTransition1, DynamicBgmService.GetPathToAudio("DevilsNeverCry\\Chorus\\01.ogg") },
         };
 
         private readonly AudioService audioService;

@@ -26,11 +26,10 @@ namespace DragoonMayCry
         public static bool IsReady { get; private set; }
         public static AssetsStatus Status { get; private set; } = AssetsStatus.Uninitialized;
 
-        private const string TargetAssetVersion = "0.13.0.0";
-        private const string TargetSha1 = "8f70168688b988efef9fbbad7454989cf67042dd";
+        private const string TargetAssetVersion = "1.3.0.0";
 
-        private const long RequiredDiskSpaceCompressed = 52_596_736;
-        private const long RequiredDiskSpaceExtracted = 53_350_400;
+        private const long RequiredDiskSpaceCompressed = 56_683_188;
+        private const long RequiredDiskSpaceExtracted = 57_383_642;
 
         public static void VerifyAndUpdateAssets()
         {

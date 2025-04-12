@@ -249,14 +249,14 @@ namespace DragoonMayCry.Audio.BGM
             PrepareBgm(currentJob);
         }
 
-        private void PrepareBgm(JobId job)
+        private void PrepareBgm(JobId jobId)
         {
             bgmFsm.Disable();
-            if (!Plugin.Configuration!.JobConfiguration.ContainsKey(job))
+            if (!Plugin.Configuration!.JobConfiguration.TryGetValue(jobId, out var jobConfiguration))
             {
                 return;
             }
-            var configuration = Plugin.Configuration!.JobConfiguration[job].Bgm.Value;
+            var configuration = jobConfiguration.Bgm.Value;
 
             if (configuration == JobConfiguration.BgmConfiguration.Off)
             {
@@ -514,6 +514,7 @@ namespace DragoonMayCry.Audio.BGM
                 Bgm.BuryTheLight => "Bury the Light",
                 Bgm.DevilTrigger => "Devil Trigger",
                 Bgm.CrimsonCloud => "Crimson Cloud",
+                Bgm.DevilsNeverCry => "Devils Never Cry",
                 Bgm.Subhuman => "Subhuman",
                 _ => "Unknown"
             };
