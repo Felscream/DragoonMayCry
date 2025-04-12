@@ -44,16 +44,17 @@ namespace DragoonMayCry.UI
                 {
                     if (bgm == JobConfiguration.BgmConfiguration.Off)
                     {
-                        return 0;
+                        return -1;
                     }
 
                     if (bgm == JobConfiguration.BgmConfiguration.Randomize)
                     {
-                        return 6;
+                        return int.MaxValue;
                     }
 
-                    return (int)bgm;
+                    return 0;
                 })
+                .ThenBy(bgm => Enum.GetName(typeof(JobConfiguration.BgmConfiguration), bgm)),
             ];
         }
 
@@ -173,6 +174,9 @@ namespace DragoonMayCry.UI
                    .BeginDisabled(PlayerState.GetInstance().IsInsideInstance || PlayerState.GetInstance().IsInCombat)
                    .AddConfigCombo(bgms, configuration.Bgm, DynamicBgmService.GetBgmLabel, $"Dynamic BGM##bgm-{job}",
                                    200f)
+                   .StartConditional(configuration.Bgm == JobConfiguration.BgmConfiguration.DevilsNeverCry)
+                   .AddString("Edit by InfamousDork04 on Nexus Mods")
+                   .EndConditional()
                    .StartConditional(configuration.Bgm == JobConfiguration.BgmConfiguration.Randomize)
                    .SameLine()
                    .AddHelpMarker("Randomized at the end of combat")

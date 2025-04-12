@@ -3,6 +3,7 @@ using DragoonMayCry.Audio.BGM.FSM;
 using DragoonMayCry.Audio.BGM.FSM.States;
 using DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight;
 using DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud;
+using DragoonMayCry.Audio.BGM.FSM.States.DevilsNeverCry;
 using DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger;
 using DragoonMayCry.Audio.BGM.FSM.States.Subhuman;
 using DragoonMayCry.Configuration;
@@ -25,6 +26,7 @@ namespace DragoonMayCry.Audio.BGM
             DevilTrigger,
             CrimsonCloud,
             Subhuman,
+            DevilsNeverCry,
             None
         }
 
@@ -33,6 +35,7 @@ namespace DragoonMayCry.Audio.BGM
         private readonly Dictionary<BgmState, IFsmState> devilTriggerStates;
         private readonly Dictionary<BgmState, IFsmState> crimsonCloudStates;
         private readonly Dictionary<BgmState, IFsmState> subhumanStates;
+        private readonly Dictionary<BgmState, IFsmState> devilsNeverCryStates;
         private readonly Dictionary<Bgm, Dictionary<BgmState, IFsmState>> bgmFsmStates = new();
         private readonly DynamicBgmFsm bgmFsm;
         private readonly PlayerState playerState;
@@ -96,11 +99,22 @@ namespace DragoonMayCry.Audio.BGM
                 { BgmState.CombatLoop, subCombat },
                 { BgmState.CombatPeak, subPeak },
             };
+            
+            IFsmState dncIntro = new DncIntro(audioService);
+            IFsmState dncCombat = new DncVerse(audioService);
+            IFsmState dncPeak = new DncChorus(audioService);
+            devilsNeverCryStates = new Dictionary<BgmState, IFsmState>
+            {
+                { BgmState.Intro, dncIntro },
+                { BgmState.CombatLoop, dncCombat },
+                { BgmState.CombatPeak, dncPeak },
+            };
 
             bgmFsmStates.Add(Bgm.BuryTheLight, buryTheLightStates);
             bgmFsmStates.Add(Bgm.DevilTrigger, devilTriggerStates);
             bgmFsmStates.Add(Bgm.CrimsonCloud, crimsonCloudStates);
             bgmFsmStates.Add(Bgm.Subhuman, subhumanStates);
+            bgmFsmStates.Add(Bgm.DevilsNeverCry, devilsNeverCryStates);
         }
 
         public DynamicBgmFsm GetFsm()
@@ -235,14 +249,14 @@ namespace DragoonMayCry.Audio.BGM
             PrepareBgm(currentJob);
         }
 
-        private void PrepareBgm(JobId job)
+        private void PrepareBgm(JobId jobId)
         {
             bgmFsm.Disable();
-            if (!Plugin.Configuration!.JobConfiguration.ContainsKey(job))
+            if (!Plugin.Configuration!.JobConfiguration.TryGetValue(jobId, out var jobConfiguration))
             {
                 return;
             }
-            var configuration = Plugin.Configuration!.JobConfiguration[job].Bgm.Value;
+            var configuration = jobConfiguration.Bgm.Value;
 
             if (configuration == JobConfiguration.BgmConfiguration.Off)
             {
@@ -278,6 +292,7 @@ namespace DragoonMayCry.Audio.BGM
                 JobConfiguration.BgmConfiguration.DevilTrigger => Bgm.DevilTrigger,
                 JobConfiguration.BgmConfiguration.CrimsonCloud => Bgm.CrimsonCloud,
                 JobConfiguration.BgmConfiguration.Subhuman => Bgm.Subhuman,
+                JobConfiguration.BgmConfiguration.DevilsNeverCry => Bgm.DevilsNeverCry,
                 _ => Bgm.BuryTheLight,
             };
             LoadBgm(selectedBgm);
@@ -483,6 +498,7 @@ namespace DragoonMayCry.Audio.BGM
             {
                 JobConfiguration.BgmConfiguration.Off => "Off",
                 JobConfiguration.BgmConfiguration.BuryTheLight => "Bury the Light",
+                JobConfiguration.BgmConfiguration.DevilsNeverCry => "Devils Never Cry",
                 JobConfiguration.BgmConfiguration.DevilTrigger => "Devil Trigger",
                 JobConfiguration.BgmConfiguration.CrimsonCloud => "Crimson Cloud",
                 JobConfiguration.BgmConfiguration.Subhuman => "Subhuman",
@@ -498,6 +514,7 @@ namespace DragoonMayCry.Audio.BGM
                 Bgm.BuryTheLight => "Bury the Light",
                 Bgm.DevilTrigger => "Devil Trigger",
                 Bgm.CrimsonCloud => "Crimson Cloud",
+                Bgm.DevilsNeverCry => "Devils Never Cry",
                 Bgm.Subhuman => "Subhuman",
                 _ => "Unknown"
             };

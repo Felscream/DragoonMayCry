@@ -13,7 +13,8 @@ namespace DragoonMayCry.Configuration
             DevilTrigger = 2,
             CrimsonCloud = 3,
             Subhuman = 5,
-            Randomize = 4
+            Randomize = 4,
+            DevilsNeverCry = 6
         }
 
         public Setting<bool> EnableDmc = new(true);
