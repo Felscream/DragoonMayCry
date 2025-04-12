@@ -41,18 +41,6 @@ public class ConfigWindow : Window
 
     public override void Draw()
     {
-        switch (AssetsManager.Status)
-        {
-            case AssetsManager.AssetsStatus.Updating:
-                ImGui.Text($"Downloading additional assets...");
-                break;
-            case AssetsManager.AssetsStatus.FailedDownloading:
-            case AssetsManager.AssetsStatus.FailedInsufficientDiskSpace:
-            case AssetsManager.AssetsStatus.FailedFileIntegrity:
-                DrawError();
-                break;
-        }
-
         DrawConfigMenu();
     }
 
@@ -76,8 +64,7 @@ public class ConfigWindow : Window
 
     private void DrawConfigMenu()
     {
-        if (AssetsManager.Status == AssetsManager.AssetsStatus.Done)
-        {
+        
             InfoBox.Instance.AddTitle("General")
                    .AddConfigCheckbox("Lock rank window", configuration.LockScoreWindow)
                    .AddConfigCheckbox("Split rank layout", configuration.SplitLayout)
@@ -109,7 +96,24 @@ public class ConfigWindow : Window
                    .EndConditional()
                    .AddButton("Open job configuration", () => jobConfigurationWindow.Toggle())
                    .Draw();
+            
+            switch (AssetsManager.Status)
+            {
+                case AssetsManager.AssetsStatus.Updating:
+                    ImGui.Text($"Downloading additional assets...");
+                    return;
+                case AssetsManager.AssetsStatus.FailedDownloading:
+                case AssetsManager.AssetsStatus.FailedInsufficientDiskSpace:
+                case AssetsManager.AssetsStatus.FailedFileIntegrity:
+                    DrawError();
+                    return;
+            }
 
+            if (AssetsManager.Status != AssetsManager.AssetsStatus.Done)
+            {
+                return;
+            }
+            
             InfoBox.Instance.AddTitle("Announcer")
                    .AddConfigCheckbox("Enable announcer", configuration.PlaySoundEffects)
                    .AddConfigCheckbox("Force announcer on blunders", configuration.ForceSoundEffectsOnBlunder)
@@ -216,7 +220,6 @@ public class ConfigWindow : Window
                    .AddButton("Char id", () => Service.Log.Debug($"{Service.ClientState.LocalContentId}"))
                    .Draw();
 #endif
-        }
     }
 
     public static void AddLabel(string label, Vector2 cursorPosition)
