@@ -62,7 +62,7 @@ namespace DragoonMayCry.Audio.BGM
 
             IFsmState btlIntro = new BTLIntro(audioService);
             IFsmState btlCombat = new BTLVerse(audioService);
-            IFsmState btlPeak = new BTLChorus(audioService);
+            IFsmState btlPeak = new BtlChorus(audioService);
             buryTheLightStates = new Dictionary<BgmState, IFsmState>
             {
                 { BgmState.Intro, btlIntro },

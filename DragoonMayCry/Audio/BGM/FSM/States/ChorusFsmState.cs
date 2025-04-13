@@ -1,4 +1,5 @@
 using DragoonMayCry.Audio.Engine;
+using FFXIVClientStructs.Havok.Common.Base.System.IO.IStream;
 using NAudio.Wave;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,9 +7,24 @@ using System.Linq;
 
 namespace DragoonMayCry.Audio.BGM.FSM.States
 {
+    internal class ExitTimings(int baseTransitionTime, 
+                                int nextPossibleStateTransitionTime, 
+                                int nextStateTransitionTime,
+                                int fadingDuration = 0, 
+                                int fadeOutDelay = 0, 
+                                double fadeOutDuration = 0)
+    {
+        public int BaseTransitionTime { get; } = baseTransitionTime;
+        public int NextPossibleStateTransitionTime { get; } = nextPossibleStateTransitionTime;
+        public int NextStateTransitionTime { get; } = nextStateTransitionTime;
+        public int FadingDuration { get; } = fadingDuration;
+        public int FadeOutDelay { get; } = fadeOutDelay;
+        public double FadeOutDuration { get; }= fadeOutDuration;
+    }
     internal abstract class ChorusFsmState(
         AudioService audioService,
-        int nextStateTransitionTimeOnTransitionTriggered,
+        int nextStateTransitionTimeOnDemotion,
+        ExitTimings exitTimings,
         int combatEndFadeOutTime = 1300,
         int samplesToKeepInCache = 4)
         : IFsmState
@@ -21,8 +37,10 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
             CleaningUpDemotion,
             VerseIntro,
         }
+
         
-        public abstract BgmState ID { get; }
+        
+        public BgmState ID => BgmState.CombatPeak;
         protected abstract Dictionary<string, BgmTrackData> Stems { get; }
         protected LinkedList<string> CompleteSequence =
             [];
@@ -39,11 +57,10 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
         //indicates when the next FSM state transition will take place
         protected int NextStateTransitionTime;
         protected int ElapsedStopwatchTimeBeforeDemotion;
+        protected readonly ExitTimings ExitTimings = exitTimings;
         protected readonly int CombatEndFadeOutTime = combatEndFadeOutTime;
         protected readonly int SamplesToKeepInCache = samplesToKeepInCache;
-        protected readonly int NextStateTimeOnTransitionTriggered = nextStateTransitionTimeOnTransitionTriggered;
-        
-        private static readonly string DemotionStemId = "demotion";
+        protected readonly int NextStateTimeOnDemotion = nextStateTransitionTimeOnDemotion;
 
         public virtual Dictionary<string, string> GetBgmPaths()
         {
@@ -94,9 +111,60 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
                 }
             }
         }
-        public abstract void Reset();
-        public abstract int Exit(ExitType exit);
-        public abstract bool CancelExit();
+        public virtual void Reset()
+        {
+            while (Samples.TryDequeue(out var sample))
+            {
+                if (sample is ExposedFadeInOutSampleProvider provider)
+                {
+                    if (provider.fadeState == ExposedFadeInOutSampleProvider.FadeState.FullVolume)
+                    {
+                        provider.BeginFadeOut(1500);
+                        continue;
+                    }
+                }
+                AudioService.RemoveBgmPart(sample);
+            }
+            CurrentTrackStopwatch.Reset();
+            CurrentState = PeakState.Loop;
+        }
+        public virtual int Exit(ExitType exit)
+        {
+            NextStateTransitionTime = 0;
+            if (exit == ExitType.EndOfCombat && CurrentState != PeakState.LeavingStateOutOfCombat)
+            {
+                TransitionTime = ExitTimings.BaseTransitionTime;
+                NextPosibleStateTransitionTime = ExitTimings.NextPossibleStateTransitionTime;
+                NextStateTransitionTime = ExitTimings.NextStateTransitionTime;
+                AudioService.PlayBgm(BgmStemIds.CombatEnd, ExitTimings.FadingDuration, ExitTimings.FadeOutDelay, ExitTimings.FadeOutDuration);
+                CurrentState = PeakState.LeavingStateOutOfCombat;
+            }
+            else if (CurrentState == PeakState.LeavingStateDemotion)
+            {
+                return NextStateTransitionTime - (int)CurrentTrackStopwatch.Elapsed.TotalMilliseconds;
+            }
+            else if (exit == ExitType.Demotion)
+            {
+                ElapsedStopwatchTimeBeforeDemotion += (int)CurrentTrackStopwatch.Elapsed.TotalMilliseconds;
+                TransitionTime = NextPosibleStateTransitionTime - ElapsedStopwatchTimeBeforeDemotion;
+                NextStateTransitionTime = TransitionTime + Stems[BgmStemIds.Demotion].TransitionStart;
+                CurrentState = PeakState.LeavingStateDemotion;
+            }
+            CurrentTrackStopwatch.Restart();
+
+            return NextStateTransitionTime;
+        }
+        public virtual bool CancelExit()
+        {
+            if (CurrentState != PeakState.LeavingStateDemotion)
+            {
+                return false;
+            }
+            CurrentState = PeakState.Loop;
+            TransitionTime = ComputeNextTransitionTiming() - ElapsedStopwatchTimeBeforeDemotion;
+            NextStateTransitionTime = ComputeNextStateTransitionTime() - ElapsedStopwatchTimeBeforeDemotion;
+            return true;
+        }
 
         protected abstract LinkedList<string> GenerateChorusLoop();
         protected virtual int ComputeNextStateTransitionTime()
@@ -133,13 +201,13 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
             {
                 AudioService.RemoveBgmPart(Samples.Dequeue());
             }
-            var sample = AudioService.PlayBgm(DemotionStemId);
+            var sample = AudioService.PlayBgm(BgmStemIds.Demotion);
             if (sample != null)
             {
                 Samples.Enqueue(sample);
             }
             CurrentState = PeakState.CleaningUpDemotion;
-            NextStateTransitionTime = NextStateTimeOnTransitionTriggered;
+            NextStateTransitionTime = NextStateTimeOnDemotion;
             CurrentTrackStopwatch.Restart();
         }
 
@@ -147,14 +215,8 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
         {
             if (CurrentState == PeakState.Loop)
             {
-                if (CurrentTrack!.Next == null)
-                {
-                    CurrentTrack = CompleteSequence!.First!;
-                }
-                else
-                {
-                    CurrentTrack = CurrentTrack.Next;
-                }
+                CurrentTrack = CurrentTrack!.Next == null ? CompleteSequence!.First! 
+                                   : CurrentTrack.Next;
             }
 
             if (Samples.Count > SamplesToKeepInCache)

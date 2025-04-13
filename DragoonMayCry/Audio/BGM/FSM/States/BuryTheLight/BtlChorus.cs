@@ -4,31 +4,19 @@ using System.Collections.Generic;
 
 namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
 {
-    internal class BTLChorus : ChorusFsmState
+    internal class BtlChorus : ChorusFsmState
     {
-        private const string ChorusIntro = "chorusIntro";
-        private const string ChorusIntro2 = "chorusIntro2";
-        private const string Riff = "riff";
-        private const string Chorus = "chorus";
-        private const string Transition1 = "t1";
-        private const string Transition2 = "t2";
-        private const string Transition3 = "t3";
-        private const string Demotion = "demotion";
         
-
-        public override BgmState ID => BgmState.CombatPeak;
-        protected override Dictionary<string, BgmTrackData> Stems => bgmStemData;
-
-        private readonly Dictionary<String, BgmTrackData> bgmStemData = new()
+        protected override Dictionary<string, BgmTrackData> Stems { get; } = new()
         {
-            { ChorusIntro, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\025.ogg"),0, 25600, 27200) },
-            { ChorusIntro2, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\094.ogg"), 0, 51200, 52800) },
-            { Riff, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\062.ogg"), 0, 25600, 27200) },
-            { Chorus, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\112.ogg"), 0, 27200, 27200) },
-            { Transition1, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\transition1.ogg"), 0, 1600, 3220) },
-            { Transition2, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\transition2.ogg"), 0, 1600, 3220) },
-            { Transition3, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\transition3.ogg"), 0, 1600, 3220) },
-            { Demotion, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\087.ogg"), 0, 25600) },
+            { BgmStemIds.ChorusIntro, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\025.ogg"),0, 25600, 27200) },
+            { BgmStemIds.ChorusIntro2, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\094.ogg"), 0, 51200, 52800) },
+            { BgmStemIds.Riff, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\062.ogg"), 0, 25600, 27200) },
+            { BgmStemIds.Chorus, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\112.ogg"), 0, 27200, 27200) },
+            { BgmStemIds.ChorusTransition1, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\transition1.ogg"), 0, 1600, 3220) },
+            { BgmStemIds.ChorusTransition2, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\transition2.ogg"), 0, 1600, 3220) },
+            { BgmStemIds.ChorusTransition3, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\transition3.ogg"), 0, 1600, 3220) },
+            { BgmStemIds.Demotion, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\087.ogg"), 0, 25600) },
         };
 
         /*private readonly Dictionary<BgmId, int> possibleTransitionTimesToNewState = new()
@@ -58,21 +46,23 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
         private readonly LinkedList<string> secondLoop;
         private readonly LinkedList<string> thirdLoop;
 
-        public BTLChorus(AudioService audioService) : base(audioService, 1590)
+        public BtlChorus(AudioService audioService) 
+            : base(audioService, 1590, 
+                   new ExitTimings(1600, 8000, 8000))
         {
             firstLoop = new LinkedList<string>();
-            firstLoop.AddLast(Riff);
-            firstLoop.AddLast(Chorus);
+            firstLoop.AddLast(BgmStemIds.Riff);
+            firstLoop.AddLast(BgmStemIds.Chorus);
 
             secondLoop = new LinkedList<string>();
-            secondLoop.AddLast(ChorusIntro);
-            secondLoop.AddLast(ChorusIntro2);
-            secondLoop.AddLast(Riff);
-            secondLoop.AddLast(Chorus);
+            secondLoop.AddLast(BgmStemIds.ChorusIntro);
+            secondLoop.AddLast(BgmStemIds.ChorusIntro2);
+            secondLoop.AddLast(BgmStemIds.Riff);
+            secondLoop.AddLast(BgmStemIds.Chorus);
 
             thirdLoop = new LinkedList<string>();
-            thirdLoop.AddLast(ChorusIntro);
-            thirdLoop.AddLast(ChorusIntro2);
+            thirdLoop.AddLast(BgmStemIds.ChorusIntro);
+            thirdLoop.AddLast(BgmStemIds.ChorusIntro2);
         }
 
         public override void Enter(bool fromVerse)
@@ -158,13 +148,13 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
             var res = new Queue<string>();
             if (val < 1)
             {
-                res.Enqueue(Transition1);
-                res.Enqueue(Transition2);
+                res.Enqueue(BgmStemIds.ChorusTransition1);
+                res.Enqueue(BgmStemIds.ChorusTransition2);
             }
             else
             {
-                res.Enqueue(Transition2);
-                res.Enqueue(Transition1);
+                res.Enqueue(BgmStemIds.ChorusTransition2);
+                res.Enqueue(BgmStemIds.ChorusTransition1);
             }
             return res;
         }
@@ -210,37 +200,10 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
             NextPosibleStateTransitionTime = ComputeNextStateTransitionTime();
         }
 
-        public override int Exit(ExitType exit)
-        {
-            NextStateTransitionTime = 0;
-            if (exit == ExitType.EndOfCombat && CurrentState != PeakState.LeavingStateOutOfCombat)
-            {
-                TransitionTime = 1600;
-                NextPosibleStateTransitionTime = 8000;
-                NextStateTransitionTime = 8000;
-                AudioService.PlayBgm("CombatEnd");
-                CurrentState = PeakState.LeavingStateOutOfCombat;
-            }
-            else if (CurrentState == PeakState.LeavingStateDemotion)
-            {
-                return NextStateTransitionTime - (int)CurrentTrackStopwatch.Elapsed.TotalMilliseconds;
-            }
-            else if (exit == ExitType.Demotion)
-            {
-                ElapsedStopwatchTimeBeforeDemotion += (int)CurrentTrackStopwatch.Elapsed.TotalMilliseconds;
-                TransitionTime = NextPosibleStateTransitionTime - ElapsedStopwatchTimeBeforeDemotion;
-                NextStateTransitionTime = TransitionTime + bgmStemData[Demotion].TransitionStart;
-                CurrentState = PeakState.LeavingStateDemotion;
-            }
-            CurrentTrackStopwatch.Restart();
-
-            return NextStateTransitionTime;
-        }
-
         private static string SelectRandomChorus()
         {
             var random = new Random();
-            return random.Next(2) < 1 ? ChorusIntro : ChorusIntro2;
+            return random.Next(2) < 1 ? BgmStemIds.ChorusIntro : BgmStemIds.ChorusIntro2;
         }
 
         public override void Reset()
@@ -259,18 +222,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
             }
             CurrentTrackStopwatch.Reset();
             CurrentState = PeakState.VerseIntro;
-        }
-
-        public override bool CancelExit()
-        {
-            if (CurrentState != PeakState.LeavingStateDemotion)
-            {
-                return false;
-            }
-            CurrentState = PeakState.Loop;
-            TransitionTime = ComputeNextTransitionTiming() - ElapsedStopwatchTimeBeforeDemotion;
-            NextStateTransitionTime = ComputeNextStateTransitionTime() - ElapsedStopwatchTimeBeforeDemotion;
-            return true;
         }
     }
 }

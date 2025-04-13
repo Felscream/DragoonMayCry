@@ -235,7 +235,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilsNeverCry
                 {
                     if (provider.fadeState == ExposedFadeInOutSampleProvider.FadeState.FullVolume)
                     {
-                        provider.BeginFadeOut(1700);
+                        provider.BeginFadeOut(1500);
                         continue;
                     }
                 }
