@@ -72,7 +72,7 @@ namespace DragoonMayCry.Audio.BGM
 
             IFsmState dtIntro = new DTIntro(audioService);
             IFsmState dtCombat = new DTVerse(audioService);
-            IFsmState dtPeak = new DTChorus(audioService);
+            IFsmState dtPeak = new DtChorus(audioService);
             devilTriggerStates = new Dictionary<BgmState, IFsmState>
             {
                 { BgmState.Intro, dtIntro },
@@ -82,7 +82,7 @@ namespace DragoonMayCry.Audio.BGM
 
             IFsmState ccIntro = new CCIntro(audioService);
             IFsmState ccCombat = new CCVerse(audioService);
-            IFsmState ccPeak = new CCChorus(audioService);
+            IFsmState ccPeak = new CcChorus(audioService);
             crimsonCloudStates = new Dictionary<BgmState, IFsmState>
             {
                 { BgmState.Intro, ccIntro },

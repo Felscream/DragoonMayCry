@@ -2,7 +2,7 @@ namespace DragoonMayCry.Audio.BGM
 {
     public static class BgmStemIds
     {
-        public const string ChorusIntro = "chorusIntro";
+        public const string ChorusIntro1 = "chorusIntro";
         public const string ChorusIntro2 = "chorusIntro2";
         public const string Riff = "riff";
         public const string Chorus = "chorus";
