@@ -36,7 +36,7 @@ namespace DragoonMayCry.Audio
 
         // to alternate between dead weight sfx
         private readonly AudioEngine audioEngine;
-        private readonly Dictionary<DynamicBgmService.Bgm, Dictionary<BgmId, CachedSound>> registeredBgms = new();
+        private readonly Dictionary<DynamicBgmService.Bgm, Dictionary<string, CachedSound>> registeredBgms = new();
         private static AudioService? instance;
         private bool deathEffectApplied;
         private AudioService()
@@ -77,13 +77,13 @@ namespace DragoonMayCry.Audio
             audioEngine.UpdateBgmVolume(GetBgmVolume());
         }
 
-        public bool RegisterBgmParts(DynamicBgmService.Bgm key, Dictionary<BgmId, string> paths)
+        public bool RegisterBgmParts(DynamicBgmService.Bgm key, Dictionary<string, string> paths)
         {
             if (registeredBgms.ContainsKey(key))
             {
                 return true;
             }
-            Dictionary<BgmId, CachedSound> bgm;
+            Dictionary<string, CachedSound> bgm;
             try
             {
                 bgm = audioEngine.RegisterBgm(paths);
@@ -158,7 +158,7 @@ namespace DragoonMayCry.Audio
             }
         }
 
-        public ISampleProvider? PlayBgm(BgmId id, double fadingDuration = 0, double fadeOutDelay = 0, double fadeOutDuration = 0)
+        public ISampleProvider? PlayBgm(string id, double fadingDuration = 0, double fadeOutDelay = 0, double fadeOutDuration = 0)
         {
             return audioEngine.PlayBgm(id, fadingDuration, fadeOutDelay, fadeOutDuration);
         }

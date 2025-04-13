@@ -69,7 +69,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud
             this.audioService = audioService;
             currentTrackStopwatch = new Stopwatch();
             samples = new Queue<ISampleProvider>();
-            completeSequence = GenerateVerseLoop();
+            completeSequence = GenerateChorusLoop();
         }
 
         public void Enter(bool fromVerse)
@@ -193,7 +193,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud
             return time;
         }
 
-        private LinkedList<BgmId> GenerateVerseLoop()
+        private LinkedList<BgmId> GenerateChorusLoop()
         {
             var loop = new LinkedList<BgmId>();
             loop.AddLast(BgmId.ChorusIntro1);

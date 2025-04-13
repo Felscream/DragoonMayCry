@@ -75,7 +75,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 
         public void Enter(bool fromVerse)
         {
-            completeSequence = GenerateVerseLoop();
+            completeSequence = GenerateChorusLoop();
             currentTrack = completeSequence.First!;
             currentState = PeakState.Loop;
             var sample = audioService.PlayBgm(currentTrack.Value);
@@ -195,7 +195,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
             return time;
         }
 
-        private LinkedList<BgmId> GenerateVerseLoop()
+        private LinkedList<BgmId> GenerateChorusLoop()
         {
             var chorusIntro = RandomizeQueue(BgmId.ChorusIntro1, BgmId.ChorusIntro2);
             var chorus = RandomizeQueue(BgmId.ChorusTransition1, BgmId.ChorusTransition2);

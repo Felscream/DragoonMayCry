@@ -9,7 +9,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
     {
         public BgmState ID { get; }
 
-        public Dictionary<BgmId, string> GetBgmPaths();
+        public Dictionary<string, string> GetBgmPaths();
         public void Enter(bool fromLoop);
         public void Update();
 

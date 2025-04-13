@@ -21,7 +21,7 @@ namespace DragoonMayCry.Audio.Engine
         private readonly MixingSampleProvider bgmMixer;
         private readonly MMDeviceEnumerator deviceEnumerator;
         private readonly DeviceNotificationClient notificationClient;
-        private Dictionary<BgmId, CachedSound> bgmStems;
+        private Dictionary<string, CachedSound> bgmStems;
         private ISampleProvider lastBgmSampleApplied;
 
         public AudioEngine()
@@ -35,7 +35,7 @@ namespace DragoonMayCry.Audio.Engine
                                             true, 20);
 
             announcerSfx = new Dictionary<SoundId, CachedSound>();
-            bgmStems = new Dictionary<BgmId, CachedSound>();
+            bgmStems = new Dictionary<string, CachedSound>();
 
             sfxMixer = new(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2))
             {
@@ -163,7 +163,7 @@ namespace DragoonMayCry.Audio.Engine
         }
 
         public ISampleProvider? PlayBgm(
-            BgmId id, double fadeInDuration = 0d, double fadeOutDelay = 0, double fadeOutDuration = 0)
+            string id, double fadeInDuration = 0d, double fadeOutDelay = 0, double fadeOutDuration = 0)
         {
             if (!bgmStems.ContainsKey(id))
             {
@@ -176,9 +176,9 @@ namespace DragoonMayCry.Audio.Engine
             return AddBgmMixerInput(sample, fadeInDuration, fadeOutDelay, fadeOutDuration);
         }
 
-        public Dictionary<BgmId, CachedSound> RegisterBgm(Dictionary<BgmId, string> paths)
+        public Dictionary<string, CachedSound> RegisterBgm(Dictionary<string, string> paths)
         {
-            Dictionary<BgmId, CachedSound> bgm = new();
+            Dictionary<string, CachedSound> bgm = new();
             foreach (var entry in paths)
             {
                 if (!File.Exists(entry.Value))
@@ -194,7 +194,7 @@ namespace DragoonMayCry.Audio.Engine
             return bgm;
         }
 
-        public void LoadBgm(Dictionary<BgmId, CachedSound> toLoad)
+        public void LoadBgm(Dictionary<string, CachedSound> toLoad)
         {
             bgmStems = toLoad;
         }
