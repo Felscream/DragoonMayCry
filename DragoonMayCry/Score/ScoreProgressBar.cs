@@ -12,26 +12,25 @@ namespace DragoonMayCry.Score
 {
     public class ScoreProgressBar : IDisposable, IResettable
     {
-        public float Progress { get; private set; }
-
-        public EventHandler<float>? DemotionStart;
-        public EventHandler<bool>? DemotionApplied;
-        public EventHandler? DemotionCanceled;
-        public EventHandler? Promotion;
 
         private const float TimeBetweenRankChanges = 1f;
         private const float RankChangeSafeguardDuration = 3f;
         private const float DemotionTimerDuration = 5000f;
         private const float InterpolationWeight = 0.09f;
-        private readonly ScoreManager scoreManager;
-        private readonly StyleRankHandler styleRankHandler;
+        private readonly Stopwatch demotionApplicationStopwatch;
         private readonly PlayerActionTracker playerActionTracker;
         private readonly PlayerState playerState;
-        private readonly Stopwatch demotionApplicationStopwatch;
-        private float interpolatedScore = 0;
-        private double lastRankChange = 0;
-        private float demotionThreshold = 0;
+        private readonly ScoreManager scoreManager;
+        private readonly StyleRankHandler styleRankHandler;
+        public EventHandler<bool>? DemotionApplied;
+        public EventHandler? DemotionCanceled;
+
+        public EventHandler<float>? DemotionStart;
+        private float demotionThreshold;
+        private float interpolatedScore;
         private bool isCastingLb;
+        private double lastRankChange;
+        public EventHandler? Promotion;
 
         public ScoreProgressBar(
             ScoreManager scoreManager, StyleRankHandler styleRankHandler, PlayerActionTracker playerActionTracker,
@@ -50,10 +49,23 @@ namespace DragoonMayCry.Score
             playerState.RegisterCombatStateChangeHandler(OnCombat);
             demotionApplicationStopwatch = new Stopwatch();
         }
+        public float Progress { get; private set; }
 
         public void Dispose()
         {
             Service.Framework.Update -= UpdateScoreInterpolation;
+        }
+
+        public void Reset()
+        {
+            Progress = 0;
+            lastRankChange = 0;
+            isCastingLb = false;
+            interpolatedScore = 0;
+            if (demotionApplicationStopwatch.IsRunning)
+            {
+                CancelDemotion();
+            }
         }
 
         public void UpdateScoreInterpolation(IFramework framework)
@@ -140,7 +152,7 @@ namespace DragoonMayCry.Score
 
         private bool CanStartDemotionTimer()
         {
-            return this.Progress < demotionThreshold
+            return Progress < demotionThreshold
                    && !playerState.IsIncapacitated()
                    && styleRankHandler.CurrentStyle.Value > StyleType.D
                    && !demotionApplicationStopwatch.IsRunning
@@ -209,18 +221,6 @@ namespace DragoonMayCry.Score
         private void OnStyleScoringChange(object? sender, StyleScoring styleScoring)
         {
             demotionThreshold = styleScoring.DemotionThreshold / styleScoring.Threshold;
-        }
-
-        public void Reset()
-        {
-            Progress = 0;
-            lastRankChange = 0;
-            isCastingLb = false;
-            interpolatedScore = 0;
-            if (demotionApplicationStopwatch.IsRunning)
-            {
-                CancelDemotion();
-            }
         }
     }
 }

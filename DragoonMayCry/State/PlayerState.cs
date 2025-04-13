@@ -5,12 +5,12 @@ using DragoonMayCry.Data;
 using DragoonMayCry.State.Tracker;
 using DragoonMayCry.Util;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
 using CSFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 using DalamudGameObject = Dalamud.Game.ClientState.Objects.Types.IGameObject;
@@ -20,6 +20,42 @@ namespace DragoonMayCry.State
 {
     public unsafe class PlayerState : IDisposable
     {
+        private static PlayerState? Instance;
+        private readonly IClientState clientState;
+        private readonly DebuffTracker debuffTracker;
+
+        private readonly InCombatStateTracker inCombatStateTracker;
+
+        private readonly ConditionFlag[] inCutscene =
+        [
+            ConditionFlag.WatchingCutscene, ConditionFlag.WatchingCutscene78, ConditionFlag.OccupiedInCutSceneEvent,
+            ConditionFlag.Occupied38,
+        ];
+        private readonly JobChangeTracker jobChangeTracker;
+        private readonly LoginStateTracker loginStateTracker;
+        private readonly OnDeathStateTracker onDeathStateTracker;
+        private readonly OnEnteringInstanceStateTracker onEnteringInstanceStateTracker;
+        private readonly PvpStateTracker pvpStateTracker;
+
+        private readonly ConditionFlag[] unableToAct =
+        [
+            ConditionFlag.Transformed, ConditionFlag.Swimming,
+            ConditionFlag.Diving, ConditionFlag.WatchingCutscene,
+            ConditionFlag.OccupiedInCutSceneEvent, ConditionFlag.WatchingCutscene78,
+        ];
+
+        private PlayerState()
+        {
+            inCombatStateTracker = new InCombatStateTracker();
+            onDeathStateTracker = new OnDeathStateTracker();
+            onEnteringInstanceStateTracker = new OnEnteringInstanceStateTracker();
+            loginStateTracker = new LoginStateTracker();
+            jobChangeTracker = new JobChangeTracker();
+            debuffTracker = new DebuffTracker();
+            pvpStateTracker = new PvpStateTracker();
+            clientState = Service.ClientState;
+            Service.Framework.Update += Update;
+        }
         public bool IsInCombat => CheckCondition([ConditionFlag.InCombat]);
 
         public bool IsInsideInstance =>
@@ -36,39 +72,14 @@ namespace DragoonMayCry.State
         private static RaptureAtkModule* RaptureAtkModule =>
             CSFramework.Instance()->GetUIModule()->GetRaptureAtkModule();
 
-        private bool CheckCondition(ConditionFlag[] conditionFlags) => conditionFlags.Any(x => Condition[x]);
-
-        private readonly ConditionFlag[] unableToAct =
-        [
-            ConditionFlag.Transformed, ConditionFlag.Swimming,
-            ConditionFlag.Diving, ConditionFlag.WatchingCutscene,
-            ConditionFlag.OccupiedInCutSceneEvent, ConditionFlag.WatchingCutscene78,
-        ];
-
-        private readonly ConditionFlag[] inCutscene =
-            [ConditionFlag.WatchingCutscene, ConditionFlag.WatchingCutscene78, ConditionFlag.OccupiedInCutSceneEvent, ConditionFlag.Occupied38];
-
-        private readonly InCombatStateTracker inCombatStateTracker;
-        private readonly OnDeathStateTracker onDeathStateTracker;
-        private readonly OnEnteringInstanceStateTracker onEnteringInstanceStateTracker;
-        private readonly LoginStateTracker loginStateTracker;
-        private readonly JobChangeTracker jobChangeTracker;
-        private readonly DebuffTracker debuffTracker;
-        private readonly PvpStateTracker pvpStateTracker;
-        private readonly IClientState clientState;
-        private static PlayerState? Instance;
-
-        private PlayerState()
+        public void Dispose()
         {
-            inCombatStateTracker = new();
-            onDeathStateTracker = new();
-            onEnteringInstanceStateTracker = new();
-            loginStateTracker = new();
-            jobChangeTracker = new();
-            debuffTracker = new();
-            pvpStateTracker = new();
-            clientState = Service.ClientState;
-            Service.Framework.Update += Update;
+            Service.Framework.Update -= Update;
+        }
+
+        private bool CheckCondition(ConditionFlag[] conditionFlags)
+        {
+            return conditionFlags.Any(x => Condition[x]);
         }
 
         public static PlayerState GetInstance()
@@ -244,7 +255,7 @@ namespace DragoonMayCry.State
 
         private ISet<uint> GetEnemyListObjectIds()
         {
-            var addonByName = Service.GameGui.GetAddonByName("_EnemyList", 1);
+            var addonByName = Service.GameGui.GetAddonByName("_EnemyList");
             if (addonByName == IntPtr.Zero)
                 return new HashSet<uint>();
 
@@ -253,16 +264,11 @@ namespace DragoonMayCry.State
             var enemyIdSet = new HashSet<uint>();
             for (var i = 0; i < addon->EnemyCount; i++)
             {
-                var id = (uint)numArray->IntArray[8 + (i * 6)];
+                var id = (uint)numArray->IntArray[8 + i * 6];
                 enemyIdSet.Add(id);
             }
 
             return enemyIdSet;
-        }
-
-        public void Dispose()
-        {
-            Service.Framework.Update -= Update;
         }
 
         public uint GetCurrentTerritoryId()

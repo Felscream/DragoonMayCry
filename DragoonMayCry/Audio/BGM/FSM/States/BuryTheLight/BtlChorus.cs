@@ -6,25 +6,13 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
 {
     internal class BtlChorus : ChorusFsmState
     {
-        
-        protected override Dictionary<string, BgmTrackData> Stems { get; } = new()
-        {
-            { BgmStemIds.ChorusIntro1, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\025.ogg"),0, 25600, 27200) },
-            { BgmStemIds.ChorusIntro2, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\094.ogg"), 0, 51200, 52800) },
-            { BgmStemIds.Riff, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\062.ogg"), 0, 25600, 27200) },
-            { BgmStemIds.Chorus, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\112.ogg"), 0, 27200, 27200) },
-            { BgmStemIds.ChorusTransition1, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\transition1.ogg"), 0, 1600, 3220) },
-            { BgmStemIds.ChorusTransition2, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\transition2.ogg"), 0, 1600, 3220) },
-            { BgmStemIds.ChorusTransition3, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\transition3.ogg"), 0, 1600, 3220) },
-            { BgmStemIds.Demotion, new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\087.ogg"), 0, 25600) },
-        };
-        
+
         private readonly LinkedList<string> firstLoop;
         private readonly LinkedList<string> secondLoop;
         private readonly LinkedList<string> thirdLoop;
 
-        public BtlChorus(AudioService audioService) 
-            : base(audioService, 1590, 
+        public BtlChorus(AudioService audioService)
+            : base(audioService, 1590,
                    new ExitTimings(1600, 8000, 8000))
         {
             firstLoop = new LinkedList<string>();
@@ -41,6 +29,49 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
             thirdLoop.AddLast(BgmStemIds.ChorusIntro1);
             thirdLoop.AddLast(BgmStemIds.ChorusIntro2);
         }
+
+        protected override Dictionary<string, BgmTrackData> Stems { get; } = new()
+        {
+            {
+                BgmStemIds.ChorusIntro1,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\025.ogg"), 0, 25600,
+                                 27200)
+            },
+            {
+                BgmStemIds.ChorusIntro2,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\094.ogg"), 0, 51200,
+                                 52800)
+            },
+            {
+                BgmStemIds.Riff,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\062.ogg"), 0, 25600,
+                                 27200)
+            },
+            {
+                BgmStemIds.Chorus,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\112.ogg"), 0, 27200,
+                                 27200)
+            },
+            {
+                BgmStemIds.ChorusTransition1,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\transition1.ogg"), 0,
+                                 1600, 3220)
+            },
+            {
+                BgmStemIds.ChorusTransition2,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\transition2.ogg"), 0,
+                                 1600, 3220)
+            },
+            {
+                BgmStemIds.ChorusTransition3,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\transition3.ogg"), 0,
+                                 1600, 3220)
+            },
+            {
+                BgmStemIds.Demotion,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatChorus\\087.ogg"), 0, 25600)
+            },
+        };
 
         public override void Enter(bool fromVerse)
         {
@@ -156,8 +187,8 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
             else if (CurrentState == PeakState.Loop)
             {
                 // swap to transition at the end of each loop
-                CurrentTrack = CurrentTrack!.Next == null ? 
-                                   CompleteSequence!.First! 
+                CurrentTrack = CurrentTrack!.Next == null ?
+                                   CompleteSequence!.First!
                                    : CurrentTrack.Next;
             }
 

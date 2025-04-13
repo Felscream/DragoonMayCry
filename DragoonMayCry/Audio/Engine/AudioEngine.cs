@@ -1,6 +1,6 @@
-using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using NAudio.CoreAudioApi;
+using NAudio.CoreAudioApi.Interfaces;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using System;
@@ -12,17 +12,17 @@ namespace DragoonMayCry.Audio.Engine
 {
     internal class AudioEngine : IDisposable
     {
-        private WasapiOut sfxOutputDevice;
-        private WasapiOut bgmOutputDevice;
         private readonly Dictionary<SoundId, CachedSound> announcerSfx;
-        private readonly VolumeSampleProvider sfxSampleProvider;
-        private readonly MixingSampleProvider sfxMixer;
-        private readonly VolumeSampleProvider bgmSampleProvider;
         private readonly MixingSampleProvider bgmMixer;
+        private readonly VolumeSampleProvider bgmSampleProvider;
         private readonly MMDeviceEnumerator deviceEnumerator;
         private readonly DeviceNotificationClient notificationClient;
+        private readonly MixingSampleProvider sfxMixer;
+        private readonly VolumeSampleProvider sfxSampleProvider;
+        private WasapiOut bgmOutputDevice;
         private Dictionary<string, CachedSound> bgmStems;
         private ISampleProvider lastBgmSampleApplied;
+        private WasapiOut sfxOutputDevice;
 
         public AudioEngine()
         {
@@ -37,19 +37,19 @@ namespace DragoonMayCry.Audio.Engine
             announcerSfx = new Dictionary<SoundId, CachedSound>();
             bgmStems = new Dictionary<string, CachedSound>();
 
-            sfxMixer = new(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2))
+            sfxMixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2))
             {
-                ReadFully = true
+                ReadFully = true,
             };
 
 
-            bgmMixer = new(WaveFormat.CreateIeeeFloatWaveFormat(48000, 2))
+            bgmMixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(48000, 2))
             {
-                ReadFully = true
+                ReadFully = true,
             };
 
-            sfxSampleProvider = new(sfxMixer);
-            bgmSampleProvider = new(bgmMixer);
+            sfxSampleProvider = new VolumeSampleProvider(sfxMixer);
+            bgmSampleProvider = new VolumeSampleProvider(bgmMixer);
 
             sfxOutputDevice.Init(sfxSampleProvider);
             bgmOutputDevice.Init(bgmSampleProvider);
@@ -63,6 +63,16 @@ namespace DragoonMayCry.Audio.Engine
             deviceEnumerator.RegisterEndpointNotificationCallback(notificationClient);
 
             lastBgmSampleApplied = bgmSampleProvider;
+        }
+
+        public void Dispose()
+        {
+            sfxMixer.RemoveAllMixerInputs();
+            bgmMixer.RemoveAllMixerInputs();
+            sfxOutputDevice.Dispose();
+            bgmOutputDevice.Dispose();
+            deviceEnumerator.UnregisterEndpointNotificationCallback(notificationClient);
+            deviceEnumerator.Dispose();
         }
 
         private void OnDefaultDeviceChanged()
@@ -98,11 +108,11 @@ namespace DragoonMayCry.Audio.Engine
 
                 if (!announcerSfx.ContainsKey(entry.Key))
                 {
-                    announcerSfx.Add(entry.Key, new(entry.Value));
+                    announcerSfx.Add(entry.Key, new CachedSound(entry.Value));
                 }
                 else
                 {
-                    announcerSfx[entry.Key] = new(entry.Value);
+                    announcerSfx[entry.Key] = new CachedSound(entry.Value);
                 }
             }
         }
@@ -288,17 +298,7 @@ namespace DragoonMayCry.Audio.Engine
             }
         }
 
-        public void Dispose()
-        {
-            sfxMixer.RemoveAllMixerInputs();
-            bgmMixer.RemoveAllMixerInputs();
-            sfxOutputDevice.Dispose();
-            bgmOutputDevice.Dispose();
-            deviceEnumerator.UnregisterEndpointNotificationCallback(notificationClient);
-            deviceEnumerator.Dispose();
-        }
-
-        private class DeviceNotificationClient : NAudio.CoreAudioApi.Interfaces.IMMNotificationClient
+        private class DeviceNotificationClient : IMMNotificationClient
         {
             public delegate void DefaultDeviceChanged();
 

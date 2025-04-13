@@ -2,7 +2,6 @@ using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using DragoonMayCry.Audio;
-using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Score.Model;
 using ImGuiNET;
@@ -12,59 +11,59 @@ using KamiLib.Drawing;
 using System;
 using System.Numerics;
 
-namespace DragoonMayCry.UI;
-
-public class ConfigWindow : Window
+namespace DragoonMayCry.UI
 {
-    public EventHandler<bool>? ActiveOutsideInstanceChange;
-    public EventHandler<bool>? ToggleDynamicBgmChange;
-    public EventHandler<int>? SfxVolumeChange;
-    public EventHandler<int>? BgmVolumeChange;
-    public EventHandler<bool>? MuffledOnDeathChange;
-
-    private readonly DmcConfiguration configuration;
-    private readonly JobConfigurationWindow jobConfigurationWindow;
-    private readonly BgmDutyBlacklistConfigurationWindow bgmDutyBlacklistConfigurationWindow;
-    private readonly Setting<int> decay = new(0);
-
-    public ConfigWindow(
-        DmcConfiguration configuration, JobConfigurationWindow jobConfiguration,
-        BgmDutyBlacklistConfigurationWindow bgmDutyBlacklistConfigurationWindow) : base(
-        "DragoonMayCry - Configuration")
+    public class ConfigWindow : Window
     {
-        Size = new Vector2(525, 470);
-        SizeCondition = ImGuiCond.Appearing;
-        jobConfigurationWindow = jobConfiguration;
-        this.bgmDutyBlacklistConfigurationWindow = bgmDutyBlacklistConfigurationWindow;
-        this.configuration = configuration;
-    }
+        private readonly BgmDutyBlacklistConfigurationWindow bgmDutyBlacklistConfigurationWindow;
 
-    public override void Draw()
-    {
-        DrawConfigMenu();
-    }
+        private readonly DmcConfiguration configuration;
+        private readonly Setting<int> decay = new(0);
+        private readonly JobConfigurationWindow jobConfigurationWindow;
+        public EventHandler<bool>? ActiveOutsideInstanceChange;
+        public EventHandler<int>? BgmVolumeChange;
+        public EventHandler<bool>? MuffledOnDeathChange;
+        public EventHandler<int>? SfxVolumeChange;
+        public EventHandler<bool>? ToggleDynamicBgmChange;
 
-    private void DrawError()
-    {
-        var errorMessage = AssetsManager.Status switch
+        public ConfigWindow(
+            DmcConfiguration configuration, JobConfigurationWindow jobConfiguration,
+            BgmDutyBlacklistConfigurationWindow bgmDutyBlacklistConfigurationWindow) : base(
+            "DragoonMayCry - Configuration")
         {
-            AssetsManager.AssetsStatus.FailedInsufficientDiskSpace => "Not enough disk space for additional assets",
-            AssetsManager.AssetsStatus.FailedDownloading => "Could not retrieve additional assets",
-            AssetsManager.AssetsStatus.FailedFileIntegrity => "File integrity check failed",
-            _ => "An unexpected error occured",
-        };
-
-        ImGui.Indent();
-        ImGui.Text(errorMessage);
-        if (ImGui.Button("Download assets"))
-        {
-            AssetsManager.VerifyAndUpdateAssets();
+            Size = new Vector2(525, 470);
+            SizeCondition = ImGuiCond.Appearing;
+            jobConfigurationWindow = jobConfiguration;
+            this.bgmDutyBlacklistConfigurationWindow = bgmDutyBlacklistConfigurationWindow;
+            this.configuration = configuration;
         }
-    }
 
-    private void DrawConfigMenu()
-    {
-        
+        public override void Draw()
+        {
+            DrawConfigMenu();
+        }
+
+        private void DrawError()
+        {
+            var errorMessage = AssetsManager.Status switch
+            {
+                AssetsManager.AssetsStatus.FailedInsufficientDiskSpace => "Not enough disk space for additional assets",
+                AssetsManager.AssetsStatus.FailedDownloading => "Could not retrieve additional assets",
+                AssetsManager.AssetsStatus.FailedFileIntegrity => "File integrity check failed",
+                _ => "An unexpected error occured",
+            };
+
+            ImGui.Indent();
+            ImGui.Text(errorMessage);
+            if (ImGui.Button("Download assets"))
+            {
+                AssetsManager.VerifyAndUpdateAssets();
+            }
+        }
+
+        private void DrawConfigMenu()
+        {
+
             InfoBox.Instance.AddTitle("General")
                    .AddConfigCheckbox("Lock rank window", configuration.LockScoreWindow)
                    .AddConfigCheckbox("Split rank layout", configuration.SplitLayout)
@@ -96,11 +95,11 @@ public class ConfigWindow : Window
                    .EndConditional()
                    .AddButton("Open job configuration", () => jobConfigurationWindow.Toggle())
                    .Draw();
-            
+
             switch (AssetsManager.Status)
             {
                 case AssetsManager.AssetsStatus.Updating:
-                    ImGui.Text($"Downloading additional assets...");
+                    ImGui.Text("Downloading additional assets...");
                     return;
                 case AssetsManager.AssetsStatus.FailedDownloading:
                 case AssetsManager.AssetsStatus.FailedInsufficientDiskSpace:
@@ -113,7 +112,7 @@ public class ConfigWindow : Window
             {
                 return;
             }
-            
+
             InfoBox.Instance.AddTitle("Announcer")
                    .AddConfigCheckbox("Enable announcer", configuration.PlaySoundEffects)
                    .AddConfigCheckbox("Force announcer on blunders", configuration.ForceSoundEffectsOnBlunder)
@@ -208,10 +207,10 @@ public class ConfigWindow : Window
                    .AddButton("BGM Enter combat", () => Plugin.BgmTransitionNext())
                    .SameLine().AddButton("BGM Rank up",
                                          () => Plugin.SimulateBgmRankChanges(
-                                             Score.Model.StyleType.A, Score.Model.StyleType.S))
+                                             StyleType.A, StyleType.S))
                    .SameLine().AddButton("BGM Rank down",
                                          () => Plugin.SimulateBgmRankChanges(
-                                             Score.Model.StyleType.S, Score.Model.StyleType.D))
+                                             StyleType.S, StyleType.D))
                    .SameLine().AddButton("EndCombat", () => Plugin.BgmEndCombat())
                    .AddButton("Muffle", () => AudioService.Instance.ApplyDeathEffect())
                    .SameLine().AddButton("Remove muffled", () => AudioService.Instance.RemoveDeathEffect())
@@ -220,14 +219,15 @@ public class ConfigWindow : Window
                    .AddButton("Char id", () => Service.Log.Debug($"{Service.ClientState.LocalContentId}"))
                    .Draw();
 #endif
-    }
+        }
 
-    public static void AddLabel(string label, Vector2 cursorPosition)
-    {
-        var spacing = ImGui.GetStyle().ItemSpacing;
-        cursorPosition += spacing;
-        ImGui.SetCursorPos(cursorPosition with { X = cursorPosition.X + 27.0f * ImGuiHelpers.GlobalScale });
+        public static void AddLabel(string label, Vector2 cursorPosition)
+        {
+            var spacing = ImGui.GetStyle().ItemSpacing;
+            cursorPosition += spacing;
+            ImGui.SetCursorPos(cursorPosition with { X = cursorPosition.X + 27.0f * ImGuiHelpers.GlobalScale });
 
-        ImGui.TextUnformatted(label);
+            ImGui.TextUnformatted(label);
+        }
     }
 }

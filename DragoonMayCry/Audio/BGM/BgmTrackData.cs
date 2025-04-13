@@ -1,12 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace DragoonMayCry.Audio.BGM
 {
-    public class BgmTrackData(string audioPath, int effectiveStart, int transitionStart, int possibleTransitionTimeToNewState = int.MaxValue)
+    public class BgmTrackData(
+        string audioPath,
+        int effectiveStart,
+        int transitionStart,
+        int possibleTransitionTimeToNewState = int.MaxValue)
     {
         public string AudioPath { get; private set; } = audioPath;
         public int EffectiveStart { get; private set; } = effectiveStart;

@@ -1,5 +1,6 @@
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Audio.BGM.FSM.States;
+using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
@@ -12,28 +13,27 @@ namespace DragoonMayCry.Audio.BGM.FSM
 {
     public class DynamicBgmFsm : IDisposable
     {
-        public delegate void LoadNewBgm();
-        public LoadNewBgm? loadNewBgm;
-        public bool IsActive { get; private set; }
-
-        private readonly PlayerState playerState;
+        public delegate void LoadNewBgmDelegate();
         private readonly AudioService audioService;
+        private readonly DoubleLinkedList<BgmState> bgmStates;
 
 
         private readonly IFramework framework;
+
+        private readonly PlayerState playerState;
         private readonly Stopwatch stateTransitionStopwatch;
         private readonly StyleRankHandler styleRankHandler;
-
-        // The current state.
-        private IFsmState? currentState;
         private IFsmState? candidateState;
-
-        private int nextTransitionTime = -1;
-        private readonly DoubleLinkedList<BgmState> bgmStates;
-        private DoubleLinkedNode<BgmState> currentStateNode;
 
 
         private Dictionary<BgmState, IFsmState>? currentBgmStates;
+
+        // The current state.
+        private IFsmState? currentState;
+        private DoubleLinkedNode<BgmState> currentStateNode;
+        public LoadNewBgmDelegate? LoadNewBgm;
+
+        private int nextTransitionTime = -1;
         public DynamicBgmFsm(StyleRankHandler styleRankHandler)
         {
             this.styleRankHandler = styleRankHandler;
@@ -49,6 +49,13 @@ namespace DragoonMayCry.Audio.BGM.FSM
             currentStateNode = bgmStates.Head!;
 
             framework.Update += Update;
+        }
+        public bool IsActive { get; private set; }
+
+        public void Dispose()
+        {
+            audioService.StopBgm();
+            framework.Update -= Update;
         }
 
         public void Start()
@@ -73,7 +80,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
             currentState?.Update();
 
-            if (playerState.IsInCombat && currentState?.ID == BgmState.Intro && candidateState == null)
+            if (playerState.IsInCombat && currentState?.Id == BgmState.Intro && candidateState == null)
             {
                 audioService.FadeOutBgm(1600);
                 currentState.Exit(ExitType.ImmediateExit);
@@ -83,20 +90,15 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
             }
 
-            if (stateTransitionStopwatch.IsRunning && stateTransitionStopwatch.Elapsed.TotalMilliseconds > nextTransitionTime)
+            if (stateTransitionStopwatch.IsRunning
+                && stateTransitionStopwatch.Elapsed.TotalMilliseconds > nextTransitionTime)
             {
                 GoToNextState();
             }
-            else if (playerState.IsInCombat && currentState?.ID == BgmState.Intro && candidateState == null)
+            else if (playerState.IsInCombat && currentState?.Id == BgmState.Intro && candidateState == null)
             {
                 Promote();
             }
-        }
-
-        public void Dispose()
-        {
-            audioService.StopBgm();
-            framework.Update -= Update;
         }
 
         public void ResetToIntro()
@@ -126,25 +128,25 @@ namespace DragoonMayCry.Audio.BGM.FSM
                 return;
             }
 
-            if (candidateState.ID == BgmState.Intro)
+            if (candidateState.Id == BgmState.Intro)
             {
                 currentStateNode = bgmStates.Head!;
             }
-            else if (currentStateNode.Next != null && currentStateNode.Next.Value == candidateState.ID)
+            else if (currentStateNode.Next != null && currentStateNode.Next.Value == candidateState.Id)
             {
                 currentStateNode = currentStateNode.Next!;
             }
             else
             {
-                currentStateNode = bgmStates.Find(candidateState.ID)!;
+                currentStateNode = bgmStates.Find(candidateState.Id)!;
             }
-            var fromVerse = currentState?.ID == BgmState.CombatPeak && candidateState.ID == BgmState.CombatLoop;
+            var fromVerse = currentState?.Id == BgmState.CombatPeak && candidateState.Id == BgmState.CombatLoop;
 
 
             currentState = candidateState;
-            if (candidateState.ID == BgmState.Intro)
+            if (candidateState.Id == BgmState.Intro)
             {
-                loadNewBgm?.Invoke();
+                LoadNewBgm?.Invoke();
             }
             currentState.Enter(fromVerse);
             candidateState = null;
@@ -152,7 +154,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
         public void Promote()
         {
-            if (currentStateNode.Next == null || candidateState?.ID == currentStateNode.Value || currentState == null)
+            if (currentStateNode.Next == null || candidateState?.Id == currentStateNode.Value || currentState == null)
             {
                 return;
             }
@@ -164,7 +166,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
         public void LeaveCombat()
         {
-            if (currentState == null || candidateState?.ID == BgmState.Intro)
+            if (currentState == null || candidateState?.Id == BgmState.Intro)
             {
                 return;
             }
@@ -176,7 +178,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
         public void Demote()
         {
             // we can only go to the previous state for ranks S and above
-            if (currentState?.ID != BgmState.CombatPeak || candidateState != null)
+            if (currentState?.Id != BgmState.CombatPeak || candidateState != null)
             {
                 return;
             }
@@ -193,7 +195,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
                 return;
             }
 
-            if (isInCombat && currentState?.ID == BgmState.Intro)
+            if (isInCombat && currentState?.Id == BgmState.Intro)
             {
                 Promote();
             }
@@ -205,15 +207,18 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
         public void OnRankChange(object? sender, StyleRankHandler.RankChangeData rankChangeData)
         {
-            if (rankChangeData.NewRank >= Score.Model.StyleType.S && currentState?.ID == BgmState.CombatLoop && candidateState?.ID != BgmState.CombatPeak)
+            if (rankChangeData.NewRank >= StyleType.S && currentState?.Id == BgmState.CombatLoop
+                                                      && candidateState?.Id != BgmState.CombatPeak)
             {
                 Promote();
             }
-            else if (rankChangeData.NewRank < Score.Model.StyleType.S && currentState?.ID == BgmState.CombatPeak && candidateState?.ID != BgmState.CombatLoop)
+            else if (rankChangeData.NewRank < StyleType.S && currentState?.Id == BgmState.CombatPeak
+                                                          && candidateState?.Id != BgmState.CombatLoop)
             {
                 Demote();
             }
-            else if (rankChangeData.NewRank >= Score.Model.StyleType.S && currentState?.ID == BgmState.CombatPeak && candidateState?.ID == BgmState.CombatLoop)
+            else if (rankChangeData.NewRank >= StyleType.S && currentState?.Id == BgmState.CombatPeak
+                                                           && candidateState?.Id == BgmState.CombatLoop)
             {
                 // Cancel demotion if player was being demoted but went back to S before the demotion transition started.
                 var canCancel = currentState.CancelExit();

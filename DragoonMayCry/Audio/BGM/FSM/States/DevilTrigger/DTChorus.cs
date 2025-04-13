@@ -1,8 +1,5 @@
-using DragoonMayCry.Audio.Engine;
-using NAudio.Wave;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
 {
@@ -10,18 +7,39 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger
                                                                         new ExitTimings(1, 4500, 4500), 500)
     {
 
+        private readonly Random random = new();
+
         protected override Dictionary<string, BgmTrackData> Stems { get; } = new()
         {
-            { BgmStemIds.ChorusIntro1, new BgmTrackData(DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\058.ogg"), 0, 12000, 13500) },
-            { BgmStemIds.ChorusIntro2, new BgmTrackData(DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\061.ogg"), 0, 12000, 13500) },
-            { BgmStemIds.Riff, new BgmTrackData(DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\003.ogg"), 0, 24000, 25500) },
-            { BgmStemIds.ChorusTransition1, new BgmTrackData(DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\098.ogg"), 0, 24000, 25500) },
-            { BgmStemIds.ChorusTransition2, new BgmTrackData(DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\072.ogg"), 0, 24000, 25500) },
-            { BgmStemIds.ChorusTransition3, new BgmTrackData(DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\041.ogg"), 0, 24000, 25500) },
-            { BgmStemIds.Demotion, new BgmTrackData(DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\030.ogg"), 0, 1500) },
+            {
+                BgmStemIds.ChorusIntro1,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\058.ogg"), 0, 12000, 13500)
+            },
+            {
+                BgmStemIds.ChorusIntro2,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\061.ogg"), 0, 12000, 13500)
+            },
+            {
+                BgmStemIds.Riff,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\003.ogg"), 0, 24000, 25500)
+            },
+            {
+                BgmStemIds.ChorusTransition1,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\098.ogg"), 0, 24000, 25500)
+            },
+            {
+                BgmStemIds.ChorusTransition2,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\072.ogg"), 0, 24000, 25500)
+            },
+            {
+                BgmStemIds.ChorusTransition3,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\041.ogg"), 0, 24000, 25500)
+            },
+            {
+                BgmStemIds.Demotion,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("DevilTrigger\\Chorus\\030.ogg"), 0, 1500)
+            },
         };
-
-        private readonly Random random = new();
 
         protected override LinkedList<string> GenerateChorusLoop()
         {

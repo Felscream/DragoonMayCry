@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace DragoonMayCry.Audio.StyleAnnouncer
 {
     public enum SoundId
@@ -27,6 +21,6 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
         SickSkills2,
         SmokinSexyStyle1,
         SmokinSexyStyle2,
-        Unknown
+        Unknown,
     }
 }

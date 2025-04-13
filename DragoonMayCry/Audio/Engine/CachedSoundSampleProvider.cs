@@ -1,13 +1,9 @@
 using NAudio.Wave;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DragoonMayCry.Audio.Engine
 {
-    class CachedSoundSampleProvider : ISampleProvider
+    internal class CachedSoundSampleProvider : ISampleProvider
     {
         private readonly CachedSound cachedSound;
         private long position;
@@ -26,6 +22,6 @@ namespace DragoonMayCry.Audio.Engine
             return (int)samplesToCopy;
         }
 
-        public WaveFormat WaveFormat { get { return cachedSound.WaveFormat; } }
+        public WaveFormat WaveFormat => cachedSound.WaveFormat;
     }
 }

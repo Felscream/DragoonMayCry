@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace DragoonMayCry.Score.Action
 {
     public enum PlayerActionType
@@ -15,6 +9,6 @@ namespace DragoonMayCry.Score.Action
         OffGCD = 4,
         AutoAttack = 5,
         LimitBreak = 6,
-        Other = 7
+        Other = 7,
     }
 }

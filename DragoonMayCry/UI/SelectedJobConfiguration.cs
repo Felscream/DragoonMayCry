@@ -17,19 +17,19 @@ namespace DragoonMayCry.UI
 {
     internal class SelectedJobConfiguration : ISelectable, IDrawable
     {
-        public delegate void JobAnnouncerChangeDelegate(JobId job, AnnouncerType announcer);
-
-        public delegate void DmcToggleChangeDelegate(JobId job);
 
         public delegate void ApplyToAllDelegate(JobConfiguration configuration);
 
-        public JobAnnouncerChangeDelegate? JobAnnouncerChange;
-        public DmcToggleChangeDelegate? DmcToggleChange;
-        public ApplyToAllDelegate? ApplyToAll;
-        private readonly JobId job;
-        private readonly JobConfiguration configuration;
+        public delegate void DmcToggleChangeDelegate(JobId job);
+        public delegate void JobAnnouncerChangeDelegate(JobId job, AnnouncerType announcer);
         private readonly IList<AnnouncerType> announcers;
         private readonly IList<JobConfiguration.BgmConfiguration> bgms;
+        private readonly JobConfiguration configuration;
+        private readonly JobId job;
+        public ApplyToAllDelegate? ApplyToAll;
+        public DmcToggleChangeDelegate? DmcToggleChange;
+
+        public JobAnnouncerChangeDelegate? JobAnnouncerChange;
 
         public SelectedJobConfiguration(
             JobId job, JobConfiguration configuration, IList<AnnouncerType> announcers,
@@ -41,45 +41,21 @@ namespace DragoonMayCry.UI
             this.bgms =
             [
                 .. bgms.OrderBy(bgm =>
-                {
-                    if (bgm == JobConfiguration.BgmConfiguration.Off)
-                    {
-                        return -1;
-                    }
+                       {
+                           if (bgm == JobConfiguration.BgmConfiguration.Off)
+                           {
+                               return -1;
+                           }
 
-                    if (bgm == JobConfiguration.BgmConfiguration.Randomize)
-                    {
-                        return int.MaxValue;
-                    }
+                           if (bgm == JobConfiguration.BgmConfiguration.Randomize)
+                           {
+                               return int.MaxValue;
+                           }
 
-                    return 0;
-                })
-                .ThenBy(bgm => Enum.GetName(typeof(JobConfiguration.BgmConfiguration), bgm)),
+                           return 0;
+                       })
+                       .ThenBy(bgm => Enum.GetName(typeof(JobConfiguration.BgmConfiguration), bgm)),
             ];
-        }
-
-        IDrawable ISelectable.Contents => this;
-
-        string ISelectable.ID => job.ToString();
-
-        private Vector4 GetJobSelectionItemColor()
-        {
-            if (!configuration.EnableDmc)
-            {
-                return Colors.Grey;
-            }
-
-            if (configuration.DifficultyMode == DifficultyMode.EstinienMustDie)
-            {
-                return Colors.SoftRed;
-            }
-
-            if (configuration.DifficultyMode == DifficultyMode.Sprout)
-            {
-                return Colors.SoftGreen;
-            }
-
-            return Colors.White;
         }
 
         void IDrawable.Draw()
@@ -186,11 +162,35 @@ namespace DragoonMayCry.UI
                    .Draw();
         }
 
+        IDrawable ISelectable.Contents => this;
+
+        string ISelectable.ID => job.ToString();
+
         void ISelectable.DrawLabel()
         {
             ImGui.PushStyleColor(ImGuiCol.Text, GetJobSelectionItemColor());
             ImGui.Text(job.ToString());
             ImGui.PopStyleColor();
+        }
+
+        private Vector4 GetJobSelectionItemColor()
+        {
+            if (!configuration.EnableDmc)
+            {
+                return Colors.Grey;
+            }
+
+            if (configuration.DifficultyMode == DifficultyMode.EstinienMustDie)
+            {
+                return Colors.SoftRed;
+            }
+
+            if (configuration.DifficultyMode == DifficultyMode.Sprout)
+            {
+                return Colors.SoftGreen;
+            }
+
+            return Colors.White;
         }
     }
 }

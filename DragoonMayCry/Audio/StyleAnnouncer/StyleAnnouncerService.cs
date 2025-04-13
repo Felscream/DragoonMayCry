@@ -17,25 +17,25 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
 {
     public class StyleAnnouncerService
     {
+        private readonly List<IStyleAnnouncer> allAnnouncers;
+        private readonly Queue<IStyleAnnouncer> announcerQueue;
         private readonly AudioService audioService;
-        private readonly StyleRankHandler rankHandler;
-        private readonly IStyleAnnouncer dmcAnnouncer;
-        private readonly IStyleAnnouncer dmc5Announcer;
         private readonly IStyleAnnouncer balrogAnnouncer;
-        private readonly IStyleAnnouncer nicoAnnouncer;
+        private readonly IStyleAnnouncer dmc5Announcer;
+        private readonly IStyleAnnouncer dmcAnnouncer;
         private readonly IStyleAnnouncer morrisonAnnouncer;
+        private readonly IStyleAnnouncer nicoAnnouncer;
+        private readonly PlayerState playerState;
+        private readonly Random random = new();
+        private readonly StyleRankHandler rankHandler;
 
         private readonly float sfxCooldown = 1f;
         private readonly Dictionary<SoundId, int> soundIdsNextAvailability = new();
-        private readonly Random random = new();
-        private readonly PlayerState playerState;
-        private bool isCastingLimitBreak;
+        private IStyleAnnouncer? announcer;
 
         private bool initialized;
-        private double lastPlayTime = 0f;
-        private Queue<IStyleAnnouncer> announcerQueue;
-        private IStyleAnnouncer? announcer;
-        private List<IStyleAnnouncer> allAnnouncers;
+        private bool isCastingLimitBreak;
+        private double lastPlayTime;
 
         public StyleAnnouncerService(StyleRankHandler styleRankHandler, PlayerActionTracker actionTracker)
         {
@@ -59,7 +59,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             nicoAnnouncer = new NicoAnnouncer();
             morrisonAnnouncer = new MorrisonAnnouncer();
 
-            allAnnouncers = new List<IStyleAnnouncer>()
+            allAnnouncers = new List<IStyleAnnouncer>
                 { dmc5Announcer, dmcAnnouncer, balrogAnnouncer, nicoAnnouncer, morrisonAnnouncer };
 
             announcerQueue = CreateStyleAnnouncerQueue();
@@ -75,7 +75,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             var temp = new List<IStyleAnnouncer>(pool);
             var queue = new Queue<IStyleAnnouncer>();
 
-            for (int i = 0; i < pool.Count; i++)
+            for (var i = 0; i < pool.Count; i++)
             {
                 var randIdx = random.Next(pool.Count);
                 queue.Enqueue(pool[randIdx]);
@@ -340,7 +340,8 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
 
             if (data.IsBlunder && previousRank != StyleType.NoStyle)
             {
-                if(!Plugin.Configuration!.DisableAnnouncerBlunder){
+                if (!Plugin.Configuration!.DisableAnnouncerBlunder)
+                {
                     var sfx = SelectRandomSfx(announcer.GetBlunderVariations());
                     PlayAnnouncer(sfx, Plugin.Configuration!.ForceSoundEffectsOnBlunder);
                 }
@@ -451,7 +452,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
                 AnnouncerType.Nico => "Nico",
                 AnnouncerType.Morrison => "Morrison",
                 AnnouncerType.Randomize => "Randomize",
-                _ => "Unknown"
+                _ => "Unknown",
             };
         }
     }

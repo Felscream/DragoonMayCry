@@ -6,28 +6,30 @@ namespace DragoonMayCry.Audio.Engine
     // It's a mix of low pass filter and reverb
     internal class DeathEffect : ISampleProvider
     {
-        private readonly ISampleProvider source;
-        private readonly BiQuadFilter lowPassFilter;
-        //stores samples to create the delay effect
-        private readonly float[] reverbDelayBuffer;
 
         // how much of the delayed feedback is sent back into the buffer
         private readonly float decay;
+        private readonly BiQuadFilter lowPassFilter;
+        //stores samples to create the delay effect
+        private readonly float[] reverbDelayBuffer;
+        private readonly ISampleProvider source;
 
         private int reverbBufferPosition;
 
-        public DeathEffect(ISampleProvider sampleProvider, float cutoffFrequency, int reverbDelayTime, float decayFactor)
+        public DeathEffect(
+            ISampleProvider sampleProvider, float cutoffFrequency, int reverbDelayTime, float decayFactor)
         {
             source = sampleProvider;
 
             lowPassFilter = BiQuadFilter.LowPassFilter(sampleProvider.WaveFormat.SampleRate, cutoffFrequency, 1f);
             decay = decayFactor;
-            var reverbSamples = (int)(sampleProvider.WaveFormat.SampleRate * (reverbDelayTime / 1000.0f) * sampleProvider.WaveFormat.Channels);
+            var reverbSamples = (int)(sampleProvider.WaveFormat.SampleRate * (reverbDelayTime / 1000.0f)
+                                                                           * sampleProvider.WaveFormat.Channels);
 
             reverbDelayBuffer = new float[reverbSamples];
         }
 
-        public WaveFormat WaveFormat { get { return source.WaveFormat; } }
+        public WaveFormat WaveFormat => source.WaveFormat;
 
         public int Read(float[] buffer, int offset, int count)
         {

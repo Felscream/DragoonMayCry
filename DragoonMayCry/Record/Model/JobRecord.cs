@@ -4,13 +4,13 @@ namespace DragoonMayCry.Record.Model
 {
     public class JobRecord
     {
-        public Dictionary<ushort, DutyRecord> Record { get; private set; }
-        public Dictionary<ushort, DutyRecord> EmdRecord { get; private set; }
         public JobRecord()
         {
             Record = [];
             EmdRecord = [];
         }
+        public Dictionary<ushort, DutyRecord> Record { get; private set; }
+        public Dictionary<ushort, DutyRecord> EmdRecord { get; private set; }
 
         public void UpdateEmdRecord(ushort dutyId, DutyRecord dutyRecord)
         {
