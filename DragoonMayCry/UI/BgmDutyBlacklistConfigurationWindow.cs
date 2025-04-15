@@ -1,3 +1,5 @@
+#region
+
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Windowing;
@@ -11,6 +13,8 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using PlayerState = DragoonMayCry.State.PlayerState;
+
+#endregion
 
 namespace DragoonMayCry.UI
 {
@@ -70,7 +74,8 @@ namespace DragoonMayCry.UI
             }
 
             ImGui.Separator();
-            if (ImGui.BeginTable("##dutySearchResults", 2, ImGuiTableFlags.Resizable))
+            if (ImGui.BeginTable("##dutySearchResults", 2,
+                                 ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.Borders))
             {
                 ImGui.TableSetupColumn("Duty search", ImGuiTableColumnFlags.None, 280f);
                 ImGui.TableSetupColumn("Blacklisted duties", ImGuiTableColumnFlags.None, 240f);

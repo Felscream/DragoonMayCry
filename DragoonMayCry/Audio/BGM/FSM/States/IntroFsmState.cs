@@ -51,7 +51,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
                 return;
             }
 
-            if (CurrentTrackStopwatch.Elapsed.TotalMilliseconds > TransitionTime)
+            if (CurrentTrackStopwatch.ElapsedMilliseconds > TransitionTime)
             {
 
                 if (State != IntroState.OutOfCombat)
