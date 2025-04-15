@@ -1,3 +1,5 @@
+#region
+
 using Dalamud.Interface.Animation;
 using Dalamud.Interface.Animation.EasingFunctions;
 using Dalamud.Interface.Textures.TextureWraps;
@@ -16,6 +18,8 @@ using System.Numerics;
 using System.Reflection;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = FFXIVClientStructs.FFXIV.Common.Math.Vector4;
+
+#endregion
 
 namespace DragoonMayCry.UI
 {
@@ -186,6 +190,7 @@ namespace DragoonMayCry.UI
                 }
 
                 DrawHitCounter(Plugin.Configuration!.RankDisplayScale.Value);
+                ImGui.End();
             }
         }
 
@@ -205,6 +210,7 @@ namespace DragoonMayCry.UI
                     DrawCurrentRank(rankIcon, Plugin.Configuration!.SplitLayoutRankDisplayScale.Value);
                     DrawHitCounter(Plugin.Configuration!.SplitLayoutRankDisplayScale.Value);
                 }
+                ImGui.End();
             }
 
             ImGui.SetNextWindowSize(new Vector2(0, 0), ImGuiCond.Always);
@@ -218,6 +224,7 @@ namespace DragoonMayCry.UI
                     DrawProgressGauge(gauge, scoreProgressBar.Progress, style.GaugeColor,
                                       Plugin.Configuration.SplitLayoutProgressGaugeScale.Value);
                 }
+                ImGui.End();
             }
         }
 
@@ -291,6 +298,7 @@ namespace DragoonMayCry.UI
                     DrawProgressGauge(gauge, progress, new Vector3(255, 255, 255),
                                       Plugin.Configuration!.RankDisplayScale.Value);
                 }
+                ImGui.End();
             }
         }
 
@@ -311,6 +319,7 @@ namespace DragoonMayCry.UI
                     ImGui.Image(rankIcon.ImGuiHandle,
                                 rankSize * Plugin.Configuration!.SplitLayoutRankDisplayScale.Value / 100f);
                 }
+                ImGui.End();
             }
 
             ImGui.SetNextWindowSize(new Vector2(0, 0), ImGuiCond.Always);
@@ -323,6 +332,7 @@ namespace DragoonMayCry.UI
                     DrawProgressGauge(gauge, progress, new Vector3(255, 255, 255),
                                       Plugin.Configuration!.SplitLayoutProgressGaugeScale.Value);
                 }
+                ImGui.End();
             }
         }
 

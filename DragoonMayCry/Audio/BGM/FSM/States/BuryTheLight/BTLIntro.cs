@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
 {
     internal class BtlIntro(AudioService audioService) : IntroFsmState(audioService, 4500, 1500,
-                                                                       new EndCombatTiming(1600, 8000))
+                                                                       new CombatEndTransitionTimings(1600, 8000))
     {
         public override BgmState Id => BgmState.Intro;
 

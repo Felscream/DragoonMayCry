@@ -92,7 +92,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud
 
         public void Enter(bool fromVerse)
         {
-
             ISampleProvider? sample;
             if (fromVerse)
             {

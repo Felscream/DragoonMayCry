@@ -1,8 +1,12 @@
+#region
+
 using DragoonMayCry.Audio.Engine;
 using NAudio.Wave;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+
+#endregion
 
 namespace DragoonMayCry.Audio.BGM.FSM.States
 {
@@ -12,6 +16,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
         protected readonly int CachedSampleFadeOutDuration = cachedSampleFadeOutDuration;
         protected readonly Stopwatch CurrentTrackStopwatch = new();
         protected readonly Queue<ISampleProvider> Samples = new();
+        protected LinkedListNode<string>? CurrentTrack;
         //indicates when the next FSM state transition will take place
         protected int NextStateTransitionTime;
 

@@ -63,7 +63,7 @@ namespace DragoonMayCry.UI
             }
             if (contentFinder.TryGetRow((uint)idToBlacklist, out var contentFinderRow))
             {
-                if (!string.IsNullOrEmpty(contentFinderRow.Name.ToString())
+                if (!string.IsNullOrEmpty(contentFinderRow.Name.ExtractText())
                     && UIState.IsInstanceContentUnlocked(contentFinderRow.Content.RowId))
                 {
                     if (ImGui.Button("Add to blacklist##addToBlacklistButton"))
@@ -199,7 +199,7 @@ namespace DragoonMayCry.UI
             {
                 RowId = condition.RowId,
                 ContentId = condition.Content.RowId,
-                Name = condition.Name.ToString(),
+                Name = condition.Name.ExtractText(),
             };
         }
 

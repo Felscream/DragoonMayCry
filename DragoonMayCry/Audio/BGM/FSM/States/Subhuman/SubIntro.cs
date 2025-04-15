@@ -7,7 +7,8 @@ using System.Collections.Generic;
 namespace DragoonMayCry.Audio.BGM.FSM.States.Subhuman
 {
     internal class SubIntro(AudioService audioService) : IntroFsmState(audioService, 4500, 4500,
-                                                                       new EndCombatTiming(1300, 6000, 0, 9000, 6000))
+                                                                       new CombatEndTransitionTimings(
+                                                                           1300, 6000, 0, 9000, 6000))
     {
 
         protected override Dictionary<string, BgmTrackData> Stems { get; } = new()

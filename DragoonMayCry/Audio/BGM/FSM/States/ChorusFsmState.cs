@@ -40,7 +40,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
             [];
         protected PeakState CurrentState;
 
-        protected LinkedListNode<string>? CurrentTrack;
 
         protected int ElapsedStopwatchTimeBeforeDemotion;
         // indicates when it is appropriate to transition to a new FSM state

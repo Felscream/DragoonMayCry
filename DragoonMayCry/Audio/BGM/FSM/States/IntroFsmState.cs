@@ -6,26 +6,11 @@ using System;
 
 namespace DragoonMayCry.Audio.BGM.FSM.States
 {
-    internal class EndCombatTiming(
-        int transitionTime,
-        int nextStateTransitionTime,
-        int fadingDuration = 0,
-        int fadeOutDelay = 0,
-        int fadeOutDuration = 0)
-    {
-        public int TransitionTime => transitionTime;
-
-        public int NextStateTransitionTime => nextStateTransitionTime;
-        public int FadingDuration => fadingDuration;
-        public int FadeOutDelay => fadeOutDelay;
-        public int FadeOutDuration => fadeOutDuration;
-    }
-
     internal abstract class IntroFsmState(
         AudioService audioService,
         int introFadingDuration,
         int cachedSampleFadeOutDuration,
-        EndCombatTiming endCombatTiming) : BaseFsmState(audioService, cachedSampleFadeOutDuration)
+        CombatEndTransitionTimings combatEndTransitionTimings) : BaseFsmState(audioService, cachedSampleFadeOutDuration)
     {
 
         protected IntroState State = IntroState.OutOfCombat;
@@ -102,11 +87,12 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
             if (exit == ExitType.EndOfCombat && State != IntroState.EndCombat)
             {
                 State = IntroState.EndCombat;
-                TransitionTime = endCombatTiming.TransitionTime;
-                NextStateTransitionTime = endCombatTiming.NextStateTransitionTime;
+                TransitionTime = combatEndTransitionTimings.TransitionTime;
+                NextStateTransitionTime = combatEndTransitionTimings.NextStateTransitionTime;
                 CurrentTrackStopwatch.Restart();
-                AudioService.PlayBgm(BgmStemIds.CombatEnd, endCombatTiming.FadingDuration, endCombatTiming.FadeOutDelay,
-                                     endCombatTiming.FadeOutDuration);
+                AudioService.PlayBgm(BgmStemIds.CombatEnd, combatEndTransitionTimings.FadingDuration,
+                                     combatEndTransitionTimings.FadeOutDelay,
+                                     combatEndTransitionTimings.FadeOutDuration);
             }
             return NextStateTransitionTime;
         }

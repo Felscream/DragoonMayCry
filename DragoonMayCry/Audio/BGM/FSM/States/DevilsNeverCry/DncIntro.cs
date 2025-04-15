@@ -6,8 +6,8 @@ using System.Collections.Generic;
 
 namespace DragoonMayCry.Audio.BGM.FSM.States.DevilsNeverCry
 {
-    internal class DncIntro(AudioService audioService) : IntroFsmState(audioService, 12000, 4500,
-                                                                       new EndCombatTiming(1300, 6000))
+    internal class DncIntro(AudioService audioService) : IntroFsmState(audioService, 12000, 2500,
+                                                                       new CombatEndTransitionTimings(1300, 6000))
     {
         protected override Dictionary<string, BgmTrackData> Stems { get; } = new()
         {
