@@ -1,60 +1,53 @@
+#region
+
+using Dalamud.Game.Gui.FlyText;
 using Dalamud.Plugin.Services;
+using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Rank;
+using DragoonMayCry.Score.ScoringTable;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using DragoonMayCry.Configuration;
-using DragoonMayCry.Score.ScoringTable;
 using static DragoonMayCry.Score.Rank.StyleRankHandler;
+
+#endregion
 
 namespace DragoonMayCry.Score
 {
     public class ScoreManager : IDisposable, IResettable
     {
-        public class ScoreRank
-        {
-            public float Score { get; set; }
-            public StyleType Rank { get; set; }
-            public StyleScoring StyleScoring { get; set; }
-
-            public ScoreRank(float score, StyleType styleRank, StyleScoring styleScoring)
-            {
-                Score = score;
-                Rank = styleRank;
-                StyleScoring = styleScoring;
-            }
-        }
-
-
-        public EventHandler<double>? Scoring;
-        public EventHandler<StyleScoring>? StyleScoringChange;
-        public ScoreRank CurrentScoreRank { get; private set; }
-        private readonly PlayerState playerState;
-        private readonly StyleRankHandler rankHandler;
-        private readonly ItemLevelCalculator itemLevelCalculator;
-        private readonly ScoringTableFactory scoringTableFactory;
 
         private const int PointsReductionDuration = 8300; //milliseconds
         private const float PointReductionFactor = 0.8f;
         private const float PointsDecayMultiplierMalus = 4f;
-
-        private float pointsDecayMultiplier = 1f;
+        private readonly Stopwatch decayFreezeStopwatch;
+        private readonly ItemLevelCalculator itemLevelCalculator;
+        private readonly PlayerState playerState;
+        private readonly Stopwatch pointsReductionStopwatch;
+        private readonly StyleRankHandler rankHandler;
+        private readonly ScoringTableFactory scoringTableFactory;
         private bool isCastingLb;
         private Dictionary<StyleType, StyleScoring> jobScoringTable;
-        private readonly Stopwatch pointsReductionStopwatch;
+
+        private float pointsDecayMultiplier = 1f;
         private float scoreMultiplier = 1f;
+
+
+        public EventHandler<double>? Scoring;
+        public EventHandler<StyleScoring>? StyleScoringChange;
 
         public ScoreManager(StyleRankHandler styleRankHandler, PlayerActionTracker playerActionTracker)
         {
             pointsReductionStopwatch = new Stopwatch();
+            decayFreezeStopwatch = new Stopwatch();
 
             playerState = PlayerState.GetInstance();
-            playerState.RegisterJobChangeHandler(((_, _) => ResetScore()));
+            playerState.RegisterJobChangeHandler((_, _) => ResetScore());
             playerState.RegisterInstanceChangeHandler(OnInstanceChange!);
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             playerState.RegisterJobChangeHandler(OnJobChange);
@@ -62,8 +55,8 @@ namespace DragoonMayCry.Score
 
             itemLevelCalculator = new ItemLevelCalculator();
 
-            this.rankHandler = styleRankHandler;
-            this.rankHandler.StyleRankChange += OnRankChange!;
+            rankHandler = styleRankHandler;
+            rankHandler.StyleRankChange += OnRankChange!;
 
             playerActionTracker.DamageActionUsed += AddScore;
             playerActionTracker.GcdClip += OnGcdClip;
@@ -78,9 +71,24 @@ namespace DragoonMayCry.Score
             jobScoringTable = ScoringTableFactory.DefaultScoringTable;
 
             var styleRank = styleRankHandler.CurrentStyle.Value;
-            CurrentScoreRank = new(0, styleRank, jobScoringTable[styleRank]);
+            CurrentScoreRank = new ScoreRank(0, styleRank, jobScoringTable[styleRank]);
 
             ResetScore();
+        }
+        public ScoreRank CurrentScoreRank { get; private set; }
+
+        public void Dispose()
+        {
+            Service.Framework.Update -= UpdateScore;
+            Service.ClientState.Logout -= ResetScore;
+        }
+
+        public void Reset()
+        {
+            isCastingLb = false;
+            ResetScore();
+            DisablePointsGainedReduction();
+            pointsDecayMultiplier = 1f;
         }
 
         // Increase score decay overtime if GCD is dropped in Sprout mode, do nothing otherwise
@@ -96,12 +104,6 @@ namespace DragoonMayCry.Score
             pointsDecayMultiplier = PointsDecayMultiplierMalus;
         }
 
-        public void Dispose()
-        {
-            Service.Framework.Update -= UpdateScore;
-            Service.ClientState.Logout -= ResetScore;
-        }
-
         private void UpdateScore(IFramework framework)
         {
             if (!Plugin.CanRunDmc())
@@ -114,6 +116,11 @@ namespace DragoonMayCry.Score
                 DisablePointsGainedReduction();
             }
 
+            if (decayFreezeStopwatch.IsRunning && decayFreezeStopwatch.ElapsedMilliseconds > 2000)
+            {
+                decayFreezeStopwatch.Reset();
+            }
+
             if (isCastingLb)
             {
                 CurrentScoreRank.Score =
@@ -123,7 +130,7 @@ namespace DragoonMayCry.Score
                                0,
                                CurrentScoreRank.StyleScoring.Threshold * 1.5f);
             }
-            else
+            else if (!decayFreezeStopwatch.IsRunning)
             {
                 var scoreReduction =
                     (float)(framework.UpdateDelta.TotalSeconds *
@@ -140,13 +147,24 @@ namespace DragoonMayCry.Score
                 CurrentScoreRank.Score, 0, CurrentScoreRank.StyleScoring.Threshold * 1.2f);
         }
 
-        private void AddScore(object? sender, float val)
+        private void AddScore(object? sender, PlayerActionTracker.DamagePayload payload)
         {
             pointsDecayMultiplier = 1f;
-            var points = val * CurrentScoreRank.StyleScoring.PointCoefficient * scoreMultiplier;
+            var points = payload.Damage * CurrentScoreRank.StyleScoring.PointCoefficient * scoreMultiplier;
             if (AreGcdClippingRestrictionsActive())
             {
                 points *= PointReductionFactor;
+            }
+
+            switch (payload.HitKind)
+            {
+                case FlyTextKind.DamageCritDh:
+                    points *= 1.25f;
+                    decayFreezeStopwatch.Restart();
+                    break;
+                case FlyTextKind.DamageCrit:
+                    points *= 1.1f;
+                    break;
             }
 
             CurrentScoreRank.Score += points;
@@ -159,10 +177,13 @@ namespace DragoonMayCry.Score
             Scoring?.Invoke(this, points);
         }
 
-        private bool CanDisableGcdClippingRestrictions() => pointsReductionStopwatch is
+        private bool CanDisableGcdClippingRestrictions()
         {
-            IsRunning: true, ElapsedMilliseconds: > PointsReductionDuration
-        };
+            return pointsReductionStopwatch is
+            {
+                IsRunning: true, ElapsedMilliseconds: > PointsReductionDuration,
+            };
+        }
 
         private void OnInstanceChange(object send, bool value)
         {
@@ -282,12 +303,18 @@ namespace DragoonMayCry.Score
             }
         }
 
-        public void Reset()
+        public class ScoreRank
         {
-            isCastingLb = false;
-            ResetScore();
-            DisablePointsGainedReduction();
-            pointsDecayMultiplier = 1f;
+
+            public ScoreRank(float score, StyleType styleRank, StyleScoring styleScoring)
+            {
+                Score = score;
+                Rank = styleRank;
+                StyleScoring = styleScoring;
+            }
+            public float Score { get; set; }
+            public StyleType Rank { get; set; }
+            public StyleScoring StyleScoring { get; set; }
         }
     }
 }

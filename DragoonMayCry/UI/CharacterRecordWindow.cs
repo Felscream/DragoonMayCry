@@ -1,54 +1,60 @@
+#region
+
+using Dalamud.Interface;
 using Dalamud.Interface.Components;
+using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
+using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
 using DragoonMayCry.Record;
 using DragoonMayCry.Record.Model;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ImGuiNET;
+using Lumina.Excel;
+using Lumina.Excel.Sheets;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using Dalamud.Interface.Textures.TextureWraps;
-using DragoonMayCry.Configuration;
-using Lumina.Excel;
-using Lumina.Excel.Sheets;
 using PlayerState = DragoonMayCry.State.PlayerState;
+
+#endregion
 
 namespace DragoonMayCry.UI
 {
     public class CharacterRecordWindow : Window
     {
-        private readonly IClientState clientState;
-        private readonly RecordService recordService;
-        private readonly PlayerState playerState;
-        private readonly ConfigWindow configWindow;
-        private readonly HowItWorksWindow howItWorksWindow;
-
-        private Dictionary<JobId, JobRecord> characterRecords = new();
-        private readonly ExcelSheet<ContentFinderCondition> contentFinder;
-        private readonly Extension[] extensions;
-        private readonly List<String> extensionValues;
-        private readonly List<JobId> jobs;
         private const uint HiddenDutyIconId = 112056;
         private const string MissingRankTexPath = "DragoonMayCry.Assets.MissingRank.png";
         private const string DefaultKillTime = "--:--";
+
+        private const ImGuiTableFlags TableFlags =
+            ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.ScrollX | ImGuiTableFlags.BordersInnerH;
+        private readonly IClientState clientState;
+        private readonly ConfigWindow configWindow;
+        private readonly ExcelSheet<ContentFinderCondition> contentFinder;
+        private readonly Vector2 dutyTextureSize = new(376, 120);
+        private readonly Extension[] extensions;
+        private readonly List<string> extensionValues;
+        private readonly HowItWorksWindow howItWorksWindow;
+        private readonly List<JobId> jobs;
+        private readonly PlayerState playerState;
+        private readonly Vector2 rankSize = new(130, 130);
+        private readonly RecordService recordService;
         private ExtensionCategory[] categories = [];
-        private List<string> subcategories = [];
+
+        private Dictionary<JobId, JobRecord> characterRecords = new();
         private List<Difficulty> difficulties = [];
         private List<DisplayedDuty> displayedDuties = [];
+        private int selectedCategoryId;
+        private int selectedDifficultyId;
+        private int selectedExtensionId;
         private JobId selectedJob;
-        private int selectedExtensionId = 0;
-        private int selectedCategoryId = 0;
-        private int selectedSubcategoryId = 0;
-        private int selectedDifficultyId = 0;
-        private readonly Vector2 dutyTextureSize = new(376, 120);
-        private readonly Vector2 rankSize = new(130, 130);
-
-        private const ImGuiTableFlags TableFlags = ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.ScrollX | ImGuiTableFlags.BordersInnerH;
+        private int selectedSubcategoryId;
+        private List<string> subcategories = [];
 
         public CharacterRecordWindow(
             RecordService recordService, ConfigWindow configWindow, HowItWorksWindow howItWorksWindow) : base(
@@ -79,7 +85,7 @@ namespace DragoonMayCry.UI
             jobs =
             [
                 .. Enum.GetValues(typeof(JobId)).Cast<JobId>().Where(job => job != JobId.OTHER)
-                       .OrderBy(job => job.ToString())
+                       .OrderBy(job => job.ToString()),
             ];
             selectedJob = jobs[0];
 
@@ -97,7 +103,7 @@ namespace DragoonMayCry.UI
         public override void Draw()
         {
             ImGui.SetCursorPosX(ImGui.GetContentRegionAvail().X - 40f - ImGui.GetStyle().WindowPadding.X);
-            if (ImGuiComponents.IconButton(Dalamud.Interface.FontAwesomeIcon.Cog))
+            if (ImGuiComponents.IconButton(FontAwesomeIcon.Cog))
             {
                 configWindow.Toggle();
             }
@@ -109,7 +115,7 @@ namespace DragoonMayCry.UI
 
             ImGui.SameLine();
 
-            if (ImGuiComponents.IconButton(Dalamud.Interface.FontAwesomeIcon.Question))
+            if (ImGuiComponents.IconButton(FontAwesomeIcon.Question))
             {
                 howItWorksWindow.Toggle();
             }
@@ -145,7 +151,7 @@ namespace DragoonMayCry.UI
 
         private void OnJobChange(object? sender, JobId job)
         {
-            if (job == JobId.OTHER || this.IsOpen)
+            if (job == JobId.OTHER || IsOpen)
             {
                 return;
             }
@@ -320,6 +326,7 @@ namespace DragoonMayCry.UI
                         }
 
                         #endregion
+
                     }
 
                     ImGui.EndTable();
@@ -329,6 +336,7 @@ namespace DragoonMayCry.UI
             }
 
             #endregion
+
         }
 
         private void UpdateCategories()
@@ -401,7 +409,7 @@ namespace DragoonMayCry.UI
             {
                 Difficulty.HighEnd => "High-end",
                 Difficulty.Normal => "Normal",
-                _ => "Unknown"
+                _ => "Unknown",
             };
         }
 
@@ -416,13 +424,13 @@ namespace DragoonMayCry.UI
         {
             var content = GetContent(displayed);
             var iconToDisplay = displayed.Duty.IconId;
-            
+
             if (content == null || content.Value.RowId == 0 || content.Value.Content.RowId == 0)
             {
                 iconToDisplay = characterRecords.Values.Any(record => record.Record.ContainsKey(displayed.DutyId)
                                                                       || record.EmdRecord.ContainsKey(displayed.DutyId))
                                     ? displayed.Duty.IconId : HiddenDutyIconId;
-            } 
+            }
             else if (!UIState.IsInstanceContentUnlocked(content.Value.Content.RowId))
             {
                 iconToDisplay = HiddenDutyIconId;
@@ -431,7 +439,7 @@ namespace DragoonMayCry.UI
             texture = null!;
             if (Service.TextureProvider.TryGetFromGameIcon(iconToDisplay, out var tex))
             {
-                if (tex.TryGetWrap(out var wrap, out var _))
+                if (tex.TryGetWrap(out var wrap, out _))
                 {
                     texture = wrap;
                     return true;
@@ -476,7 +484,7 @@ namespace DragoonMayCry.UI
 
             ImGui.SetCursorPos(new Vector2(ImGui.GetCursorPosX() + 30, ImGui.GetCursorPosY() + 10));
             if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), rankIconPath)
-                       .TryGetWrap(out var rankIcon, out var _))
+                       .TryGetWrap(out var rankIcon, out _))
             {
                 ImGui.Image(rankIcon.ImGuiHandle, rankSize);
             }
@@ -515,15 +523,16 @@ namespace DragoonMayCry.UI
             if (content == null || content.Value.RowId == 0 || content.Value.Content.RowId == 0)
             {
                 return characterRecords.Values.Any(record => record.Record.ContainsKey(displayed.DutyId)
-                                                             || record.EmdRecord.ContainsKey(displayed.DutyId)) ? displayed.Duty.Name : "???";
+                                                             || record.EmdRecord.ContainsKey(displayed.DutyId))
+                           ? displayed.Duty.Name : "???";
             }
-            
+
             if (!UIState.IsInstanceContentUnlocked(content.Value.Content.RowId))
             {
                 return "???";
             }
 
-            var name = content?.Name.ToString() ?? displayed.Duty.Name;
+            var name = content?.Name.ExtractText() ?? displayed.Duty.Name;
             return string.Concat(name[0].ToString().ToUpper(), name.AsSpan(1));
         }
 
