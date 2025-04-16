@@ -1,3 +1,5 @@
+#region
+
 using Dalamud.Game.Gui.FlyText;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
@@ -5,101 +7,46 @@ using Dalamud.Plugin.Services;
 using DragoonMayCry.Data;
 using DragoonMayCry.Score.Action.JobModule;
 using DragoonMayCry.State;
+using DragoonMayCry.Util;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using ImGuiNET;
+using Lumina.Excel;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Lumina.Excel;
 using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
 using LuminaAction = Lumina.Excel.Sheets.Action;
+
+#endregion
 
 namespace DragoonMayCry.Score.Action
 {
     public unsafe class PlayerActionTracker : IDisposable
     {
-        public struct LimitBreakEvent(bool isTankLb, bool isCasting)
-        {
-            public readonly bool IsTankLb = isTankLb;
-            public readonly bool IsCasting = isCasting;
-        }
-
-        public class LimitBreak(float gracePeriod, uint id)
-        {
-            public float GracePeriod { get; set; } = gracePeriod;
-            public uint ActionId { get; set; } = id;
-            public uint TargetHit { get; set; } = 0;
-        }
-
-        private readonly HashSet<FlyTextKind> validTextKind =
-        [
-            FlyTextKind.Damage,
-            FlyTextKind.DamageCrit,
-            FlyTextKind.DamageDh,
-            FlyTextKind.DamageCritDh,
-
-        ];
-
-        public EventHandler? GcdDropped;
-        public EventHandler<float>? DamageActionUsed;
-        public EventHandler<float>? GcdClip;
-        public EventHandler<LimitBreakEvent>? UsingLimitBreak;
-        public EventHandler? LimitBreakEffect;
-        public EventHandler? LimitBreakCanceled;
-        public EventHandler? ActionFlyTextCreated;
-        public EventHandler<float>? TotalCombatWastedGcd;
-        public EventHandler<DutyCompletionStats>? DutyCompletedWastedGcd;
-
-
-        private delegate void ActionUsedDelegate(
-            uint sourceId, nint sourceCharacter, nint pos,
-            nint effectHeader, nint effectArray, nint effectTrail);
-
-        private readonly Hook<ActionUsedDelegate>? onActionUsedHook;
-
-        private delegate void ActorControlDelegate(
-            uint entityId, uint id, uint unk1, uint type, uint unk2, uint unk3,
-            uint unk4, uint unk5, ulong targetId, byte unk6);
-
-        private readonly Hook<ActorControlDelegate>? onActorControlHook;
-
-        private delegate void CastDelegate(
-            uint sourceId, nint sourceCharacter);
-
-        private readonly Hook<CastDelegate>? onCastHook;
-
         public delegate void AddToScreenLogWithLogMessageId(
             BattleChara* target, BattleChara* dealer, int a3, char a4, int castId, int a6, int a7, int a8);
 
-        readonly Hook<AddToScreenLogWithLogMessageId>? addToScreenLogWithLogMessageId;
-
-        private readonly ActionManagerLight* actionManagerL;
-        private readonly PlayerState playerState;
-        private readonly IDutyState dutyState;
-        private readonly ExcelSheet<LuminaAction> luminaActionSheet;
-
         private const float DefaultGcdDropThreshold = 0.2f;
-        private ushort lastDetectedClip = 0;
-        private float wastedGcd = 0;
-        private float combatWastedGcd = 0;
-
-        private bool isGcdDropped;
-
-        private readonly Stopwatch limitBreakStopwatch;
-        private readonly Stopwatch spellCastStopwatch;
-        private LimitBreak? limitBreakCast;
         private const int MaxActionHistorySize = 6;
         private readonly Queue<UsedAction> actionHistory;
 
-        private readonly HashSet<FlyTextKind> validHitTypes = new()
-            { FlyTextKind.Damage, FlyTextKind.DamageDh, FlyTextKind.DamageCrit, FlyTextKind.DamageCritDh };
+        private readonly ActionManager* actionManagerL;
 
-        private uint spellCastId = uint.MaxValue;
-        private IJobActionModifier? jobActionModule;
-        private JobModuleFactory? jobModuleFactory;
-        private JobId currentJob = JobId.OTHER;
+        private readonly Hook<AddToScreenLogWithLogMessageId>? addToScreenLogWithLogMessageId;
+        private readonly IDutyState dutyState;
+
+        private readonly Stopwatch limitBreakStopwatch;
+        private readonly ExcelSheet<LuminaAction> luminaActionSheet;
+
+        private readonly Hook<ActionUsedDelegate>? onActionUsedHook;
+
+        private readonly Hook<ActorControlDelegate>? onActorControlHook;
+
+        private readonly Hook<CastDelegate>? onCastHook;
+        private readonly PlayerState playerState;
+        private readonly Stopwatch spellCastStopwatch;
 
         // added 0.1f to all duration
         private readonly Dictionary<uint, float> tankLimitBreakDelays =
@@ -113,9 +60,42 @@ namespace DragoonMayCry.Score.Action
                 { 17105, 4.1f }, // GNB Gunmetal Soul
             };
 
+        private readonly HashSet<FlyTextKind> validHitTypes = new()
+            { FlyTextKind.Damage, FlyTextKind.DamageDh, FlyTextKind.DamageCrit, FlyTextKind.DamageCritDh };
+
+        private readonly HashSet<FlyTextKind> validTextKind =
+        [
+            FlyTextKind.Damage,
+            FlyTextKind.DamageCrit,
+            FlyTextKind.DamageDh,
+            FlyTextKind.DamageCritDh,
+
+        ];
+        public EventHandler? ActionFlyTextCreated;
+        private float combatWastedGcd;
+        private JobId currentJob = JobId.OTHER;
+        public EventHandler<DamagePayload>? DamageActionUsed;
+        public EventHandler<DutyCompletionStats>? DutyCompletedWastedGcd;
+        public EventHandler<float>? GcdClip;
+
+        public EventHandler? GcdDropped;
+
+        private bool isGcdDropped;
+        private IJobActionModifier? jobActionModule;
+        private JobModuleFactory? jobModuleFactory;
+        private ushort lastDetectedClip;
+        public EventHandler? LimitBreakCanceled;
+        private LimitBreak? limitBreakCast;
+        public EventHandler? LimitBreakEffect;
+
+        private uint spellCastId = uint.MaxValue;
+        public EventHandler<float>? TotalCombatWastedGcd;
+        public EventHandler<LimitBreakEvent>? UsingLimitBreak;
+        private float wastedGcd;
+
         public PlayerActionTracker()
         {
-            actionHistory = new();
+            actionHistory = new Queue<UsedAction>();
             luminaActionSheet = Service.DataManager.GetExcelSheet<LuminaAction>();
             playerState = PlayerState.GetInstance();
             currentJob = playerState.GetCurrentJob();
@@ -124,14 +104,14 @@ namespace DragoonMayCry.Score.Action
 
             limitBreakStopwatch = new Stopwatch();
             spellCastStopwatch = new Stopwatch();
-            actionManagerL =
-                (ActionManagerLight*)ActionManager.Instance();
+            actionManagerL = ActionManager.Instance();
             Service.FlyText.FlyTextCreated += OnFlyText;
             try
             {
                 onActionUsedHook =
                     Service.Hook.HookFromSignature<ActionUsedDelegate>(
-                        "40 55 53 56 41 54 41 55 41 56 41 57 48 8D AC 24 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 70 ", OnActionUsed);
+                        "40 55 53 56 41 54 41 55 41 56 41 57 48 8D AC 24 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 70 ",
+                        OnActionUsed);
 
 
                 onActorControlHook =
@@ -195,7 +175,7 @@ namespace DragoonMayCry.Score.Action
             {
                 return;
             }
-            
+
             if (limitBreakCast != null && limitBreakCast.ActionId == (uint)actionId)
             {
                 limitBreakCast.TargetHit++;
@@ -212,7 +192,7 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-            var kind = GetHitType(hitType);
+            var kind = HitTypeHelper.GetHitType(hitType);
             if (!validHitTypes.Contains(kind) ||
                 dealer->Character.GetGameObjectId() == target->Character.GetGameObjectId())
             {
@@ -221,7 +201,7 @@ namespace DragoonMayCry.Score.Action
                     var bonusPoints = jobActionModule.OnActionAppliedOnTarget((uint)actionId);
                     if (bonusPoints > 0)
                     {
-                        DamageActionUsed?.Invoke(this, bonusPoints);
+                        DamageActionUsed?.Invoke(this, new DamagePayload(bonusPoints, kind));
                         ResetLimitBreakUse();
                     }
                 }
@@ -236,6 +216,7 @@ namespace DragoonMayCry.Score.Action
             if (Plugin.CanRunDmc() && hasFailedMechanic)
             {
                 combatWastedGcd += 3f;
+                Service.Log.Information($"failed Wasted GCD {combatWastedGcd}");
             }
         }
 
@@ -278,25 +259,10 @@ namespace DragoonMayCry.Score.Action
             var bonusPoints = jobActionModule?.OnAction((uint)actionId);
             if (bonusPoints > 0)
             {
-                
-                DamageActionUsed?.Invoke(this, bonusPoints.Value);
+
+                DamageActionUsed?.Invoke(this, new DamagePayload(bonusPoints.Value, FlyTextKind.None));
                 ResetLimitBreakUse();
             }
-        }
-
-        private static FlyTextKind GetHitType(int hitType)
-        {
-            return hitType switch
-            {
-                448 => FlyTextKind.DamageDh,
-                451 => FlyTextKind.DamageCritDh,
-                510 => FlyTextKind.Damage,
-                511 => FlyTextKind.DamageCrit,
-                519 => FlyTextKind.Healing,
-                521 => FlyTextKind.MpRegen,
-                526 => FlyTextKind.Buff,
-                _ => FlyTextKind.AutoAttackOrDot
-            };
         }
 
         private PlayerActionType TypeForActionId(uint actionId)
@@ -348,6 +314,7 @@ namespace DragoonMayCry.Score.Action
                 if (playerState.CanTargetEnemy())
                 {
                     combatWastedGcd += (float)limitBreakStopwatch.Elapsed.TotalSeconds;
+                    Service.Log.Information($"LB Wasted GCD {combatWastedGcd}");
                 }
 
                 CancelLimitBreak();
@@ -355,6 +322,7 @@ namespace DragoonMayCry.Score.Action
             else if (spellCastStopwatch.IsRunning)
             {
                 combatWastedGcd += (float)spellCastStopwatch.Elapsed.TotalSeconds;
+                Service.Log.Information($"Cast Wasted GCD {combatWastedGcd}");
             }
 
             spellCastStopwatch.Reset();
@@ -505,7 +473,7 @@ namespace DragoonMayCry.Score.Action
             {
                 return animationLock > 0.2f;
             }
-            
+
             if (Plugin.IsEmdModeEnabled())
             {
                 return animationLock > 0.1f;
@@ -516,37 +484,36 @@ namespace DragoonMayCry.Score.Action
 
         private void DetectClipping()
         {
-            var animationLock = actionManagerL->animationLock;
-            
-            
-            if (lastDetectedClip == actionManagerL->currentSequence &&(
-                 actionManagerL->isGCDRecastActive
-                || animationLock <= 0.1))
+            var animationLock = actionManagerL->AnimationLock;
+
+            Service.Log.Information($"last handled sequence {actionManagerL->LastHandledActionSequence}");
+            Service.Log.Information($"last used sequence {actionManagerL->LastUsedActionSequence}");
+            if (lastDetectedClip == actionManagerL->LastHandledActionSequence
+                || animationLock <= 0)
             {
                 return;
             }
-            
 
-            if (limitBreakCast == null)
+            combatWastedGcd += animationLock;
+            Service.Log.Information($"Clipping Wasted GCD {combatWastedGcd}");
+
+            if (IsGcdClipped(animationLock)
+                && limitBreakCast == null
+                && !playerState.IsIncapacitated()
+                && playerState.CanTargetEnemy())
             {
-                combatWastedGcd += animationLock;
-            }
-            if (IsGcdClipped(animationLock))
-            {
-                if (limitBreakCast == null)
+
+                if (Plugin.IsEmdModeEnabled())
                 {
-                    if (Plugin.IsEmdModeEnabled() && !playerState.IsIncapacitated() && playerState.CanTargetEnemy())
-                    {
-                        GcdDropped?.Invoke(this, EventArgs.Empty);
-                    }
-                    else
-                    {
-                        GcdClip?.Invoke(this, animationLock);
-                    }
+                    GcdDropped?.Invoke(this, EventArgs.Empty);
+                }
+                else
+                {
+                    GcdClip?.Invoke(this, animationLock);
                 }
             }
 
-            lastDetectedClip = actionManagerL->currentSequence;
+            lastDetectedClip = actionManagerL->LastUsedActionSequence;
         }
 
         private void OnJobChanged(object? sender, JobId job)
@@ -571,14 +538,15 @@ namespace DragoonMayCry.Score.Action
         {
             var isIncapacitated = playerState.IsIncapacitated();
             var canTargetEnemy = playerState.CanTargetEnemy();
-            if (!actionManagerL->isGCDRecastActive
-                && actionManagerL->animationLock == 0
+            if (!actionManagerL->Gcd
+                && actionManagerL->animationLock <= 0
                 && !actionManagerL->isCasting
                 && limitBreakCast == null
                 && !isIncapacitated
                 && (canTargetEnemy || playerState.IsDead))
             {
                 combatWastedGcd += ImGui.GetIO().DeltaTime;
+                Service.Log.Information($"Wasted GCD {combatWastedGcd}");
             }
 
             // do not track dropped GCDs if the LB is being cast
@@ -621,7 +589,7 @@ namespace DragoonMayCry.Score.Action
 
         internal void SetJobModuleFactory(JobModuleFactory factory)
         {
-            this.jobModuleFactory = factory;
+            jobModuleFactory = factory;
             jobActionModule = jobModuleFactory.GetJobActionModule();
         }
 
@@ -692,12 +660,12 @@ namespace DragoonMayCry.Score.Action
                     var modifiedPoints = jobActionModule.OnActionAppliedOnTarget(actionId);
                     if (modifiedPoints > 0)
                     {
-                        DamageActionUsed?.Invoke(this, modifiedPoints);
+                        DamageActionUsed?.Invoke(this, new DamagePayload(modifiedPoints, kind));
                         return;
                     }
                 }
 
-                DamageActionUsed?.Invoke(this, damage);
+                DamageActionUsed?.Invoke(this, new DamagePayload(damage, kind));
                 ResetLimitBreakUse();
             }
         }
@@ -710,12 +678,43 @@ namespace DragoonMayCry.Score.Action
             }
         }
 
+        public class DamagePayload(float damage, FlyTextKind hitKind)
+        {
+            public float Damage { get; } = damage;
+            public FlyTextKind HitKind { get; } = hitKind;
+        }
+
+        public struct LimitBreakEvent(bool isTankLb, bool isCasting)
+        {
+            public readonly bool IsTankLb = isTankLb;
+            public readonly bool IsCasting = isCasting;
+        }
+
+        public class LimitBreak(float gracePeriod, uint id)
+        {
+            public float GracePeriod { get; set; } = gracePeriod;
+            public uint ActionId { get; set; } = id;
+            public uint TargetHit { get; set; }
+        }
+
+
+        private delegate void ActionUsedDelegate(
+            uint sourceId, nint sourceCharacter, nint pos,
+            nint effectHeader, nint effectArray, nint effectTrail);
+
+        private delegate void ActorControlDelegate(
+            uint entityId, uint id, uint unk1, uint type, uint unk2, uint unk3,
+            uint unk4, uint unk5, ulong targetId, byte unk6);
+
+        private delegate void CastDelegate(
+            uint sourceId, nint sourceCharacter);
+
         public struct DutyCompletionStats
         {
             public float WastedGcd { get; private set; }
             public ushort InstanceId { get; private set; }
 
-            public DutyCompletionStats(float wastedGcd, ushort instanceId)
+            internal DutyCompletionStats(float wastedGcd, ushort instanceId)
             {
                 WastedGcd = wastedGcd;
                 InstanceId = instanceId;
@@ -724,9 +723,6 @@ namespace DragoonMayCry.Score.Action
 
         private class UsedAction
         {
-            public uint ActionId { get; private set; }
-            public int Damage { get; private set; }
-            public FlyTextKind Kind { get; private set; }
 
             public UsedAction(uint actionId, int damage, FlyTextKind kind)
             {
@@ -734,6 +730,9 @@ namespace DragoonMayCry.Score.Action
                 Damage = damage;
                 Kind = kind;
             }
+            public uint ActionId { get; private set; }
+            public int Damage { get; private set; }
+            public FlyTextKind Kind { get; private set; }
 
             public override bool Equals(object? obj)
             {
