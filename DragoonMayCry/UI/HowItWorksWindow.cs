@@ -77,6 +77,7 @@ namespace DragoonMayCry.UI
             ImGui.Text("- You fill your style gauge by dealing damage. The value is read from the flying text.");
             ImGui.Text(
                 "- The expected damage output is based on your role and iLvL at the start of the encounter. It is calculated using an exponential regression on the nDPS 80th percentile from FFLogs on Dawntrail and Endwalker content, and some legacy ultimates pulls in 7.05.");
+            ImGui.Text("- Critical Direct hits will stop the gauge decay for 2 seconds.");
             ImGui.Text("- Limit breaks are cool.");
 
             ImGui.TextColored(goldColor, "\nDemotions");

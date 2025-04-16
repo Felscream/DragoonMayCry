@@ -32,7 +32,7 @@ namespace DragoonMayCry.Score.Action
         private const int MaxActionHistorySize = 6;
         private readonly Queue<UsedAction> actionHistory;
 
-        private readonly ActionManager* actionManagerL;
+        private readonly ActionManagerLight* actionManagerL;
 
         private readonly Hook<AddToScreenLogWithLogMessageId>? addToScreenLogWithLogMessageId;
         private readonly IDutyState dutyState;
@@ -104,7 +104,7 @@ namespace DragoonMayCry.Score.Action
 
             limitBreakStopwatch = new Stopwatch();
             spellCastStopwatch = new Stopwatch();
-            actionManagerL = ActionManager.Instance();
+            actionManagerL = (ActionManagerLight*)ActionManager.Instance();
             Service.FlyText.FlyTextCreated += OnFlyText;
             try
             {
@@ -216,7 +216,6 @@ namespace DragoonMayCry.Score.Action
             if (Plugin.CanRunDmc() && hasFailedMechanic)
             {
                 combatWastedGcd += 3f;
-                Service.Log.Information($"failed Wasted GCD {combatWastedGcd}");
             }
         }
 
@@ -314,7 +313,6 @@ namespace DragoonMayCry.Score.Action
                 if (playerState.CanTargetEnemy())
                 {
                     combatWastedGcd += (float)limitBreakStopwatch.Elapsed.TotalSeconds;
-                    Service.Log.Information($"LB Wasted GCD {combatWastedGcd}");
                 }
 
                 CancelLimitBreak();
@@ -322,7 +320,6 @@ namespace DragoonMayCry.Score.Action
             else if (spellCastStopwatch.IsRunning)
             {
                 combatWastedGcd += (float)spellCastStopwatch.Elapsed.TotalSeconds;
-                Service.Log.Information($"Cast Wasted GCD {combatWastedGcd}");
             }
 
             spellCastStopwatch.Reset();
@@ -484,23 +481,20 @@ namespace DragoonMayCry.Score.Action
 
         private void DetectClipping()
         {
-            var animationLock = actionManagerL->AnimationLock;
-
-            Service.Log.Information($"last handled sequence {actionManagerL->LastHandledActionSequence}");
-            Service.Log.Information($"last used sequence {actionManagerL->LastUsedActionSequence}");
-            if (lastDetectedClip == actionManagerL->LastHandledActionSequence
-                || animationLock <= 0)
+            var animationLock = actionManagerL->animationLock;
+            if (lastDetectedClip == actionManagerL->currentSequence
+                || actionManagerL->isGCDRecastActive
+                || actionManagerL->isCasting
+                || animationLock <= 0.1f
+                || !playerState.CanTargetEnemy()
+                || limitBreakCast != null)
             {
                 return;
             }
 
             combatWastedGcd += animationLock;
-            Service.Log.Information($"Clipping Wasted GCD {combatWastedGcd}");
 
-            if (IsGcdClipped(animationLock)
-                && limitBreakCast == null
-                && !playerState.IsIncapacitated()
-                && playerState.CanTargetEnemy())
+            if (IsGcdClipped(animationLock))
             {
 
                 if (Plugin.IsEmdModeEnabled())
@@ -513,7 +507,7 @@ namespace DragoonMayCry.Score.Action
                 }
             }
 
-            lastDetectedClip = actionManagerL->LastUsedActionSequence;
+            lastDetectedClip = actionManagerL->currentSequence;
         }
 
         private void OnJobChanged(object? sender, JobId job)
@@ -538,15 +532,16 @@ namespace DragoonMayCry.Score.Action
         {
             var isIncapacitated = playerState.IsIncapacitated();
             var canTargetEnemy = playerState.CanTargetEnemy();
-            if (!actionManagerL->Gcd
+
+            if (!actionManagerL->isGCDRecastActive
                 && actionManagerL->animationLock <= 0
                 && !actionManagerL->isCasting
+                && !actionManagerL->isQueued
                 && limitBreakCast == null
                 && !isIncapacitated
                 && (canTargetEnemy || playerState.IsDead))
             {
                 combatWastedGcd += ImGui.GetIO().DeltaTime;
-                Service.Log.Information($"Wasted GCD {combatWastedGcd}");
             }
 
             // do not track dropped GCDs if the LB is being cast

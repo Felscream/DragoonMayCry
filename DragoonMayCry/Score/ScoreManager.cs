@@ -25,7 +25,6 @@ namespace DragoonMayCry.Score
         private const int PointsReductionDuration = 8300; //milliseconds
         private const float PointReductionFactor = 0.8f;
         private const float PointsDecayMultiplierMalus = 4f;
-        private static readonly List<FlyTextKind> decayFreezeKind = [FlyTextKind.DamageCritDh];
         private readonly Stopwatch decayFreezeStopwatch;
         private readonly ItemLevelCalculator itemLevelCalculator;
         private readonly PlayerState playerState;
@@ -117,10 +116,9 @@ namespace DragoonMayCry.Score
                 DisablePointsGainedReduction();
             }
 
-            if (decayFreezeStopwatch.IsRunning && decayFreezeStopwatch.ElapsedMilliseconds > 1200)
+            if (decayFreezeStopwatch.IsRunning && decayFreezeStopwatch.ElapsedMilliseconds > 2000)
             {
                 decayFreezeStopwatch.Reset();
-                Service.Log.Information("Freezing removed");
             }
 
             if (isCastingLb)
@@ -158,17 +156,22 @@ namespace DragoonMayCry.Score
                 points *= PointReductionFactor;
             }
 
+            switch (payload.HitKind)
+            {
+                case FlyTextKind.DamageCritDh:
+                    points *= 1.25f;
+                    decayFreezeStopwatch.Restart();
+                    break;
+                case FlyTextKind.DamageCrit:
+                    points *= 1.1f;
+                    break;
+            }
+
             CurrentScoreRank.Score += points;
             if (CurrentScoreRank.Rank == StyleType.SSS)
             {
                 CurrentScoreRank.Score = Math.Min(
                     CurrentScoreRank.Score, CurrentScoreRank.StyleScoring.Threshold);
-            }
-
-            if (decayFreezeKind.Contains(payload.HitKind))
-            {
-                decayFreezeStopwatch.Restart();
-                Service.Log.Information("Freezing active");
             }
 
             Scoring?.Invoke(this, points);

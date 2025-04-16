@@ -1,10 +1,9 @@
+#region
+
 using FFXIVClientStructs.FFXIV.Client.Game;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+
+#endregion
 
 namespace DragoonMayCry.State
 {
@@ -17,7 +16,7 @@ namespace DragoonMayCry.State
         [FieldOffset(0x34)] public float castTime;
         [FieldOffset(0x60)] public ComboDetail Combo;
         [FieldOffset(0x68)] public bool isQueued;
-        [FieldOffset(0x110)] public ushort currentSequence;
+        [FieldOffset(0x120)] public ushort currentSequence;
         [FieldOffset(0x5F8)] public bool isGCDRecastActive;
         [FieldOffset(0x5FC)] public uint currentGCDAction;
         [FieldOffset(0x600)] public float elapsedGCDRecastTime;
