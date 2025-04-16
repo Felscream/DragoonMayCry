@@ -1,3 +1,5 @@
+#region
+
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.State;
@@ -5,16 +7,17 @@ using DragoonMayCry.Util;
 using System;
 using System.Diagnostics;
 
+#endregion
+
 namespace DragoonMayCry.Score.Rank
 {
     public class FinalRankCalculator : IResettable
     {
-        public EventHandler<StyleType>? FinalRankCalculated;
-        public EventHandler<FinalRank>? DutyCompletedFinalRank;
-        public FinalRank FinalRank { get; private set; }
-        private readonly PlayerState playerState;
-        private readonly PlayerActionTracker playerActionTracker;
         private readonly Stopwatch combatTimer;
+        private readonly PlayerActionTracker playerActionTracker;
+        private readonly PlayerState playerState;
+        public EventHandler<FinalRank>? DutyCompletedFinalRank;
+        public EventHandler<StyleType>? FinalRankCalculated;
 
         public FinalRankCalculator(PlayerState playerState, PlayerActionTracker playerActionTracker)
         {
@@ -24,6 +27,12 @@ namespace DragoonMayCry.Score.Rank
             this.playerActionTracker.DutyCompletedWastedGcd += OnDutyCompletedWastedGcd;
             this.playerState = playerState;
             this.playerState.RegisterCombatStateChangeHandler(OnCombat);
+        }
+        public FinalRank FinalRank { get; private set; }
+
+        public void Reset()
+        {
+            combatTimer.Reset();
         }
 
         private FinalRank DetermineFinalRank(float wastedGcd, ushort instanceId = 0)
@@ -117,57 +126,28 @@ namespace DragoonMayCry.Score.Rank
 
         private static StyleType GetFinalRank(double uptimePercentage)
         {
-            if (uptimePercentage > 0.98)
+            return uptimePercentage switch
             {
-                return StyleType.S;
-            }
+                > 0.95 => StyleType.S,
+                > 0.9 => StyleType.A,
+                > 0.85 => StyleType.B,
+                > 0.75 => StyleType.C,
+                _ => StyleType.D,
+            };
 
-            if (uptimePercentage > 0.97)
-            {
-                return StyleType.A;
-            }
-
-            if (uptimePercentage > 0.95)
-            {
-                return StyleType.B;
-            }
-
-            if (uptimePercentage > 0.93)
-            {
-                return StyleType.C;
-            }
-
-            return StyleType.D;
         }
 
         private static StyleType GetFinalRankEmd(double uptimePercentage)
         {
-            if (uptimePercentage > 0.991)
+            return uptimePercentage switch
             {
-                return StyleType.S;
-            }
+                > 0.98 => StyleType.S,
+                > 0.96 => StyleType.A,
+                > 0.93 => StyleType.B,
+                > 0.88 => StyleType.C,
+                _ => StyleType.D,
+            };
 
-            if (uptimePercentage > 0.98)
-            {
-                return StyleType.A;
-            }
-
-            if (uptimePercentage > 0.97)
-            {
-                return StyleType.B;
-            }
-
-            if (uptimePercentage > 0.95)
-            {
-                return StyleType.C;
-            }
-
-            return StyleType.D;
-        }
-
-        public void Reset()
-        {
-            combatTimer.Reset();
         }
     }
 
