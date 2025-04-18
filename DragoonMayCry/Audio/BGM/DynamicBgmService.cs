@@ -250,9 +250,9 @@ namespace DragoonMayCry.Audio.BGM
             {
                 return;
             }
-            var configuration = jobConfiguration.Bgm.Value;
+            var bgmConfigurationSelected = jobConfiguration.Bgm.Value;
 
-            if (configuration == JobConfiguration.BgmConfiguration.Off)
+            if (bgmConfigurationSelected == JobConfiguration.BgmConfiguration.Off)
             {
                 return;
             }
@@ -262,13 +262,13 @@ namespace DragoonMayCry.Audio.BGM
                 audioService.ApplyDeathEffect();
             }
 
-            if (configuration == JobConfiguration.BgmConfiguration.Randomize)
+            if (bgmConfigurationSelected == JobConfiguration.BgmConfiguration.Randomize)
             {
                 bgmFsm.LoadNewBgm = LoadNextBgmInQueue;
                 Task.Run(() =>
                 {
-                    var loadedBgm = CacheAllBgm();
-                    randomBgmQueue = GenerateRandomBgmQueue(loadedBgm);
+                    var loadedBgms = CacheAllBgm(jobConfiguration.BgmRandomSelection.Value);
+                    randomBgmQueue = GenerateRandomBgmQueue(loadedBgms);
                     LoadNextBgmInQueue();
                 });
 
@@ -280,7 +280,7 @@ namespace DragoonMayCry.Audio.BGM
                 bgmFsm.LoadNewBgm -= LoadNextBgmInQueue;
             }
 
-            var selectedBgm = configuration switch
+            var selectedBgm = bgmConfigurationSelected switch
             {
                 JobConfiguration.BgmConfiguration.BuryTheLight => BgmKeys.BuryTheLight,
                 JobConfiguration.BgmConfiguration.DevilTrigger => BgmKeys.DevilTrigger,
@@ -396,11 +396,15 @@ namespace DragoonMayCry.Audio.BGM
             audioService.RegisterBgmParts(bgm, bgmParts);
         }
 
-        private List<string> CacheAllBgm()
+        private List<string> CacheAllBgm(ISet<string> bgmKeysToLoad)
         {
             var bgmList = new List<string>();
             foreach (var states in bgmFsmStates)
             {
+                if (bgmKeysToLoad.Count > 0 && !bgmKeysToLoad.Contains(states.Key))
+                {
+                    continue;
+                }
                 var bgmParts = states.Value.SelectMany(entry => entry.Value.GetBgmPaths()).ToDictionary();
                 try
                 {

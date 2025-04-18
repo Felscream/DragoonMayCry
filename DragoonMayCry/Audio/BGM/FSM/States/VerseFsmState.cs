@@ -72,8 +72,9 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
         }
         public override int Exit(ExitType exit)
         {
-            var nextTransitionTime = Stems[BgmStemIds.CombatCoreLoopExit1].TransitionStart;
-            var selectedTransition = BgmStemIds.CombatCoreLoopExit1;
+            var selectedTransition = SelectStateTransitionStem();
+            var nextTransitionTime = Stems[selectedTransition].TransitionStart;
+
             if (CurrentState == CombatLoopState.Exit)
             {
                 nextTransitionTime = (int)Math.Max(nextTransitionTime - CurrentTrackStopwatch.ElapsedMilliseconds, 0);
@@ -106,13 +107,14 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
             return false;
         }
 
-        private int ComputeNextTransitionTiming()
+        protected int ComputeNextTransitionTiming()
         {
             return Stems[CurrentTrack!.Value].TransitionStart;
         }
 
         protected abstract LinkedList<string> GenerateCombatLoop();
         protected abstract LinkedList<string> GenerateCombatIntro();
+        protected abstract string SelectStateTransitionStem();
 
         protected virtual void PlayNextPart()
         {
