@@ -1,6 +1,12 @@
+#region
+
+using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using KamiLib.Configuration;
 using System;
+using System.Collections.Generic;
+
+#endregion
 
 namespace DragoonMayCry.Configuration
 {
@@ -19,6 +25,9 @@ namespace DragoonMayCry.Configuration
 
         public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);
         public Setting<BgmConfiguration> Bgm = new(BgmConfiguration.Off);
+        public Setting<HashSet<string>> BgmRandomSelection = new([
+            BgmKeys.BuryTheLight, BgmKeys.DevilsNeverCry, BgmKeys.CrimsonCloud, BgmKeys.DevilTrigger, BgmKeys.Subhuman,
+        ]);
         public Setting<DifficultyMode> DifficultyMode = new(Configuration.DifficultyMode.WyrmHunter);
 
         public Setting<bool> EnableDmc = new(true);
