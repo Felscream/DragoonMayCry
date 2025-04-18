@@ -1,14 +1,12 @@
+using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using System.Collections.Generic;
 
 namespace DragoonMayCry.Score.Action.JobModule
 {
-    internal unsafe class BRD : DotJob
+    internal class BRD : DotJob
     {
-        protected override Dictionary<uint, uint> ActionToStatusIds
-        {
-            get { return bardDotIds; }
-        }
+        private readonly List<uint> bardBuffs = [125, 141, 2722, 2964]; // Raging Strikes, Battle Voice, Radiant Finale
 
         private readonly Dictionary<uint, uint> bardDotIds = new()
         {
@@ -19,16 +17,16 @@ namespace DragoonMayCry.Score.Action.JobModule
         };
 
         private readonly HashSet<uint> dotIds;
-        private readonly List<uint> bardBuffs = [125, 141, 2722, 2964]; // Raging Strikes, Battle Voice, Radiant Finale
         private readonly uint ironJawsId = 3560;
 
         private readonly ScoreManager scoreManager;
 
-        public BRD(ScoreManager scoreManager) : base()
+        public BRD(ScoreManager scoreManager)
         {
             this.scoreManager = scoreManager;
             dotIds = [.. bardDotIds.Values];
         }
+        protected override Dictionary<uint, uint> ActionToStatusIds => bardDotIds;
 
         public override float OnAction(uint actionId)
         {
@@ -75,7 +73,7 @@ namespace DragoonMayCry.Score.Action.JobModule
 
         private bool IsValidIronJawsUsage(int buffCount)
         {
-            if (targetManager.Target?.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc)
+            if (targetManager.Target?.ObjectKind != ObjectKind.BattleNpc)
             {
                 return false;
             }

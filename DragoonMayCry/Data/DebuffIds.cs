@@ -30,29 +30,29 @@ namespace DragoonMayCry.Data
 
         public static readonly HashSet<uint> DownForTheCountIds =
         [
-            625, 774, 783, 896, 1762, 1785, 1950, 1953, 1963, 2408, 2910, 2961, 3165, 3501, 3730, 3908, 3983, 4132
+            625, 774, 783, 896, 1762, 1785, 1950, 1953, 1963, 2408, 2910, 2961, 3165, 3501, 3730, 3908, 3983, 4132,
         ];
 
         // 3552 on P10S if you don't find a safe spot near a tower
         public static readonly HashSet<uint> FettersIds =
         [
             292, 504, 510, 667, 668, 770, 800, 822, 901, 930, 990, 1010, 1055, 1153, 1258, 1391, 1399, 1460, 1477, 1497,
-            1614, 1726, 1757, 1849, 1908, 2285, 2286, 2304, 2407, 2975, 3249, 3283, 3324, 3421, 3755
+            1614, 1726, 1757, 1849, 1908, 2285, 2286, 2304, 2407, 2975, 3249, 3283, 3324, 3421, 3755,
         ];
 
         public static readonly HashSet<uint> OutOfTheActionIds =
         [
-            626, 939, 1113, 1284, 1462, 2109
+            626, 939, 1113, 1284, 1462, 2109,
         ];
 
         public static readonly HashSet<uint> ForcedMarchIds =
         [
-            1257, 3629, 3719, 3737
+            1257, 3629, 3719, 3737,
         ];
 
         public static readonly HashSet<uint> PyreticIds =
         [
-            639, 960, 1049, 1133, 1599, 3522
+            639, 960, 1049, 1133, 1599, 3522,
         ];
 
         public static readonly HashSet<uint> StopAndStunsIds =

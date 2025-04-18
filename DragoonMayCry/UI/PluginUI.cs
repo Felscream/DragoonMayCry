@@ -16,19 +16,14 @@ namespace DragoonMayCry.UI
 {
     public sealed class PluginUI : IDisposable
     {
-        private readonly WindowSystem windowSystem = new("DragoonMayCry");
-        private ConfigWindow ConfigWindow { get; init; }
-        private HowItWorksWindow HowItWorksWindow { get; init; }
-        private JobConfigurationWindow JobConfigurationWindow { get; init; }
-        private CharacterRecordWindow CharacterRecordWindow { get; init; }
-        private BgmDutyBlacklistConfigurationWindow BgmDutyBlacklistWindow { get; init; }
+        private const float TimeToResetScoreAfterCombat = 10000;
+        private readonly FinalRankCalculator finalRankCalculator;
+        private readonly Stopwatch hideRankUiStopwatch;
+        private readonly PlayerState playerState;
+        private readonly IDalamudPluginInterface pluginInterface;
 
         private readonly StyleRankUi styleRankUi;
-        private readonly FinalRankCalculator finalRankCalculator;
-        private readonly IDalamudPluginInterface pluginInterface;
-        private readonly PlayerState playerState;
-        private readonly Stopwatch hideRankUiStopwatch;
-        private const float TimeToResetScoreAfterCombat = 10000;
+        private readonly WindowSystem windowSystem = new("DragoonMayCry");
 
         public PluginUI(
             ScoreProgressBar scoreProgressBar,
@@ -42,13 +37,13 @@ namespace DragoonMayCry.UI
             HitCounter hitCounter)
         {
             this.finalRankCalculator = finalRankCalculator;
-            JobConfigurationWindow = new(Plugin.Configuration!);
+            JobConfigurationWindow = new JobConfigurationWindow(Plugin.Configuration!);
             JobConfigurationWindow.JobAnnouncerTypeChange += styleAnnouncerService.OnAnnouncerTypeChange;
             JobConfigurationWindow.EnabledForJobChange += dynamicBgmService.OnJobEnableChange;
 
             BgmDutyBlacklistWindow = new BgmDutyBlacklistConfigurationWindow(Plugin.Configuration!);
             BgmDutyBlacklistWindow.BgmBlacklistChanged += dynamicBgmService.OnBgmBlacklistChanged;
-            
+
             HowItWorksWindow = new HowItWorksWindow();
 
             ConfigWindow = new ConfigWindow(Plugin.Configuration!, JobConfigurationWindow, BgmDutyBlacklistWindow);
@@ -58,7 +53,7 @@ namespace DragoonMayCry.UI
             ConfigWindow.SfxVolumeChange += AudioService.Instance.OnSfxVolumeChange;
             ConfigWindow.BgmVolumeChange += AudioService.Instance.OnBgmVolumeChange;
 
-            CharacterRecordWindow = new(recordService, ConfigWindow, HowItWorksWindow);
+            CharacterRecordWindow = new CharacterRecordWindow(recordService, ConfigWindow, HowItWorksWindow);
 
             styleRankUi = new StyleRankUi(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator,
                                           playerActionTracker, hitCounter);
@@ -74,11 +69,16 @@ namespace DragoonMayCry.UI
             pluginInterface.UiBuilder.OpenMainUi += ToggleCharacterRecords;
             pluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
 
-            this.playerState = PlayerState.GetInstance();
+            playerState = PlayerState.GetInstance();
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
 
             hideRankUiStopwatch = new Stopwatch();
         }
+        private ConfigWindow ConfigWindow { get; init; }
+        private HowItWorksWindow HowItWorksWindow { get; init; }
+        private JobConfigurationWindow JobConfigurationWindow { get; init; }
+        private CharacterRecordWindow CharacterRecordWindow { get; init; }
+        private BgmDutyBlacklistConfigurationWindow BgmDutyBlacklistWindow { get; init; }
 
         public void Dispose()
         {
@@ -110,7 +110,7 @@ namespace DragoonMayCry.UI
             {
                 return false;
             }
-            
+
             if (!Plugin.Configuration!.LockScoreWindow)
             {
                 return true;

@@ -5,6 +5,6 @@ namespace DragoonMayCry.Audio.BGM
         Intro,
         CombatLoop,
         CombatPeak,
-        LeavingCombat
+        LeavingCombat,
     }
 }

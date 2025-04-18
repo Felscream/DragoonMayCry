@@ -1,25 +1,37 @@
 using Dalamud.Game.ClientState.Objects;
+using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using DragoonMayCry.State;
 using System.Collections.Generic;
 
 namespace DragoonMayCry.Score.Action.JobModule
 {
-    internal abstract unsafe class DotJob : IJobActionModifier
+    internal abstract class DotJob : IJobActionModifier
     {
-        protected abstract Dictionary<uint, uint> ActionToStatusIds { get; }
-        protected readonly ITargetManager targetManager;
         protected readonly PlayerState playerState;
+        protected readonly ITargetManager targetManager;
 
         protected DotJob()
         {
-            this.targetManager = Service.TargetManager;
+            targetManager = Service.TargetManager;
             playerState = PlayerState.GetInstance();
+        }
+        protected abstract Dictionary<uint, uint> ActionToStatusIds { get; }
+
+
+        public virtual float OnAction(uint actionId)
+        {
+            return 0;
+        }
+
+        public virtual float OnActionAppliedOnTarget(uint actionId)
+        {
+            return 0;
         }
 
         protected virtual bool IsValidDotRefresh(uint actionId)
         {
-            if (targetManager.Target?.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc
+            if (targetManager.Target?.ObjectKind != ObjectKind.BattleNpc
                 || !ActionToStatusIds.ContainsKey(actionId))
             {
                 return false;
@@ -44,17 +56,6 @@ namespace DragoonMayCry.Score.Action.JobModule
                 }
             }
             return false;
-        }
-
-
-        public virtual float OnAction(uint actionId)
-        {
-            return 0;
-        }
-
-        public virtual float OnActionAppliedOnTarget(uint actionId)
-        {
-            return 0;
         }
     }
 }

@@ -1,5 +1,7 @@
-namespace DragoonMayCry.Data {
-    public enum JobId : uint {
+namespace DragoonMayCry.Data
+{
+    public enum JobId : uint
+    {
         OTHER = 0,
         AST = 33,
         BLM = 25,

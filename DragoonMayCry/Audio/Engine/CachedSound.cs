@@ -1,16 +1,15 @@
+using NAudio.Vorbis;
 using NAudio.Wave;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace DragoonMayCry.Audio.Engine
 {
-    class CachedSound
+    internal class CachedSound
     {
-        internal float[] AudioData { get; private set; }
-        internal WaveFormat WaveFormat { get; private set; }
         internal CachedSound(string audioFileName)
         {
-            using (var audioFileReader = new NAudio.Vorbis.VorbisWaveReader(audioFileName))
+            using (var audioFileReader = new VorbisWaveReader(audioFileName))
             {
                 WaveFormat = audioFileReader.WaveFormat;
                 var wholeFile = new List<float>((int)(audioFileReader.Length / 4));
@@ -23,5 +22,7 @@ namespace DragoonMayCry.Audio.Engine
                 AudioData = wholeFile.ToArray();
             }
         }
+        internal float[] AudioData { get; private set; }
+        internal WaveFormat WaveFormat { get; private set; }
     }
 }

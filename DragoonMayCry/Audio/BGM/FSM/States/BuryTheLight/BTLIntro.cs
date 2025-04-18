@@ -1,152 +1,26 @@
-using DragoonMayCry.Audio.Engine;
-using NAudio.Wave;
-using System;
+#region
+
 using System.Collections.Generic;
-using System.Diagnostics;
+
+#endregion
 
 namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
 {
-    public class BTLIntro : IFsmState
+    internal class BtlIntro(AudioService audioService) : IntroFsmState(audioService, 4500, 1500,
+                                                                       new CombatEndTransitionTimings(1600, 8000))
     {
-        enum IntroState
-        {
-            OutOfCombat,
-            CombatStart,
-            EndCombat
-        }
-        public BgmState ID { get { return BgmState.Intro; } }
+        public override BgmState Id => BgmState.Intro;
 
-        private readonly Dictionary<BgmId, BgmTrackData> transitionTimePerId = new()
+        protected override Dictionary<string, BgmTrackData> Stems { get; } = new()
         {
-            { BgmId.Intro, new BgmTrackData(1600, 51500) },
+            {
+                BgmStemIds.Intro,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\intro.ogg"), 1600, 51500)
+            },
+            {
+                BgmStemIds.CombatEnd,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\end.ogg"), 1600, 8000)
+            },
         };
-
-        private readonly Dictionary<BgmId, string> bgmPaths = new()
-        {
-            { BgmId.Intro, DynamicBgmService.GetPathToAudio("BuryTheLight\\intro.ogg") },
-            { BgmId.CombatEnd, DynamicBgmService.GetPathToAudio("BuryTheLight\\end.ogg") },
-        };
-
-        private readonly AudioService audioService;
-        private readonly Stopwatch currentTrackStopwatch;
-        private int transitionTime = 0;
-        private readonly Queue<ISampleProvider> samples;
-        private IntroState state = IntroState.OutOfCombat;
-        private int nextStateTransitionTime = 0;
-
-        public BTLIntro(AudioService audioService)
-        {
-            currentTrackStopwatch = new Stopwatch();
-
-            this.audioService = audioService;
-            samples = new Queue<ISampleProvider>();
-        }
-
-        public void Enter(bool fromVerse)
-        {
-            state = IntroState.OutOfCombat;
-            var sample = audioService.PlayBgm(BgmId.Intro, 4500);
-            if (sample != null)
-            {
-                samples.Enqueue(sample);
-            }
-
-            transitionTime = transitionTimePerId[BgmId.Intro].TransitionStart;
-            currentTrackStopwatch.Restart();
-        }
-
-        public void Update()
-        {
-            if (!currentTrackStopwatch.IsRunning)
-            {
-                return;
-            }
-
-            if (currentTrackStopwatch.Elapsed.TotalMilliseconds > transitionTime)
-            {
-
-                if (state != IntroState.OutOfCombat)
-                {
-                    TransitionToNextState();
-                }
-                else
-                {
-                    var sample = audioService.PlayBgm(BgmId.Intro);
-                    if (sample != null)
-                    {
-                        samples.Enqueue(sample);
-                    }
-                    currentTrackStopwatch.Restart();
-                }
-            }
-        }
-
-        public void Reset()
-        {
-            TransitionToNextState();
-        }
-
-        public Dictionary<BgmId, string> GetBgmPaths()
-        {
-            return bgmPaths;
-        }
-
-        public int Exit(ExitType exit)
-        {
-            if (!currentTrackStopwatch.IsRunning)
-            {
-                return 0;
-            }
-            if (exit == ExitType.ImmediateExit)
-            {
-                transitionTime = 0;
-                TransitionToNextState();
-                return 0;
-            }
-            // we are already leaving this state, player transitioned rapidly between multiple ranks
-            if (state != IntroState.OutOfCombat)
-            {
-                nextStateTransitionTime = (int)Math.Max(nextStateTransitionTime - currentTrackStopwatch.Elapsed.TotalMilliseconds, 0);
-            }
-            else if (exit == ExitType.Promotion)
-            {
-                state = IntroState.CombatStart;
-                nextStateTransitionTime = 0;
-                TransitionToNextState();
-            }
-
-            if (exit == ExitType.EndOfCombat && state != IntroState.EndCombat)
-            {
-                state = IntroState.EndCombat;
-                transitionTime = 1600;
-                nextStateTransitionTime = 8000;
-                currentTrackStopwatch.Restart();
-                audioService.PlayBgm(BgmId.CombatEnd);
-            }
-            return nextStateTransitionTime;
-        }
-
-        private void TransitionToNextState()
-        {
-            while (samples.TryDequeue(out var sample))
-            {
-                if (sample is ExposedFadeInOutSampleProvider provider)
-                {
-                    if (provider.fadeState == ExposedFadeInOutSampleProvider.FadeState.FullVolume)
-                    {
-                        provider.BeginFadeOut(1500);
-                        continue;
-                    }
-                }
-                audioService.RemoveBgmPart(sample);
-            }
-
-            currentTrackStopwatch.Reset();
-        }
-
-        public bool CancelExit()
-        {
-            return false;
-        }
     }
 }

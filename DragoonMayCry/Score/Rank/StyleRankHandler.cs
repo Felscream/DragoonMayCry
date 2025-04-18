@@ -1,23 +1,14 @@
+using DragoonMayCry.Configuration;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using System;
-using DragoonMayCry.Configuration;
 
 namespace DragoonMayCry.Score.Rank
 {
     public class StyleRankHandler : IResettable
     {
-        public struct RankChangeData(StyleType previousRank, StyleType newRank, bool isBlunder)
-        {
-            public readonly StyleType PreviousRank = previousRank;
-            public readonly StyleType NewRank = newRank;
-            public readonly bool IsBlunder = isBlunder;
-        }
-
-        public EventHandler<RankChangeData>? StyleRankChange;
-        public DoubleLinkedNode<StyleType> CurrentStyle { get; private set; }
 
         private static readonly DoubleLinkedList<StyleType> Styles = new(
             StyleType.NoStyle,
@@ -31,6 +22,8 @@ namespace DragoonMayCry.Score.Rank
 
         private readonly PlayerState playerState;
 
+        public EventHandler<RankChangeData>? StyleRankChange;
+
         public StyleRankHandler(PlayerActionTracker playerActionTracker)
         {
             ResetRank();
@@ -43,6 +36,12 @@ namespace DragoonMayCry.Score.Rank
             playerActionTracker.UsingLimitBreak += OnLimitBreak;
             playerActionTracker.LimitBreakEffect += OnLimitBreakEffect;
             CurrentStyle = Styles.Head!;
+        }
+        public DoubleLinkedNode<StyleType> CurrentStyle { get; private set; }
+
+        public void Reset()
+        {
+            ResetRank();
         }
 
         public void OnDemotion(object? sender, bool playSfx)
@@ -193,9 +192,11 @@ namespace DragoonMayCry.Score.Rank
             ForceRankTo(StyleType.D, true);
         }
 
-        public void Reset()
+        public struct RankChangeData(StyleType previousRank, StyleType newRank, bool isBlunder)
         {
-            ResetRank();
+            public readonly StyleType PreviousRank = previousRank;
+            public readonly StyleType NewRank = newRank;
+            public readonly bool IsBlunder = isBlunder;
         }
     }
 }

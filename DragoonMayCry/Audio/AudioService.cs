@@ -12,6 +12,30 @@ namespace DragoonMayCry.Audio
 {
     public class AudioService : IDisposable
     {
+
+        private static readonly HashSet<string> SfxGameSettings = new()
+        {
+            "IsSndSe", "IsSndMaster", "SoundSe", "SoundMaster",
+        };
+        private static readonly HashSet<string> BgmGameSettings = new()
+        {
+            "IsSndMaster", "SoundMaster",
+        };
+        private static AudioService? instance;
+
+
+        // to alternate between dead weight sfx
+        private readonly AudioEngine audioEngine;
+        private readonly Dictionary<DynamicBgmService.Bgm, Dictionary<string, CachedSound>> registeredBgms = new();
+        private bool deathEffectApplied;
+        private AudioService()
+        {
+            audioEngine = new AudioEngine();
+            audioEngine.UpdateSfxVolume(GetSfxVolume());
+            audioEngine.UpdateBgmVolume(GetBgmVolume());
+            Service.GameConfig.SystemChanged += OnSystemChange;
+        }
+
         public static AudioService Instance
         {
             get
@@ -24,27 +48,9 @@ namespace DragoonMayCry.Audio
             }
         }
 
-        private static readonly HashSet<string> SfxGameSettings = new()
+        public void Dispose()
         {
-            "IsSndSe", "IsSndMaster", "SoundSe", "SoundMaster"
-        };
-        private static readonly HashSet<string> BgmGameSettings = new()
-        {
-            "IsSndMaster", "SoundMaster"
-        };
-
-
-        // to alternate between dead weight sfx
-        private readonly AudioEngine audioEngine;
-        private readonly Dictionary<DynamicBgmService.Bgm, Dictionary<BgmId, CachedSound>> registeredBgms = new();
-        private static AudioService? instance;
-        private bool deathEffectApplied;
-        private AudioService()
-        {
-            audioEngine = new AudioEngine();
-            audioEngine.UpdateSfxVolume(GetSfxVolume());
-            audioEngine.UpdateBgmVolume(GetBgmVolume());
-            Service.GameConfig.SystemChanged += OnSystemChange;
+            audioEngine.Dispose();
         }
 
         public void PlaySfx(SoundId key)
@@ -77,13 +83,13 @@ namespace DragoonMayCry.Audio
             audioEngine.UpdateBgmVolume(GetBgmVolume());
         }
 
-        public bool RegisterBgmParts(DynamicBgmService.Bgm key, Dictionary<BgmId, string> paths)
+        public bool RegisterBgmParts(DynamicBgmService.Bgm key, Dictionary<string, string> paths)
         {
             if (registeredBgms.ContainsKey(key))
             {
                 return true;
             }
-            Dictionary<BgmId, CachedSound> bgm;
+            Dictionary<string, CachedSound> bgm;
             try
             {
                 bgm = audioEngine.RegisterBgm(paths);
@@ -117,7 +123,7 @@ namespace DragoonMayCry.Audio
         private static float GetSfxVolume()
         {
             if (Plugin.Configuration!.ApplyGameVolumeSfx && (Service.GameConfig.System.GetBool("IsSndSe") ||
-                            Service.GameConfig.System.GetBool("IsSndMaster")))
+                                                             Service.GameConfig.System.GetBool("IsSndMaster")))
             {
                 return 0;
             }
@@ -133,13 +139,13 @@ namespace DragoonMayCry.Audio
 
         private static float GetBgmVolume()
         {
-            if (Plugin.Configuration!.ApplyGameVolumeBgm.Value && (Service.GameConfig.System.GetBool("IsSndMaster")))
+            if (Plugin.Configuration!.ApplyGameVolumeBgm.Value && Service.GameConfig.System.GetBool("IsSndMaster"))
             {
                 return 0;
             }
 
             var gameVolume = Plugin.Configuration!.ApplyGameVolumeBgm.Value
-                                 ? (Service.GameConfig.System.GetUInt("SoundMaster") / 100f)
+                                 ? Service.GameConfig.System.GetUInt("SoundMaster") / 100f
                                  : 1;
             return gameVolume * (Plugin.Configuration!.BgmVolume.Value / 100f);
         }
@@ -158,7 +164,8 @@ namespace DragoonMayCry.Audio
             }
         }
 
-        public ISampleProvider? PlayBgm(BgmId id, double fadingDuration = 0, double fadeOutDelay = 0, double fadeOutDuration = 0)
+        public ISampleProvider? PlayBgm(
+            string id, double fadingDuration = 0, double fadeOutDelay = 0, double fadeOutDuration = 0)
         {
             return audioEngine.PlayBgm(id, fadingDuration, fadeOutDelay, fadeOutDuration);
         }
@@ -176,11 +183,6 @@ namespace DragoonMayCry.Audio
         public void FadeOutBgm(float fadeOutDuration = 0)
         {
             audioEngine.FadeOutBgm(fadeOutDuration);
-        }
-
-        public void Dispose()
-        {
-            audioEngine.Dispose();
         }
 
         public void ApplyDeathEffect()

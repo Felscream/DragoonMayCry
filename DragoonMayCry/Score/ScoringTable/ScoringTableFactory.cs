@@ -19,12 +19,12 @@ namespace DragoonMayCry.Score.ScoringTable
                 { StyleType.SS, new StyleScoring(70000, 15000, 7000, 0.65f) },
                 { StyleType.SSS, new StyleScoring(60000, 13000, 6000, 0.3f) },
             };
+        private readonly ScoringTable casterScoringTable = new CasterScoringTable();
+        private readonly ScoringTable healerScoringTable = new HealerScoringTable();
 
         private readonly ScoringTable meleeScoringTable = new MeleeScoringTable();
-        private readonly ScoringTable casterScoringTable = new CasterScoringTable();
         private readonly ScoringTable physRangeScoringTable = new PhysRangeScoringTable();
         private readonly ScoringTable tankScoringTable = new TankScoringTable();
-        private readonly ScoringTable healerScoringTable = new HealerScoringTable();
 
         public Dictionary<StyleType, StyleScoring> GetScoringTable(int ilvl, JobId job)
         {
@@ -42,13 +42,13 @@ namespace DragoonMayCry.Score.ScoringTable
             {
                 return healerScoringTable.GetScoringTable(ilvl);
             }
-            
+
             //MCH raw damage output comparable to casters
             if (JobHelper.IsCaster(job) || job == JobId.MCH)
             {
                 //BLM damage output comparable to melee
-                return job == JobId.BLM ?  
-                           meleeScoringTable.GetScoringTable(ilvl) : 
+                return job == JobId.BLM ?
+                           meleeScoringTable.GetScoringTable(ilvl) :
                            casterScoringTable.GetScoringTable(ilvl);
             }
 

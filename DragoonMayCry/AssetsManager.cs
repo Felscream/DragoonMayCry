@@ -3,9 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net.Http;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace DragoonMayCry
@@ -19,17 +17,17 @@ namespace DragoonMayCry
             Done,
             FailedFileIntegrity,
             FailedDownloading,
-            FailedInsufficientDiskSpace
+            FailedInsufficientDiskSpace,
         }
-
-        public static EventHandler<bool>? AssetsReady;
-        public static bool IsReady { get; private set; }
-        public static AssetsStatus Status { get; private set; } = AssetsStatus.Uninitialized;
 
         private const string TargetAssetVersion = "1.3.0.0";
 
         private const long RequiredDiskSpaceCompressed = 56_683_188;
         private const long RequiredDiskSpaceExtracted = 57_383_642;
+
+        public static EventHandler<bool>? AssetsReady;
+        public static bool IsReady { get; private set; }
+        public static AssetsStatus Status { get; private set; } = AssetsStatus.Uninitialized;
 
         public static void VerifyAndUpdateAssets()
         {
@@ -50,7 +48,8 @@ namespace DragoonMayCry
                 return;
             }
 
-            var configDir = Plugin.PluginInterface.GetPluginConfigDirectory(); ;
+            var configDir = Plugin.PluginInterface.GetPluginConfigDirectory();
+            ;
             var localAssetDir = GetAssetsDirectory();
             if (Directory.Exists(localAssetDir) && AreLocalFilesValid())
             {
@@ -67,7 +66,9 @@ namespace DragoonMayCry
                 Directory.Delete(localAssetDir, true);
             }
 
-            var assetsUri = new Uri($"https://github.com/Felscream/DragoonMayCry/releases/download/v{TargetAssetVersion}/assets.zip");
+            var assetsUri =
+                new Uri(
+                    $"https://github.com/Felscream/DragoonMayCry/releases/download/v{TargetAssetVersion}/assets.zip");
             var downloadLocation = $"{configDir}/assets-{TargetAssetVersion}.zip";
             const long requiredSpace = RequiredDiskSpaceExtracted + RequiredDiskSpaceCompressed;
             var freeDiskSpace = new DriveInfo(configDir).AvailableFreeSpace;
@@ -84,7 +85,8 @@ namespace DragoonMayCry
 
             if (!response.IsSuccessStatusCode)
             {
-                LogAndNotify($"Unable to download assets: {response.StatusCode} - {response.Content}", NotificationType.Error);
+                LogAndNotify($"Unable to download assets: {response.StatusCode} - {response.Content}",
+                             NotificationType.Error);
                 Status = AssetsStatus.FailedDownloading;
                 return;
             }

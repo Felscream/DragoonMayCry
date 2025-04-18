@@ -12,25 +12,18 @@ namespace DragoonMayCry.Audio.Engine
             Silence,
             FadingIn,
             FullVolume,
-            FadingOut
+            FadingOut,
         }
 
         private readonly object lockObject = new();
 
         private readonly ISampleProvider source;
-
-        private int fadeSamplePosition;
+        private long fadeOutDelayPosition;
+        private long fadeOutDelaySamples;
 
         private int fadeSampleCount;
-        private long fadeOutDelaySamples;
-        private long fadeOutDelayPosition;
 
-        public FadeState fadeState { get; private set; }
-
-        //
-        // Summary:
-        //     WaveFormat of this SampleProvider
-        public WaveFormat WaveFormat => source.WaveFormat;
+        private int fadeSamplePosition;
 
         //
         // Summary:
@@ -45,48 +38,15 @@ namespace DragoonMayCry.Audio.Engine
         public ExposedFadeInOutSampleProvider(ISampleProvider source, bool initiallySilent = false)
         {
             this.source = source;
-            fadeState = ((!initiallySilent) ? FadeState.FullVolume : FadeState.Silence);
+            fadeState = !initiallySilent ? FadeState.FullVolume : FadeState.Silence;
         }
+
+        public FadeState fadeState { get; private set; }
 
         //
         // Summary:
-        //     Requests that a fade-in begins (will start on the next call to Read)
-        //
-        // Parameters:
-        //   fadeDurationInMilliseconds:
-        //     Duration of fade in milliseconds
-        public void BeginFadeIn(double fadeDurationInMilliseconds)
-        {
-            lock (lockObject)
-            {
-                fadeSamplePosition = 0;
-                fadeSampleCount = (int)(fadeDurationInMilliseconds * source.WaveFormat.SampleRate / 1000.0);
-                fadeState = FadeState.FadingIn;
-            }
-        }
-
-        //
-        // Summary:
-        //     Requests that a fade-out begins (will start on the next call to Read)
-        //
-        // Parameters:
-        //   fadeDurationInMilliseconds:
-        //     Duration of fade in milliseconds
-        public void BeginFadeOut(double fadeDurationInMilliseconds, double fadeAfterMilliseconds = 0)
-        {
-            lock (lockObject)
-            {
-                fadeSamplePosition = 0;
-                fadeSampleCount = (int)(fadeDurationInMilliseconds * source.WaveFormat.SampleRate / 1000.0);
-                fadeOutDelaySamples = (int)(fadeAfterMilliseconds * source.WaveFormat.SampleRate / 1000.0);
-                fadeOutDelayPosition = 0;
-                if (fadeOutDelaySamples == 0)
-                {
-                    fadeState = FadeState.FadingOut;
-                }
-
-            }
-        }
+        //     WaveFormat of this SampleProvider
+        public WaveFormat WaveFormat => source.WaveFormat;
 
         //
         // Summary:
@@ -134,6 +94,46 @@ namespace DragoonMayCry.Audio.Engine
             }
 
             return num;
+        }
+
+        //
+        // Summary:
+        //     Requests that a fade-in begins (will start on the next call to Read)
+        //
+        // Parameters:
+        //   fadeDurationInMilliseconds:
+        //     Duration of fade in milliseconds
+        public void BeginFadeIn(double fadeDurationInMilliseconds)
+        {
+            lock (lockObject)
+            {
+                fadeSamplePosition = 0;
+                fadeSampleCount = (int)(fadeDurationInMilliseconds * source.WaveFormat.SampleRate / 1000.0);
+                fadeState = FadeState.FadingIn;
+            }
+        }
+
+        //
+        // Summary:
+        //     Requests that a fade-out begins (will start on the next call to Read)
+        //
+        // Parameters:
+        //   fadeDurationInMilliseconds:
+        //     Duration of fade in milliseconds
+        public void BeginFadeOut(double fadeDurationInMilliseconds, double fadeAfterMilliseconds = 0)
+        {
+            lock (lockObject)
+            {
+                fadeSamplePosition = 0;
+                fadeSampleCount = (int)(fadeDurationInMilliseconds * source.WaveFormat.SampleRate / 1000.0);
+                fadeOutDelaySamples = (int)(fadeAfterMilliseconds * source.WaveFormat.SampleRate / 1000.0);
+                fadeOutDelayPosition = 0;
+                if (fadeOutDelaySamples == 0)
+                {
+                    fadeState = FadeState.FadingOut;
+                }
+
+            }
         }
 
         private static void ClearBuffer(float[] buffer, int offset, int count)

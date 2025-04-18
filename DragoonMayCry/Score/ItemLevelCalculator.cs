@@ -1,18 +1,17 @@
 using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using KamiLib.Caching;
-using System;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
+using System;
 
 namespace DragoonMayCry.Score
 {
     public unsafe class ItemLevelCalculator
     {
+        private readonly ExcelSheet<ParamGrow> growthSheet;
         private readonly InventoryManager* inventoryManager;
         private readonly ExcelSheet<Item> itemSheet;
         private readonly ExcelSheet<TerritoryType> territorySheet;
-        private readonly ExcelSheet<ParamGrow> growthSheet;
 
         public ItemLevelCalculator()
         {
@@ -77,20 +76,20 @@ namespace DragoonMayCry.Score
                     continue;
                 }
 
-                uint itemLevel = item.LevelItem.Value.RowId;
+                var itemLevel = item.LevelItem.Value.RowId;
                 var isItemSynced =
-                    (isLvlSync && iLvlSyncForInstance > 0 && itemLevel > iLvlSyncForInstance) ||
-                    (iLvlSyncForContentLvl > 0 && itemLevel > iLvlSyncForContentLvl);
+                    isLvlSync && iLvlSyncForInstance > 0 && itemLevel > iLvlSyncForInstance ||
+                    iLvlSyncForContentLvl > 0 && itemLevel > iLvlSyncForContentLvl;
                 if (isItemSynced)
                 {
                     if (iLvlSyncForInstance > 0 && iLvlSyncForContentLvl > 0)
                     {
                         // the instance ilvl sync overrides the general content level ilvl sync
-                        itemLevel = (uint)iLvlSyncForInstance;
+                        itemLevel = iLvlSyncForInstance;
                     }
                     else
                     {
-                        itemLevel = Math.Max((uint)iLvlSyncForInstance!,
+                        itemLevel = Math.Max(iLvlSyncForInstance!,
                                              (uint)iLvlSyncForContentLvl!);
                     }
                 }

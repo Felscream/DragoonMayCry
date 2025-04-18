@@ -4,25 +4,25 @@ namespace DragoonMayCry.Score.Action.JobModule
 {
     internal class SCH : DotJob
     {
-        protected override Dictionary<uint, uint> ActionToStatusIds { get { return actionToStatusIds; } }
 
         private readonly Dictionary<uint, uint> actionToStatusIds = new()
         {
-            { 17864, 179 }, // Bio
-            { 17865, 189 }, // Bio II
-            { 16540,  1895}, // Biolysis
-            { 17796,  2039}, // Biolysis
-            { 29233,  3089}, // Biolysis
+            { 17864, 179 },  // Bio
+            { 17865, 189 },  // Bio II
+            { 16540, 1895 }, // Biolysis
+            { 17796, 2039 }, // Biolysis
+            { 29233, 3089 }, // Biolysis
         };
-        private readonly ScoreManager scoreManager;
-        private readonly uint energyDrainId = 167;
         private readonly float dotRefreshBonus = 0.3f;
         private readonly float energyDrainBonus = 0.20f;
+        private readonly uint energyDrainId = 167;
+        private readonly ScoreManager scoreManager;
 
-        public SCH(ScoreManager scoreManager) : base()
+        public SCH(ScoreManager scoreManager)
         {
             this.scoreManager = scoreManager;
         }
+        protected override Dictionary<uint, uint> ActionToStatusIds => actionToStatusIds;
 
         public override float OnAction(uint actionId)
         {

@@ -1,29 +1,29 @@
 using System;
-using FFXIVClientStructs.FFXIV.Component.GUI;
 
-namespace DragoonMayCry.Configuration;
-
-public enum DifficultyMode
+namespace DragoonMayCry.Configuration
 {
-    Sprout,
-    WyrmHunter,
-    EstinienMustDie
-}
-
-public static class DifficultyModeExtension
-{
-    public static string GetLabel(this DifficultyMode difficultyMode)
+    public enum DifficultyMode
     {
-        switch (difficultyMode)
+        Sprout,
+        WyrmHunter,
+        EstinienMustDie,
+    }
+
+    public static class DifficultyModeExtension
+    {
+        public static string GetLabel(this DifficultyMode difficultyMode)
         {
-            case DifficultyMode.Sprout:
-                return "Sprout";
-            case DifficultyMode.WyrmHunter:
-                return "Wyrm Hunter";
-            case DifficultyMode.EstinienMustDie:
-                return "Estinien Must Die";
-            default:
-                throw new InvalidOperationException($"{difficultyMode} does not have a label.");
+            switch (difficultyMode)
+            {
+                case DifficultyMode.Sprout:
+                    return "Sprout";
+                case DifficultyMode.WyrmHunter:
+                    return "Wyrm Hunter";
+                case DifficultyMode.EstinienMustDie:
+                    return "Estinien Must Die";
+                default:
+                    throw new InvalidOperationException($"{difficultyMode} does not have a label.");
+            }
         }
     }
 }

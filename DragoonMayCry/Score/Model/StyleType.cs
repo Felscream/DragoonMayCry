@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace DragoonMayCry.Score.Model
 {
     public enum StyleType
@@ -15,6 +9,6 @@ namespace DragoonMayCry.Score.Model
         A = 4,
         S = 5,
         SS = 6,
-        SSS = 7
+        SSS = 7,
     }
 }

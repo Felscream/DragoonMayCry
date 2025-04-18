@@ -1,3 +1,4 @@
+using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using DragoonMayCry.Audio.StyleAnnouncer;
@@ -17,28 +18,13 @@ namespace DragoonMayCry.UI
 {
     public class JobConfigurationWindow : Window, IDisposable
     {
-        public struct JobAnnouncerType
-        {
-            public AnnouncerType type;
-            public JobId job;
 
-            public JobAnnouncerType(AnnouncerType type, JobId job)
-            {
-                this.type = type;
-                this.job = job;
-            }
-        }
-
-        public EventHandler<JobAnnouncerType>? JobAnnouncerTypeChange;
-        public EventHandler<JobId>? EnabledForJobChange;
-        private readonly DmcConfiguration configuration;
+        private readonly IList<AnnouncerType> announcers =
+            Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>().ToList();
 
         private readonly IList<AnnouncerType> announcersPreview =
             Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>()
                 .Where(announcer => announcer != AnnouncerType.Randomize).ToList();
-
-        private readonly IList<AnnouncerType> announcers =
-            Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>().ToList();
 
         private readonly IList<JobConfiguration.BgmConfiguration> bgmOptions = Enum
                                                                                .GetValues(
@@ -47,10 +33,14 @@ namespace DragoonMayCry.UI
                                                                                .Cast<
                                                                                    JobConfiguration.BgmConfiguration>()
                                                                                .ToList();
+        private readonly DmcConfiguration configuration;
+        private readonly IList<ISelectable> selectableJobConfiguration = new List<ISelectable>();
 
         private readonly Setting<AnnouncerType> selectedAnnouncerPreview = new(AnnouncerType.DmC5);
+        public EventHandler<JobId>? EnabledForJobChange;
+
+        public EventHandler<JobAnnouncerType>? JobAnnouncerTypeChange;
         private ISelectable selected;
-        private readonly IList<ISelectable> selectableJobConfiguration = new List<ISelectable>();
 
         public JobConfigurationWindow(DmcConfiguration configuration) : base(
             "DragoonMayCry - Job configuration##DmCJobConfiguration",
@@ -72,6 +62,8 @@ namespace DragoonMayCry.UI
             selected = selectableJobConfiguration[0];
         }
 
+        public void Dispose() { }
+
         public override void Draw()
         {
             InfoBox.Instance
@@ -79,7 +71,7 @@ namespace DragoonMayCry.UI
                    .AddConfigCombo(announcersPreview, selectedAnnouncerPreview,
                                    StyleAnnouncerService.GetAnnouncerTypeLabel,
                                    "##", 150)
-                   .SameLine().AddIconButton("preview", Dalamud.Interface.FontAwesomeIcon.Play,
+                   .SameLine().AddIconButton("preview", FontAwesomeIcon.Play,
                                              () => Plugin.StyleAnnouncerService?.PlayRandomAnnouncerLine(
                                                  selectedAnnouncerPreview.Value))
                    .Draw();
@@ -100,7 +92,7 @@ namespace DragoonMayCry.UI
                     DrawSelectables();
                     ImGui.EndChild();
                 }
-                
+
                 ImGui.TableNextColumn();
                 if (ImGui.BeginChild("##SelectedJob", Vector2.Zero, false, ImGuiWindowFlags.NoDecoration))
                 {
@@ -115,11 +107,11 @@ namespace DragoonMayCry.UI
         {
             foreach (var entry in configuration.JobConfiguration)
             {
-                entry.Value.Announcer = new(targetConfiguration.Announcer.Value);
-                entry.Value.RandomizeAnnouncement = new(targetConfiguration.RandomizeAnnouncement);
-                entry.Value.Bgm = new(targetConfiguration.Bgm.Value);
-                entry.Value.GcdDropThreshold = new(targetConfiguration.GcdDropThreshold.Value);
-                entry.Value.ScoreMultiplier = new(targetConfiguration.ScoreMultiplier.Value);
+                entry.Value.Announcer = new Setting<AnnouncerType>(targetConfiguration.Announcer.Value);
+                entry.Value.RandomizeAnnouncement = new Setting<bool>(targetConfiguration.RandomizeAnnouncement);
+                entry.Value.Bgm = new Setting<JobConfiguration.BgmConfiguration>(targetConfiguration.Bgm.Value);
+                entry.Value.GcdDropThreshold = new Setting<float>(targetConfiguration.GcdDropThreshold.Value);
+                entry.Value.ScoreMultiplier = new Setting<float>(targetConfiguration.ScoreMultiplier.Value);
             }
 
             KamiCommon.SaveConfiguration();
@@ -127,7 +119,7 @@ namespace DragoonMayCry.UI
 
         private void JobAnnouncerChange(JobId job, AnnouncerType announcer)
         {
-            JobAnnouncerTypeChange?.Invoke(this, new(announcer, job));
+            JobAnnouncerTypeChange?.Invoke(this, new JobAnnouncerType(announcer, job));
         }
 
         private void DmcEnabledForJobChange(JobId job)
@@ -164,6 +156,16 @@ namespace DragoonMayCry.UI
             }
         }
 
-        public void Dispose() { }
+        public struct JobAnnouncerType
+        {
+            public AnnouncerType type;
+            public JobId job;
+
+            public JobAnnouncerType(AnnouncerType type, JobId job)
+            {
+                this.type = type;
+                this.job = job;
+            }
+        }
     }
 }

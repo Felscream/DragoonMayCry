@@ -1,5 +1,6 @@
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
 using DragoonMayCry.Record.Model;
 using DragoonMayCry.Score.Rank;
@@ -10,26 +11,24 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using DragoonMayCry.Configuration;
 
 namespace DragoonMayCry.Record
 {
     public class RecordService
     {
-        public Extension[] Extensions { get; private set; } = [];
-        public EventHandler<Dictionary<JobId, JobRecord>>? CharacterRecordsChanged;
 
         private const string TrackedDutiesResource = "DragoonMayCry.Data.TrackedDuties.json";
-        private readonly IDalamudPluginInterface pluginInterface;
         private readonly IClientState clientState;
         private readonly IDutyState dutyState;
         private readonly FinalRankCalculator finalRankCalculator;
         private readonly PlayerState playerState;
+        private readonly IDalamudPluginInterface pluginInterface;
         private readonly string recordDirectoryPath;
-        private ulong characterId = 0;
+        private ulong characterId;
         private Dictionary<JobId, JobRecord>? characterRecords;
+        public EventHandler<Dictionary<JobId, JobRecord>>? CharacterRecordsChanged;
+        private bool ready;
         private Dictionary<ushort, TrackableDuty> trackableDuties = new();
-        private bool ready = false;
 
         public RecordService(FinalRankCalculator finalRankCalculator)
         {
@@ -45,6 +44,7 @@ namespace DragoonMayCry.Record
 
             recordDirectoryPath = $"{pluginInterface.GetPluginConfigDirectory()}/records";
         }
+        public Extension[] Extensions { get; private set; } = [];
 
         public void Initialize()
         {
@@ -194,7 +194,7 @@ namespace DragoonMayCry.Record
 
         private bool IsInvalidEntry(FinalRank finalRank)
         {
-            
+
             var playerLevel = playerState.Player != null ? playerState.Player.Level : int.MaxValue;
             return !ready
                    || !trackableDuties.ContainsKey(finalRank.InstanceId)
@@ -228,8 +228,8 @@ namespace DragoonMayCry.Record
         {
             return !targetDifficulty.ContainsKey(finalRank.InstanceId)
                    || targetDifficulty[finalRank.InstanceId].Result < finalRank.Rank
-                   || (targetDifficulty[finalRank.InstanceId].Result == finalRank.Rank
-                       && targetDifficulty[finalRank.InstanceId].KillTime > finalRank.KillTime);
+                   || targetDifficulty[finalRank.InstanceId].Result == finalRank.Rank
+                   && targetDifficulty[finalRank.InstanceId].KillTime > finalRank.KillTime;
         }
 
         private void SaveCharacterRecords()
@@ -253,7 +253,7 @@ namespace DragoonMayCry.Record
 
             if (characterId == clientState.LocalContentId && characterRecords != null)
             {
-                return new(characterRecords);
+                return new Dictionary<JobId, JobRecord>(characterRecords);
             }
 
             return LoadCharacterRecords(clientState.LocalContentId);
