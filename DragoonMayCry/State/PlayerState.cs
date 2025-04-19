@@ -1,3 +1,5 @@
+#region
+
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Plugin.Services;
@@ -15,6 +17,8 @@ using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
 using CSFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 using DalamudGameObject = Dalamud.Game.ClientState.Objects.Types.IGameObject;
 using ObjectKind = Dalamud.Game.ClientState.Objects.Enums.ObjectKind;
+
+#endregion
 
 namespace DragoonMayCry.State
 {
@@ -226,7 +230,6 @@ namespace DragoonMayCry.State
                     return true;
                 }
             }
-
             return false;
         }
 

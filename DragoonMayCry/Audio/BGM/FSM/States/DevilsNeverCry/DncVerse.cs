@@ -48,5 +48,10 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilsNeverCry
             list.AddLast(BgmStemIds.CombatEnter2);
             return list;
         }
+
+        protected override string SelectChorusTransitionStem()
+        {
+            return BgmStemIds.CombatCoreLoopExit1;
+        }
     }
 }

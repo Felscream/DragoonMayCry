@@ -1,5 +1,6 @@
+#region
+
 using Dalamud.Game.Config;
-using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.Engine;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using NAudio.Wave;
@@ -7,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+
+#endregion
 
 namespace DragoonMayCry.Audio
 {
@@ -26,7 +29,7 @@ namespace DragoonMayCry.Audio
 
         // to alternate between dead weight sfx
         private readonly AudioEngine audioEngine;
-        private readonly Dictionary<DynamicBgmService.Bgm, Dictionary<string, CachedSound>> registeredBgms = new();
+        private readonly Dictionary<long, Dictionary<string, CachedSound>> registeredBgms = new();
         private bool deathEffectApplied;
         private AudioService()
         {
@@ -83,7 +86,7 @@ namespace DragoonMayCry.Audio
             audioEngine.UpdateBgmVolume(GetBgmVolume());
         }
 
-        public bool RegisterBgmParts(DynamicBgmService.Bgm key, Dictionary<string, string> paths)
+        public bool RegisterBgmParts(long key, Dictionary<string, string> paths)
         {
             if (registeredBgms.ContainsKey(key))
             {
@@ -110,7 +113,7 @@ namespace DragoonMayCry.Audio
             audioEngine.RegisterAnnouncerSfx(sfx);
         }
 
-        public bool LoadRegisteredBgm(DynamicBgmService.Bgm key)
+        public bool LoadRegisteredBgm(long key)
         {
             if (registeredBgms.TryGetValue(key, out var value))
             {

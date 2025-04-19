@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 #endregion
 
-namespace DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud
+namespace DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight
 {
-    internal class CcVerse : VerseFsmState
+    internal class BtlVerse : VerseFsmState
     {
         private readonly Random rand;
-        public CcVerse(AudioService audioService) : base(audioService, 1500,
-                                                         new CombatEndTransitionTimings(1, 4500))
+        public BtlVerse(AudioService audioService) : base(audioService, 1500,
+                                                          new CombatEndTransitionTimings(1600, 8000))
         {
             rand = new Random();
             CombatIntro = GenerateCombatIntro();
@@ -21,51 +21,43 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud
         {
             {
                 BgmStemIds.CombatEnter1,
-                new BgmTrackData(DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\004.ogg"), 0, 2500)
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\111.ogg"), 0, 3200)
             },
             {
                 BgmStemIds.CombatEnter2,
-                new BgmTrackData(DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\069.ogg"), 0, 10400)
-            },
-            {
-                BgmStemIds.CombatEnter3,
-                new BgmTrackData(DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\036.ogg"), 0, 2590)
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\029.ogg"), 0, 12800)
             },
             {
                 BgmStemIds.CombatVerse1,
-                new BgmTrackData(DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\110.ogg"), 0, 20650)
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\017.ogg"), 0, 25600)
             },
             {
                 BgmStemIds.CombatVerse2,
-                new BgmTrackData(DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\056.ogg"), 0, 20650)
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\040.ogg"), 0, 25600)
             },
             {
-                BgmStemIds.CombatVerse3,
-                new BgmTrackData(DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\007.ogg"), 0, 20600)
-            },
-            {
-                BgmStemIds.CombatVerse4,
-                new BgmTrackData(DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\074.ogg"), 0, 20600)
+                BgmStemIds.CombatCoreLoop,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\coreloop.ogg"), 0, 80000)
             },
             {
                 BgmStemIds.CombatCoreLoopTransition1,
-                new BgmTrackData(DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\052.ogg"), 0, 19355)
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\029.ogg"), 0, 12800)
             },
             {
                 BgmStemIds.CombatCoreLoopTransition2,
-                new BgmTrackData(DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\060.ogg"), 1300, 21900)
-            },
-            {
-                BgmStemIds.CombatCoreLoopTransition3,
-                new BgmTrackData(DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\108.ogg"), 0, 10295)
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\064.ogg"), 0, 12800)
             },
             {
                 BgmStemIds.CombatCoreLoopExit1,
-                new BgmTrackData(DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\038.ogg"), 1, 1000)
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\039.ogg"), 1590, 1600)
             },
             {
                 BgmStemIds.CombatCoreLoopExit2,
-                new BgmTrackData(DynamicBgmService.GetPathToAudio("CrimsonCloud\\Verse\\045.ogg"), 1, 2555)
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\092.ogg"), 1590, 1600)
+            },
+            {
+                BgmStemIds.CombatCoreLoopExit3,
+                new BgmTrackData(DynamicBgmService.GetPathToAudio("BuryTheLight\\CombatLoop\\093.ogg"), 1590, 1600)
             },
         };
 
@@ -74,13 +66,13 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud
             LinkedList<string> combatIntro = new();
             combatIntro.AddLast(BgmStemIds.CombatEnter1);
             combatIntro.AddLast(BgmStemIds.CombatEnter2);
-            combatIntro.AddLast(BgmStemIds.CombatEnter3);
             return combatIntro;
         }
 
         protected override string SelectChorusTransitionStem()
         {
-            return SelectRandom(BgmStemIds.CombatCoreLoopExit1, BgmStemIds.CombatCoreLoopExit2);
+            return SelectRandom(BgmStemIds.CombatCoreLoopExit1, BgmStemIds.CombatCoreLoopExit2,
+                                BgmStemIds.CombatCoreLoopExit3);
         }
 
         private string SelectRandom(params string[] bgmIds)
@@ -113,18 +105,15 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud
         protected override LinkedList<string> GenerateCombatLoop()
         {
             var verseQueue = RandomizeQueue(BgmStemIds.CombatVerse1, BgmStemIds.CombatVerse2);
-            var verse2Queue = RandomizeQueue(BgmStemIds.CombatVerse3, BgmStemIds.CombatVerse4);
-            var verse3Queue =
+            var loopTransitionQueue =
                 RandomizeQueue(BgmStemIds.CombatCoreLoopTransition1, BgmStemIds.CombatCoreLoopTransition2);
             var loop = new LinkedList<string>();
             loop.AddLast(verseQueue.Dequeue());
-            loop.AddLast(verse2Queue.Dequeue());
-            loop.AddLast(verse3Queue.Dequeue());
-            loop.AddLast(BgmStemIds.CombatCoreLoopTransition3);
+            loop.AddLast(BgmStemIds.CombatCoreLoop);
+            loop.AddLast(loopTransitionQueue.Dequeue());
             loop.AddLast(verseQueue.Dequeue());
-            loop.AddLast(verse2Queue.Dequeue());
-            loop.AddLast(verse3Queue.Dequeue());
-            loop.AddLast(BgmStemIds.CombatCoreLoopTransition3);
+            loop.AddLast(BgmStemIds.CombatCoreLoop);
+            loop.AddLast(loopTransitionQueue.Dequeue());
             return loop;
         }
     }
