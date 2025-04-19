@@ -1,3 +1,5 @@
+#region
+
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
@@ -13,6 +15,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+
+#endregion
 
 namespace DragoonMayCry.UI
 {
@@ -94,7 +98,7 @@ namespace DragoonMayCry.UI
                 }
 
                 ImGui.TableNextColumn();
-                if (ImGui.BeginChild("##SelectedJob", Vector2.Zero, false, ImGuiWindowFlags.NoDecoration))
+                if (ImGui.BeginChild("##SelectedJob", Vector2.Zero, false))
                 {
                     selected.Contents.Draw();
                     ImGui.EndChild();
@@ -112,6 +116,8 @@ namespace DragoonMayCry.UI
                 entry.Value.Bgm = new Setting<JobConfiguration.BgmConfiguration>(targetConfiguration.Bgm.Value);
                 entry.Value.GcdDropThreshold = new Setting<float>(targetConfiguration.GcdDropThreshold.Value);
                 entry.Value.ScoreMultiplier = new Setting<float>(targetConfiguration.ScoreMultiplier.Value);
+                entry.Value.BgmRandomSelection =
+                    new Setting<HashSet<long>>(targetConfiguration.BgmRandomSelection.Value);
             }
 
             KamiCommon.SaveConfiguration();
@@ -156,16 +162,11 @@ namespace DragoonMayCry.UI
             }
         }
 
-        public struct JobAnnouncerType
+        public struct JobAnnouncerType(AnnouncerType type, JobId job)
         {
-            public AnnouncerType type;
-            public JobId job;
+            public readonly AnnouncerType Type = type;
+            public readonly JobId Job = job;
 
-            public JobAnnouncerType(AnnouncerType type, JobId job)
-            {
-                this.type = type;
-                this.job = job;
-            }
         }
     }
 }

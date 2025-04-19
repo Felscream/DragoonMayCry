@@ -1,3 +1,5 @@
+#region
+
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Audio.StyleAnnouncer.Announcer;
 using DragoonMayCry.Data;
@@ -12,6 +14,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using static DragoonMayCry.UI.JobConfigurationWindow;
+
+#endregion
 
 namespace DragoonMayCry.Audio.StyleAnnouncer
 {
@@ -264,12 +268,12 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
 
         public void OnAnnouncerTypeChange(object? sender, JobAnnouncerType jobAnnouncer)
         {
-            if (playerState.GetCurrentJob() != jobAnnouncer.job)
+            if (playerState.GetCurrentJob() != jobAnnouncer.Job)
             {
                 return;
             }
 
-            UpdateAnnouncer(jobAnnouncer.type);
+            UpdateAnnouncer(jobAnnouncer.Type);
         }
 
         private void UpdateAnnouncer()

@@ -1,3 +1,5 @@
+#region
+
 using Dalamud.Interface.Components;
 using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.StyleAnnouncer;
@@ -12,6 +14,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+
+#endregion
 
 namespace DragoonMayCry.UI
 {
@@ -41,20 +45,19 @@ namespace DragoonMayCry.UI
             this.bgms =
             [
                 .. bgms.OrderBy(bgm =>
-                       {
-                           if (bgm == JobConfiguration.BgmConfiguration.Off)
-                           {
-                               return -1;
-                           }
+                {
+                    if (bgm == JobConfiguration.BgmConfiguration.Off)
+                    {
+                        return -1;
+                    }
 
-                           if (bgm == JobConfiguration.BgmConfiguration.Randomize)
-                           {
-                               return int.MaxValue;
-                           }
+                    if (bgm == JobConfiguration.BgmConfiguration.Randomize)
+                    {
+                        return int.MaxValue;
+                    }
 
-                           return 0;
-                       })
-                       .ThenBy(bgm => Enum.GetName(typeof(JobConfiguration.BgmConfiguration), bgm)),
+                    return 0;
+                }).ThenBy(bgm => Enum.GetName(typeof(JobConfiguration.BgmConfiguration), bgm)),
             ];
         }
 
@@ -75,9 +78,10 @@ namespace DragoonMayCry.UI
                        ConfigWindow.AddLabel("Enable DragoonMayCry", cursorPos);
                    })
                    .BeginDisabled(PlayerState.GetInstance().IsInCombat)
-                   .AddConfigCombo(Enum.GetValues(typeof(DifficultyMode)).Cast<DifficultyMode>().ToList(),
-                                   configuration.DifficultyMode, mode => mode.GetLabel(),
-                                   "Difficulty", 200f)
+                   .AddConfigCombo(
+                       Enum.GetValues(typeof(DifficultyMode)).Cast<DifficultyMode>().ToList(),
+                       configuration.DifficultyMode, mode => mode.GetLabel(),
+                       "Difficulty", 200f)
                    .StartConditional(configuration.DifficultyMode == DifficultyMode.EstinienMustDie)
                    .AddHelpMarker("You have no leeway")
                    .EndConditional()
@@ -156,6 +160,7 @@ namespace DragoonMayCry.UI
                    .StartConditional(configuration.Bgm == JobConfiguration.BgmConfiguration.Randomize)
                    .SameLine()
                    .AddHelpMarker("Randomized at the end of combat")
+                   .AddAction(DrawRandomBgmSelection)
                    .EndConditional()
                    .AddButton("Apply to all jobs", () => { ApplyToAll?.Invoke(configuration); })
                    .EndDisabled()
@@ -171,6 +176,39 @@ namespace DragoonMayCry.UI
             ImGui.PushStyleColor(ImGuiCol.Text, GetJobSelectionItemColor());
             ImGui.Text(job.ToString());
             ImGui.PopStyleColor();
+        }
+
+        private void DrawRandomBgmSelection()
+        {
+            if (ImGui.BeginListBox($"##bgmRandomSelect-{job}", new Vector2(300, 100)))
+            {
+                IList<long> bgmConfToKey = bgms
+                                           .Where(bgmConf => bgmConf != JobConfiguration.BgmConfiguration.Off
+                                                             && bgmConf != JobConfiguration.BgmConfiguration
+                                                                 .Randomize)
+                                           .Select(DynamicBgmService.BgmConfigurationToBgmKey)
+                                           .ToList();
+                foreach (var bgm in bgmConfToKey)
+                {
+                    var isSelected = configuration.BgmRandomSelection.Value.Contains(bgm);
+                    ImGui.BeginDisabled(isSelected && configuration.BgmRandomSelection.Value.Count <= 2);
+                    if (ImGui.Checkbox(DynamicBgmService.GetBgmLabel(bgm),
+                                       ref isSelected))
+                    {
+                        if (isSelected)
+                        {
+                            configuration.BgmRandomSelection.Value.Add(bgm);
+                        }
+                        else
+                        {
+                            configuration.BgmRandomSelection.Value.Remove(bgm);
+                        }
+                        KamiCommon.SaveConfiguration();
+                    }
+                    ImGui.EndDisabled();
+                }
+                ImGui.EndListBox();
+            }
         }
 
         private Vector4 GetJobSelectionItemColor()

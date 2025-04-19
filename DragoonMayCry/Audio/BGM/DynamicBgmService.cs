@@ -506,14 +506,27 @@ namespace DragoonMayCry.Audio.BGM
             };
         }
 
-        private static string GetBgmLabel(long bgmKey)
+        public static long BgmConfigurationToBgmKey(JobConfiguration.BgmConfiguration bgm)
+        {
+            return bgm switch
+            {
+                JobConfiguration.BgmConfiguration.BuryTheLight => BgmKeys.BuryTheLight,
+                JobConfiguration.BgmConfiguration.DevilsNeverCry => BgmKeys.DevilsNeverCry,
+                JobConfiguration.BgmConfiguration.DevilTrigger => BgmKeys.DevilTrigger,
+                JobConfiguration.BgmConfiguration.CrimsonCloud => BgmKeys.CrimsonCloud,
+                JobConfiguration.BgmConfiguration.Subhuman => BgmKeys.Subhuman,
+                _ => BgmKeys.BuryTheLight,
+            };
+        }
+
+        public static string GetBgmLabel(long bgmKey)
         {
             return bgmKey switch
             {
                 BgmKeys.BuryTheLight => "Bury the Light",
                 BgmKeys.DevilTrigger => "Devil Trigger",
                 BgmKeys.CrimsonCloud => "Crimson Cloud",
-                BgmKeys.DevilsNeverCry => "Devils Never Cry",
+                BgmKeys.DevilsNeverCry => "Devils Never Cry - by InfamousDork04",
                 BgmKeys.Subhuman => "Subhuman",
                 _ => "Unknown",
             };

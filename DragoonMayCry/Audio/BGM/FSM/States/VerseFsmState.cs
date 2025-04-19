@@ -28,14 +28,12 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
             if (fromVerse)
             {
                 CurrentTrack = CombatLoop.First!;
-                Service.Log.Information($"Playing {CurrentTrack.Value}");
                 sample = AudioService.PlayBgm(CurrentTrack.Value);
                 CurrentState = CombatLoopState.CoreLoop;
             }
             else
             {
                 CurrentTrack = CombatIntro.First!;
-                Service.Log.Information($"Playing {CurrentTrack.Value}");
                 sample = AudioService.PlayBgm(CurrentTrack.Value);
                 CurrentState = CombatLoopState.Intro;
             }
