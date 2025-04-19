@@ -50,7 +50,7 @@ namespace DragoonMayCry.UI
             "DragoonMayCry - Job configuration##DmCJobConfiguration",
             ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
         {
-            Size = new Vector2(675, 375f);
+            Size = new Vector2(675, 425f);
             SizeCondition = ImGuiCond.Appearing;
 
             this.configuration = configuration;

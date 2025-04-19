@@ -116,7 +116,7 @@ namespace DragoonMayCry.Score
                 DisablePointsGainedReduction();
             }
 
-            if (decayFreezeStopwatch.IsRunning && decayFreezeStopwatch.ElapsedMilliseconds > 600)
+            if (decayFreezeStopwatch.IsRunning && decayFreezeStopwatch.ElapsedMilliseconds > 1200)
             {
                 decayFreezeStopwatch.Reset();
             }
@@ -159,6 +159,7 @@ namespace DragoonMayCry.Score
             if (payload.HitKind == FlyTextKind.DamageCritDh)
             {
                 decayFreezeStopwatch.Restart();
+                points *= 1.1f;
             }
 
             CurrentScoreRank.Score += points;
