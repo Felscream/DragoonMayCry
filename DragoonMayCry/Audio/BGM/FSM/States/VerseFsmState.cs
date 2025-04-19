@@ -22,19 +22,20 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
         public override BgmState Id => BgmState.CombatLoop;
         public override void Enter(bool fromVerse)
         {
-            CombatIntro = GenerateCombatIntro();
             CombatLoop = GenerateCombatLoop();
             CurrentTrackStopwatch.Reset();
             ISampleProvider? sample;
             if (fromVerse)
             {
                 CurrentTrack = CombatLoop.First!;
+                Service.Log.Information($"Playing {CurrentTrack.Value}");
                 sample = AudioService.PlayBgm(CurrentTrack.Value);
                 CurrentState = CombatLoopState.CoreLoop;
             }
             else
             {
                 CurrentTrack = CombatIntro.First!;
+                Service.Log.Information($"Playing {CurrentTrack.Value}");
                 sample = AudioService.PlayBgm(CurrentTrack.Value);
                 CurrentState = CombatLoopState.Intro;
             }
@@ -72,7 +73,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
         }
         public override int Exit(ExitType exit)
         {
-            var selectedTransition = SelectStateTransitionStem();
+            var selectedTransition = SelectChorusTransitionStem();
             var nextTransitionTime = Stems[selectedTransition].TransitionStart;
 
             if (CurrentState == CombatLoopState.Exit)
@@ -114,7 +115,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
 
         protected abstract LinkedList<string> GenerateCombatLoop();
         protected abstract LinkedList<string> GenerateCombatIntro();
-        protected abstract string SelectStateTransitionStem();
+        protected abstract string SelectChorusTransitionStem();
 
         protected virtual void PlayNextPart()
         {

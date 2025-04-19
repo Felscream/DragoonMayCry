@@ -1,6 +1,5 @@
 #region
 
-using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 
@@ -88,32 +87,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.Subhuman
             return list;
         }
 
-        public override void Enter(bool fromVerse)
-        {
-            CombatLoop = GenerateCombatLoop();
-            CurrentTrackStopwatch.Reset();
-            ISampleProvider? sample;
-            if (fromVerse)
-            {
-                CurrentTrack = CombatLoop.First!;
-                sample = AudioService.PlayBgm(CurrentTrack.Value);
-                CurrentState = CombatLoopState.CoreLoop;
-            }
-            else
-            {
-                CurrentTrack = CombatIntro.First!;
-                sample = AudioService.PlayBgm(CurrentTrack.Value);
-                CurrentState = CombatLoopState.Intro;
-            }
-            if (sample != null)
-            {
-                Samples.Enqueue(sample);
-            }
-            TransitionTime = ComputeNextTransitionTiming();
-            CurrentTrackStopwatch.Restart();
-        }
-
-        protected override string SelectStateTransitionStem()
+        protected override string SelectChorusTransitionStem()
         {
             return SelectRandom(BgmStemIds.CombatCoreLoopExit1, BgmStemIds.CombatCoreLoopExit2,
                                 BgmStemIds.CombatCoreLoopExit3);

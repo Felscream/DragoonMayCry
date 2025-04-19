@@ -49,7 +49,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilsNeverCry
             return list;
         }
 
-        protected override string SelectStateTransitionStem()
+        protected override string SelectChorusTransitionStem()
         {
             return BgmStemIds.CombatCoreLoopExit1;
         }

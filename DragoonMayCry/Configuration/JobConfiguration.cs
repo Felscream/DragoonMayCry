@@ -25,7 +25,7 @@ namespace DragoonMayCry.Configuration
 
         public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);
         public Setting<BgmConfiguration> Bgm = new(BgmConfiguration.Off);
-        public Setting<HashSet<string>> BgmRandomSelection = new([
+        public Setting<HashSet<long>> BgmRandomSelection = new([
             BgmKeys.BuryTheLight, BgmKeys.CrimsonCloud, BgmKeys.DevilTrigger, BgmKeys.Subhuman,
         ]);
         public Setting<DifficultyMode> DifficultyMode = new(Configuration.DifficultyMode.WyrmHunter);

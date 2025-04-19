@@ -29,7 +29,7 @@ namespace DragoonMayCry.Audio
 
         // to alternate between dead weight sfx
         private readonly AudioEngine audioEngine;
-        private readonly Dictionary<string, Dictionary<string, CachedSound>> registeredBgms = new();
+        private readonly Dictionary<long, Dictionary<string, CachedSound>> registeredBgms = new();
         private bool deathEffectApplied;
         private AudioService()
         {
@@ -86,7 +86,7 @@ namespace DragoonMayCry.Audio
             audioEngine.UpdateBgmVolume(GetBgmVolume());
         }
 
-        public bool RegisterBgmParts(string key, Dictionary<string, string> paths)
+        public bool RegisterBgmParts(long key, Dictionary<string, string> paths)
         {
             if (registeredBgms.ContainsKey(key))
             {
@@ -113,7 +113,7 @@ namespace DragoonMayCry.Audio
             audioEngine.RegisterAnnouncerSfx(sfx);
         }
 
-        public bool LoadRegisteredBgm(string key)
+        public bool LoadRegisteredBgm(long key)
         {
             if (registeredBgms.TryGetValue(key, out var value))
             {
