@@ -1,3 +1,5 @@
+#region
+
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using DragoonMayCry.Audio;
@@ -11,6 +13,8 @@ using DragoonMayCry.State;
 using KamiLib;
 using System;
 using System.Diagnostics;
+
+#endregion
 
 namespace DragoonMayCry.UI
 {
@@ -45,8 +49,10 @@ namespace DragoonMayCry.UI
             BgmDutyBlacklistWindow.BgmBlacklistChanged += dynamicBgmService.OnBgmBlacklistChanged;
 
             HowItWorksWindow = new HowItWorksWindow();
+            CustomBgmEditor = new CustomBgmEditor();
 
-            ConfigWindow = new ConfigWindow(Plugin.Configuration!, JobConfigurationWindow, BgmDutyBlacklistWindow);
+            ConfigWindow = new ConfigWindow(Plugin.Configuration!, JobConfigurationWindow, BgmDutyBlacklistWindow,
+                                            CustomBgmEditor);
             ConfigWindow.ActiveOutsideInstanceChange += Plugin.OnActiveOutsideInstanceConfChange;
             ConfigWindow.ToggleDynamicBgmChange += dynamicBgmService.ToggleDynamicBgm;
             ConfigWindow.MuffledOnDeathChange += dynamicBgmService.OnMuffledOnDeathChange;
@@ -63,6 +69,7 @@ namespace DragoonMayCry.UI
             KamiCommon.WindowManager.AddWindow(HowItWorksWindow);
             KamiCommon.WindowManager.AddWindow(CharacterRecordWindow);
             KamiCommon.WindowManager.AddWindow(BgmDutyBlacklistWindow);
+            KamiCommon.WindowManager.AddWindow(CustomBgmEditor);
 
             pluginInterface = Plugin.PluginInterface;
             pluginInterface.UiBuilder.Draw += DrawUi;
@@ -76,6 +83,7 @@ namespace DragoonMayCry.UI
         }
         private ConfigWindow ConfigWindow { get; init; }
         private HowItWorksWindow HowItWorksWindow { get; init; }
+        private CustomBgmEditor CustomBgmEditor { get; init; }
         private JobConfigurationWindow JobConfigurationWindow { get; init; }
         private CharacterRecordWindow CharacterRecordWindow { get; init; }
         private BgmDutyBlacklistConfigurationWindow BgmDutyBlacklistWindow { get; init; }
