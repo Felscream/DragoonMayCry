@@ -21,6 +21,7 @@ namespace DragoonMayCry.Configuration
             Subhuman = 5,
             Randomize = 4,
             DevilsNeverCry = 6,
+            Custom = 7,
         }
 
         public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);

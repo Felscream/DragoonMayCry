@@ -2,6 +2,7 @@
 
 using Dalamud.Interface.Components;
 using DragoonMayCry.Audio.BGM;
+using DragoonMayCry.Audio.BGM.CustomBgm;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
@@ -31,6 +32,7 @@ namespace DragoonMayCry.UI
         private readonly JobConfiguration configuration;
         private readonly JobId job;
         public ApplyToAllDelegate? ApplyToAll;
+        private long currentProjectId = -1;
         public DmcToggleChangeDelegate? DmcToggleChange;
 
         public JobAnnouncerChangeDelegate? JobAnnouncerChange;
@@ -157,6 +159,9 @@ namespace DragoonMayCry.UI
                    .StartConditional(configuration.Bgm == JobConfiguration.BgmConfiguration.DevilsNeverCry)
                    .AddString("Edit by InfamousDork04 on Nexus Mods")
                    .EndConditional()
+                   .StartConditional(configuration.Bgm == JobConfiguration.BgmConfiguration.Custom)
+                   .AddAction(DrawCustomBgmSelection)
+                   .EndConditional()
                    .StartConditional(configuration.Bgm == JobConfiguration.BgmConfiguration.Randomize)
                    .SameLine()
                    .AddHelpMarker("Randomized at the end of combat")
@@ -229,6 +234,64 @@ namespace DragoonMayCry.UI
             }
 
             return Colors.White;
+        }
+
+        private void DrawCustomBgmSelection()
+        {
+            var bgmService = CustomBgmService.Instance;
+            var projects = bgmService.Projects;
+
+            if (projects.Count == 0)
+            {
+                ImGui.TextColored(new Vector4(1, 0, 0, 1), "No custom BGM projects available.");
+                ImGui.Text("Create a custom BGM project in the BGM Editor first.");
+                return;
+            }
+
+            ImGui.SetNextItemWidth(300f);
+            if (ImGui.BeginCombo($"Custom BGM Project##custom-bgm-{job}",
+                                 GetSelectedCustomBgmName()))
+            {
+                foreach (var project in projects)
+                {
+                    var isSelected = currentProjectId == project.Id;
+                    var name = $"{project.Name} {(bgmService.IsProjectValid(project) ? "✓" : "✗")}";
+
+                    if (ImGui.Selectable(name, isSelected))
+                    {
+                        currentProjectId = project.Id;
+                        KamiCommon.SaveConfiguration();
+                    }
+                }
+                ImGui.EndCombo();
+            }
+
+            if (currentProjectId != -1)
+            {
+                var selectedProject = bgmService.GetProjectById(currentProjectId);
+                if (selectedProject != null && !bgmService.IsProjectValid(selectedProject))
+                {
+                    ImGui.TextColored(new Vector4(1, 0, 0, 1), "Selected project has validation errors!");
+                    if (ImGui.Button("View Errors"))
+                    {
+                        // TODO: Open BGM Editor with this project selected
+                    }
+                }
+            }
+        }
+
+        private string GetSelectedCustomBgmName()
+        {
+            if (currentProjectId == -1)
+                return "Select a project...";
+
+            var bgmService = CustomBgmService.Instance;
+            var project = bgmService.GetProjectById(currentProjectId);
+
+            if (project == null)
+                return "Project not found";
+
+            return $"{project.Name} {(bgmService.IsProjectValid(project) ? "✓" : "✗")}";
         }
     }
 }
