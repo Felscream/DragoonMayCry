@@ -1,4 +1,7 @@
+#region
+
 using Dalamud.Configuration;
+using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Data;
 using KamiLib.Configuration;
@@ -6,6 +9,8 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+
+#endregion
 
 namespace DragoonMayCry.Configuration
 {
@@ -61,7 +66,7 @@ namespace DragoonMayCry.Configuration
         public Setting<int> SplitLayoutProgressGaugeScale = new(100);
         public Setting<int> SplitLayoutRankDisplayScale = new(100);
         public Setting<bool> LockScoreWindow { get; set; } = new(true);
-        public int Version { get; set; } = 2;
+        public int Version { get; set; } = 3;
 
         public DmcConfiguration MigrateToVersionTwo()
         {
@@ -75,6 +80,25 @@ namespace DragoonMayCry.Configuration
             }
 
             Version = 2;
+            return this;
+        }
+
+        public DmcConfiguration MigrateToVersionThree()
+        {
+            foreach (var job in JobConfiguration.Values)
+            {
+                job.Bgm.Value = job.Bgm.Value switch
+                {
+                    (long)Configuration.JobConfiguration.BgmConfiguration.BuryTheLight => BgmKeys.BuryTheLight,
+                    (long)Configuration.JobConfiguration.BgmConfiguration.DevilsNeverCry => BgmKeys.DevilsNeverCry,
+                    (long)Configuration.JobConfiguration.BgmConfiguration.DevilTrigger => BgmKeys.DevilTrigger,
+                    (long)Configuration.JobConfiguration.BgmConfiguration.CrimsonCloud => BgmKeys.CrimsonCloud,
+                    (long)Configuration.JobConfiguration.BgmConfiguration.Subhuman => BgmKeys.Subhuman,
+                    (long)Configuration.JobConfiguration.BgmConfiguration.Randomize => BgmKeys.Randomize,
+                    _ => BgmKeys.Off,
+                };
+            }
+            Version = 3;
             return this;
         }
 

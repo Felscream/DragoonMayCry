@@ -1,6 +1,7 @@
 #region
 
 using Dalamud.Game.Config;
+using DragoonMayCry.Audio.BGM.CustomBgm;
 using DragoonMayCry.Audio.BGM.FSM;
 using DragoonMayCry.Audio.BGM.FSM.States;
 using DragoonMayCry.Audio.BGM.FSM.States.BuryTheLight;
@@ -8,7 +9,6 @@ using DragoonMayCry.Audio.BGM.FSM.States.CrimsonCloud;
 using DragoonMayCry.Audio.BGM.FSM.States.DevilsNeverCry;
 using DragoonMayCry.Audio.BGM.FSM.States.DevilTrigger;
 using DragoonMayCry.Audio.BGM.FSM.States.Subhuman;
-using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
 using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
@@ -24,6 +24,8 @@ namespace DragoonMayCry.Audio.BGM
 {
     public class DynamicBgmService : IDisposable
     {
+        private const long MaxDefaultBgmConfigurationId = 6;
+        private static readonly CustomBgmService CustomBgmService = CustomBgmService.Instance;
         private readonly AudioService audioService;
         private readonly DynamicBgmFsm bgmFsm;
         private readonly Dictionary<long, Dictionary<BgmState, IFsmState>> bgmFsmStates = new();
@@ -216,7 +218,7 @@ namespace DragoonMayCry.Audio.BGM
                    && Plugin.Configuration!.EnableDynamicBgm
                    && Plugin.Configuration.JobConfiguration.ContainsKey(job)
                    && Plugin.Configuration.JobConfiguration[job].EnableDmc
-                   && Plugin.Configuration.JobConfiguration[job].Bgm.Value != JobConfiguration.BgmConfiguration.Off
+                   && Plugin.Configuration.JobConfiguration[job].Bgm.Value != BgmKeys.Off
                    && !TerritoryIds.NoBgmInstances.Contains(currentTerritory)
                    && !IsCurrentDutyBlacklisted();
         }
@@ -252,7 +254,7 @@ namespace DragoonMayCry.Audio.BGM
             }
             var bgmConfigurationSelected = jobConfiguration.Bgm.Value;
 
-            if (bgmConfigurationSelected == JobConfiguration.BgmConfiguration.Off)
+            if (bgmConfigurationSelected == BgmKeys.Off)
             {
                 return;
             }
@@ -262,7 +264,7 @@ namespace DragoonMayCry.Audio.BGM
                 audioService.ApplyDeathEffect();
             }
 
-            if (bgmConfigurationSelected == JobConfiguration.BgmConfiguration.Randomize)
+            if (bgmConfigurationSelected == BgmKeys.Randomize)
             {
                 bgmFsm.LoadNewBgm = LoadNextBgmInQueue;
                 Task.Run(() =>
@@ -280,16 +282,12 @@ namespace DragoonMayCry.Audio.BGM
                 bgmFsm.LoadNewBgm -= LoadNextBgmInQueue;
             }
 
-            var selectedBgm = bgmConfigurationSelected switch
-            {
-                JobConfiguration.BgmConfiguration.BuryTheLight => BgmKeys.BuryTheLight,
-                JobConfiguration.BgmConfiguration.DevilTrigger => BgmKeys.DevilTrigger,
-                JobConfiguration.BgmConfiguration.CrimsonCloud => BgmKeys.CrimsonCloud,
-                JobConfiguration.BgmConfiguration.Subhuman => BgmKeys.Subhuman,
-                JobConfiguration.BgmConfiguration.DevilsNeverCry => BgmKeys.DevilsNeverCry,
-                _ => BgmKeys.BuryTheLight,
-            };
-            LoadBgm(selectedBgm);
+            LoadBgm(bgmConfigurationSelected);
+        }
+
+        private bool IsCustomBgmId(long bgmId)
+        {
+            return bgmId > 5;
         }
 
         private Queue<long> GenerateRandomBgmQueue(List<long> loadedBgm)
@@ -315,7 +313,7 @@ namespace DragoonMayCry.Audio.BGM
             }
 
             if (!bgmFsm.IsActive || Plugin.Configuration!.JobConfiguration[currentJob].Bgm.Value
-                != JobConfiguration.BgmConfiguration.Randomize)
+                != BgmKeys.Randomize)
             {
                 return "";
             }
@@ -491,38 +489,17 @@ namespace DragoonMayCry.Audio.BGM
             }
         }
 
-        public static string GetBgmLabel(JobConfiguration.BgmConfiguration bgm)
-        {
-            return bgm switch
-            {
-                JobConfiguration.BgmConfiguration.Off => "Off",
-                JobConfiguration.BgmConfiguration.BuryTheLight => "Bury the Light",
-                JobConfiguration.BgmConfiguration.DevilsNeverCry => "Devils Never Cry",
-                JobConfiguration.BgmConfiguration.DevilTrigger => "Devil Trigger",
-                JobConfiguration.BgmConfiguration.CrimsonCloud => "Crimson Cloud",
-                JobConfiguration.BgmConfiguration.Subhuman => "Subhuman",
-                JobConfiguration.BgmConfiguration.Randomize => "Randomize",
-                _ => "Unknown",
-            };
-        }
-
-        public static long BgmConfigurationToBgmKey(JobConfiguration.BgmConfiguration bgm)
-        {
-            return bgm switch
-            {
-                JobConfiguration.BgmConfiguration.BuryTheLight => BgmKeys.BuryTheLight,
-                JobConfiguration.BgmConfiguration.DevilsNeverCry => BgmKeys.DevilsNeverCry,
-                JobConfiguration.BgmConfiguration.DevilTrigger => BgmKeys.DevilTrigger,
-                JobConfiguration.BgmConfiguration.CrimsonCloud => BgmKeys.CrimsonCloud,
-                JobConfiguration.BgmConfiguration.Subhuman => BgmKeys.Subhuman,
-                _ => BgmKeys.BuryTheLight,
-            };
-        }
-
         public static string GetBgmLabel(long bgmKey)
         {
+            var customBgmName = CustomBgmService.GetProjectName(bgmKey);
+            if (customBgmName != null)
+            {
+                return customBgmName;
+            }
             return bgmKey switch
             {
+                BgmKeys.Off => "Off",
+                BgmKeys.Randomize => "Randomize",
                 BgmKeys.BuryTheLight => "Bury the Light",
                 BgmKeys.DevilTrigger => "Devil Trigger",
                 BgmKeys.CrimsonCloud => "Crimson Cloud",

@@ -3,6 +3,8 @@
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
+using DragoonMayCry.Audio.BGM;
+using DragoonMayCry.Audio.BGM.CustomBgm;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
@@ -30,14 +32,9 @@ namespace DragoonMayCry.UI
             Enum.GetValues(typeof(AnnouncerType)).Cast<AnnouncerType>()
                 .Where(announcer => announcer != AnnouncerType.Randomize).ToList();
 
-        private readonly IList<JobConfiguration.BgmConfiguration> bgmOptions = Enum
-                                                                               .GetValues(
-                                                                                   typeof(JobConfiguration.
-                                                                                       BgmConfiguration))
-                                                                               .Cast<
-                                                                                   JobConfiguration.BgmConfiguration>()
-                                                                               .ToList();
+        private readonly IList<long> bgmOptions;
         private readonly DmcConfiguration configuration;
+        private readonly CustomBgmService customBgmService = CustomBgmService.Instance;
         private readonly IList<ISelectable> selectableJobConfiguration = new List<ISelectable>();
 
         private readonly Setting<AnnouncerType> selectedAnnouncerPreview = new(AnnouncerType.DmC5);
@@ -54,6 +51,11 @@ namespace DragoonMayCry.UI
             SizeCondition = ImGuiCond.Appearing;
 
             this.configuration = configuration;
+            bgmOptions =
+            [
+                BgmKeys.Off, BgmKeys.Randomize, BgmKeys.BuryTheLight, BgmKeys.DevilsNeverCry, BgmKeys.Subhuman,
+                BgmKeys.CrimsonCloud, BgmKeys.DevilTrigger,
+            ];
             foreach (var entry in configuration.JobConfiguration)
             {
                 var jobSelection = new SelectedJobConfiguration(entry.Key, entry.Value, announcers, bgmOptions);
@@ -113,7 +115,7 @@ namespace DragoonMayCry.UI
             {
                 entry.Value.Announcer = new Setting<AnnouncerType>(targetConfiguration.Announcer.Value);
                 entry.Value.RandomizeAnnouncement = new Setting<bool>(targetConfiguration.RandomizeAnnouncement);
-                entry.Value.Bgm = new Setting<JobConfiguration.BgmConfiguration>(targetConfiguration.Bgm.Value);
+                entry.Value.Bgm = new Setting<long>(targetConfiguration.Bgm.Value);
                 entry.Value.GcdDropThreshold = new Setting<float>(targetConfiguration.GcdDropThreshold.Value);
                 entry.Value.ScoreMultiplier = new Setting<float>(targetConfiguration.ScoreMultiplier.Value);
                 entry.Value.BgmRandomSelection =

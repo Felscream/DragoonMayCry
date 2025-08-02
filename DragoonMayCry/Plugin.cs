@@ -142,12 +142,11 @@ namespace DragoonMayCry
 
         public static bool IsMultiHitLoaded()
         {
-            return PluginInterface.InstalledPlugins.Any(
-                plugin => plugin is
-                {
-                    IsLoaded: true,
-                    InternalName: "MultiHit",
-                });
+            return PluginInterface.InstalledPlugins.Any(plugin => plugin is
+            {
+                IsLoaded: true,
+                InternalName: "MultiHit",
+            });
         }
 
         public static bool CanHandleEvents()
@@ -249,9 +248,12 @@ namespace DragoonMayCry
                 var version = versionCheck.Version;
                 var config = version switch
                 {
-                    1 => JsonConvert.DeserializeObject<DmcConfiguration>(configText)?.MigrateToVersionTwo() ??
+                    1 => JsonConvert.DeserializeObject<DmcConfiguration>(configText)?.MigrateToVersionTwo()
+                                    .MigrateToVersionThree() ??
                          new DmcConfiguration(),
-                    2 => JsonConvert.DeserializeObject<DmcConfiguration>(configText) ?? new DmcConfiguration(),
+                    2 => JsonConvert.DeserializeObject<DmcConfiguration>(configText)?.MigrateToVersionThree()
+                         ?? new DmcConfiguration(),
+                    3 => JsonConvert.DeserializeObject<DmcConfiguration>(configText) ?? new DmcConfiguration(),
                     _ => new DmcConfiguration(),
                 };
                 return config;

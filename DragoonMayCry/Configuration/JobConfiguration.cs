@@ -12,7 +12,8 @@ namespace DragoonMayCry.Configuration
 {
     public class JobConfiguration
     {
-        public enum BgmConfiguration
+
+        public enum BgmConfiguration : long
         {
             Off = 0,
             BuryTheLight = 1,
@@ -21,11 +22,10 @@ namespace DragoonMayCry.Configuration
             Subhuman = 5,
             Randomize = 4,
             DevilsNeverCry = 6,
-            Custom = 7,
         }
 
         public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);
-        public Setting<BgmConfiguration> Bgm = new(BgmConfiguration.Off);
+        public Setting<long> Bgm = new(0);
         public Setting<HashSet<long>> BgmRandomSelection = new([
             BgmKeys.BuryTheLight, BgmKeys.CrimsonCloud, BgmKeys.DevilTrigger, BgmKeys.Subhuman,
         ]);

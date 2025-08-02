@@ -28,8 +28,9 @@ namespace DragoonMayCry.UI
         public delegate void DmcToggleChangeDelegate(JobId job);
         public delegate void JobAnnouncerChangeDelegate(JobId job, AnnouncerType announcer);
         private readonly IList<AnnouncerType> announcers;
-        private readonly IList<JobConfiguration.BgmConfiguration> bgms;
+        private readonly IList<long> bgmIds;
         private readonly JobConfiguration configuration;
+        private readonly CustomBgmService customBgmService;
         private readonly JobId job;
         public ApplyToAllDelegate? ApplyToAll;
         private long currentProjectId = -1;
@@ -39,27 +40,28 @@ namespace DragoonMayCry.UI
 
         public SelectedJobConfiguration(
             JobId job, JobConfiguration configuration, IList<AnnouncerType> announcers,
-            IList<JobConfiguration.BgmConfiguration> bgms)
+            IList<long> bgms)
         {
             this.job = job;
             this.configuration = configuration;
             this.announcers = announcers;
-            this.bgms =
+            customBgmService = CustomBgmService.Instance;
+            bgmIds =
             [
                 .. bgms.OrderBy(bgm =>
                 {
-                    if (bgm == JobConfiguration.BgmConfiguration.Off)
+                    if (bgm == BgmKeys.Off)
                     {
                         return -1;
                     }
 
-                    if (bgm == JobConfiguration.BgmConfiguration.Randomize)
+                    if (bgm == BgmKeys.Randomize)
                     {
                         return int.MaxValue;
                     }
 
                     return 0;
-                }).ThenBy(bgm => Enum.GetName(typeof(JobConfiguration.BgmConfiguration), bgm)),
+                }).ThenBy(DynamicBgmService.GetBgmLabel),
             ];
         }
 
@@ -154,15 +156,12 @@ namespace DragoonMayCry.UI
                    .EndConditional()
                    .EndDisabled()
                    .BeginDisabled(PlayerState.GetInstance().IsInsideInstance || PlayerState.GetInstance().IsInCombat)
-                   .AddConfigCombo(bgms, configuration.Bgm, DynamicBgmService.GetBgmLabel, $"Dynamic BGM##bgm-{job}",
+                   .AddConfigCombo(bgmIds, configuration.Bgm, DynamicBgmService.GetBgmLabel, $"Dynamic BGM##bgm-{job}",
                                    200f)
-                   .StartConditional(configuration.Bgm == JobConfiguration.BgmConfiguration.DevilsNeverCry)
+                   .StartConditional(configuration.Bgm == BgmKeys.DevilsNeverCry)
                    .AddString("Edit by InfamousDork04 on Nexus Mods")
                    .EndConditional()
-                   .StartConditional(configuration.Bgm == JobConfiguration.BgmConfiguration.Custom)
-                   .AddAction(DrawCustomBgmSelection)
-                   .EndConditional()
-                   .StartConditional(configuration.Bgm == JobConfiguration.BgmConfiguration.Randomize)
+                   .StartConditional(configuration.Bgm == BgmKeys.Randomize)
                    .SameLine()
                    .AddHelpMarker("Randomized at the end of combat")
                    .AddAction(DrawRandomBgmSelection)
@@ -187,13 +186,11 @@ namespace DragoonMayCry.UI
         {
             if (ImGui.BeginListBox($"##bgmRandomSelect-{job}", new Vector2(300, 100)))
             {
-                IList<long> bgmConfToKey = bgms
-                                           .Where(bgmConf => bgmConf != JobConfiguration.BgmConfiguration.Off
-                                                             && bgmConf != JobConfiguration.BgmConfiguration
-                                                                 .Randomize)
-                                           .Select(DynamicBgmService.BgmConfigurationToBgmKey)
-                                           .ToList();
-                foreach (var bgm in bgmConfToKey)
+                IList<long> eligibleBgmKeys = bgmIds
+                                              .Where(bgmConf => bgmConf != BgmKeys.Off
+                                                                && bgmConf != BgmKeys.Randomize)
+                                              .ToList();
+                foreach (var bgm in eligibleBgmKeys)
                 {
                     var isSelected = configuration.BgmRandomSelection.Value.Contains(bgm);
                     ImGui.BeginDisabled(isSelected && configuration.BgmRandomSelection.Value.Count <= 2);
@@ -234,64 +231,6 @@ namespace DragoonMayCry.UI
             }
 
             return Colors.White;
-        }
-
-        private void DrawCustomBgmSelection()
-        {
-            var bgmService = CustomBgmService.Instance;
-            var projects = bgmService.GetProjects();
-
-            if (projects.Count == 0)
-            {
-                ImGui.TextColored(new Vector4(1, 0, 0, 1), "No custom BGM projects available.");
-                ImGui.Text("Create a custom BGM project in the BGM Editor first.");
-                return;
-            }
-
-            ImGui.SetNextItemWidth(300f);
-            if (ImGui.BeginCombo($"Custom BGM Project##custom-bgm-{job}",
-                                 GetSelectedCustomBgmName()))
-            {
-                foreach (var project in projects.Values)
-                {
-                    var isSelected = currentProjectId == project.Id;
-                    var name = $"{project.Name} {(bgmService.IsProjectValid(project) ? "✓" : "✗")}";
-
-                    if (ImGui.Selectable(name, isSelected))
-                    {
-                        currentProjectId = project.Id;
-                        KamiCommon.SaveConfiguration();
-                    }
-                }
-                ImGui.EndCombo();
-            }
-
-            if (currentProjectId != -1)
-            {
-                var selectedProject = bgmService.GetProjectById(currentProjectId);
-                if (selectedProject != null && !bgmService.IsProjectValid(selectedProject))
-                {
-                    ImGui.TextColored(new Vector4(1, 0, 0, 1), "Selected project has validation errors!");
-                    if (ImGui.Button("View Errors"))
-                    {
-                        // TODO: Open BGM Editor with this project selected
-                    }
-                }
-            }
-        }
-
-        private string GetSelectedCustomBgmName()
-        {
-            if (currentProjectId == -1)
-                return "Select a project...";
-
-            var bgmService = CustomBgmService.Instance;
-            var project = bgmService.GetProjectById(currentProjectId);
-
-            if (project == null)
-                return "Project not found";
-
-            return $"{project.Name} {(bgmService.IsProjectValid(project) ? "✓" : "✗")}";
         }
     }
 }

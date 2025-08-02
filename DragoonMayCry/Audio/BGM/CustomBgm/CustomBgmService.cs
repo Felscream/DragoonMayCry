@@ -40,7 +40,7 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm
                 {
                     var json = File.ReadAllText(file);
                     var project = JsonConvert.DeserializeObject<CustomBgmProject>(json);
-                    if (project != null)
+                    if (project != null && project.Id > BgmKeys.Subhuman)
                     {
                         projects.Add(project.Id, project);
                     }
@@ -56,6 +56,11 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm
         {
             var json = JsonConvert.SerializeObject(projects);
             return JsonConvert.DeserializeObject<Dictionary<long, CustomBgmProject>>(json);
+        }
+
+        public List<long> GetCustomBgmIds()
+        {
+            return projects.Keys.ToList();
         }
 
         public void UpdateProjectName(CustomBgmProject project, string newName)
@@ -124,7 +129,25 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm
 
         public bool IsProjectValid(CustomBgmProject project)
         {
-            return !GetProjectErrors(project).Any();
+            return GetProjectErrors(project).Count == 0;
+        }
+
+        public bool IsProjectValid(long projectId)
+        {
+            if (projects.TryGetValue(projectId, out var project))
+            {
+                return IsProjectValid(project);
+            }
+            return false;
+        }
+
+        public string? GetProjectName(long projectId)
+        {
+            if (projects.TryGetValue(projectId, out var project))
+            {
+                return project.Name;
+            }
+            return null;
         }
 
         public CustomBgmProject? GetProjectById(long id)
