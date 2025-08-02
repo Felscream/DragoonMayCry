@@ -33,6 +33,7 @@ namespace DragoonMayCry.UI
 
         private const ImGuiTableFlags TableFlags =
             ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.ScrollX | ImGuiTableFlags.BordersInnerH;
+        private readonly BgmEditor bgmEditor;
         private readonly IClientState clientState;
         private readonly ConfigWindow configWindow;
         private readonly ExcelSheet<ContentFinderCondition> contentFinder;
@@ -57,7 +58,8 @@ namespace DragoonMayCry.UI
         private List<string> subcategories = [];
 
         public CharacterRecordWindow(
-            RecordService recordService, ConfigWindow configWindow, HowItWorksWindow howItWorksWindow) : base(
+            RecordService recordService, ConfigWindow configWindow, HowItWorksWindow howItWorksWindow,
+            BgmEditor bgmEditor) : base(
             "DragoonMayCry - Character records")
         {
             contentFinder = Service.DataManager.GetExcelSheet<ContentFinderCondition>();
@@ -79,6 +81,8 @@ namespace DragoonMayCry.UI
             extensions = this.recordService.Extensions;
             extensionValues = extensions.Select(extension => extension.Name).ToList();
             selectedExtensionId = extensionValues.Count - 1;
+
+            this.bgmEditor = bgmEditor;
 
             UpdateCategories();
 
@@ -102,7 +106,19 @@ namespace DragoonMayCry.UI
 
         public override void Draw()
         {
-            ImGui.SetCursorPosX(ImGui.GetContentRegionAvail().X - 40f - ImGui.GetStyle().WindowPadding.X);
+            ImGui.SetCursorPosX(ImGui.GetContentRegionAvail().X - 80f - ImGui.GetStyle().WindowPadding.X);
+            if (ImGuiComponents.IconButton(FontAwesomeIcon.Music))
+            {
+                bgmEditor.Toggle();
+            }
+
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip("BGM Editor");
+            }
+
+            ImGui.SameLine();
+
             if (ImGuiComponents.IconButton(FontAwesomeIcon.Cog))
             {
                 configWindow.Toggle();

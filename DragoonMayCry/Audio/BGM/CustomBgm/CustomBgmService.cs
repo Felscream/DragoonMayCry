@@ -17,7 +17,7 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm
         private static CustomBgmService? instance;
 
         private readonly string customBgmDirectory;
-        private readonly List<CustomBgmProject> projects = new();
+        private readonly Dictionary<long, CustomBgmProject> projects = new();
 
         private CustomBgmService()
         {
@@ -27,8 +27,6 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm
             LoadProjects();
         }
         public static CustomBgmService Instance => instance ??= new CustomBgmService();
-
-        public IReadOnlyList<CustomBgmProject> Projects => projects.AsReadOnly();
 
         public void LoadProjects()
         {
@@ -44,7 +42,7 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm
                     var project = JsonConvert.DeserializeObject<CustomBgmProject>(json);
                     if (project != null)
                     {
-                        projects.Add(project);
+                        projects.Add(project.Id, project);
                     }
                 }
                 catch (Exception ex)
@@ -52,6 +50,12 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm
                     Service.Log.Error($"Failed to load Custom BGM project from {file}: {ex.Message}");
                 }
             }
+        }
+
+        public Dictionary<long, CustomBgmProject> GetProjects()
+        {
+            var json = JsonConvert.SerializeObject(projects);
+            return JsonConvert.DeserializeObject<Dictionary<long, CustomBgmProject>>(json);
         }
 
         public void UpdateProjectName(CustomBgmProject project, string newName)
@@ -75,66 +79,73 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm
             {
                 UpdateProjectName(project, newName);
             }
+            SaveProject(project);
+        }
+
+        public void SaveProject(CustomBgmProject project)
+        {
             var filePath = Path.Combine(customBgmDirectory, $"{project.Name}.json");
             var json = JsonConvert.SerializeObject(project, Formatting.Indented);
             File.WriteAllText(filePath, json);
 
-            // Update the project in our list
-            var existingIndex = projects.FindIndex(p => p.Id == project.Id);
-            if (existingIndex >= 0)
-            {
-                projects[existingIndex] = project;
-            }
-            else
-            {
-                projects.Add(project);
-            }
+            projects[project.Id] = project;
         }
 
-        public void DeleteProject(CustomBgmProject project)
+        public bool DeleteProject(CustomBgmProject project)
         {
             var filePath = Path.Combine(customBgmDirectory, $"{project.Name}.json");
             if (File.Exists(filePath))
             {
-                File.Delete(filePath);
-            }
+                try
+                {
+                    File.Delete(filePath);
+                    projects.Remove(project.Id);
+                }
+                catch (IOException e)
+                {
+                    return false;
+                }
 
-            projects.RemoveAll(p => p.Id == project.Id);
+            }
+            return true;
         }
 
         public CustomBgmProject CreateNewProject(string name)
         {
-            var project = new CustomBgmProject
-            {
-                Name = name,
-            };
-            return project;
+            var project = new CustomBgmProject(name);
+            SaveProject(project);
+            return GetProjectById(project.Id)!;
         }
 
-        public List<string> ValidateProject(CustomBgmProject project)
+        public List<string> GetProjectErrors(CustomBgmProject project)
         {
             return CustomBgmValidator.GetErrors(project);
         }
 
         public bool IsProjectValid(CustomBgmProject project)
         {
-            return !ValidateProject(project).Any();
+            return !GetProjectErrors(project).Any();
         }
 
         public CustomBgmProject? GetProjectById(long id)
         {
-            return projects.FirstOrDefault(p => p.Id == id);
+            if (projects.TryGetValue(id, out var project))
+            {
+                var json = JsonConvert.SerializeObject(project);
+                return JsonConvert.DeserializeObject<CustomBgmProject>(json);
+            }
+            return null;
         }
 
         public CustomBgmProject? GetProjectByName(string name)
         {
-            return projects.FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            return projects.FirstOrDefault(p => p.Value.Name.Equals(name, StringComparison.OrdinalIgnoreCase)).Value;
         }
 
         public bool IsNameUnique(string name, long? excludeId = null)
         {
-            return !projects.Any(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase) &&
-                                      (excludeId == null || p.Id != excludeId));
+            return !projects.Any(p => p.Value.Name.Equals(name, StringComparison.OrdinalIgnoreCase) &&
+                                      (excludeId == null || p.Value.Id != excludeId));
         }
     }
 }

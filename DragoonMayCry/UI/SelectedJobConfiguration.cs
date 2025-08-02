@@ -239,7 +239,7 @@ namespace DragoonMayCry.UI
         private void DrawCustomBgmSelection()
         {
             var bgmService = CustomBgmService.Instance;
-            var projects = bgmService.Projects;
+            var projects = bgmService.GetProjects();
 
             if (projects.Count == 0)
             {
@@ -252,7 +252,7 @@ namespace DragoonMayCry.UI
             if (ImGui.BeginCombo($"Custom BGM Project##custom-bgm-{job}",
                                  GetSelectedCustomBgmName()))
             {
-                foreach (var project in projects)
+                foreach (var project in projects.Values)
                 {
                     var isSelected = currentProjectId == project.Id;
                     var name = $"{project.Name} {(bgmService.IsProjectValid(project) ? "✓" : "✗")}";

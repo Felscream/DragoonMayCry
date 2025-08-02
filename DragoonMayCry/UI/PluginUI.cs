@@ -49,17 +49,18 @@ namespace DragoonMayCry.UI
             BgmDutyBlacklistWindow.BgmBlacklistChanged += dynamicBgmService.OnBgmBlacklistChanged;
 
             HowItWorksWindow = new HowItWorksWindow();
-            CustomBgmEditor = new CustomBgmEditor();
+            BgmEditor = new BgmEditor();
 
             ConfigWindow = new ConfigWindow(Plugin.Configuration!, JobConfigurationWindow, BgmDutyBlacklistWindow,
-                                            CustomBgmEditor);
+                                            BgmEditor);
             ConfigWindow.ActiveOutsideInstanceChange += Plugin.OnActiveOutsideInstanceConfChange;
             ConfigWindow.ToggleDynamicBgmChange += dynamicBgmService.ToggleDynamicBgm;
             ConfigWindow.MuffledOnDeathChange += dynamicBgmService.OnMuffledOnDeathChange;
             ConfigWindow.SfxVolumeChange += AudioService.Instance.OnSfxVolumeChange;
             ConfigWindow.BgmVolumeChange += AudioService.Instance.OnBgmVolumeChange;
 
-            CharacterRecordWindow = new CharacterRecordWindow(recordService, ConfigWindow, HowItWorksWindow);
+            CharacterRecordWindow =
+                new CharacterRecordWindow(recordService, ConfigWindow, HowItWorksWindow, BgmEditor);
 
             styleRankUi = new StyleRankUi(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator,
                                           playerActionTracker, hitCounter);
@@ -69,7 +70,7 @@ namespace DragoonMayCry.UI
             KamiCommon.WindowManager.AddWindow(HowItWorksWindow);
             KamiCommon.WindowManager.AddWindow(CharacterRecordWindow);
             KamiCommon.WindowManager.AddWindow(BgmDutyBlacklistWindow);
-            KamiCommon.WindowManager.AddWindow(CustomBgmEditor);
+            KamiCommon.WindowManager.AddWindow(BgmEditor);
 
             pluginInterface = Plugin.PluginInterface;
             pluginInterface.UiBuilder.Draw += DrawUi;
@@ -83,7 +84,7 @@ namespace DragoonMayCry.UI
         }
         private ConfigWindow ConfigWindow { get; init; }
         private HowItWorksWindow HowItWorksWindow { get; init; }
-        private CustomBgmEditor CustomBgmEditor { get; init; }
+        private BgmEditor BgmEditor { get; init; }
         private JobConfigurationWindow JobConfigurationWindow { get; init; }
         private CharacterRecordWindow CharacterRecordWindow { get; init; }
         private BgmDutyBlacklistConfigurationWindow BgmDutyBlacklistWindow { get; init; }

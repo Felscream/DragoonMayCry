@@ -2,6 +2,7 @@
 
 using DragoonMayCry.Audio.BGM.CustomBgm.Model;
 using System.Collections.Generic;
+using System.IO;
 
 #endregion
 
@@ -11,39 +12,43 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm
     {
         public static List<string> GetIntroErrors(CustomBgmProject project)
         {
-            return GetStemErrors(project.Intro, "The intro is required");
+            return GetStemErrors(project.Intro, "Intro");
         }
 
         public static List<string> GetCombatStartErrors(CustomBgmProject project)
         {
-            return GetStemErrors(project.CombatStart, "The combat start transition is required");
+            return GetStemErrors(project.CombatStart, "Combat Start");
         }
 
         public static List<string> GetVerseLoopErrors(CustomBgmProject project)
         {
-            return GetStemGroupErrors(project.VerseLoop, "You must have at least one audio file for the verse loop.");
+            return GetStemGroupsErrors(project.VerseLoop, "You must have at least one audio file for the verse loop.",
+                                       "Verse Loop");
         }
 
         public static List<string> GetChorusLoopErrors(CustomBgmProject project)
         {
-            return GetStemGroupErrors(project.ChorusLoop, "You must have at least one audio file for the chorus loop.");
+            return GetStemGroupsErrors(project.ChorusLoop, "You must have at least one audio file for the chorus loop.",
+                                       "Chorus Loop");
         }
 
         public static List<string> GetChorusTransitionErrors(CustomBgmProject project)
         {
-            return GetStemListErrors(project.ChorusTransitions,
-                                     "You must have at least one audio file for the chorus transition.");
+            return GetStemGroupErrors(project.ChorusTransitions,
+                                      "You must have at least one audio file for the chorus transition.",
+                                      "Chorus Transition");
         }
 
         public static List<string> GetDemotionTransitionErrors(CustomBgmProject project)
         {
-            return GetStemListErrors(project.DemotionTransitions,
-                                     "You must have at least one audio file for the demotion transition.");
+            return GetStemGroupErrors(project.DemotionTransitions,
+                                      "You must have at least one audio file for the demotion transition.",
+                                      "Demotion Transition");
         }
 
         public static List<string> GetCombatEndErrors(CustomBgmProject project)
         {
-            return GetStemErrors(project.CombatEnd, "The combat end is required");
+            return GetStemErrors(project.CombatEnd, "Combat End");
         }
 
         public static List<string> GetErrors(CustomBgmProject project)
@@ -59,45 +64,55 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm
             return errors;
         }
 
-        private static List<string> GetStemErrors(Stem? stem, string nullMessage)
+        private static List<string> GetStemErrors(Stem? stem, string prefix)
         {
             var errors = new List<string>();
             if (stem is null)
             {
-                errors.Add(nullMessage);
+                errors.Add($"{prefix} : No stem has been set");
             }
             else
             {
-                errors.AddRange(stem.GetErrors());
+                if (!File.Exists(stem.AudioPath))
+                {
+                    errors.Add($"{prefix} : Audio file  doesn't exist");
+                }
+                else if (Path.GetExtension(stem.AudioPath) != ".ogg")
+                {
+                    errors.Add($"{prefix} : Only .ogg files are supported");
+                }
             }
             return errors;
         }
 
-        private static List<string> GetStemGroupErrors(LinkedList<Group> groups, string emptyMessage)
+        private static List<string> GetStemGroupsErrors(LinkedList<Group> groups, string emptyMessage, string prefix)
         {
             var errors = new List<string>();
             if (groups.Count == 0)
             {
-                errors.Add(emptyMessage);
+                errors.Add($"{prefix} : {emptyMessage}");
             }
+            var index = 1;
             foreach (var stemGroup in groups)
             {
-                errors.AddRange(stemGroup.GetErrors());
+                errors.AddRange(GetStemGroupErrors(stemGroup, "No stem has been set", $"{prefix} - Group {index}"));
+                index++;
             }
             return errors;
         }
 
-        private static List<string> GetStemListErrors(List<Stem> stems, string emptyMessage)
+        private static List<string> GetStemGroupErrors(Group group, string emptyMessage, string prefix)
         {
-            var errors = new List<string>();
-            if (stems.Count == 0)
+            List<string> errors = [];
+            if (group.Stems.Count == 0)
             {
-                errors.Add(emptyMessage);
+                errors.Add($"{prefix} : {emptyMessage}");
             }
-            foreach (var stem in stems)
+            for (var i = 0; i < group.Stems.Count; i++)
             {
-                errors.AddRange(stem.GetErrors());
+                errors.AddRange(GetStemErrors(group.Stems[i], $"{prefix} - Stem {i + 1}"));
             }
+
             return errors;
         }
     }

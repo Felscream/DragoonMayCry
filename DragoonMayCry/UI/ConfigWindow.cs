@@ -20,8 +20,8 @@ namespace DragoonMayCry.UI
     public class ConfigWindow : Window
     {
         private readonly BgmDutyBlacklistConfigurationWindow bgmDutyBlacklistConfigurationWindow;
+        private readonly BgmEditor bgmEditor;
         private readonly DmcConfiguration configuration;
-        private readonly CustomBgmEditor customBgmEditor;
         private readonly Setting<int> decay = new(0);
         private readonly JobConfigurationWindow jobConfigurationWindow;
         public EventHandler<bool>? ActiveOutsideInstanceChange;
@@ -33,14 +33,14 @@ namespace DragoonMayCry.UI
         public ConfigWindow(
             DmcConfiguration configuration, JobConfigurationWindow jobConfiguration,
             BgmDutyBlacklistConfigurationWindow bgmDutyBlacklistConfigurationWindow,
-            CustomBgmEditor customBgmEditor) : base(
+            BgmEditor bgmEditor) : base(
             "DragoonMayCry - Configuration")
         {
             Size = new Vector2(525, 470);
             SizeCondition = ImGuiCond.Appearing;
             jobConfigurationWindow = jobConfiguration;
             this.bgmDutyBlacklistConfigurationWindow = bgmDutyBlacklistConfigurationWindow;
-            this.customBgmEditor = customBgmEditor;
+            this.bgmEditor = bgmEditor;
             this.configuration = configuration;
         }
 
@@ -196,7 +196,7 @@ namespace DragoonMayCry.UI
                        }
                    })
                    .AddButton("Dynamic BGM duty blacklist", () => bgmDutyBlacklistConfigurationWindow.Toggle())
-                   .AddButton("Dynamic BGM editor", () => customBgmEditor.Toggle())
+                   .AddButton("Dynamic BGM editor", () => bgmEditor.Toggle())
                    .Draw();
 
 #if DEBUG

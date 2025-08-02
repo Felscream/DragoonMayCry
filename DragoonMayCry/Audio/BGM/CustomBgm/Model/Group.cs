@@ -1,29 +1,17 @@
 #region
 
+using System;
 using System.Collections.Generic;
 
 #endregion
 
 namespace DragoonMayCry.Audio.BGM.CustomBgm.Model
 {
+    [Serializable]
     public class Group
     {
-        public HashSet<Stem> Stems { get; private set; } = [];
+        public List<Stem> Stems { get; private set; } = new(10);
 
-        public List<string> GetErrors()
-        {
-            List<string> errors = [];
-            if (Stems.Count == 0)
-            {
-                errors.Add("No Stems have been set");
-            }
-            foreach (var stem in Stems)
-            {
-                errors.AddRange(stem.GetErrors());
-            }
-
-            return errors;
-        }
 
         public void AddStem(Stem stem)
         {

@@ -4,6 +4,7 @@ using Dalamud.Interface;
 using Dalamud.Interface.ImGuiFileDialog;
 using ImGuiNET;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 #endregion
@@ -29,23 +30,13 @@ namespace DragoonMayCry.UI.Utility
             fileDialog.Reset();
         }
 
-        public string SelectAudioFile(string? filePath)
+        public void SelectAudioFile(string? filePath, Action<bool, List<string>> callback)
         {
-            var newPath = "";
             var startPath = string.IsNullOrEmpty(filePath)
                                 ? Environment.ExpandEnvironmentVariables("%USERPROFILE%")
                                 : Path.GetDirectoryName(filePath);
-            fileDialog.OpenFileDialog("Select a file", ".ogg", (success, paths) =>
-                                      {
-                                          if (success && paths.Count > 0)
-                                          {
-                                              newPath = paths[0];
-                                          }
-                                      }, 1,
-                                      startPath);
-            return newPath;
+            fileDialog.OpenFileDialog("Select a file", ".ogg", callback, 1, startPath);
         }
-
 
         public void OnClose()
         {

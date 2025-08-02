@@ -6,9 +6,9 @@ using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Windowing;
 using DragoonMayCry.Audio.BGM.CustomBgm;
 using DragoonMayCry.Audio.BGM.CustomBgm.Model;
-using DragoonMayCry.UI.Utility;
 using ImGuiNET;
 using KamiLib.Drawing;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
@@ -17,48 +17,58 @@ using System.Numerics;
 
 namespace DragoonMayCry.UI
 {
-    public class CustomBgmEditor : Window
+    public class BgmEditor : Window
     {
-        private readonly AudioFileSelector audioFileSelector;
-        private readonly CustomBgmService bgmService;
+        private readonly CustomBgmService customBgmService;
         private readonly Vector4 errorColor = new(219, 45, 26, 255);
+        private readonly FileDialogManager fileDialogManager = new();
         private readonly string[] tabNames =
-        {
-            "Projects", "Intro", "Combat Start", "Verse Loop", "Chorus Loop", "Transitions", "Combat End", "Settings",
-        };
+        [
+            "Intro", "Combat Start", "Verse Loop", "Chorus Loop", "Transitions", "Combat End",
+        ];
         private CustomBgmProject? currentProject;
         private string currentProjectNewName;
-        private FileDialogManager fileDialog;
-        private bool nameExistsOpened;
+        private bool displayProjectNameError;
         private string newProjectName = "";
+        private string projectNameError;
+        private Dictionary<long, CustomBgmProject> projects;
         private CustomBgmProject? projectToDelete;
-        private int selectedTab;
         private bool showDeleteConfirmDialog;
-        private bool showErrorDialog;
         private bool showNewProjectDialog;
-        private bool showSuccessDialog;
 
-        public CustomBgmEditor() : base("DragoonMayCry - BGM Editor ##dmc-bgm-editor")
+        public BgmEditor() : base("DragoonMayCry - BGM Editor ##dmc-bgm-editor")
         {
-            Size = new Vector2(800, 600);
+            Size = new Vector2(1200, 800);
             SizeCondition = ImGuiCond.Appearing;
-            bgmService = CustomBgmService.Instance;
-            fileDialog = new FileDialogManager();
-            audioFileSelector = new AudioFileSelector();
+            customBgmService = CustomBgmService.Instance;
+            fileDialogManager.CustomSideBarItems.Add((Environment.ExpandEnvironmentVariables("User Folder"),
+                                                         Environment.ExpandEnvironmentVariables("%USERPROFILE%"),
+                                                         FontAwesomeIcon.User, 0));
+            projects = customBgmService.GetProjects();
         }
 
         public override void Draw()
         {
-
             DrawMainInterface();
             DrawNewProjectDialog();
             DrawDeleteConfirmDialog();
+            fileDialogManager.Draw();
         }
 
         private void DrawMainInterface()
         {
             // Project selection and management
-            DrawProjectManagement();
+            if (ImGui.BeginTable("##ProjectTable", 2))
+            {
+                ImGui.TableSetupColumn("##LeftColumn", ImGuiTableColumnFlags.WidthFixed, 300);
+                ImGui.TableNextColumn();
+                DrawProjectManagement();
+
+                ImGui.TableNextColumn();
+                DrawProjectErrors();
+                ImGui.EndTable();
+            }
+
 
             ImGui.Separator();
 
@@ -71,10 +81,28 @@ namespace DragoonMayCry.UI
                 ImGui.Text("Select a project to edit or create a new one.");
             }
         }
+        private void DrawProjectErrors()
+        {
+
+            if (ImGui.BeginChild("##project_errors", new Vector2(0, 230)))
+            {
+                ImGui.Text("Note : only `.ogg` files with a sample rate of 48kHz are supported.");
+                ImGui.Separator();
+                if (currentProject != null)
+                {
+                    foreach (var error in customBgmService.GetProjectErrors(currentProject))
+                    {
+                        ImGui.Text(error);
+                    }
+                }
+
+                ImGui.EndChild();
+            }
+        }
 
         private Vector4 GetProjectColor(CustomBgmProject project)
         {
-            return bgmService.IsProjectValid(project) ? Colors.White : Colors.SoftRed;
+            return customBgmService.IsProjectValid(project) ? Colors.White : Colors.SoftRed;
         }
 
         private void DrawProjectManagement()
@@ -84,22 +112,22 @@ namespace DragoonMayCry.UI
 
             if (ImGui.Button("New Project"))
             {
-                showNewProjectDialog = true;
                 newProjectName = "";
-                ImGui.OpenPopup("Create New Dynamic Bgm");
+                showNewProjectDialog = true;
             }
 
             ImGui.SameLine();
 
             if (ImGui.Button("Refresh"))
             {
-                bgmService.LoadProjects();
+                customBgmService.LoadProjects();
+                projects = customBgmService.GetProjects();
             }
 
             // Project list
             ImGui.BeginChild("##project_list", new Vector2(300, 200), true);
 
-            foreach (var project in bgmService.Projects)
+            foreach (var project in projects.Values)
             {
                 var isSelected = currentProject?.Id == project.Id;
                 var name = $"##{project.Name}";
@@ -109,22 +137,21 @@ namespace DragoonMayCry.UI
                     currentProject = project;
                     currentProjectNewName = currentProject.Name;
                 }
-
-                ImGui.SameLine();
-                ImGui.PushStyleColor(ImGuiCol.Text, GetProjectColor(project));
-                ImGui.Text(project.Name);
-                ImGui.PopStyleColor();
-
                 if (ImGui.BeginPopupContextItem($"##context_{project.Id}"))
                 {
                     if (ImGui.MenuItem("Delete"))
                     {
                         projectToDelete = project;
                         showDeleteConfirmDialog = true;
-                        ImGui.OpenPopup($"Delete {projectToDelete.Name}");
+
                     }
                     ImGui.EndPopup();
                 }
+
+                ImGui.SameLine();
+                ImGui.PushStyleColor(ImGuiCol.Text, GetProjectColor(project));
+                ImGui.Text(project.Name);
+                ImGui.PopStyleColor();
             }
 
             ImGui.EndChild();
@@ -141,26 +168,25 @@ namespace DragoonMayCry.UI
 
             if (ImGui.Button("Save"))
             {
-                bgmService.SaveProject(currentProject, currentProjectNewName);
+                customBgmService.SaveProject(currentProject, currentProjectNewName);
+                currentProject = customBgmService.GetProjectById(currentProject.Id);
+                projects[currentProject!.Id] = currentProject;
             }
-
             ImGui.SameLine();
-
-            if (ImGui.Button("Validate"))
+            if (ImGui.Button("Cancel"))
             {
-                var errors = bgmService.ValidateProject(currentProject);
-                if (errors.Count == 0)
+                if (projects.TryGetValue(currentProject!.Id, out var project))
                 {
-                    ImGui.OpenPopup("Validation Result");
+                    currentProject = customBgmService.GetProjectById(currentProject.Id);
+                    projects[currentProject!.Id] = currentProject;
                 }
-                else
-                {
-                    ImGui.OpenPopup("Validation Errors");
-                }
+                currentProject = null;
             }
 
-            // Draw validation popups
-            DrawValidationPopups();
+            if (currentProject == null)
+            {
+                return;
+            }
 
             // Tab bar for different sections
             if (ImGui.BeginTabBar("##project_tabs"))
@@ -169,7 +195,6 @@ namespace DragoonMayCry.UI
                 {
                     if (ImGui.BeginTabItem(tabNames[i]))
                     {
-                        selectedTab = i;
                         DrawTabContent(i);
                         ImGui.EndTabItem();
                     }
@@ -182,28 +207,23 @@ namespace DragoonMayCry.UI
         {
             switch (tabIndex)
             {
-                case 0: // Projects (shouldn't happen, but just in case)
-                    break;
-                case 1: // Intro
+                case 0:
                     DrawIntroTab();
                     break;
-                case 2: // Combat Start
+                case 1: // Combat Start
                     DrawCombatStartTab();
                     break;
-                case 3: // Verse Loop
+                case 2: // Verse Loop
                     DrawVerseLoopTab();
                     break;
-                case 4: // Chorus Loop
+                case 3: // Chorus Loop
                     DrawChorusLoopTab();
                     break;
-                case 5: // Transitions
+                case 4: // Transitions
                     DrawTransitionsTab();
                     break;
-                case 6: // Combat End
+                case 5: // Combat End
                     DrawCombatEndTab();
-                    break;
-                case 7: // Settings
-                    DrawSettingsTab();
                     break;
             }
         }
@@ -217,19 +237,10 @@ namespace DragoonMayCry.UI
 
             if (currentProject?.Intro == null)
             {
-                currentProject!.Intro = new Stem("", 0);
+                currentProject!.Intro = new Stem();
             }
 
-            if (ImGuiComponents.IconButton(FontAwesomeIcon.Folder))
-            {
-                currentProject.Intro.AudioPath = SelectFilePath(currentProject.Intro.AudioPath);
-            }
-
-            var transitionTime = currentProject.Intro.TransitionTime ?? 0;
-            if (ImGui.SliderInt("Transition Time (ms)", ref transitionTime, 0, 10000))
-            {
-                currentProject.Intro.TransitionTime = transitionTime;
-            }
+            DrawStemConfiguration(currentProject.Intro);
 
             ImGui.Text("Transition time is when the audio should start transitioning to the next state.");
         }
@@ -239,23 +250,14 @@ namespace DragoonMayCry.UI
             ImGui.Text("Combat Start Transition");
             ImGui.Separator();
 
-            ImGui.Text("This audio plays when entering combat to transition from intro to verse loop.");
+            ImGui.Text("This audio plays when entering combat to transition from the intro to the verse loop.");
 
             if (currentProject?.CombatStart == null)
             {
-                currentProject!.CombatStart = new Stem("", 0);
+                currentProject!.CombatStart = new Stem();
             }
 
-            if (ImGuiComponents.IconButton(FontAwesomeIcon.Folder))
-            {
-                currentProject.CombatStart.AudioPath = SelectFilePath(currentProject.CombatStart.AudioPath);
-            }
-
-            var transitionTime = currentProject.CombatStart.TransitionTime ?? 0;
-            if (ImGui.SliderInt("Transition Time (ms)", ref transitionTime, 0, 10000))
-            {
-                currentProject.CombatStart.TransitionTime = transitionTime;
-            }
+            DrawStemConfiguration(currentProject.CombatStart);
         }
 
         private void DrawVerseLoopTab()
@@ -264,8 +266,10 @@ namespace DragoonMayCry.UI
             ImGui.Separator();
 
             ImGui.Text(
-                "Verse loop is the base combat state. It consists of groups of audio stems that play sequentially.");
-            ImGui.Text("Each group contains multiple stems that are chosen randomly. Groups play in order and loop.");
+                "Verse loop is the base combat state (D rank to A Rank). It consists of a list of audio stems.");
+            ImGui.Text("One stem is selected randomly to be played for a given group.");
+            ImGui.Text(
+                "Groups are played sequentially, one after another : Group 1 -> Group 2 -> ... -> Group N -> Group 1 -> ...");
 
             if (ImGui.Button("Add Group"))
             {
@@ -291,6 +295,7 @@ namespace DragoonMayCry.UI
                 {
                     DrawGroupContent(group, "verse");
 
+                    ImGui.NewLine();
                     if (ImGui.Button("Remove Group"))
                     {
                         groupsToRemove.Add(group);
@@ -313,7 +318,7 @@ namespace DragoonMayCry.UI
             ImGui.Text("Chorus Loop Configuration");
             ImGui.Separator();
 
-            ImGui.Text("Chorus loop plays when player performance reaches S rank. It works the same as verse loop.");
+            ImGui.Text("Chorus loop plays when the rating reaches S rank. It works the same as the verse loop.");
 
             if (ImGui.Button("Add Group"))
             {
@@ -358,53 +363,19 @@ namespace DragoonMayCry.UI
 
         private void DrawGroupContent(Group group, string prefix)
         {
-            if (ImGui.Button("Add Stem"))
+            if (ImGui.Button($"Add Stem##{prefix}"))
             {
-                group.AddStem(new Stem("", 0));
+                group.AddStem(new Stem());
             }
 
             ImGui.SameLine();
 
-            if (ImGui.Button("Clear Stems"))
+            if (ImGui.Button($"Clear Stems##{prefix}"))
             {
                 group.ClearStems();
             }
 
-            var stemIndex = 0;
-            var stemsToRemove = new List<Stem>();
-
-            foreach (var stem in group.Stems)
-            {
-                ImGui.PushID($"{prefix}_stem_{stemIndex}");
-
-                if (ImGui.CollapsingHeader($"Stem {stemIndex + 1}"))
-                {
-                    if (ImGuiComponents.IconButton(FontAwesomeIcon.Folder))
-                    {
-                        stem.AudioPath = SelectFilePath(stem.AudioPath);
-                    }
-
-                    var transitionTime = stem.TransitionTime ?? 0;
-                    if (ImGui.SliderInt("Transition Time (ms)", ref transitionTime, 0, 10000))
-                    {
-                        stem.TransitionTime = transitionTime;
-                    }
-
-                    if (ImGui.Button("Remove Stem"))
-                    {
-                        stemsToRemove.Add(stem);
-                    }
-                }
-
-                ImGui.PopID();
-                stemIndex++;
-            }
-
-            // Remove marked stems
-            foreach (var stem in stemsToRemove)
-            {
-                group.RemoveStem(stem);
-            }
+            DrawStemList(group.Stems, prefix);
         }
 
         private void DrawTransitionsTab()
@@ -414,74 +385,33 @@ namespace DragoonMayCry.UI
 
             // Chorus Transitions
             ImGui.Text("Chorus Transitions");
-            ImGui.Text("These play when transitioning from verse to chorus (S rank achieved).");
+            ImGui.Text("One is played randomly when transitioning from verse to chorus (S rank achieved).");
 
-            if (ImGui.Button("Add Chorus Transition"))
-            {
-                currentProject!.ChorusTransitions.Add(new Stem("", 0));
-            }
+            DrawGroupContent(currentProject!.ChorusTransitions, "chorusTransistion");
 
-            ImGui.SameLine();
-
-            if (ImGui.Button("Clear Chorus Transitions"))
-            {
-                currentProject!.ChorusTransitions.Clear();
-            }
-
-            DrawStemList(currentProject!.ChorusTransitions, "chorus_transition");
 
             ImGui.Separator();
 
             // Demotion Transitions
             ImGui.Text("Demotion Transitions");
-            ImGui.Text("These play when transitioning from chorus back to verse (rating drops to A or lower).");
+            ImGui.Text(
+                "One is played randomly when transitioning from chorus back to verse (rating drops to A or lower).");
 
-            if (ImGui.Button("Add Demotion Transition"))
-            {
-                currentProject.DemotionTransitions.Add(new Stem("", 0));
-            }
-
-            ImGui.SameLine();
-
-            if (ImGui.Button("Clear Demotion Transitions"))
-            {
-                currentProject.DemotionTransitions.Clear();
-            }
-
-            DrawStemList(currentProject.DemotionTransitions, "demotion_transition");
+            DrawGroupContent(currentProject.DemotionTransitions, "demotionTransistion");
         }
 
-        private void DrawStemList(List<Stem> stems, string prefix)
+        private void DrawStemList(ICollection<Stem> stems, string prefix)
         {
             var stemIndex = 0;
             var stemsToRemove = new List<Stem>();
 
             foreach (var stem in stems)
             {
-                ImGui.PushID($"{prefix}_{stemIndex}");
-
-                if (ImGui.CollapsingHeader($"Stem {stemIndex + 1}"))
-                {
-                    if (ImGuiComponents.IconButton(FontAwesomeIcon.Folder))
-                    {
-                        stem.AudioPath = SelectFilePath(stem.AudioPath);
-                    }
-
-                    var transitionTime = stem.TransitionTime ?? 0;
-                    if (ImGui.SliderInt("Transition Time (ms)", ref transitionTime, 0, 10000))
-                    {
-                        stem.TransitionTime = transitionTime;
-                    }
-
-                    if (ImGui.Button("Remove Stem"))
-                    {
-                        stemsToRemove.Add(stem);
-                    }
-                }
-
+                DrawGroupStem(prefix, stemIndex, stem, stemsToRemove);
                 ImGui.PopID();
                 stemIndex++;
             }
+            ImGui.Separator();
 
             // Remove marked stems
             foreach (var stem in stemsToRemove)
@@ -489,14 +419,57 @@ namespace DragoonMayCry.UI
                 stems.Remove(stem);
             }
         }
-        private string SelectFilePath(string audioPath)
+        private void DrawGroupStem(string prefix, int stemIndex, Stem stem, List<Stem> stemsToRemove)
         {
-            var path = audioFileSelector.SelectAudioFile(audioPath);
-            if (!string.IsNullOrEmpty(path) && File.Exists(path))
+            var fileName = Path.GetFileName(stem.AudioPath);
+            ImGui.PushID($"{prefix}_{stemIndex}");
+            ImGui.Separator();
+            ImGui.Text($"Stem {stemIndex + 1}");
+            DrawStemConfiguration(stem);
+
+            if (ImGui.Button($"Remove Stem##{prefix}-{stemIndex}"))
             {
-                return path;
+                stemsToRemove.Add(stem);
             }
-            return audioPath;
+        }
+
+        private void DrawStemConfiguration(Stem stem)
+        {
+            var filePath = stem.AudioPath;
+            if (ImGui.InputText($"##filePath-{stem.Id}", ref filePath, 600))
+            {
+                stem.AudioPath = filePath;
+            }
+            ImGui.SameLine();
+            if (ImGuiComponents.IconButton(FontAwesomeIcon.Folder))
+            {
+                var startPath = string.IsNullOrEmpty(filePath)
+                                    ? Environment.ExpandEnvironmentVariables("%USERPROFILE%/Music")
+                                    : Path.GetDirectoryName(filePath);
+                fileDialogManager.OpenFileDialog("Select a file", ".ogg",
+                                                 (success, paths) => UpdateFilePath(stem, success, paths), 1,
+                                                 startPath);
+            }
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip("Audio file selection...");
+            }
+
+            var transitionTime = stem.TransitionTime ?? 0;
+            if (ImGui.InputInt("Transition Time (ms)", ref transitionTime, 1, 100))
+            {
+                transitionTime = Math.Max(0, transitionTime);
+                stem.TransitionTime = transitionTime;
+            }
+        }
+
+
+        private void UpdateFilePath(Stem stem, bool success, List<string> paths)
+        {
+            if (success && paths.Count > 0)
+            {
+                stem.AudioPath = paths[0];
+            }
         }
 
         private void DrawCombatEndTab()
@@ -508,35 +481,17 @@ namespace DragoonMayCry.UI
 
             if (currentProject?.CombatEnd == null)
             {
-                currentProject!.CombatEnd = new Stem("", 0);
+                currentProject!.CombatEnd = new Stem();
             }
-
-            if (ImGuiComponents.IconButton(FontAwesomeIcon.Folder))
-            {
-                currentProject.CombatEnd.AudioPath = SelectFilePath(currentProject.CombatEnd.AudioPath);
-            }
-
-
-            var transitionTime = currentProject.CombatEnd.TransitionTime ?? 0;
-            if (ImGui.SliderInt("Transition Time (ms)", ref transitionTime, 0, 10000))
-            {
-                currentProject.CombatEnd.TransitionTime = transitionTime;
-            }
-        }
-
-        private void DrawSettingsTab()
-        {
-            ImGui.Text("Advanced Settings");
-            ImGui.Separator();
-
+            DrawStemConfiguration(currentProject.CombatEnd);
             var endFadeOutDelay = currentProject!.EndFadeOutDelay;
-            if (ImGui.SliderInt("End Fade Out Delay (ms)", ref endFadeOutDelay, 0, 10000))
+            if (ImGui.SliderInt("Combat End Fade Out Delay (ms)", ref endFadeOutDelay, 0, 10000))
             {
                 currentProject.EndFadeOutDelay = endFadeOutDelay;
             }
 
             var endFadeOutDuration = currentProject.EndFadeOutDuration;
-            if (ImGui.SliderInt("End Fade Out Duration (ms)", ref endFadeOutDuration, 0, 10000))
+            if (ImGui.SliderInt("Combat End Fade Out Duration (ms)", ref endFadeOutDuration, 0, 10000))
             {
                 currentProject.EndFadeOutDuration = endFadeOutDuration;
             }
@@ -548,64 +503,44 @@ namespace DragoonMayCry.UI
             }
         }
 
-        private void DrawValidationPopups()
-        {
-            // Validation success popup
-            if (showSuccessDialog && ImGui.BeginPopupModal("Validation Result", ref showSuccessDialog))
-            {
-                ImGui.Text("Project is valid! ✓");
-                if (ImGui.Button("OK"))
-                {
-                    ImGui.CloseCurrentPopup();
-                }
-                ImGui.EndPopup();
-            }
-
-            // Validation errors popup
-            if (showErrorDialog && ImGui.BeginPopupModal("Validation Errors", ref showErrorDialog))
-            {
-                var errors = bgmService.ValidateProject(currentProject!);
-                ImGui.Text("The following errors were found:");
-                ImGui.Separator();
-
-                foreach (var error in errors)
-                {
-                    ImGui.Text($"• {error}");
-                }
-
-                if (ImGui.Button("OK"))
-                {
-                    ImGui.CloseCurrentPopup();
-                }
-                ImGui.EndPopup();
-            }
-        }
-
         private void DrawNewProjectDialog()
         {
-            if (ImGui.BeginPopupModal("Create New Dynamic Bgm", ref showNewProjectDialog))
+            if (showNewProjectDialog)
+            {
+                showNewProjectDialog = false;
+                ImGui.OpenPopup("Create New Dynamic Bgm");
+            }
+            if (ImGui.BeginPopupModal("Create New Dynamic Bgm"))
             {
                 ImGui.Text("Enter project name:");
                 ImGui.InputText("##new_project_name", ref newProjectName, 100);
-
+                if (displayProjectNameError)
+                {
+                    ImGui.TextColored(errorColor, projectNameError);
+                }
                 if (ImGui.Button("Create"))
                 {
                     if (!string.IsNullOrWhiteSpace(newProjectName))
                     {
-                        if (bgmService.IsNameUnique(newProjectName))
+                        if (customBgmService.IsNameUnique(newProjectName))
                         {
-                            currentProject = bgmService.CreateNewProject(newProjectName);
+                            currentProject = customBgmService.CreateNewProject(newProjectName);
+                            projects[currentProject.Id] = currentProject;
                             currentProjectNewName = currentProject.Name;
-                            showNewProjectDialog = false;
+                            displayProjectNameError = false;
+                            projectNameError = "";
+                            ImGui.CloseCurrentPopup();
                         }
                         else
                         {
-                            ImGui.TextColored(errorColor, "Project name already exists!");
+                            displayProjectNameError = true;
+                            projectNameError = "Project name already exists!";
                         }
                     }
                     else
                     {
-                        ImGui.TextColored(errorColor, "Name cannot be empty");
+                        displayProjectNameError = true;
+                        projectNameError = "Name cannot be empty";
                     }
                 }
 
@@ -613,7 +548,7 @@ namespace DragoonMayCry.UI
 
                 if (ImGui.Button("Cancel"))
                 {
-                    showNewProjectDialog = false;
+                    ImGui.CloseCurrentPopup();
                 }
 
                 ImGui.EndPopup();
@@ -622,21 +557,31 @@ namespace DragoonMayCry.UI
 
         private void DrawDeleteConfirmDialog()
         {
+            if (showDeleteConfirmDialog && projectToDelete != null)
+            {
+                ImGui.OpenPopup($"Delete {projectToDelete.Name}");
+                showDeleteConfirmDialog = false;
+            }
+
             if (projectToDelete != null &&
-                ImGui.BeginPopupModal($"Delete {projectToDelete.Name}", ref showDeleteConfirmDialog))
+                ImGui.BeginPopupModal($"Delete {projectToDelete.Name}"))
             {
                 ImGui.Text($"Are you sure you want to delete '{projectToDelete.Name}'?");
-                ImGui.Text("This action cannot be undone.");
+                ImGui.Text("\nThis action cannot be undone.");
 
                 if (ImGui.Button("Delete"))
                 {
-                    bgmService.DeleteProject(projectToDelete);
-                    if (currentProject?.Id == projectToDelete.Id)
+                    if (customBgmService.DeleteProject(projectToDelete))
                     {
-                        currentProject = null;
+                        projects.Remove(projectToDelete.Id);
+                        if (currentProject?.Id == projectToDelete.Id)
+                        {
+                            currentProject = null;
+                        }
+                        projectToDelete = null;
                     }
-                    projectToDelete = null;
-                    showDeleteConfirmDialog = false;
+
+                    ImGui.CloseCurrentPopup();
                 }
 
                 ImGui.SameLine();
@@ -644,7 +589,7 @@ namespace DragoonMayCry.UI
                 if (ImGui.Button("Cancel"))
                 {
                     projectToDelete = null;
-                    showDeleteConfirmDialog = false;
+                    ImGui.CloseCurrentPopup();
                 }
 
                 ImGui.EndPopup();
