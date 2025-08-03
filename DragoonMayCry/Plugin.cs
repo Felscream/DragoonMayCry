@@ -6,6 +6,7 @@ using Dalamud.Plugin;
 using Dalamud.Utility;
 using DragoonMayCry.Audio;
 using DragoonMayCry.Audio.BGM;
+using DragoonMayCry.Audio.BGM.CustomBgm;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
@@ -20,6 +21,7 @@ using DragoonMayCry.Util;
 using KamiLib;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -237,6 +239,7 @@ namespace DragoonMayCry
             }
 
             var configText = File.ReadAllText(configFile);
+            DmcConfiguration config;
             try
             {
                 var versionCheck = JsonSerializer.Deserialize<BaseConfiguration>(configText);
@@ -246,7 +249,7 @@ namespace DragoonMayCry
                 }
 
                 var version = versionCheck.Version;
-                var config = version switch
+                config = version switch
                 {
                     1 => JsonConvert.DeserializeObject<DmcConfiguration>(configText)?.MigrateToVersionTwo()
                                     .MigrateToVersionThree() ??
@@ -256,7 +259,6 @@ namespace DragoonMayCry
                     3 => JsonConvert.DeserializeObject<DmcConfiguration>(configText) ?? new DmcConfiguration(),
                     _ => new DmcConfiguration(),
                 };
-                return config;
             }
             catch (Exception e)
             {
@@ -267,6 +269,60 @@ namespace DragoonMayCry
 
                 Service.Log.Warning("Your configuration migration failed, it has been reinitialized");
                 return new DmcConfiguration();
+            }
+
+            RemoveUnknownCustomBgmIds(config);
+            return config;
+        }
+
+        private static bool IsInvalidBgmKey(long bgmKey, HashSet<long> currentCustomBgmIds)
+        {
+            return bgmKey is > BgmKeys.MaxPreconfiguredBgmKey or < BgmKeys.Off
+                   && !currentCustomBgmIds.Contains(bgmKey);
+        }
+
+        private static bool IsInvalidBgmSelectionKey(long bgmKey, HashSet<long> currentCustomBgmIds)
+        {
+            return (bgmKey < BgmKeys.MinPreconfiguredBgmKey || bgmKey > BgmKeys.MaxPreconfiguredBgmKey)
+                   && !currentCustomBgmIds.Contains(bgmKey);
+        }
+        private static void RemoveUnknownCustomBgmIds(DmcConfiguration config)
+        {
+            var currentCustomBgmIds = CustomBgmManager.Instance.GetCustomBgmIds().ToHashSet();
+            HashSet<long> removedCustomBgmIds = new();
+            foreach (var jobConfig in config.JobConfiguration)
+            {
+                if (IsInvalidBgmKey(jobConfig.Value.Bgm.Value, currentCustomBgmIds))
+                {
+                    Service.Log.Warning(
+                        $"Unknown custom bgm ID {jobConfig.Value.Bgm.Value}. The value has been reset.");
+                    jobConfig.Value.Bgm.Value = BgmKeys.BuryTheLight;
+                }
+
+                foreach (var randomBgmId in jobConfig.Value.BgmRandomSelection.Value)
+                {
+                    if (IsInvalidBgmSelectionKey(randomBgmId, currentCustomBgmIds))
+                    {
+                        removedCustomBgmIds.Add(randomBgmId);
+                    }
+                }
+                jobConfig.Value.BgmRandomSelection.Value.RemoveWhere(removedCustomBgmIds.Contains);
+
+                if (jobConfig.Value.BgmRandomSelection.Value.Count < 2)
+                {
+                    jobConfig.Value.BgmRandomSelection.Value.Add(BgmKeys.BuryTheLight);
+                }
+                if (jobConfig.Value.BgmRandomSelection.Value.Count < 2)
+                {
+                    jobConfig.Value.BgmRandomSelection.Value.Add(BgmKeys.DevilTrigger);
+                }
+
+            }
+            if (removedCustomBgmIds.Count > 0)
+            {
+                var removedIds = string.Join(", ", removedCustomBgmIds);
+                Service.Log.Warning(
+                    $"Could not find Custom BGMs with the following IDs {removedIds}. \nThey have been removed from your configuration.");
             }
         }
 

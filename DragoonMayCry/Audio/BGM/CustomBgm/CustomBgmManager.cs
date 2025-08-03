@@ -1,6 +1,7 @@
 #region
 
 using DragoonMayCry.Audio.BGM.CustomBgm.Model;
+using KamiLib;
 using Newtonsoft.Json;
 using Serilog;
 using System;
@@ -40,7 +41,7 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm
                 {
                     var json = File.ReadAllText(file);
                     var project = JsonConvert.DeserializeObject<CustomBgmProject>(json);
-                    if (project != null && project.Id > BgmKeys.Subhuman)
+                    if (project != null && project.Id > BgmKeys.MaxPreconfiguredBgmKey)
                     {
                         projects.Add(project.Id, project);
                     }
@@ -105,14 +106,35 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm
                 {
                     File.Delete(filePath);
                     projects.Remove(project.Id);
+                    RemoveFromConfiguration(project.Id);
                 }
                 catch (IOException e)
                 {
                     return false;
                 }
-
             }
             return true;
+        }
+
+        private void RemoveFromConfiguration(long projectId)
+        {
+            foreach (var jobConfiguration in Plugin.Configuration!.JobConfiguration)
+            {
+                if (jobConfiguration.Value.Bgm == projectId)
+                {
+                    jobConfiguration.Value.Bgm.Value = BgmKeys.DefaultBgmKey;
+                }
+                jobConfiguration.Value.BgmRandomSelection.Value.Remove(projectId);
+                if (jobConfiguration.Value.BgmRandomSelection.Value.Count < 2)
+                {
+                    jobConfiguration.Value.BgmRandomSelection.Value.Add(BgmKeys.DefaultBgmKey);
+                }
+                if (jobConfiguration.Value.BgmRandomSelection.Value.Count < 2)
+                {
+                    jobConfiguration.Value.BgmRandomSelection.Value.Add(BgmKeys.DevilTrigger);
+                }
+            }
+            KamiCommon.SaveConfiguration();
         }
 
         public CustomBgmProject CreateNewProject(string name)

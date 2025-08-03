@@ -27,6 +27,8 @@ namespace DragoonMayCry.UI
 
         public delegate void DmcToggleChangeDelegate(JobId job);
         public delegate void JobAnnouncerChangeDelegate(JobId job, AnnouncerType announcer);
+        private const int MinBgmSelectionCount = 2;
+        private const int MaxBgmSelectionCount = 6;
         private readonly IList<AnnouncerType> announcers;
         private readonly IList<long> bgmIds;
         private readonly JobConfiguration configuration;
@@ -48,25 +50,26 @@ namespace DragoonMayCry.UI
             customBgmManager = CustomBgmManager.Instance;
             bgmIds =
             [
-                .. bgms.OrderBy(bgm =>
-                {
-                    if (bgm == BgmKeys.Off)
-                    {
-                        return -1;
-                    }
-
-                    if (bgm == BgmKeys.Randomize)
-                    {
-                        return int.MaxValue;
-                    }
-
-                    return 0;
-                }).ThenBy(DynamicBgmService.GetBgmLabel),
+                .. bgms,
             ];
         }
 
         void IDrawable.Draw()
         {
+            var availableBgmTracks = bgmIds.Concat(customBgmManager.GetCustomBgmIds()).OrderBy(bgm =>
+            {
+                if (bgm == BgmKeys.Off)
+                {
+                    return -1;
+                }
+
+                if (bgm == BgmKeys.Randomize)
+                {
+                    return int.MaxValue;
+                }
+
+                return 0;
+            }).ThenBy(DynamicBgmService.GetBgmLabel).ToList();
             InfoBox.Instance.AddTitle(job.ToString())
                    .AddAction(() =>
                    {
@@ -156,15 +159,18 @@ namespace DragoonMayCry.UI
                    .EndConditional()
                    .EndDisabled()
                    .BeginDisabled(PlayerState.GetInstance().IsInsideInstance || PlayerState.GetInstance().IsInCombat)
-                   .AddConfigCombo(bgmIds, configuration.Bgm, DynamicBgmService.GetBgmLabel, $"Dynamic BGM##bgm-{job}",
+                   .AddConfigCombo(availableBgmTracks, configuration.Bgm, DynamicBgmService.GetBgmLabel,
+                                   "Dynamic BGM ##bgm-{job}",
                                    200f)
                    .StartConditional(configuration.Bgm == BgmKeys.DevilsNeverCry)
                    .AddString("Edit by InfamousDork04 on Nexus Mods")
                    .EndConditional()
                    .StartConditional(configuration.Bgm == BgmKeys.Randomize)
                    .SameLine()
-                   .AddHelpMarker("Randomized at the end of combat")
-                   .AddAction(DrawRandomBgmSelection)
+                   .AddHelpMarker(
+                       $"Randomized at the end of combat. You can select between {MinBgmSelectionCount} to {MaxBgmSelectionCount} elements.")
+                   .AddAction(() => DrawRandomBgmSelection(availableBgmTracks))
+                   .AddString($"{configuration.BgmRandomSelection.Value.Count} selected")
                    .EndConditional()
                    .AddButton("Apply to all jobs", () => { ApplyToAll?.Invoke(configuration); })
                    .EndDisabled()
@@ -182,18 +188,20 @@ namespace DragoonMayCry.UI
             ImGui.PopStyleColor();
         }
 
-        private void DrawRandomBgmSelection()
+        private void DrawRandomBgmSelection(List<long> bgmTracks)
         {
             if (ImGui.BeginListBox($"##bgmRandomSelect-{job}", new Vector2(300, 100)))
             {
-                IList<long> eligibleBgmKeys = bgmIds
-                                              .Where(bgmConf => bgmConf != BgmKeys.Off
-                                                                && bgmConf != BgmKeys.Randomize)
-                                              .ToList();
+                var eligibleBgmKeys = bgmTracks
+                                      .Where(bgmConf => bgmConf != BgmKeys.Off
+                                                        && bgmConf != BgmKeys.Randomize)
+                                      .ToHashSet();
                 foreach (var bgm in eligibleBgmKeys)
                 {
                     var isSelected = configuration.BgmRandomSelection.Value.Contains(bgm);
-                    ImGui.BeginDisabled(isSelected && configuration.BgmRandomSelection.Value.Count <= 2);
+                    ImGui.BeginDisabled(
+                        isSelected && configuration.BgmRandomSelection.Value.Count <= MinBgmSelectionCount
+                        || !isSelected && configuration.BgmRandomSelection.Value.Count >= MaxBgmSelectionCount);
                     if (ImGui.Checkbox(DynamicBgmService.GetBgmLabel(bgm),
                                        ref isSelected))
                     {

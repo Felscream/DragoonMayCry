@@ -3,6 +3,7 @@
 using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using KamiLib.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
@@ -12,7 +13,6 @@ namespace DragoonMayCry.Configuration
 {
     public class JobConfiguration
     {
-
         public enum BgmConfiguration : long
         {
             Off = 0,
@@ -39,5 +39,22 @@ namespace DragoonMayCry.Configuration
         public Setting<float> GcdDropThreshold = new(0.2f);
         public Setting<bool> RandomizeAnnouncement = new(false);
         public Setting<float> ScoreMultiplier = new(1.0f);
+        public JobConfiguration() { }
+
+        [JsonConstructor]
+        public JobConfiguration(
+            Setting<AnnouncerType> announcer, Setting<long> bgm, Setting<HashSet<long>> bgmRandomSelection,
+            Setting<DifficultyMode> difficultyMode, Setting<bool> enableDmc,
+            Setting<float> gcdDropThreshold, Setting<bool> randomizeAnnoucement, Setting<float> scoreMultiplier)
+        {
+            Announcer = announcer;
+            Bgm = bgm;
+            BgmRandomSelection = bgmRandomSelection;
+            DifficultyMode = difficultyMode;
+            EnableDmc = enableDmc;
+            GcdDropThreshold = gcdDropThreshold;
+            RandomizeAnnouncement = randomizeAnnoucement;
+            ScoreMultiplier = scoreMultiplier;
+        }
     }
 }
