@@ -8,7 +8,7 @@ using System.Collections.Generic;
 namespace DragoonMayCry.Audio.BGM.CustomBgm.Model
 {
     [Serializable]
-    public class Group
+    public class StemGroup
     {
         public List<Stem> Stems { get; private set; } = new(10);
 

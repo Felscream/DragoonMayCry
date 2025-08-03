@@ -88,7 +88,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
             {
                 State = IntroState.EndCombat;
                 TransitionTime = combatEndTransitionTimings.TransitionTime;
-                NextStateTransitionTime = combatEndTransitionTimings.NextStateTransitionTime;
+                NextStateTransitionTime = combatEndTransitionTimings.NextBgmTransitionTime;
                 CurrentTrackStopwatch.Restart();
                 AudioService.PlayBgm(BgmStemIds.CombatEnd, combatEndTransitionTimings.FadingDuration,
                                      combatEndTransitionTimings.FadeOutDelay,

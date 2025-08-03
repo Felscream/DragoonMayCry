@@ -21,8 +21,8 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm.Model
 
         [JsonConstructor]
         public CustomBgmProject(
-            string name, long id, Stem intro, Stem combatStart, Stem combatEnd, LinkedList<Group> verseLoop,
-            LinkedList<Group> chorusLoop, Group chorusTransitions, Stem demotionTransition,
+            string name, long id, Stem intro, Stem combatStart, Stem combatEnd, LinkedList<StemGroup> verseLoop,
+            LinkedList<StemGroup> chorusLoop, StemGroup chorusTransitions, Stem demotionTransition,
             int endFadeOutDelay, int endFadeOutDuration, int nextSongTransistionStart)
         {
             Name = name;
@@ -44,9 +44,9 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm.Model
         public Stem Intro { get; set; } = new();
         public Stem CombatStart { get; set; } = new();
         public Stem CombatEnd { get; set; } = new();
-        public LinkedList<Group> VerseLoop { get; set; } = [];
-        public LinkedList<Group> ChorusLoop { get; set; } = [];
-        public Group ChorusTransitions { get; set; } = new();
+        public LinkedList<StemGroup> VerseLoop { get; set; } = [];
+        public LinkedList<StemGroup> ChorusLoop { get; set; } = [];
+        public StemGroup ChorusTransitions { get; set; } = new();
         public Stem DemotionTransition { get; set; } = new();
         public int EndFadeOutDelay { get; set; }
         public int EndFadeOutDuration { get; set; }

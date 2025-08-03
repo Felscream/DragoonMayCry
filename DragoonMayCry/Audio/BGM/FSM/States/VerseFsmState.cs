@@ -90,7 +90,7 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
                         AudioService.PlayBgm(BgmStemIds.CombatEnd, combatEndTransitionTimings.FadingDuration,
                                              combatEndTransitionTimings.FadeOutDelay,
                                              combatEndTransitionTimings.FadeOutDuration);
-                        nextTransitionTime = combatEndTransitionTimings.NextStateTransitionTime;
+                        nextTransitionTime = combatEndTransitionTimings.NextBgmTransitionTime;
                         break;
                 }
                 CurrentTrackStopwatch.Restart();

@@ -318,7 +318,7 @@ namespace DragoonMayCry.UI
 
             if (ImGui.Button("Add Group"))
             {
-                currentProject!.VerseLoop.AddLast(new Group());
+                currentProject!.VerseLoop.AddLast(new StemGroup());
             }
 
             ImGui.SameLine();
@@ -330,7 +330,7 @@ namespace DragoonMayCry.UI
 
             // Draw groups
             var groupIndex = 0;
-            var groupsToRemove = new List<Group>();
+            var groupsToRemove = new List<StemGroup>();
 
             foreach (var group in currentProject!.VerseLoop)
             {
@@ -367,7 +367,7 @@ namespace DragoonMayCry.UI
 
             if (ImGui.Button("Add Group"))
             {
-                currentProject!.ChorusLoop.AddLast(new Group());
+                currentProject!.ChorusLoop.AddLast(new StemGroup());
             }
 
             ImGui.SameLine();
@@ -379,7 +379,7 @@ namespace DragoonMayCry.UI
 
             // Draw groups
             var groupIndex = 0;
-            var groupsToRemove = new List<Group>();
+            var groupsToRemove = new List<StemGroup>();
 
             foreach (var group in currentProject!.ChorusLoop)
             {
@@ -406,21 +406,21 @@ namespace DragoonMayCry.UI
             }
         }
 
-        private void DrawGroupContent(Group group, string prefix)
+        private void DrawGroupContent(StemGroup stemGroup, string prefix)
         {
             if (ImGui.Button($"Add Stem##{prefix}"))
             {
-                group.AddStem(new Stem());
+                stemGroup.AddStem(new Stem());
             }
 
             ImGui.SameLine();
 
             if (ImGui.Button($"Clear Stems##{prefix}"))
             {
-                group.ClearStems();
+                stemGroup.ClearStems();
             }
 
-            DrawStemList(group.Stems, prefix);
+            DrawStemList(stemGroup.Stems, prefix);
         }
 
         private void DrawTransitionsTab()
@@ -458,7 +458,6 @@ namespace DragoonMayCry.UI
             }
             ImGui.Separator();
 
-            // Remove marked stems
             foreach (var stem in stemsToRemove)
             {
                 stems.Remove(stem);
@@ -499,7 +498,7 @@ namespace DragoonMayCry.UI
                 ImGui.SetTooltip("Audio file selection...");
             }
 
-            var transitionTime = stem.TransitionTime ?? 0;
+            var transitionTime = stem.TransitionTime;
             if (ImGui.InputInt("Transition Time (ms)", ref transitionTime, 1, 100))
             {
                 transitionTime = Math.Max(0, transitionTime);

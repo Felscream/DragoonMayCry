@@ -84,7 +84,8 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm
             return errors;
         }
 
-        private static List<string> GetStemGroupsErrors(LinkedList<Group> groups, string emptyMessage, string prefix)
+        private static List<string> GetStemGroupsErrors(
+            LinkedList<StemGroup> groups, string emptyMessage, string prefix)
         {
             var errors = new List<string>();
             if (groups.Count == 0)
@@ -100,16 +101,16 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm
             return errors;
         }
 
-        private static List<string> GetStemGroupErrors(Group group, string emptyMessage, string prefix)
+        private static List<string> GetStemGroupErrors(StemGroup stemGroup, string emptyMessage, string prefix)
         {
             List<string> errors = [];
-            if (group.Stems.Count == 0)
+            if (stemGroup.Stems.Count == 0)
             {
                 errors.Add($"{prefix} : {emptyMessage}");
             }
-            for (var i = 0; i < group.Stems.Count; i++)
+            for (var i = 0; i < stemGroup.Stems.Count; i++)
             {
-                errors.AddRange(GetStemErrors(group.Stems[i], $"{prefix} - Stem {i + 1}"));
+                errors.AddRange(GetStemErrors(stemGroup.Stems[i], $"{prefix} - Stem {i + 1}"));
             }
 
             return errors;

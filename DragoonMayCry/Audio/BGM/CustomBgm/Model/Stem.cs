@@ -16,7 +16,7 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm.Model
 
         public string Id { get; } = id;
         public string AudioPath { get; set; } = audioPath;
-        public int? TransitionTime { get; set; } = transitionTime;
+        public int TransitionTime { get; set; } = transitionTime;
         protected bool Equals(Stem other)
         {
             return Id == other.Id;
