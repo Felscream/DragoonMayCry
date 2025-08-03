@@ -15,7 +15,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
     {
         public delegate void LoadNewBgmDelegate();
         private readonly AudioService audioService;
-        private readonly DoubleLinkedList<BgmState> bgmStates;
+        private readonly LinkedList<BgmState> bgmStates;
 
 
         private readonly IFramework framework;
@@ -30,7 +30,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
         // The current state.
         private IFsmState? currentState;
-        private DoubleLinkedNode<BgmState> currentStateNode;
+        private LinkedListNode<BgmState> currentStateNode;
         public LoadNewBgmDelegate? LoadNewBgm;
 
         private int nextTransitionTime = -1;
@@ -44,9 +44,9 @@ namespace DragoonMayCry.Audio.BGM.FSM
             audioService = AudioService.Instance;
             stateTransitionStopwatch = new Stopwatch();
 
-            bgmStates = new DoubleLinkedList<BgmState>(BgmState.Intro, BgmState.CombatLoop, BgmState.CombatPeak);
+            bgmStates = new LinkedList<BgmState>(new[] { BgmState.Intro, BgmState.CombatLoop, BgmState.CombatPeak });
 
-            currentStateNode = bgmStates.Head!;
+            currentStateNode = bgmStates.First!;
 
             framework.Update += Update;
         }
@@ -65,7 +65,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
                 return;
             }
 
-            currentStateNode = bgmStates.Head!;
+            currentStateNode = bgmStates.First!;
             currentState = currentBgmStates?[currentStateNode.Value];
             IsActive = true;
             currentState?.Enter(false);
@@ -105,7 +105,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
         {
             IsActive = false;
             stateTransitionStopwatch.Reset();
-            currentStateNode = bgmStates.Head!;
+            currentStateNode = bgmStates.First!;
             candidateState = null;
 
             if (currentBgmStates != null)
@@ -130,7 +130,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
             if (candidateState.Id == BgmState.Intro)
             {
-                currentStateNode = bgmStates.Head!;
+                currentStateNode = bgmStates.First!;
             }
             else if (currentStateNode.Next != null && currentStateNode.Next.Value == candidateState.Id)
             {

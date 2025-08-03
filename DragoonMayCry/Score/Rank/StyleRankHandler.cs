@@ -2,15 +2,16 @@ using DragoonMayCry.Configuration;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.State;
-using DragoonMayCry.Util;
 using System;
+using System.Collections.Generic;
 
 namespace DragoonMayCry.Score.Rank
 {
     public class StyleRankHandler : IResettable
     {
 
-        private static readonly DoubleLinkedList<StyleType> Styles = new(
+        private static readonly LinkedList<StyleType> Styles = new(new[]
+        {
             StyleType.NoStyle,
             StyleType.D,
             StyleType.C,
@@ -18,7 +19,8 @@ namespace DragoonMayCry.Score.Rank
             StyleType.A,
             StyleType.S,
             StyleType.SS,
-            StyleType.SSS);
+            StyleType.SSS
+        });
 
         private readonly PlayerState playerState;
 
@@ -35,9 +37,9 @@ namespace DragoonMayCry.Score.Rank
             playerActionTracker.LimitBreakCanceled += OnLimitBreakCanceled;
             playerActionTracker.UsingLimitBreak += OnLimitBreak;
             playerActionTracker.LimitBreakEffect += OnLimitBreakEffect;
-            CurrentStyle = Styles.Head!;
+            CurrentStyle = Styles.First!;
         }
-        public DoubleLinkedNode<StyleType> CurrentStyle { get; private set; }
+        public LinkedListNode<StyleType> CurrentStyle { get; private set; }
 
         public void Reset()
         {
@@ -63,7 +65,7 @@ namespace DragoonMayCry.Score.Rank
         {
             if (CurrentStyle.Next == null)
             {
-                if (Styles.Head != null && loop)
+                if (Styles.First != null && loop)
                 {
                     ResetRank();
                 }
@@ -95,7 +97,7 @@ namespace DragoonMayCry.Score.Rank
 
         private void ResetRank()
         {
-            CurrentStyle = Styles.Head!;
+            CurrentStyle = Styles.First!;
             StyleRankChange?.Invoke(this, new RankChangeData(CurrentStyle.Value, CurrentStyle.Value, false));
         }
 
@@ -108,7 +110,7 @@ namespace DragoonMayCry.Score.Rank
 
             if (CurrentStyle == null)
             {
-                CurrentStyle = Styles.Head!;
+                CurrentStyle = Styles.First!;
             }
 
             var tempRank = CurrentStyle;
