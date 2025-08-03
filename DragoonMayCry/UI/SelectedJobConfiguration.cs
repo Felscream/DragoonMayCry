@@ -30,7 +30,7 @@ namespace DragoonMayCry.UI
         private readonly IList<AnnouncerType> announcers;
         private readonly IList<long> bgmIds;
         private readonly JobConfiguration configuration;
-        private readonly CustomBgmService customBgmService;
+        private readonly CustomBgmManager customBgmManager;
         private readonly JobId job;
         public ApplyToAllDelegate? ApplyToAll;
         private long currentProjectId = -1;
@@ -45,7 +45,7 @@ namespace DragoonMayCry.UI
             this.job = job;
             this.configuration = configuration;
             this.announcers = announcers;
-            customBgmService = CustomBgmService.Instance;
+            customBgmManager = CustomBgmManager.Instance;
             bgmIds =
             [
                 .. bgms.OrderBy(bgm =>

@@ -86,9 +86,9 @@ namespace DragoonMayCry.Audio
             audioEngine.UpdateBgmVolume(GetBgmVolume());
         }
 
-        public bool RegisterBgmParts(long key, Dictionary<string, string> paths)
+        public bool RegisterBgmParts(long key, Dictionary<string, string> paths, bool overwrite = false)
         {
-            if (registeredBgms.ContainsKey(key))
+            if (!overwrite && registeredBgms.ContainsKey(key))
             {
                 return true;
             }
@@ -103,7 +103,7 @@ namespace DragoonMayCry.Audio
                 return false;
             }
 
-            registeredBgms.Add(key, bgm);
+            registeredBgms[key] = bgm;
             return true;
         }
 

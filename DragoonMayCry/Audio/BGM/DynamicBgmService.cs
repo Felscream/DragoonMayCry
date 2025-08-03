@@ -12,6 +12,7 @@ using DragoonMayCry.Audio.BGM.FSM.States.Subhuman;
 using DragoonMayCry.Data;
 using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
+using DragoonMayCry.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,7 +26,7 @@ namespace DragoonMayCry.Audio.BGM
     public class DynamicBgmService : IDisposable
     {
         private const long MaxDefaultBgmConfigurationId = 6;
-        private static readonly CustomBgmService CustomBgmService = CustomBgmService.Instance;
+        private static readonly CustomBgmManager CustomBgmManager = CustomBgmManager.Instance;
         private readonly AudioService audioService;
         private readonly DynamicBgmFsm bgmFsm;
         private readonly Dictionary<long, Dictionary<BgmState, IFsmState>> bgmFsmStates = new();
@@ -292,14 +293,11 @@ namespace DragoonMayCry.Audio.BGM
 
         private Queue<long> GenerateRandomBgmQueue(List<long> loadedBgm)
         {
-            var bgmTemp = new List<long>(loadedBgm);
             var randomQueue = new Queue<long>();
-            var random = new Random();
-            while (bgmTemp.Count > 0)
+            var shuffledItems = loadedBgm.Shuffle();
+            foreach (var item in shuffledItems)
             {
-                var index = random.Next(0, bgmTemp.Count);
-                randomQueue.Enqueue(bgmTemp[index]);
-                bgmTemp.RemoveAt(index);
+                randomQueue.Enqueue(item);
             }
             return randomQueue;
         }
@@ -491,7 +489,7 @@ namespace DragoonMayCry.Audio.BGM
 
         public static string GetBgmLabel(long bgmKey)
         {
-            var customBgmName = CustomBgmService.GetProjectName(bgmKey);
+            var customBgmName = CustomBgmManager.GetProjectName(bgmKey);
             if (customBgmName != null)
             {
                 return customBgmName;

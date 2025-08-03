@@ -1,4 +1,8 @@
+#region
+
 using System.Collections.Generic;
+
+#endregion
 
 namespace DragoonMayCry.Audio.BGM.FSM.States.DevilsNeverCry
 {
@@ -63,7 +67,6 @@ namespace DragoonMayCry.Audio.BGM.FSM.States.DevilsNeverCry
             TransitionTime = ComputeNextTransitionTiming();
             CurrentTrackStopwatch.Restart();
             NextPosibleStateTransitionTime = ComputeNextStateTransitionTime();
-
         }
     }
 }

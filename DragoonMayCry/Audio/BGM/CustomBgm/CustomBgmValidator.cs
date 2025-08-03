@@ -41,9 +41,8 @@ namespace DragoonMayCry.Audio.BGM.CustomBgm
 
         public static List<string> GetDemotionTransitionErrors(CustomBgmProject project)
         {
-            return GetStemGroupErrors(project.DemotionTransitions,
-                                      "You must have at least one audio file for the demotion transition.",
-                                      "Demotion Transition");
+            return GetStemErrors(project.DemotionTransition,
+                                 "Demotion Transition");
         }
 
         public static List<string> GetCombatEndErrors(CustomBgmProject project)

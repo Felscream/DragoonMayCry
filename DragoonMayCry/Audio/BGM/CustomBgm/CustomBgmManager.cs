@@ -12,21 +12,21 @@ using System.Linq;
 
 namespace DragoonMayCry.Audio.BGM.CustomBgm
 {
-    public class CustomBgmService
+    public class CustomBgmManager
     {
-        private static CustomBgmService? instance;
+        private static CustomBgmManager? instance;
 
         private readonly string customBgmDirectory;
         private readonly Dictionary<long, CustomBgmProject> projects = new();
 
-        private CustomBgmService()
+        private CustomBgmManager()
         {
             var configDir = Plugin.PluginInterface.GetPluginConfigDirectory();
             customBgmDirectory = Path.Combine(configDir, "CustomBGM");
             Directory.CreateDirectory(customBgmDirectory);
             LoadProjects();
         }
-        public static CustomBgmService Instance => instance ??= new CustomBgmService();
+        public static CustomBgmManager Instance => instance ??= new CustomBgmManager();
 
         public void LoadProjects()
         {

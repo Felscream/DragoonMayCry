@@ -34,7 +34,7 @@ namespace DragoonMayCry.UI
 
         private readonly IList<long> bgmOptions;
         private readonly DmcConfiguration configuration;
-        private readonly CustomBgmService customBgmService = CustomBgmService.Instance;
+        private readonly CustomBgmManager customBgmManager = CustomBgmManager.Instance;
         private readonly IList<ISelectable> selectableJobConfiguration = new List<ISelectable>();
 
         private readonly Setting<AnnouncerType> selectedAnnouncerPreview = new(AnnouncerType.DmC5);

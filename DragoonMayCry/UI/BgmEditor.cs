@@ -19,7 +19,7 @@ namespace DragoonMayCry.UI
 {
     public class BgmEditor : Window
     {
-        private readonly CustomBgmService customBgmService;
+        private readonly CustomBgmManager customBgmManager;
         private readonly Vector4 errorColor = new(219, 45, 26, 255);
         private readonly FileDialogManager fileDialogManager = new();
         private readonly string[] tabNames =
@@ -40,11 +40,11 @@ namespace DragoonMayCry.UI
         {
             Size = new Vector2(1200, 800);
             SizeCondition = ImGuiCond.Appearing;
-            customBgmService = CustomBgmService.Instance;
+            customBgmManager = CustomBgmManager.Instance;
             fileDialogManager.CustomSideBarItems.Add((Environment.ExpandEnvironmentVariables("User Folder"),
                                                          Environment.ExpandEnvironmentVariables("%USERPROFILE%"),
                                                          FontAwesomeIcon.User, 0));
-            projects = customBgmService.GetProjects();
+            projects = customBgmManager.GetProjects();
         }
 
         public override void Draw()
@@ -71,7 +71,7 @@ namespace DragoonMayCry.UI
 
 
             ImGui.Separator();
-
+            DrawAudioControls();
             if (currentProject != null)
             {
                 DrawProjectEditor();
@@ -90,7 +90,7 @@ namespace DragoonMayCry.UI
                 ImGui.Separator();
                 if (currentProject != null)
                 {
-                    foreach (var error in customBgmService.GetProjectErrors(currentProject))
+                    foreach (var error in customBgmManager.GetProjectErrors(currentProject))
                     {
                         ImGui.Text(error);
                     }
@@ -102,7 +102,7 @@ namespace DragoonMayCry.UI
 
         private Vector4 GetProjectColor(CustomBgmProject project)
         {
-            return customBgmService.IsProjectValid(project) ? Colors.White : Colors.SoftRed;
+            return customBgmManager.IsProjectValid(project) ? Colors.White : Colors.SoftRed;
         }
 
         private void DrawProjectManagement()
@@ -120,8 +120,8 @@ namespace DragoonMayCry.UI
 
             if (ImGui.Button("Refresh"))
             {
-                customBgmService.LoadProjects();
-                projects = customBgmService.GetProjects();
+                customBgmManager.LoadProjects();
+                projects = customBgmManager.GetProjects();
             }
 
             // Project list
@@ -157,6 +157,51 @@ namespace DragoonMayCry.UI
             ImGui.EndChild();
         }
 
+        private void DrawAudioControls()
+        {
+            ImGui.BeginDisabled(currentProject == null);
+            if (ImGuiComponents.IconButton(FontAwesomeIcon.Play))
+            {
+                // play current project
+            }
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip("Play");
+            }
+
+
+            ImGui.SameLine();
+            if (ImGuiComponents.IconButton(FontAwesomeIcon.ArrowUp))
+            {
+                // rank up
+            }
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip("Rank Up");
+            }
+            ImGui.SameLine();
+
+            if (ImGuiComponents.IconButton(FontAwesomeIcon.ArrowDown))
+            {
+                // rank down
+            }
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip("Rank Down");
+            }
+            ImGui.SameLine();
+            ImGui.EndDisabled();
+            if (ImGuiComponents.IconButton(FontAwesomeIcon.Stop))
+            {
+                // rank down
+            }
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip("Stop");
+            }
+
+        }
+
         private void DrawProjectEditor()
         {
             if (currentProject == null) return;
@@ -168,16 +213,16 @@ namespace DragoonMayCry.UI
 
             if (ImGui.Button("Save"))
             {
-                customBgmService.SaveProject(currentProject, currentProjectNewName);
-                currentProject = customBgmService.GetProjectById(currentProject.Id);
+                customBgmManager.SaveProject(currentProject, currentProjectNewName);
+                currentProject = customBgmManager.GetProjectById(currentProject.Id);
                 projects[currentProject!.Id] = currentProject;
             }
             ImGui.SameLine();
             if (ImGui.Button("Cancel"))
             {
-                if (projects.TryGetValue(currentProject!.Id, out var project))
+                if (projects.ContainsKey(currentProject!.Id))
                 {
-                    currentProject = customBgmService.GetProjectById(currentProject.Id);
+                    currentProject = customBgmManager.GetProjectById(currentProject.Id);
                     projects[currentProject!.Id] = currentProject;
                 }
                 currentProject = null;
@@ -395,9 +440,9 @@ namespace DragoonMayCry.UI
             // Demotion Transitions
             ImGui.Text("Demotion Transitions");
             ImGui.Text(
-                "One is played randomly when transitioning from chorus back to verse (rating drops to A or lower).");
+                "Played when transitioning from chorus back to verse (rating drops to A or lower).");
 
-            DrawGroupContent(currentProject.DemotionTransitions, "demotionTransistion");
+            DrawStemConfiguration(currentProject!.DemotionTransition);
         }
 
         private void DrawStemList(ICollection<Stem> stems, string prefix)
@@ -421,7 +466,6 @@ namespace DragoonMayCry.UI
         }
         private void DrawGroupStem(string prefix, int stemIndex, Stem stem, List<Stem> stemsToRemove)
         {
-            var fileName = Path.GetFileName(stem.AudioPath);
             ImGui.PushID($"{prefix}_{stemIndex}");
             ImGui.Separator();
             ImGui.Text($"Stem {stemIndex + 1}");
@@ -522,9 +566,9 @@ namespace DragoonMayCry.UI
                 {
                     if (!string.IsNullOrWhiteSpace(newProjectName))
                     {
-                        if (customBgmService.IsNameUnique(newProjectName))
+                        if (customBgmManager.IsNameUnique(newProjectName))
                         {
-                            currentProject = customBgmService.CreateNewProject(newProjectName);
+                            currentProject = customBgmManager.CreateNewProject(newProjectName);
                             projects[currentProject.Id] = currentProject;
                             currentProjectNewName = currentProject.Name;
                             displayProjectNameError = false;
@@ -571,7 +615,7 @@ namespace DragoonMayCry.UI
 
                 if (ImGui.Button("Delete"))
                 {
-                    if (customBgmService.DeleteProject(projectToDelete))
+                    if (customBgmManager.DeleteProject(projectToDelete))
                     {
                         projects.Remove(projectToDelete.Id);
                         if (currentProject?.Id == projectToDelete.Id)

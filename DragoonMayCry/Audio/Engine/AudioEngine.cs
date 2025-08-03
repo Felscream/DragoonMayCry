@@ -1,3 +1,5 @@
+#region
+
 using DragoonMayCry.Audio.StyleAnnouncer;
 using NAudio.CoreAudioApi;
 using NAudio.CoreAudioApi.Interfaces;
@@ -7,6 +9,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+
+#endregion
 
 namespace DragoonMayCry.Audio.Engine
 {
@@ -188,7 +192,7 @@ namespace DragoonMayCry.Audio.Engine
 
         public Dictionary<string, CachedSound> RegisterBgm(Dictionary<string, string> paths)
         {
-            Dictionary<string, CachedSound> bgm = new();
+            bgmStems.Clear();
             foreach (var entry in paths)
             {
                 if (!File.Exists(entry.Value))
@@ -197,11 +201,10 @@ namespace DragoonMayCry.Audio.Engine
                 }
 
                 var part = new CachedSound(entry.Value);
-                bgm.Add(entry.Key, part);
+                bgmStems[entry.Key] = part;
             }
 
-            bgmStems = bgm;
-            return bgm;
+            return bgmStems;
         }
 
         public void LoadBgm(Dictionary<string, CachedSound> toLoad)

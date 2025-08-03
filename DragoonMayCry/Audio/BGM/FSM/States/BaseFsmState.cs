@@ -1,6 +1,7 @@
 #region
 
 using DragoonMayCry.Audio.Engine;
+using DragoonMayCry.Util;
 using NAudio.Wave;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -50,6 +51,16 @@ namespace DragoonMayCry.Audio.BGM.FSM.States
             }
 
             CurrentTrackStopwatch.Reset();
+        }
+        protected static Queue<string> RandomizeQueue(List<string> ids)
+        {
+            var spanIds = ids.Shuffle();
+            var queue = new Queue<string>();
+            foreach (var id in spanIds)
+            {
+                queue.Enqueue(id);
+            }
+            return queue;
         }
     }
 }
