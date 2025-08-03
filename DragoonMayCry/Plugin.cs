@@ -25,7 +25,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 using PlayerState = DragoonMayCry.State.PlayerState;
 
 #endregion
@@ -37,55 +36,61 @@ namespace DragoonMayCry
 
         private const string CommandName = "/dmc";
 
-        private static ScoreManager? ScoreManager;
-        private static PlayerState? PlayerState;
-        private static ScoreProgressBar? ScoreProgressBar;
-        private static PlayerActionTracker? PlayerActionTracker;
-        private static StyleRankHandler? StyleRankHandler;
-        private static FinalRankCalculator? FinalRankCalculator;
-        private static AudioService? AudioService;
-        private static DynamicBgmService? DynamicBgmService;
-        private static RecordService? RecordService;
-        public static StyleAnnouncerService? StyleAnnouncerService;
-        private static JobId CurrentJob = JobId.OTHER;
+        private static Plugin? instance;
+        private readonly AudioService audioService;
+        private readonly DynamicBgmService dynamicBgmService;
+        private readonly FinalRankCalculator finalRankCalculator;
 
         private readonly HitCounter hitCounter;
+        private readonly PlayerActionTracker playerActionTracker;
+        private readonly PlayerState playerState;
         private readonly PluginUI pluginUi;
+        private readonly RecordService recordService;
+
+        private readonly ScoreManager scoreManager;
+        private readonly ScoreProgressBar scoreProgressBar;
+        private readonly StyleAnnouncerService styleAnnouncerService;
+        private readonly StyleRankHandler styleRankHandler;
+        private JobId currentJob = JobId.OTHER;
 
         public Plugin()
         {
+            instance = this;
+
             PluginInterface.Create<Service>();
 
             KamiCommon.Initialize(PluginInterface, "DragoonMayCry", () => Configuration?.Save());
-            PlayerState = PlayerState.GetInstance();
-            PlayerState.RegisterJobChangeHandler(OnJobChange);
 
             Configuration = InitConfig();
             Configuration.Save();
-            AudioService = AudioService.Instance;
 
-            PlayerActionTracker = new PlayerActionTracker();
-            StyleRankHandler = new StyleRankHandler(PlayerActionTracker);
-            StyleAnnouncerService = new StyleAnnouncerService(StyleRankHandler, PlayerActionTracker);
-            DynamicBgmService = new DynamicBgmService(StyleRankHandler);
-            ScoreManager = new ScoreManager(StyleRankHandler, PlayerActionTracker);
+            playerState = PlayerState.GetInstance();
+            playerState.RegisterJobChangeHandler(OnJobChange);
 
-            PlayerActionTracker.SetJobModuleFactory(new JobModuleFactory(ScoreManager));
+            audioService = AudioService.Instance;
 
-            ScoreProgressBar = new ScoreProgressBar(ScoreManager, StyleRankHandler, PlayerActionTracker, PlayerState);
-            FinalRankCalculator = new FinalRankCalculator(PlayerState, PlayerActionTracker);
+            playerActionTracker = new PlayerActionTracker();
+            styleRankHandler = new StyleRankHandler(playerActionTracker);
+            styleAnnouncerService = new StyleAnnouncerService(styleRankHandler, playerActionTracker);
+            dynamicBgmService = new DynamicBgmService(styleRankHandler);
+            scoreManager = new ScoreManager(styleRankHandler, playerActionTracker);
 
-            RecordService = new RecordService(FinalRankCalculator);
-            RecordService.Initialize();
+            playerActionTracker.SetJobModuleFactory(new JobModuleFactory(scoreManager));
 
-            hitCounter = new HitCounter(PlayerActionTracker);
-            pluginUi = new PluginUI(ScoreProgressBar, StyleRankHandler, ScoreManager, FinalRankCalculator,
-                                    StyleAnnouncerService,
-                                    DynamicBgmService, PlayerActionTracker, RecordService, hitCounter);
+            scoreProgressBar = new ScoreProgressBar(scoreManager, styleRankHandler, playerActionTracker, playerState);
+            finalRankCalculator = new FinalRankCalculator(playerState, playerActionTracker);
+
+            recordService = new RecordService(finalRankCalculator);
+            recordService.Initialize();
+
+            hitCounter = new HitCounter(playerActionTracker);
+            pluginUi = new PluginUI(scoreProgressBar, styleRankHandler, scoreManager, finalRankCalculator,
+                                    styleAnnouncerService,
+                                    dynamicBgmService, playerActionTracker, recordService, hitCounter);
 
 
-            ScoreProgressBar.DemotionApplied += StyleRankHandler.OnDemotion;
-            ScoreProgressBar.Promotion += StyleRankHandler.OnPromotion;
+            scoreProgressBar.DemotionApplied += styleRankHandler.OnDemotion;
+            scoreProgressBar.Promotion += styleRankHandler.OnPromotion;
 
             Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
             {
@@ -113,6 +118,27 @@ namespace DragoonMayCry
             });
             AssetsManager.VerifyAndUpdateAssets();
         }
+        public static ScoreManager ScoreManager =>
+            instance?.scoreManager ?? throw new InvalidOperationException("Plugin not initialized");
+        public static PlayerState PlayerState =>
+            instance?.playerState ?? throw new InvalidOperationException("Plugin not initialized");
+        public static ScoreProgressBar ScoreProgressBar =>
+            instance?.scoreProgressBar ?? throw new InvalidOperationException("Plugin not initialized");
+        public static PlayerActionTracker PlayerActionTracker =>
+            instance?.playerActionTracker ?? throw new InvalidOperationException("Plugin not initialized");
+        public static StyleRankHandler StyleRankHandler =>
+            instance?.styleRankHandler ?? throw new InvalidOperationException("Plugin not initialized");
+        public static FinalRankCalculator FinalRankCalculator =>
+            instance?.finalRankCalculator ?? throw new InvalidOperationException("Plugin not initialized");
+        public static AudioService AudioService =>
+            instance?.audioService ?? throw new InvalidOperationException("Plugin not initialized");
+        public static DynamicBgmService DynamicBgmService =>
+            instance?.dynamicBgmService ?? throw new InvalidOperationException("Plugin not initialized");
+        public static RecordService RecordService =>
+            instance?.recordService ?? throw new InvalidOperationException("Plugin not initialized");
+        public static StyleAnnouncerService StyleAnnouncerService =>
+            instance?.styleAnnouncerService ?? throw new InvalidOperationException("Plugin not initialized");
+        public static JobId CurrentJob => instance?.currentJob ?? JobId.OTHER;
         [PluginService]
         public static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
 
@@ -120,20 +146,21 @@ namespace DragoonMayCry
 
         public void Dispose()
         {
-            DynamicBgmService?.Dispose();
-            AudioService?.Dispose();
+            instance = null;
+
+            dynamicBgmService.Dispose();
+            audioService.Dispose();
             KamiCommon.Dispose();
-            ScoreProgressBar?.Dispose();
-            PlayerActionTracker?.Dispose();
-            ScoreManager?.Dispose();
-            PlayerState?.Dispose();
-            pluginUi?.Dispose();
+            scoreProgressBar.Dispose();
+            playerActionTracker.Dispose();
+            scoreManager.Dispose();
+            playerState.Dispose();
+            pluginUi.Dispose();
             Service.CommandManager.RemoveHandler(CommandName);
         }
 
         public static bool CanRunDmc()
         {
-            // A warning appears if PlayerState#IsCombatJob is used directly
             return JobHelper.IsCombatJob(CurrentJob)
                    && PlayerState!.IsInCombat
                    && !PlayerState.IsInPvp()
@@ -154,7 +181,7 @@ namespace DragoonMayCry
         public static bool CanHandleEvents()
         {
             return JobHelper.IsCombatJob(CurrentJob)
-                   && !PlayerState!.IsInPvp()
+                   && !PlayerState.IsInPvp()
                    && IsEnabledForCurrentJob()
                    && (PlayerState.IsInsideInstance
                        || Configuration!.ActiveOutsideInstance);
@@ -162,8 +189,8 @@ namespace DragoonMayCry
 
         public static bool IsEnabledForCurrentJob()
         {
-            return Configuration != null && Configuration!.JobConfiguration.ContainsKey(CurrentJob)
-                                         && Configuration.JobConfiguration[CurrentJob].EnableDmc;
+            return Configuration?.JobConfiguration.ContainsKey(CurrentJob) == true &&
+                   Configuration.JobConfiguration[CurrentJob].EnableDmc;
         }
 
         private void OnCommand(string command, string args)
@@ -172,28 +199,28 @@ namespace DragoonMayCry
             {
                 PluginUI.ToggleConfigUi();
             }
-            else if (args == "bgm" && Configuration != null && DynamicBgmService != null)
+            else if (args == "bgm" && Configuration != null)
             {
                 Configuration.EnableDynamicBgm.Value = !Configuration.EnableDynamicBgm.Value;
                 KamiCommon.SaveConfiguration();
-                DynamicBgmService.ToggleDynamicBgm(this, Configuration.EnableDynamicBgm);
+                dynamicBgmService.ToggleDynamicBgm(this, Configuration.EnableDynamicBgm);
                 var bgmState = Configuration.EnableDynamicBgm ? "on" : "off";
                 Service.ChatGui.Print($"[DragoonMayCry] Dynamic BGM turned {bgmState}");
             }
-            else if (args == "job" && Configuration?.JobConfiguration != null && DynamicBgmService != null)
+            else if (args == "job" && Configuration?.JobConfiguration != null)
             {
                 if (Configuration.JobConfiguration.TryGetValue(CurrentJob, out var jobConfig))
                 {
-                    jobConfig.EnableDmc.Value = !jobConfig.EnableDmc;
+                    jobConfig.EnableDmc.Value = !jobConfig.EnableDmc.Value;
                     KamiCommon.SaveConfiguration();
-                    DynamicBgmService.OnJobEnableChange(this, CurrentJob);
-                    var pluginState = jobConfig.EnableDmc ? "on" : "off";
+                    dynamicBgmService.OnJobEnableChange(this, CurrentJob);
+                    var pluginState = jobConfig.EnableDmc.Value ? "on" : "off";
                     Service.ChatGui.Print($"[DragoonMayCry] DmC turned {pluginState} for {CurrentJob}");
                 }
             }
-            else if (args == "next" && Configuration != null && DynamicBgmService != null)
+            else if (args == "next" && Configuration != null)
             {
-                var bgm = DynamicBgmService.PlayNextBgmInQueue();
+                var bgm = dynamicBgmService.PlayNextBgmInQueue();
                 var message = "[DragoonMayCry] Cannot play next track in current state.";
                 if (!bgm.IsNullOrEmpty())
                 {
@@ -209,70 +236,57 @@ namespace DragoonMayCry
 
         public static void OnActiveOutsideInstanceConfChange(object? sender, bool activeOutsideInstance)
         {
-            if (PlayerState!.IsInsideInstance || activeOutsideInstance)
+            if (PlayerState.IsInsideInstance || activeOutsideInstance)
             {
                 return;
             }
 
-            ScoreProgressBar?.Reset();
-            ScoreManager?.Reset();
-            FinalRankCalculator?.Reset();
-            StyleRankHandler?.Reset();
+            ScoreProgressBar.Reset();
+            ScoreManager.Reset();
+            FinalRankCalculator.Reset();
+            StyleRankHandler.Reset();
         }
 
         public static bool IsEmdModeEnabled()
         {
-            if (Configuration == null || !Configuration.JobConfiguration.ContainsKey(CurrentJob))
-            {
-                return false;
-            }
-
-            return Configuration.JobConfiguration[CurrentJob].DifficultyMode == DifficultyMode.EstinienMustDie;
+            return Configuration?.JobConfiguration.TryGetValue(CurrentJob, out var jobConfig) == true &&
+                   jobConfig.DifficultyMode == DifficultyMode.EstinienMustDie;
         }
 
         private static DmcConfiguration InitConfig()
         {
-            var configFile = PluginInterface.ConfigFile.FullName;
-            if (!File.Exists(configFile))
+            var configPath = PluginInterface.ConfigFile;
+            if (!File.Exists(configPath.FullName))
             {
                 return new DmcConfiguration();
             }
 
-            var configText = File.ReadAllText(configFile);
-            DmcConfiguration config;
             try
             {
-                var versionCheck = JsonSerializer.Deserialize<BaseConfiguration>(configText);
-                if (versionCheck is null)
+                var configText = File.ReadAllText(configPath.FullName);
+                var config = JsonConvert.DeserializeObject<DmcConfiguration>(configText);
+                if (config == null)
                 {
                     return new DmcConfiguration();
                 }
 
-                var version = versionCheck.Version;
-                config = version switch
+                if (config.Version < 2)
                 {
-                    1 => JsonConvert.DeserializeObject<DmcConfiguration>(configText)?.MigrateToVersionTwo()
-                                    .MigrateToVersionThree() ??
-                         new DmcConfiguration(),
-                    2 => JsonConvert.DeserializeObject<DmcConfiguration>(configText)?.MigrateToVersionThree()
-                         ?? new DmcConfiguration(),
-                    3 => JsonConvert.DeserializeObject<DmcConfiguration>(configText) ?? new DmcConfiguration(),
-                    _ => new DmcConfiguration(),
-                };
+                    config = config.MigrateToVersionTwo();
+                }
+                if (config.Version < 3)
+                {
+                    config = config.MigrateToVersionThree();
+                }
+                
+                RemoveUnknownCustomBgmIds(config);
+
+                return config;
             }
             catch (Exception e)
             {
-                if (e.StackTrace is not null)
-                {
-                    Service.Log.Debug(e.StackTrace);
-                }
-
-                Service.Log.Warning("Your configuration migration failed, it has been reinitialized");
                 return new DmcConfiguration();
             }
-
-            RemoveUnknownCustomBgmIds(config);
-            return config;
         }
 
         private static bool IsInvalidBgmKey(long bgmKey, HashSet<long> currentCustomBgmIds)
@@ -286,6 +300,7 @@ namespace DragoonMayCry
             return (bgmKey < BgmKeys.MinPreconfiguredBgmKey || bgmKey > BgmKeys.MaxPreconfiguredBgmKey)
                    && !currentCustomBgmIds.Contains(bgmKey);
         }
+
         private static void RemoveUnknownCustomBgmIds(DmcConfiguration config)
         {
             var currentCustomBgmIds = CustomBgmManager.Instance.GetCustomBgmIds().ToHashSet();
@@ -328,45 +343,45 @@ namespace DragoonMayCry
 
         private void OnJobChange(object? sender, JobId job)
         {
-            CurrentJob = job;
+            currentJob = job;
         }
 
         [Conditional("DEBUG")]
         public static void StartBgm()
         {
-            DynamicBgmService?.GetFsm().Start();
+            DynamicBgmService.GetFsm().Start();
         }
 
         [Conditional("DEBUG")]
         public static void StopBgm()
         {
-            DynamicBgmService?.GetFsm().ResetToIntro();
+            DynamicBgmService.GetFsm().ResetToIntro();
             AudioService.Instance.StopBgm();
         }
 
         [Conditional("DEBUG")]
         public static void SimulateBgmRankChanges(StyleType previous, StyleType newStyle)
         {
-            DynamicBgmService?.GetFsm()
+            DynamicBgmService.GetFsm()
                              .OnRankChange(null, new StyleRankHandler.RankChangeData(previous, newStyle, false));
         }
 
         [Conditional("DEBUG")]
         public static void BgmTransitionNext()
         {
-            DynamicBgmService?.GetFsm().Promote();
+            DynamicBgmService.GetFsm().Promote();
         }
 
         [Conditional("DEBUG")]
         public static void BgmEndCombat()
         {
-            DynamicBgmService?.GetFsm().LeaveCombat();
+            DynamicBgmService.GetFsm().LeaveCombat();
         }
 
         [Conditional("DEBUG")]
         public static void BgmDemotion()
         {
-            DynamicBgmService?.GetFsm().Demote();
+            DynamicBgmService.GetFsm().Demote();
         }
     }
 }

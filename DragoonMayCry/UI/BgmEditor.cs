@@ -27,10 +27,10 @@ namespace DragoonMayCry.UI
             "Intro", "Combat Start", "Verse Loop", "Chorus Loop", "Transitions", "Combat End",
         ];
         private CustomBgmProject? currentProject;
-        private string currentProjectNewName;
+        private string currentProjectNewName = "";
         private bool displayProjectNameError;
         private string newProjectName = "";
-        private string projectNameError;
+        private string projectNameError = "";
         private Dictionary<long, CustomBgmProject> projects;
         private CustomBgmProject? projectToDelete;
         private bool showDeleteConfirmDialog;

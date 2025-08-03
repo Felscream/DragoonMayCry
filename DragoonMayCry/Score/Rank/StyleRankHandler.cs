@@ -1,9 +1,14 @@
+#region
+
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.State;
+using DragoonMayCry.Util;
 using System;
 using System.Collections.Generic;
+
+#endregion
 
 namespace DragoonMayCry.Score.Rank
 {
@@ -19,7 +24,7 @@ namespace DragoonMayCry.Score.Rank
             StyleType.A,
             StyleType.S,
             StyleType.SS,
-            StyleType.SSS
+            StyleType.SSS,
         });
 
         private readonly PlayerState playerState;

@@ -35,7 +35,6 @@ namespace DragoonMayCry.UI
         private readonly CustomBgmManager customBgmManager;
         private readonly JobId job;
         public ApplyToAllDelegate? ApplyToAll;
-        private long currentProjectId = -1;
         public DmcToggleChangeDelegate? DmcToggleChange;
 
         public JobAnnouncerChangeDelegate? JobAnnouncerChange;
