@@ -1,9 +1,22 @@
 #region
 
+#region
+
+#region
+
 using Dalamud.Interface.Windowing;
 using DragoonMayCry.UI.Text;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
+
+#endregion
+
+#region
+
 using System.Numerics;
+
+#endregion
+
+#endregion
 
 #endregion
 
@@ -82,14 +95,14 @@ namespace DragoonMayCry.UI
 
             ImGui.TextColored(goldColor, "\nDemotions");
             ImGui.Text("- You lose points over time. The higher your rank, the more points you lose.");
-            ImGui.Text("- You will be demoted if your style gauge in under a threshold for more than 5 seconds.");
+            ImGui.Text("- You will be demoted if your style gauge is under a threshold for more than 5 seconds.");
             ImGui.Text(
                 "- You won't get demoted if you can't act due to fights mechanics (ex : out of the action, fetters) and the demotion timer didn't already start.");
 
             ImGui.TextColored(goldColor, "\nBlunders");
             ImGui.Text("Blunders affect your rank significantly.");
             ImGui.Text(
-                "- Clipping your GCD for more than 0.2s will substract points from your current gauge, and heavily reduce points gained for the next 8 seconds.");
+                "- Clipping your GCD for more than 0.2s will subtract points from your current gauge, and heavily reduce points gained for the next 8 seconds.");
             ImGui.Text(
                 "- Holding your GCD for more than 0.2s, if you are not incapacited, will move you to the previous tier. But if you were in tier S or above, you will return to B tier.");
             ImGui.Text(

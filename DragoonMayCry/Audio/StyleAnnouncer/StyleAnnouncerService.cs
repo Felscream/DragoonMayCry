@@ -1,5 +1,6 @@
 #region
 
+using Dalamud.Bindings.ImGui;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Audio.StyleAnnouncer.Announcer;
 using DragoonMayCry.Data;
@@ -7,7 +8,6 @@ using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
-using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -121,11 +121,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
                 var effectiveKey = GetAnnouncementGroup(randomId);
                 if (!CanPlaySfx(effectiveKey))
                 {
-                    if (!soundIdsNextAvailability.ContainsKey(effectiveKey))
-                    {
-                        soundIdsNextAvailability.Add(effectiveKey, 0);
-                    }
-                    else
+                    if (!soundIdsNextAvailability.TryAdd(effectiveKey, 0))
                     {
                         soundIdsNextAvailability[effectiveKey]--;
                     }
@@ -252,12 +248,12 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
         private IStyleAnnouncer GetCurrentJobAnnouncer()
         {
             var currentJob = playerState.GetCurrentJob();
-            if (!Plugin.Configuration!.JobConfiguration.ContainsKey(currentJob))
+            if (!Plugin.Configuration!.JobConfiguration.TryGetValue(currentJob, out var jobConfiguration))
             {
                 return dmc5Announcer;
             }
 
-            var jobAnnouncer = Plugin.Configuration!.JobConfiguration[currentJob].Announcer.Value;
+            var jobAnnouncer = jobConfiguration.Announcer.Value;
             return GetAnnouncerByType(jobAnnouncer);
         }
 
@@ -363,9 +359,9 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             {
                 PlayAnnouncerFromAll(newRank);
             }
-            else if (sfxByStyle.ContainsKey(newRank))
+            else if (sfxByStyle.TryGetValue(newRank, out var soundId))
             {
-                PlayAnnouncer(SelectRandomSfx(sfxByStyle[newRank]));
+                PlayAnnouncer(SelectRandomSfx(soundId));
             }
         }
 

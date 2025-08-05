@@ -1,5 +1,6 @@
 #region
 
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Textures.TextureWraps;
@@ -10,7 +11,6 @@ using DragoonMayCry.Data;
 using DragoonMayCry.Record;
 using DragoonMayCry.Record.Model;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using ImGuiNET;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using System;
@@ -299,11 +299,12 @@ namespace DragoonMayCry.UI
 
                         var scaledDutyTextureSize = dutyTextureSize * 1.4f;
 
-                        CenterText(GetDutyName(displayedDuties[i]), scaledDutyTextureSize);
+                        var content = GetContent(displayedDuties[i]);
+                        CenterText(GetDutyName(content, displayedDuties[i]), scaledDutyTextureSize);
 
-                        if (TryGetTexture(displayedDuties[i], out var texture))
+                        if (TryGetTexture(content, displayedDuties[i], out var texture))
                         {
-                            ImGui.Image(texture.ImGuiHandle, scaledDutyTextureSize);
+                            ImGui.Image(texture.Handle, scaledDutyTextureSize);
                         }
 
                         #endregion
@@ -436,9 +437,9 @@ namespace DragoonMayCry.UI
             return contentFinderCondition;
         }
 
-        private bool TryGetTexture(DisplayedDuty displayed, out IDalamudTextureWrap texture)
+        private bool TryGetTexture(
+            ContentFinderCondition? content, DisplayedDuty displayed, out IDalamudTextureWrap texture)
         {
-            var content = GetContent(displayed);
             var iconToDisplay = displayed.Duty.IconId;
 
             if (content == null || content.Value.RowId == 0 || content.Value.Content.RowId == 0)
@@ -450,6 +451,10 @@ namespace DragoonMayCry.UI
             else if (!UIState.IsInstanceContentUnlocked(content.Value.Content.RowId))
             {
                 iconToDisplay = HiddenDutyIconId;
+            }
+            else if (content.Value.Image > 0)
+            {
+                iconToDisplay = content.Value.Image;
             }
 
             texture = null!;
@@ -502,7 +507,7 @@ namespace DragoonMayCry.UI
             if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), rankIconPath)
                        .TryGetWrap(out var rankIcon, out _))
             {
-                ImGui.Image(rankIcon.ImGuiHandle, rankSize);
+                ImGui.Image(rankIcon.Handle, rankSize);
             }
         }
 
@@ -533,9 +538,8 @@ namespace DragoonMayCry.UI
             return jobRecord.Record;
         }
 
-        private string GetDutyName(DisplayedDuty displayed)
+        private string GetDutyName(ContentFinderCondition? content, DisplayedDuty displayed)
         {
-            var content = GetContent(displayed);
             if (content == null || content.Value.RowId == 0 || content.Value.Content.RowId == 0)
             {
                 return characterRecords.Values.Any(record => record.Record.ContainsKey(displayed.DutyId)

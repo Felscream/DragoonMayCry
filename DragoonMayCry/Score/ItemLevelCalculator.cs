@@ -1,8 +1,12 @@
+#region
+
 using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using System;
+
+#endregion
 
 namespace DragoonMayCry.Score
 {
@@ -32,7 +36,7 @@ namespace DragoonMayCry.Score
 
             var isLvlSync =
                 FFXIVClientStructs.FFXIV.Client.Game.UI.PlayerState.Instance()->
-                    IsLevelSynced != 0;
+                    IsLevelSynced;
 
             var territory = Service.ClientState.TerritoryType;
 

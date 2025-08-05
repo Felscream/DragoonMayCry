@@ -162,7 +162,7 @@ namespace DragoonMayCry
         public static bool CanRunDmc()
         {
             return JobHelper.IsCombatJob(CurrentJob)
-                   && PlayerState!.IsInCombat
+                   && PlayerState.IsInCombat
                    && !PlayerState.IsInPvp()
                    && IsEnabledForCurrentJob()
                    && (PlayerState.IsInsideInstance
@@ -278,7 +278,7 @@ namespace DragoonMayCry
                 {
                     config = config.MigrateToVersionThree();
                 }
-                
+
                 RemoveUnknownCustomBgmIds(config);
 
                 return config;

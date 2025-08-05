@@ -262,7 +262,7 @@ namespace DragoonMayCry.State
             if (addonByName == IntPtr.Zero)
                 return new HashSet<uint>();
 
-            var addon = (AddonEnemyList*)addonByName;
+            var addon = (AddonEnemyList*)addonByName.Address;
             var numArray = RaptureAtkModule->AtkModule.AtkArrayDataHolder.NumberArrays[21];
             var enemyIdSet = new HashSet<uint>();
             for (var i = 0; i < addon->EnemyCount; i++)

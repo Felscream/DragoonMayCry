@@ -1,5 +1,6 @@
 #region
 
+using Dalamud.Bindings.ImGui;
 using Dalamud.Game.Gui.FlyText;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
@@ -10,7 +11,6 @@ using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
-using ImGuiNET;
 using Lumina.Excel;
 using System;
 using System.Collections.Generic;
@@ -110,7 +110,7 @@ namespace DragoonMayCry.Score.Action
             {
                 onActionUsedHook =
                     Service.Hook.HookFromSignature<ActionUsedDelegate>(
-                        "40 55 53 56 41 54 41 55 41 56 41 57 48 8D AC 24 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 70 ",
+                        "40 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24",
                         OnActionUsed);
 
 
@@ -118,9 +118,9 @@ namespace DragoonMayCry.Score.Action
                     Service.Hook.HookFromSignature<ActorControlDelegate>(
                         "E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64", OnActorControl);
 
-
                 onCastHook =
-                    Service.Hook.HookFromSignature<CastDelegate>("40 56 41 56 48 81 EC ?? ?? ?? ?? 48 8B F2", OnCast);
+                    Service.Hook.HookFromSignature<CastDelegate>("40 53 57 48 81 EC ?? ?? ?? ?? 48 8B FA 8B D1",
+                                                                 OnCast);
                 addToScreenLogWithLogMessageId =
                     Service.Hook.HookFromSignature<AddToScreenLogWithLogMessageId>(
                         "E8 ?? ?? ?? ?? 8B 8C 24 ?? ?? ?? ?? 85 C9", OnLogMessage);

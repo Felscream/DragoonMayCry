@@ -250,7 +250,7 @@
                 "IconId": "112600"
             },
             "1260": {
-                "Name": " AAC Cruiserweight M3",
+                "Name": "AAC Cruiserweight M3",
                 "LvlSync": 100,
                 "Difficulty": 0,
                 "Category": 1,
@@ -258,7 +258,7 @@
                 "IconId": "112601"
             },
             "1261": {
-                "Name": " AAC Cruiserweight M3 (Savage)",
+                "Name": "AAC Cruiserweight M3 (Savage)",
                 "LvlSync": 100,
                 "Difficulty": 1,
                 "Category": 1,
@@ -266,7 +266,7 @@
                 "IconId": "112602"
             },
             "1262": {
-                "Name": " AAC Cruiserweight M4",
+                "Name": "AAC Cruiserweight M4",
                 "LvlSync": 100,
                 "Difficulty": 0,
                 "Category": 1,
@@ -274,7 +274,7 @@
                 "IconId": "112603"
             },
             "1263": {
-                "Name": " AAC Cruiserweight M4 (Savage)",
+                "Name": "AAC Cruiserweight M4 (Savage)",
                 "LvlSync": 100,
                 "Difficulty": 1,
                 "Category": 1,
@@ -304,6 +304,30 @@
                 "Category": 0,
                 "Subcategory": "Unreal",
                 "IconId": "112594"
+            },
+            "1295": {
+                "Name": "The Ageless Necropolis",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 0,
+                "Subcategory": "Main story quest",
+                "IconId": "112612"
+            },
+            "1296": {
+                "Name": "The Minstrel's Ballad: Necron's Embrace",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0,
+                "Subcategory": "Main story quest",
+                "IconId": "112613"
+            },
+            "1302": {
+                "Name": "The Wreath of Snakes (Unreal) ",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0,
+                "Subcategory": "Unreal",
+                "IconId": "112631"
             }
         }
     }
