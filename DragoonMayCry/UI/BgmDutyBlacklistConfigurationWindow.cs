@@ -1,11 +1,11 @@
 #region
 
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Windowing;
 using DragoonMayCry.Configuration;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using ImGuiNET;
 using KamiLib;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;

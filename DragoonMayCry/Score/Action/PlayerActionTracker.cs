@@ -1,5 +1,6 @@
 #region
 
+using Dalamud.Bindings.ImGui;
 using Dalamud.Game.Gui.FlyText;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
@@ -10,7 +11,6 @@ using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
-using ImGuiNET;
 using Lumina.Excel;
 using System;
 using System.Collections.Generic;
@@ -42,7 +42,7 @@ namespace DragoonMayCry.Score.Action
 
         private readonly Hook<ActionUsedDelegate>? onActionUsedHook;
 
-        private readonly Hook<ActorControlDelegate>? onActorControlHook;
+        private readonly Hook<CastCancelDelegate>? onCastCancelHook;
 
         private readonly Hook<CastDelegate>? onCastHook;
         private readonly PlayerState playerState;
@@ -110,20 +110,21 @@ namespace DragoonMayCry.Score.Action
             {
                 onActionUsedHook =
                     Service.Hook.HookFromSignature<ActionUsedDelegate>(
-                        "40 55 53 56 41 54 41 55 41 56 41 57 48 8D AC 24 ?? ?? ?? ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 70 ",
+                        "40 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24",
                         OnActionUsed);
 
 
-                onActorControlHook =
-                    Service.Hook.HookFromSignature<ActorControlDelegate>(
-                        "E8 ?? ?? ?? ?? 0F B7 0B 83 E9 64", OnActorControl);
+                onCastCancelHook =
+                    Service.Hook.HookFromSignature<CastCancelDelegate>(
+                        "48 8B C4 48 83 EC 48 48 89 58 08", OnCastCancel);
 
 
                 onCastHook =
-                    Service.Hook.HookFromSignature<CastDelegate>("40 56 41 56 48 81 EC ?? ?? ?? ?? 48 8B F2", OnCast);
+                    Service.Hook.HookFromSignature<CastDelegate>("40 53 57 48 81 EC ?? ?? ?? ?? 48 8B FA 8B D1",
+                                                                 OnCast);
                 addToScreenLogWithLogMessageId =
                     Service.Hook.HookFromSignature<AddToScreenLogWithLogMessageId>(
-                        "E8 ?? ?? ?? ?? 8B 8C 24 ?? ?? ?? ?? 85 C9", OnLogMessage);
+                        "E8 ?? ?? ?? ?? 0F 28 B4 24 ?? ?? ?? ?? 48 8B 45 CF", OnLogMessage);
             }
             catch (Exception e)
             {
@@ -131,7 +132,7 @@ namespace DragoonMayCry.Score.Action
             }
 
             onActionUsedHook?.Enable();
-            onActorControlHook?.Enable();
+            onCastCancelHook?.Enable();
             onCastHook?.Enable();
             addToScreenLogWithLogMessageId?.Enable();
 
@@ -150,8 +151,8 @@ namespace DragoonMayCry.Score.Action
             onActionUsedHook?.Disable();
             onActionUsedHook?.Dispose();
 
-            onActorControlHook?.Disable();
-            onActorControlHook?.Dispose();
+            onCastCancelHook?.Disable();
+            onCastCancelHook?.Dispose();
 
             onCastHook?.Disable();
             onCastHook?.Dispose();
@@ -164,7 +165,7 @@ namespace DragoonMayCry.Score.Action
             BattleChara* target, BattleChara* dealer, int hitType, char a4, int actionId, int damage, int a7, int a8)
         {
             addToScreenLogWithLogMessageId?.Original(target, dealer, hitType, a4, actionId, damage, a7, a8);
-
+            
             if (!Plugin.CanRunDmc() || dealer == null || target == null || playerState.Player == null)
             {
                 return;
@@ -283,27 +284,16 @@ namespace DragoonMayCry.Score.Action
             return PlayerActionType.Other;
         }
 
-        private void OnActorControl(
-            uint entityId, uint type, uint buffId, uint direct, uint actionId,
-            uint sourceId, uint arg4, uint arg5, ulong targetId, byte a10)
+        private void OnCastCancel(nint actionManager)
         {
-            onActorControlHook?.Original(entityId, type, buffId, direct,
-                                         actionId, sourceId, arg4, arg5,
-                                         targetId, a10);
-
+            onCastCancelHook?.Original(actionManager);
             if (!Plugin.CanRunDmc())
             {
                 return;
             }
 
-            // 15 seems to be related to cast cancelation
-            if (type != 15)
-            {
-                return;
-            }
-
             var player = playerState.Player;
-            if (player == null || entityId != player.GameObjectId)
+            if (player == null)
             {
                 return;
             }
@@ -532,7 +522,6 @@ namespace DragoonMayCry.Score.Action
         {
             var isIncapacitated = playerState.IsIncapacitated();
             var canTargetEnemy = playerState.CanTargetEnemy();
-
             if (!actionManagerL->isGCDRecastActive
                 && actionManagerL->animationLock <= 0
                 && !actionManagerL->isCasting
@@ -697,9 +686,7 @@ namespace DragoonMayCry.Score.Action
             uint sourceId, nint sourceCharacter, nint pos,
             nint effectHeader, nint effectArray, nint effectTrail);
 
-        private delegate void ActorControlDelegate(
-            uint entityId, uint id, uint unk1, uint type, uint unk2, uint unk3,
-            uint unk4, uint unk5, ulong targetId, byte unk6);
+        private delegate void CastCancelDelegate(nint actionManager);
 
         private delegate void CastDelegate(
             uint sourceId, nint sourceCharacter);

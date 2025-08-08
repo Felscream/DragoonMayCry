@@ -1,5 +1,6 @@
 #region
 
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Animation;
 using Dalamud.Interface.Animation.EasingFunctions;
 using Dalamud.Interface.Textures.TextureWraps;
@@ -10,7 +11,6 @@ using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
 using DragoonMayCry.UI.Model;
 using DragoonMayCry.Util;
-using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -286,7 +286,7 @@ namespace DragoonMayCry.UI
                 if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), iconPath)
                            .TryGetWrap(out var rankIcon, out _))
                 {
-                    ImGui.Image(rankIcon.ImGuiHandle, rankSize * Plugin.Configuration!.RankDisplayScale.Value / 100f);
+                    ImGui.Image(rankIcon.Handle, rankSize * Plugin.Configuration!.RankDisplayScale.Value / 100f);
                 }
 
                 if (Plugin.Configuration!.EnableProgressGauge && Service.TextureProvider
@@ -316,7 +316,7 @@ namespace DragoonMayCry.UI
                 if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), iconPath)
                            .TryGetWrap(out var rankIcon, out _))
                 {
-                    ImGui.Image(rankIcon.ImGuiHandle,
+                    ImGui.Image(rankIcon.Handle,
                                 rankSize * Plugin.Configuration!.SplitLayoutRankDisplayScale.Value / 100f);
                 }
                 ImGui.End();
@@ -379,7 +379,7 @@ namespace DragoonMayCry.UI
             var color = new System.Numerics.Vector4(1, 1, 1, alpha);
 
             ImGui.SetCursorPos(pos);
-            ImGui.Image(rankIcon.ImGuiHandle, size * normalizedScale, textureUv0, textureUv1, color);
+            ImGui.Image(rankIcon.Handle, size * normalizedScale, textureUv0, textureUv1, color);
         }
 
         private float GetAnimationTransitionValue(Easing currentAnimation)
@@ -455,7 +455,7 @@ namespace DragoonMayCry.UI
             var textureW = 1.0f;
             var textureH = textureY + textureElementHeight / texture.Height;
             ImGui.SetCursorPos(new Vector2(x, y));
-            ImGui.Image(texture.ImGuiHandle, new Vector2(width, height), new Vector2(textureX, textureY),
+            ImGui.Image(texture.Handle, new Vector2(width, height), new Vector2(textureX, textureY),
                         new Vector2(textureW, textureH),
                         Vector4.One);
         }
@@ -478,7 +478,7 @@ namespace DragoonMayCry.UI
             var textureH = textureY + textureElementHeight / texture.Height;
             var color = ComputeProgressBarColor(rankColor);
             ImGui.SetCursorPos(new Vector2(x, y));
-            ImGui.Image(texture.ImGuiHandle, new Vector2(width, height), new Vector2(textureX, textureY),
+            ImGui.Image(texture.Handle, new Vector2(width, height), new Vector2(textureX, textureY),
                         new Vector2(textureW, textureH),
                         color);
         }

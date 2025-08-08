@@ -1,12 +1,12 @@
 #region
 
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Components;
 using DragoonMayCry.Audio.BGM;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
 using DragoonMayCry.State;
-using ImGuiNET;
 using KamiLib;
 using KamiLib.Drawing;
 using KamiLib.Interfaces;
