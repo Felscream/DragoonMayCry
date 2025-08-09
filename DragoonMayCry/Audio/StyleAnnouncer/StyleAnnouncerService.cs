@@ -1,5 +1,6 @@
 #region
 
+using Dalamud.Bindings.ImGui;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Audio.StyleAnnouncer.Announcer;
 using DragoonMayCry.Data;
@@ -7,7 +8,6 @@ using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
-using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

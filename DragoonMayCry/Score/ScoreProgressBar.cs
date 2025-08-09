@@ -1,12 +1,16 @@
+#region
+
+using Dalamud.Bindings.ImGui;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
-using ImGuiNET;
 using System;
 using System.Diagnostics;
+
+#endregion
 
 namespace DragoonMayCry.Score
 {

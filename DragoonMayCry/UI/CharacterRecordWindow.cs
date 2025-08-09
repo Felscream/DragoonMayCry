@@ -1,5 +1,6 @@
 #region
 
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Textures.TextureWraps;
@@ -10,7 +11,6 @@ using DragoonMayCry.Data;
 using DragoonMayCry.Record;
 using DragoonMayCry.Record.Model;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using ImGuiNET;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using System;
@@ -287,7 +287,7 @@ namespace DragoonMayCry.UI
 
                         if (TryGetTexture(displayedDuties[i], out var texture))
                         {
-                            ImGui.Image(texture.ImGuiHandle, scaledDutyTextureSize);
+                            ImGui.Image(texture!.Handle, scaledDutyTextureSize);
                         }
 
                         #endregion
@@ -415,15 +415,13 @@ namespace DragoonMayCry.UI
 
         private ContentFinderCondition? GetContent(DisplayedDuty displayedDuty)
         {
-            var contentFinderCondition =
-                contentFinder.FirstOrDefault(content => content.TerritoryType.RowId == displayedDuty.DutyId);
-            return contentFinderCondition;
+            return contentFinder.FirstOrDefault(content => content.TerritoryType.RowId == displayedDuty.DutyId);
         }
 
-        private bool TryGetTexture(DisplayedDuty displayed, out IDalamudTextureWrap texture)
+        private bool TryGetTexture(DisplayedDuty displayed, out IDalamudTextureWrap? texture)
         {
             var content = GetContent(displayed);
-            var iconToDisplay = displayed.Duty.IconId;
+            uint iconToDisplay;
 
             if (content == null || content.Value.RowId == 0 || content.Value.Content.RowId == 0)
             {
@@ -435,8 +433,12 @@ namespace DragoonMayCry.UI
             {
                 iconToDisplay = HiddenDutyIconId;
             }
-
-            texture = null!;
+            else
+            {
+                iconToDisplay = content.Value.Image > 0 ? content.Value.Image : displayed.Duty.IconId;
+            }
+            
+            texture = null;
             if (Service.TextureProvider.TryGetFromGameIcon(iconToDisplay, out var tex))
             {
                 if (tex.TryGetWrap(out var wrap, out _))
@@ -486,7 +488,7 @@ namespace DragoonMayCry.UI
             if (Service.TextureProvider.GetFromManifestResource(Assembly.GetExecutingAssembly(), rankIconPath)
                        .TryGetWrap(out var rankIcon, out _))
             {
-                ImGui.Image(rankIcon.ImGuiHandle, rankSize);
+                ImGui.Image(rankIcon.Handle, rankSize);
             }
         }
 

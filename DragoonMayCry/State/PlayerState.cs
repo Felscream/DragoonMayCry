@@ -220,17 +220,8 @@ namespace DragoonMayCry.State
                                                         && !o.Equals(Player)
                                                         && CanAttack(o)
                                                         && IsKillable(o)
-            ).ToList();
-
-            var enemyList = GetEnemyListObjectIds();
-            for (var i = 0; i < targets.Count; i++)
-            {
-                if (enemyList.Contains(targets[i].EntityId))
-                {
-                    return true;
-                }
-            }
-            return false;
+            ).ToArray();
+            return targets.Length > 0;
         }
 
         private static bool IsKillable(DalamudGameObject o)
@@ -254,24 +245,6 @@ namespace DragoonMayCry.State
 
             return go->GetIsTargetable()
                    && ActionManager.CanUseActionOnTarget(142, go);
-        }
-
-        private ISet<uint> GetEnemyListObjectIds()
-        {
-            var addonByName = Service.GameGui.GetAddonByName("_EnemyList");
-            if (addonByName == IntPtr.Zero)
-                return new HashSet<uint>();
-
-            var addon = (AddonEnemyList*)addonByName;
-            var numArray = RaptureAtkModule->AtkModule.AtkArrayDataHolder.NumberArrays[21];
-            var enemyIdSet = new HashSet<uint>();
-            for (var i = 0; i < addon->EnemyCount; i++)
-            {
-                var id = (uint)numArray->IntArray[8 + i * 6];
-                enemyIdSet.Add(id);
-            }
-
-            return enemyIdSet;
         }
 
         public uint GetCurrentTerritoryId()

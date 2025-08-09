@@ -304,6 +304,30 @@
                 "Category": 0,
                 "Subcategory": "Unreal",
                 "IconId": "112594"
+            },
+            "1295": {
+                "Name": "The Ageless Necropolis",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 0,
+                "Subcategory": "Main story quest",
+                "IconId": "112612"
+            },
+            "1296": {
+                "Name": "The Minstrel's Ballad: Necron's Embrace",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0,
+                "Subcategory": "Main story quest",
+                "IconId": "112613"
+            },
+            "1302": {
+                "Name": "The Wreath of Snakes (Unreal) ",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0,
+                "Subcategory": "Unreal",
+                "IconId": "112631"
             }
         }
     }

@@ -1,15 +1,19 @@
+#region
+
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using DragoonMayCry.Audio;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Score.Model;
-using ImGuiNET;
 using KamiLib;
 using KamiLib.Configuration;
 using KamiLib.Drawing;
 using System;
 using System.Numerics;
+
+#endregion
 
 namespace DragoonMayCry.UI
 {
