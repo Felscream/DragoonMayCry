@@ -4,6 +4,7 @@ using NAudio.CoreAudioApi.Interfaces;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -12,7 +13,7 @@ namespace DragoonMayCry.Audio.Engine
 {
     internal class AudioEngine : IDisposable
     {
-        private readonly Dictionary<SoundId, CachedSound> announcerSfx;
+        private readonly ConcurrentDictionary<SoundId, CachedSound> announcerSfx;
         private readonly MixingSampleProvider bgmMixer;
         private readonly VolumeSampleProvider bgmSampleProvider;
         private readonly MMDeviceEnumerator deviceEnumerator;
@@ -20,7 +21,7 @@ namespace DragoonMayCry.Audio.Engine
         private readonly MixingSampleProvider sfxMixer;
         private readonly VolumeSampleProvider sfxSampleProvider;
         private WasapiOut bgmOutputDevice;
-        private Dictionary<string, CachedSound> bgmStems;
+        private ConcurrentDictionary<string, CachedSound> bgmStems;
         private ISampleProvider lastBgmSampleApplied;
         private WasapiOut sfxOutputDevice;
 
@@ -34,8 +35,8 @@ namespace DragoonMayCry.Audio.Engine
                                             AudioClientShareMode.Shared,
                                             true, 20);
 
-            announcerSfx = new Dictionary<SoundId, CachedSound>();
-            bgmStems = new Dictionary<string, CachedSound>();
+            announcerSfx = new ConcurrentDictionary<SoundId, CachedSound>();
+            bgmStems = new ConcurrentDictionary<string, CachedSound>();
 
             sfxMixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2))
             {
@@ -106,14 +107,8 @@ namespace DragoonMayCry.Audio.Engine
                     continue;
                 }
 
-                if (!announcerSfx.ContainsKey(entry.Key))
-                {
-                    announcerSfx.Add(entry.Key, new CachedSound(entry.Value));
-                }
-                else
-                {
-                    announcerSfx[entry.Key] = new CachedSound(entry.Value);
-                }
+                var cachedSfx = new CachedSound(entry.Value);
+                announcerSfx.AddOrUpdate(entry.Key, cachedSfx, (_, _) => cachedSfx);
             }
         }
 
@@ -147,12 +142,10 @@ namespace DragoonMayCry.Audio.Engine
 
         public void PlaySfx(SoundId trigger)
         {
-            if (!announcerSfx.ContainsKey(trigger))
+            if (announcerSfx.TryGetValue(trigger, out var value))
             {
-                return;
+                AddSfxMixerInput(new CachedSoundSampleProvider(value));
             }
-
-            AddSfxMixerInput(new CachedSoundSampleProvider(announcerSfx[trigger]));
         }
 
         public void PlaySfx(string path)
@@ -175,20 +168,20 @@ namespace DragoonMayCry.Audio.Engine
         public ISampleProvider? PlayBgm(
             string id, double fadeInDuration = 0d, double fadeOutDelay = 0, double fadeOutDuration = 0)
         {
-            if (!bgmStems.ContainsKey(id))
+            if (!bgmStems.TryGetValue(id, out var stem))
             {
                 Service.Log.Warning($"No BGM registered for {id}");
                 return null;
             }
 
-            ISampleProvider sample = new CachedSoundSampleProvider(bgmStems[id]);
+            ISampleProvider sample = new CachedSoundSampleProvider(stem);
 
             return AddBgmMixerInput(sample, fadeInDuration, fadeOutDelay, fadeOutDuration);
         }
 
-        public Dictionary<string, CachedSound> RegisterBgm(Dictionary<string, string> paths)
+        public ConcurrentDictionary<string, CachedSound> RegisterBgm(Dictionary<string, string> paths)
         {
-            Dictionary<string, CachedSound> bgm = new();
+            ConcurrentDictionary<string, CachedSound> bgm = new();
             foreach (var entry in paths)
             {
                 if (!File.Exists(entry.Value))
@@ -197,14 +190,14 @@ namespace DragoonMayCry.Audio.Engine
                 }
 
                 var part = new CachedSound(entry.Value);
-                bgm.Add(entry.Key, part);
+                bgm.AddOrUpdate(entry.Key, part, (_, _) => part);
             }
 
             bgmStems = bgm;
             return bgm;
         }
 
-        public void LoadBgm(Dictionary<string, CachedSound> toLoad)
+        public void LoadBgm(ConcurrentDictionary<string, CachedSound> toLoad)
         {
             bgmStems = toLoad;
         }
@@ -279,9 +272,8 @@ namespace DragoonMayCry.Audio.Engine
             var inputs = new List<ISampleProvider>(bgmMixer.MixerInputs);
             foreach (var input in inputs)
             {
-                if (input is ExposedFadeInOutSampleProvider)
+                if (input is ExposedFadeInOutSampleProvider fadingInput)
                 {
-                    var fadingInput = (ExposedFadeInOutSampleProvider)input;
                     if (fadingInput.fadeState == ExposedFadeInOutSampleProvider.FadeState.FullVolume)
                     {
                         fadingInput.BeginFadeOut(fadeOutDuration);

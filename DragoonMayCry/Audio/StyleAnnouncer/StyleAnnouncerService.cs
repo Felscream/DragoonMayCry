@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using static DragoonMayCry.UI.JobConfigurationWindow;
 
 #endregion
@@ -328,8 +329,11 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
 
         private void LoadAnnouncer()
         {
-            soundIdsNextAvailability.Clear();
-            audioService.RegisterAnnouncerSfx(announcer!.GetAnnouncerFilesById());
+            Task.Run(() =>
+            {
+                soundIdsNextAvailability.Clear();
+                audioService.RegisterAnnouncerSfx(announcer!.GetAnnouncerFilesById());
+            });
         }
 
         private void OnRankChange(object? sender, StyleRankHandler.RankChangeData data)

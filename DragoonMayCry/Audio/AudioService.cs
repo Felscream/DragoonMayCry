@@ -5,6 +5,7 @@ using DragoonMayCry.Audio.Engine;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using NAudio.Wave;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -16,20 +17,20 @@ namespace DragoonMayCry.Audio
     public class AudioService : IDisposable
     {
 
-        private static readonly HashSet<string> SfxGameSettings = new()
-        {
-            "IsSndSe", "IsSndMaster", "SoundSe", "SoundMaster",
-        };
-        private static readonly HashSet<string> BgmGameSettings = new()
-        {
-            "IsSndMaster", "SoundMaster",
-        };
+        private static readonly HashSet<string> SfxGameSettings =
+        [
+            "IsSndSe", "IsSndMaster", "SoundSe", "SoundMaster"
+        ];
+        private static readonly HashSet<string> BgmGameSettings =
+        [
+            "IsSndMaster", "SoundMaster"
+        ];
         private static AudioService? instance;
 
 
         // to alternate between dead weight sfx
         private readonly AudioEngine audioEngine;
-        private readonly Dictionary<long, Dictionary<string, CachedSound>> registeredBgms = new();
+        private readonly ConcurrentDictionary<long, ConcurrentDictionary<string, CachedSound>> registeredBgms = new();
         private bool deathEffectApplied;
         private AudioService()
         {
@@ -41,14 +42,7 @@ namespace DragoonMayCry.Audio
 
         public static AudioService Instance
         {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = new AudioService();
-                }
-                return instance;
-            }
+            get { return instance ??= new AudioService(); }
         }
 
         public void Dispose()
@@ -92,7 +86,7 @@ namespace DragoonMayCry.Audio
             {
                 return true;
             }
-            Dictionary<string, CachedSound> bgm;
+            ConcurrentDictionary<string, CachedSound> bgm;
             try
             {
                 bgm = audioEngine.RegisterBgm(paths);
@@ -103,7 +97,7 @@ namespace DragoonMayCry.Audio
                 return false;
             }
 
-            registeredBgms.Add(key, bgm);
+            registeredBgms.AddOrUpdate(key, bgm, (_, _) => bgm);
             return true;
         }
 

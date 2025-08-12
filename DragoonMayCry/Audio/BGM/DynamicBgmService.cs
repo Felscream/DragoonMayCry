@@ -210,9 +210,9 @@ namespace DragoonMayCry.Audio.BGM
 
         private bool CanPlayDynamicBgm(bool isInInstance, JobId job)
         {
-            return playerState.Player != null
+            return isInInstance 
+                   && playerState.Player != null
                    && !playerState.IsInPvp()
-                   && isInInstance
                    && Plugin.Configuration!.EnableDynamicBgm
                    && Plugin.Configuration.JobConfiguration.ContainsKey(job)
                    && Plugin.Configuration.JobConfiguration[job].EnableDmc

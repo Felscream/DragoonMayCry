@@ -47,7 +47,6 @@ namespace DragoonMayCry.Score
             decayFreezeStopwatch = new Stopwatch();
 
             playerState = PlayerState.GetInstance();
-            playerState.RegisterJobChangeHandler((_, _) => ResetScore());
             playerState.RegisterInstanceChangeHandler(OnInstanceChange!);
             playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             playerState.RegisterJobChangeHandler(OnJobChange);
