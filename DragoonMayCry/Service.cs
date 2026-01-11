@@ -1,6 +1,9 @@
-using Dalamud.Game.ClientState.Objects;
+#region
+
 using Dalamud.IoC;
 using Dalamud.Plugin.Services;
+
+#endregion
 
 namespace DragoonMayCry
 {
@@ -54,6 +57,9 @@ namespace DragoonMayCry
 
         [PluginService]
         public static ITargetManager TargetManager { get; private set; }
+
+        [PluginService]
+        public static IPlayerState PlayerState { get; private set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     }
 }

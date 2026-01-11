@@ -2,9 +2,9 @@ namespace DragoonMayCry.State.Tracker
 {
     internal class InCombatStateTracker : StateTracker<bool>
     {
-        public override void Update(PlayerState playerState)
+        public override void Update(DmcPlayerState dmcPlayerState)
         {
-            CurrentValue = playerState.IsInCombat;
+            CurrentValue = dmcPlayerState.IsInCombat;
             if (CurrentValue != LastValue)
             {
                 OnChange?.Invoke(this, CurrentValue);

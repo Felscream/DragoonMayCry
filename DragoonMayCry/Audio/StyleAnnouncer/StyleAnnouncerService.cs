@@ -28,9 +28,9 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
         private readonly IStyleAnnouncer balrogAnnouncer;
         private readonly IStyleAnnouncer dmc5Announcer;
         private readonly IStyleAnnouncer dmcAnnouncer;
+        private readonly DmcPlayerState dmcPlayerState;
         private readonly IStyleAnnouncer morrisonAnnouncer;
         private readonly IStyleAnnouncer nicoAnnouncer;
-        private readonly PlayerState playerState;
         private readonly Random random = new();
         private readonly StyleRankHandler rankHandler;
 
@@ -47,11 +47,11 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             audioService = AudioService.Instance;
             AssetsManager.AssetsReady += OnAssetsReady;
 
-            playerState = PlayerState.GetInstance();
-            playerState.RegisterCombatStateChangeHandler(OnCombat);
-            playerState.RegisterJobChangeHandler(OnJobChange);
-            playerState.RegisterLoginStateChangeHandler(OnLogin);
-            playerState.RegisterInstanceChangeHandler(OnInstanceChange);
+            dmcPlayerState = DmcPlayerState.GetInstance();
+            dmcPlayerState.RegisterCombatStateChangeHandler(OnCombat);
+            dmcPlayerState.RegisterJobChangeHandler(OnJobChange);
+            dmcPlayerState.RegisterLoginStateChangeHandler(OnLogin);
+            dmcPlayerState.RegisterInstanceChangeHandler(OnInstanceChange);
 
             rankHandler = styleRankHandler;
             rankHandler.StyleRankChange += OnRankChange;
@@ -184,7 +184,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
 
         private void Initialize(IFramework framework)
         {
-            if (!initialized && playerState.Player != null && AssetsManager.IsReady)
+            if (!initialized && dmcPlayerState.Player != null && AssetsManager.IsReady)
             {
                 initialized = true;
                 UpdateAnnouncer();
@@ -214,7 +214,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
                 return;
             }
 
-            if (Plugin.Configuration!.JobConfiguration.TryGetValue(playerState.GetCurrentJob(),
+            if (Plugin.Configuration!.JobConfiguration.TryGetValue(dmcPlayerState.GetCurrentJob(),
                                                                    out var jobConfiguration)
                 && jobConfiguration.Announcer == AnnouncerType.Randomize
                 && !jobConfiguration.RandomizeAnnouncement)
@@ -252,7 +252,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
 
         private IStyleAnnouncer GetCurrentJobAnnouncer()
         {
-            var currentJob = playerState.GetCurrentJob();
+            var currentJob = dmcPlayerState.GetCurrentJob();
             if (!Plugin.Configuration!.JobConfiguration.ContainsKey(currentJob))
             {
                 return dmc5Announcer;
@@ -269,7 +269,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
 
         public void OnAnnouncerTypeChange(object? sender, JobAnnouncerType jobAnnouncer)
         {
-            if (playerState.GetCurrentJob() != jobAnnouncer.Job)
+            if (dmcPlayerState.GetCurrentJob() != jobAnnouncer.Job)
             {
                 return;
             }
@@ -375,7 +375,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
 
         private bool CanPlayRandomAnnouncerLineFromAll()
         {
-            if (Plugin.Configuration!.JobConfiguration.TryGetValue(playerState.GetCurrentJob(),
+            if (Plugin.Configuration!.JobConfiguration.TryGetValue(dmcPlayerState.GetCurrentJob(),
                                                                    out var jobConfiguration))
             {
                 return jobConfiguration.Announcer == AnnouncerType.Randomize && jobConfiguration.RandomizeAnnouncement;

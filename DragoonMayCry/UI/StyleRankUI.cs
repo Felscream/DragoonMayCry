@@ -62,6 +62,7 @@ namespace DragoonMayCry.UI
                 { StyleType.SSS, new StyleUi("DragoonMayCry.Assets.SSS.png", new Vector3(233, 216, 95), 121511) },
             };
         private readonly Stopwatch demotionStopwatch;
+        private readonly DmcPlayerState dmcPlayerState;
         private readonly FinalRankCalculator finalRankCalculator;
         private readonly Easing finalRankTransition;
         private readonly Fonts fonts;
@@ -70,7 +71,6 @@ namespace DragoonMayCry.UI
         private readonly Vector2 hitCounterPosition = new(16, 125);
         private readonly Vector2 hitCounterSize = new(120, 32);
         private readonly PlayerActionTracker playerActionTracker;
-        private readonly PlayerState playerState;
         private readonly Random random;
 
         private readonly Vector2 rankPosition = new(8, 8);
@@ -99,8 +99,8 @@ namespace DragoonMayCry.UI
             this.finalRankCalculator = finalRankCalculator;
             this.scoreManager.Scoring += OnScoring!;
             this.finalRankCalculator.FinalRankCalculated += OnFinalRankCalculated!;
-            playerState = PlayerState.GetInstance();
-            playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
+            dmcPlayerState = DmcPlayerState.GetInstance();
+            dmcPlayerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             this.playerActionTracker = playerActionTracker;
             this.playerActionTracker.ActionFlyTextCreated += OnActionFlyTextCreated!;
             this.hitCounter = hitCounter;

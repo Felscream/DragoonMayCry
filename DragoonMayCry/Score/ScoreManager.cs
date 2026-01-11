@@ -26,8 +26,8 @@ namespace DragoonMayCry.Score
         private const float PointReductionFactor = 0.8f;
         private const float PointsDecayMultiplierMalus = 4f;
         private readonly Stopwatch decayFreezeStopwatch;
+        private readonly DmcPlayerState dmcPlayerState;
         private readonly ItemLevelCalculator itemLevelCalculator;
-        private readonly PlayerState playerState;
         private readonly Stopwatch pointsReductionStopwatch;
         private readonly StyleRankHandler rankHandler;
         private readonly ScoringTableFactory scoringTableFactory;
@@ -46,11 +46,11 @@ namespace DragoonMayCry.Score
             pointsReductionStopwatch = new Stopwatch();
             decayFreezeStopwatch = new Stopwatch();
 
-            playerState = PlayerState.GetInstance();
-            playerState.RegisterInstanceChangeHandler(OnInstanceChange!);
-            playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
-            playerState.RegisterJobChangeHandler(OnJobChange);
-            playerState.RegisterDeathStateChangeHandler(OnDeath);
+            dmcPlayerState = DmcPlayerState.GetInstance();
+            dmcPlayerState.RegisterInstanceChangeHandler(OnInstanceChange!);
+            dmcPlayerState.RegisterCombatStateChangeHandler(OnCombatChange!);
+            dmcPlayerState.RegisterJobChangeHandler(OnJobChange);
+            dmcPlayerState.RegisterDeathStateChangeHandler(OnDeath);
 
             itemLevelCalculator = new ItemLevelCalculator();
 
@@ -93,7 +93,7 @@ namespace DragoonMayCry.Score
         // Increase score decay overtime if GCD is dropped in Sprout mode, do nothing otherwise
         private void OnGcdDropped(object? sender, EventArgs e)
         {
-            var currentJob = playerState.GetCurrentJob();
+            var currentJob = dmcPlayerState.GetCurrentJob();
             if (!Plugin.Configuration!.JobConfiguration.TryGetValue(currentJob, out var jobConfiguration) ||
                 jobConfiguration.DifficultyMode != DifficultyMode.Sprout)
             {
@@ -199,7 +199,7 @@ namespace DragoonMayCry.Score
 
         private float GetScoreMultiplier()
         {
-            var currentJob = playerState.GetCurrentJob();
+            var currentJob = dmcPlayerState.GetCurrentJob();
             var multiplier = 1f;
             if (Plugin.Configuration!.JobConfiguration.TryGetValue(currentJob, out var jobConfiguration))
             {
@@ -218,7 +218,7 @@ namespace DragoonMayCry.Score
         private void OnLimitBreakCanceled(object? sender, EventArgs e)
         {
             isCastingLb = false;
-            if (!playerState.IsIncapacitated())
+            if (!dmcPlayerState.IsIncapacitated())
             {
                 ResetScore();
             }
@@ -284,7 +284,7 @@ namespace DragoonMayCry.Score
         private Dictionary<StyleType, StyleScoring> GetJobScoringTable()
         {
             var ilvl = itemLevelCalculator.CalculateCurrentItemLevel();
-            var currentJob = playerState.GetCurrentJob();
+            var currentJob = dmcPlayerState.GetCurrentJob();
             return scoringTableFactory.GetScoringTable(ilvl, currentJob);
         }
 

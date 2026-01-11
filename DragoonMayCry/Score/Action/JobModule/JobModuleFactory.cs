@@ -1,15 +1,19 @@
+#region
+
 using DragoonMayCry.Data;
 using DragoonMayCry.State;
+
+#endregion
 
 namespace DragoonMayCry.Score.Action.JobModule
 {
     internal class JobModuleFactory(ScoreManager scoreManager)
     {
-        private readonly PlayerState playerState = PlayerState.GetInstance();
+        private readonly DmcPlayerState dmcPlayerState = DmcPlayerState.GetInstance();
 
         public IJobActionModifier? GetJobActionModule()
         {
-            var job = playerState.GetCurrentJob();
+            var job = dmcPlayerState.GetCurrentJob();
             return job switch
             {
                 JobId.AST => new AST(scoreManager),

@@ -74,12 +74,14 @@
                 "Type": 0,
                 "Subcategories": [
                     "Main story quest",
-                    "Unreal"
+                    "Unreal",
+                    "Event"
                 ]
             },
             {
                 "Type": 1,
                 "Subcategories": [
+                    "Heavyweight",
                     "Cruiserweight",
                     "Light-heavyweight"
                 ]
@@ -321,6 +323,14 @@
                 "Subcategory": "Main story quest",
                 "IconId": "112613"
             },
+            "1300": {
+                "Name": "The Windward Wilds",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 0,
+                "Subcategory": "Event",
+                "IconId": "112627"
+            },
             "1302": {
                 "Name": "The Wreath of Snakes (Unreal) ",
                 "LvlSync": 100,
@@ -328,6 +338,102 @@
                 "Category": 0,
                 "Subcategory": "Unreal",
                 "IconId": "112631"
+            },
+            "1306": {
+                "Name": "The Windward Wilds (Extreme)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0,
+                "Subcategory": "Event",
+                "IconId": "112628"
+            },
+            "1307": {
+                "Name": "Hell on Rails ",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 0,
+                "Subcategory": "Main story quest",
+                "IconId": "112635"
+            },
+            "1308": {
+                "Name": "Hell on Rails (Extreme)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0,
+                "Subcategory": "Main story quest",
+                "IconId": "112636"
+            },
+            "1318": {
+                "Name": "Tsukuyomi's Pain (Unreal)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0,
+                "Subcategory": "Unreal",
+                "IconId": "112650"
+            },
+            "1320": {
+                "Name": " AAC Heavyweight M1",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 1,
+                "Subcategory": "Heavyweight",
+                "IconId": "112637"
+            },
+            "1321": {
+                "Name": " AAC Heavyweight M1 (Savage)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 1,
+                "Subcategory": "Heavyweight",
+                "IconId": "112638"
+            },
+            "1322": {
+                "Name": " AAC Heavyweight M2",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 1,
+                "Subcategory": "Heavyweight",
+                "IconId": "112639"
+            },
+            "1323": {
+                "Name": " AAC Heavyweight M2 (Savage)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 1,
+                "Subcategory": "Heavyweight",
+                "IconId": "112640"
+            },
+            "1324": {
+                "Name": " AAC Heavyweight M3",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 1,
+                "Subcategory": "Heavyweight",
+                "IconId": "112641"
+            },
+            "1325": {
+                "Name": " AAC Heavyweight M3 (Savage)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 1,
+                "Subcategory": "Heavyweight",
+                "IconId": "112642"
+            },
+            "1326": {
+                "Name": " AAC Heavyweight M4",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 1,
+                "Subcategory": "Heavyweight",
+                "IconId": "112643"
+            },
+            "1327": {
+                "Name": " AAC Heavyweight M4 (Savage)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 1,
+                "Subcategory": "Heavyweight",
+                "IconId": "112644"
             }
         }
     }

@@ -2,9 +2,9 @@ namespace DragoonMayCry.State.Tracker
 {
     internal class OnEnteringInstanceStateTracker : StateTracker<bool>
     {
-        public override void Update(PlayerState playerState)
+        public override void Update(DmcPlayerState dmcPlayerState)
         {
-            CurrentValue = playerState.IsInsideInstance;
+            CurrentValue = dmcPlayerState.IsInsideInstance;
             if (CurrentValue != LastValue)
             {
                 OnChange?.Invoke(this, CurrentValue);

@@ -32,7 +32,7 @@ namespace DragoonMayCry.Audio.BGM
         private readonly Dictionary<BgmState, IFsmState> crimsonCloudStates;
         private readonly Dictionary<BgmState, IFsmState> devilsNeverCryStates;
         private readonly Dictionary<BgmState, IFsmState> devilTriggerStates;
-        private readonly PlayerState playerState;
+        private readonly DmcPlayerState dmcPlayerState;
         private readonly Dictionary<BgmState, IFsmState> subhumanStates;
         private long currentBgmKey = -1L;
         private uint currentTerritory;
@@ -45,11 +45,11 @@ namespace DragoonMayCry.Audio.BGM
         {
             bgmFsm = new DynamicBgmFsm(styleRankHandler);
             AssetsManager.AssetsReady += OnAssetsAvailable;
-            playerState = PlayerState.GetInstance();
-            playerState.RegisterInstanceChangeHandler(OnInstanceChange);
-            playerState.RegisterJobChangeHandler(OnJobChange);
-            playerState.RegisterPvpStateChangeHandler(OnPvpStateChange);
-            playerState.RegisterDeathStateChangeHandler(OnDeath);
+            dmcPlayerState = DmcPlayerState.GetInstance();
+            dmcPlayerState.RegisterInstanceChangeHandler(OnInstanceChange);
+            dmcPlayerState.RegisterJobChangeHandler(OnJobChange);
+            dmcPlayerState.RegisterPvpStateChangeHandler(OnPvpStateChange);
+            dmcPlayerState.RegisterDeathStateChangeHandler(OnDeath);
 
             gameBgmState = Service.GameConfig.System.GetBool("IsSndBgm");
             audioService = AudioService.Instance;
@@ -123,7 +123,7 @@ namespace DragoonMayCry.Audio.BGM
 
         private void OnInstanceChange(object? sender, bool insideInstance)
         {
-            currentTerritory = playerState.GetCurrentTerritoryId();
+            currentTerritory = dmcPlayerState.GetCurrentTerritoryId();
             audioService.RemoveDeathEffect();
             if (!insideInstance && bgmFsm.IsActive)
             {
@@ -140,8 +140,8 @@ namespace DragoonMayCry.Audio.BGM
         // Grab the current job here and play
         private void OnJobChange(object? sender, JobId job)
         {
-            var insideInstance = playerState.IsInsideInstance;
-            var currentJob = playerState.GetCurrentJob();
+            var insideInstance = dmcPlayerState.IsInsideInstance;
+            var currentJob = dmcPlayerState.GetCurrentJob();
             if (!CanPlayDynamicBgm(insideInstance, currentJob))
             {
                 if (ShouldDisableFsm())
@@ -166,8 +166,8 @@ namespace DragoonMayCry.Audio.BGM
 
             // when entering an instance from wolve's den pier,
             // the PvP flag is removed after other events (instance change / job change)
-            var insideInstance = playerState.IsInsideInstance;
-            var currentJob = playerState.GetCurrentJob();
+            var insideInstance = dmcPlayerState.IsInsideInstance;
+            var currentJob = dmcPlayerState.GetCurrentJob();
             if (!CanPlayDynamicBgm(insideInstance, currentJob))
             {
                 if (ShouldDisableFsm())
@@ -183,12 +183,12 @@ namespace DragoonMayCry.Audio.BGM
 
         public void OnJobEnableChange(object? sender, JobId job)
         {
-            if (job != playerState.GetCurrentJob())
+            if (job != dmcPlayerState.GetCurrentJob())
             {
                 return;
             }
-            var isInsideInstance = playerState.IsInsideInstance;
-            var currentJob = playerState.GetCurrentJob();
+            var isInsideInstance = dmcPlayerState.IsInsideInstance;
+            var currentJob = dmcPlayerState.GetCurrentJob();
             if (CanPlayDynamicBgm(isInsideInstance, currentJob) && !bgmFsm.IsActive)
             {
                 gameBgmState = Service.GameConfig.System.GetBool("IsSndBgm");
@@ -210,9 +210,9 @@ namespace DragoonMayCry.Audio.BGM
 
         private bool CanPlayDynamicBgm(bool isInInstance, JobId job)
         {
-            return isInInstance 
-                   && playerState.Player != null
-                   && !playerState.IsInPvp()
+            return isInInstance
+                   && dmcPlayerState.Player != null
+                   && !dmcPlayerState.IsInPvp()
                    && Plugin.Configuration!.EnableDynamicBgm
                    && Plugin.Configuration.JobConfiguration.ContainsKey(job)
                    && Plugin.Configuration.JobConfiguration[job].EnableDmc
@@ -224,7 +224,8 @@ namespace DragoonMayCry.Audio.BGM
         private bool IsCurrentDutyBlacklisted()
         {
             return Plugin.Configuration != null
-                   && Plugin.Configuration.DynamicBgmBlacklistDuties.Value.Contains(playerState.GetCurrentContentId());
+                   && Plugin.Configuration.DynamicBgmBlacklistDuties.Value.Contains(
+                       dmcPlayerState.GetCurrentContentId());
         }
 
         private void OnAssetsAvailable(object? sender, bool loaded)
@@ -234,8 +235,8 @@ namespace DragoonMayCry.Audio.BGM
                 return;
             }
 
-            var currentJob = playerState.GetCurrentJob();
-            if (!CanPlayDynamicBgm(playerState.IsInsideInstance, currentJob))
+            var currentJob = dmcPlayerState.GetCurrentJob();
+            if (!CanPlayDynamicBgm(dmcPlayerState.IsInsideInstance, currentJob))
             {
                 return;
             }
@@ -257,7 +258,7 @@ namespace DragoonMayCry.Audio.BGM
                 return;
             }
 
-            if (playerState.IsDead)
+            if (dmcPlayerState.IsDead)
             {
                 audioService.ApplyDeathEffect();
             }
@@ -308,8 +309,8 @@ namespace DragoonMayCry.Audio.BGM
 
         public string PlayNextBgmInQueue()
         {
-            var currentJob = playerState.GetCurrentJob();
-            if (!CanPlayDynamicBgm(playerState.IsInsideInstance, currentJob) || playerState.IsInCombat)
+            var currentJob = dmcPlayerState.GetCurrentJob();
+            if (!CanPlayDynamicBgm(dmcPlayerState.IsInsideInstance, currentJob) || dmcPlayerState.IsInCombat)
             {
                 return "";
             }
@@ -441,12 +442,12 @@ namespace DragoonMayCry.Audio.BGM
 
         public void ToggleDynamicBgm(object? sender, bool dynamicBgmEnabled)
         {
-            var currentJob = playerState.GetCurrentJob();
-            if (CanPlayDynamicBgm(playerState.IsInsideInstance, currentJob))
+            var currentJob = dmcPlayerState.GetCurrentJob();
+            if (CanPlayDynamicBgm(dmcPlayerState.IsInsideInstance, currentJob))
             {
                 DisableGameBgm();
                 PrepareBgm(currentJob);
-                if (playerState.IsDead)
+                if (dmcPlayerState.IsDead)
                 {
                     audioService.ApplyDeathEffect();
                 }
@@ -461,18 +462,18 @@ namespace DragoonMayCry.Audio.BGM
 
         public void OnBgmBlacklistChanged(object? sender, EventArgs e)
         {
-            var currentJob = playerState.GetCurrentJob();
-            if (bgmFsm.IsActive && !CanPlayDynamicBgm(playerState.IsInsideInstance, currentJob))
+            var currentJob = dmcPlayerState.GetCurrentJob();
+            if (bgmFsm.IsActive && !CanPlayDynamicBgm(dmcPlayerState.IsInsideInstance, currentJob))
             {
                 bgmFsm.Disable();
                 ResetGameBgm();
                 audioService.RemoveDeathEffect();
             }
-            else if (!bgmFsm.IsActive && CanPlayDynamicBgm(playerState.IsInsideInstance, currentJob))
+            else if (!bgmFsm.IsActive && CanPlayDynamicBgm(dmcPlayerState.IsInsideInstance, currentJob))
             {
                 DisableGameBgm();
                 PrepareBgm(currentJob);
-                if (playerState.IsDead)
+                if (dmcPlayerState.IsDead)
                 {
                     audioService.ApplyDeathEffect();
                 }
@@ -481,7 +482,7 @@ namespace DragoonMayCry.Audio.BGM
 
         public void OnMuffledOnDeathChange(object? sender, bool muffledOnDeath)
         {
-            if (muffledOnDeath && bgmFsm.IsActive && playerState.IsDead)
+            if (muffledOnDeath && bgmFsm.IsActive && dmcPlayerState.IsDead)
             {
                 audioService.ApplyDeathEffect();
             }

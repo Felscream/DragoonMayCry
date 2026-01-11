@@ -1,6 +1,10 @@
+#region
+
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using System.Collections.Generic;
+
+#endregion
 
 namespace DragoonMayCry.Score.Action.JobModule
 {
@@ -45,8 +49,8 @@ namespace DragoonMayCry.Score.Action.JobModule
 
         private int GetBuffCount()
         {
-            var player = playerState.Player;
-            if (player == null || playerState.IsDead)
+            var player = DmcPlayerState.Player;
+            if (player == null || DmcPlayerState.IsDead)
             {
                 return 0;
             }
@@ -79,7 +83,7 @@ namespace DragoonMayCry.Score.Action.JobModule
             }
 
             var target = (IBattleChara)targetManager.Target;
-            var playerId = playerState.Player?.GameObjectId;
+            var playerId = DmcPlayerState.Player?.GameObjectId;
             var statuses = target.StatusList;
 
             if (statuses == null)

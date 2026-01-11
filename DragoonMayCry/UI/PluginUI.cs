@@ -1,3 +1,5 @@
+#region
+
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using DragoonMayCry.Audio;
@@ -12,14 +14,16 @@ using KamiLib;
 using System;
 using System.Diagnostics;
 
+#endregion
+
 namespace DragoonMayCry.UI
 {
     public sealed class PluginUI : IDisposable
     {
         private const float TimeToResetScoreAfterCombat = 10000;
+        private readonly DmcPlayerState dmcPlayerState;
         private readonly FinalRankCalculator finalRankCalculator;
         private readonly Stopwatch hideRankUiStopwatch;
-        private readonly PlayerState playerState;
         private readonly IDalamudPluginInterface pluginInterface;
 
         private readonly StyleRankUi styleRankUi;
@@ -69,8 +73,8 @@ namespace DragoonMayCry.UI
             pluginInterface.UiBuilder.OpenMainUi += ToggleCharacterRecords;
             pluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
 
-            playerState = PlayerState.GetInstance();
-            playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
+            dmcPlayerState = DmcPlayerState.GetInstance();
+            dmcPlayerState.RegisterCombatStateChangeHandler(OnCombatChange!);
 
             hideRankUiStopwatch = new Stopwatch();
         }
@@ -106,7 +110,7 @@ namespace DragoonMayCry.UI
 
         private bool CanDrawStyleRank()
         {
-            if (Plugin.Configuration!.HideInCutscenes && PlayerState.GetInstance().IsInCutscene)
+            if (Plugin.Configuration!.HideInCutscenes && DmcPlayerState.GetInstance().IsInCutscene)
             {
                 return false;
             }

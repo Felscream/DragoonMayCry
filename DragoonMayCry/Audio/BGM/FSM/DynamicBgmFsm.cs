@@ -1,3 +1,5 @@
+#region
+
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Audio.BGM.FSM.States;
 using DragoonMayCry.Score.Model;
@@ -8,6 +10,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
+#endregion
+
 //This whole namespace is a landmine
 namespace DragoonMayCry.Audio.BGM.FSM
 {
@@ -17,10 +21,10 @@ namespace DragoonMayCry.Audio.BGM.FSM
         private readonly AudioService audioService;
         private readonly DoubleLinkedList<BgmState> bgmStates;
 
+        private readonly DmcPlayerState dmcPlayerState;
+
 
         private readonly IFramework framework;
-
-        private readonly PlayerState playerState;
         private readonly Stopwatch stateTransitionStopwatch;
         private readonly StyleRankHandler styleRankHandler;
         private IFsmState? candidateState;
@@ -38,8 +42,8 @@ namespace DragoonMayCry.Audio.BGM.FSM
         {
             this.styleRankHandler = styleRankHandler;
             this.styleRankHandler.StyleRankChange += OnRankChange;
-            playerState = PlayerState.GetInstance();
-            playerState.RegisterCombatStateChangeHandler(OnCombatChange);
+            dmcPlayerState = DmcPlayerState.GetInstance();
+            dmcPlayerState.RegisterCombatStateChangeHandler(OnCombatChange);
             framework = Service.Framework;
             audioService = AudioService.Instance;
             stateTransitionStopwatch = new Stopwatch();
@@ -80,7 +84,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
             currentState?.Update();
 
-            if (playerState.IsInCombat && currentState?.Id == BgmState.Intro && candidateState == null)
+            if (dmcPlayerState.IsInCombat && currentState?.Id == BgmState.Intro && candidateState == null)
             {
                 audioService.FadeOutBgm(1600);
                 currentState.Exit(ExitType.ImmediateExit);
@@ -95,7 +99,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
             {
                 GoToNextState();
             }
-            else if (playerState.IsInCombat && currentState?.Id == BgmState.Intro && candidateState == null)
+            else if (dmcPlayerState.IsInCombat && currentState?.Id == BgmState.Intro && candidateState == null)
             {
                 Promote();
             }

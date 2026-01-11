@@ -11,7 +11,6 @@ using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
 using CSFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
@@ -22,9 +21,9 @@ using ObjectKind = Dalamud.Game.ClientState.Objects.Enums.ObjectKind;
 
 namespace DragoonMayCry.State
 {
-    public unsafe class PlayerState : IDisposable
+    public unsafe class DmcPlayerState : IDisposable
     {
-        private static PlayerState? Instance;
+        private static DmcPlayerState? Instance;
         private readonly IClientState clientState;
         private readonly DebuffTracker debuffTracker;
 
@@ -48,7 +47,7 @@ namespace DragoonMayCry.State
             ConditionFlag.OccupiedInCutSceneEvent, ConditionFlag.WatchingCutscene78,
         ];
 
-        private PlayerState()
+        private DmcPlayerState()
         {
             inCombatStateTracker = new InCombatStateTracker();
             onDeathStateTracker = new OnDeathStateTracker();
@@ -70,7 +69,7 @@ namespace DragoonMayCry.State
             IsDead: true,
         };
         public bool IsLoggedIn => Player != null;
-        public IPlayerCharacter? Player => Service.ClientState.LocalPlayer;
+        public IPlayerCharacter? Player => Service.ObjectTable.LocalPlayer;
         private ICondition Condition => Service.Condition;
 
         private static RaptureAtkModule* RaptureAtkModule =>
@@ -86,11 +85,11 @@ namespace DragoonMayCry.State
             return conditionFlags.Any(x => Condition[x]);
         }
 
-        public static PlayerState GetInstance()
+        public static DmcPlayerState GetInstance()
         {
             if (Instance == null)
             {
-                Instance = new PlayerState();
+                Instance = new DmcPlayerState();
             }
 
             return Instance;

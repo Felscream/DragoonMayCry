@@ -22,8 +22,8 @@ namespace DragoonMayCry.Score
         private const float DemotionTimerDuration = 5000f;
         private const float InterpolationWeight = 0.09f;
         private readonly Stopwatch demotionApplicationStopwatch;
+        private readonly DmcPlayerState dmcPlayerState;
         private readonly PlayerActionTracker playerActionTracker;
-        private readonly PlayerState playerState;
         private readonly ScoreManager scoreManager;
         private readonly StyleRankHandler styleRankHandler;
         public EventHandler<bool>? DemotionApplied;
@@ -38,7 +38,7 @@ namespace DragoonMayCry.Score
 
         public ScoreProgressBar(
             ScoreManager scoreManager, StyleRankHandler styleRankHandler, PlayerActionTracker playerActionTracker,
-            PlayerState playerState)
+            DmcPlayerState dmcPlayerState)
         {
             this.scoreManager = scoreManager;
             this.scoreManager.StyleScoringChange += OnStyleScoringChange;
@@ -49,8 +49,8 @@ namespace DragoonMayCry.Score
             this.playerActionTracker.UsingLimitBreak += OnLimitBreakCast;
             this.playerActionTracker.LimitBreakCanceled += OnLimitBreakCanceled;
 
-            this.playerState = playerState;
-            playerState.RegisterCombatStateChangeHandler(OnCombat);
+            this.dmcPlayerState = dmcPlayerState;
+            dmcPlayerState.RegisterCombatStateChangeHandler(OnCombat);
             demotionApplicationStopwatch = new Stopwatch();
         }
         public float Progress { get; private set; }
@@ -157,11 +157,11 @@ namespace DragoonMayCry.Score
         private bool CanStartDemotionTimer()
         {
             return Progress < demotionThreshold
-                   && !playerState.IsIncapacitated()
+                   && !dmcPlayerState.IsIncapacitated()
                    && styleRankHandler.CurrentStyle.Value > StyleType.D
                    && !demotionApplicationStopwatch.IsRunning
                    && GetTimeSinceLastRankChange() > RankChangeSafeguardDuration
-                   && playerState.CanTargetEnemy();
+                   && dmcPlayerState.CanTargetEnemy();
         }
 
         private bool CanApplyDemotion()

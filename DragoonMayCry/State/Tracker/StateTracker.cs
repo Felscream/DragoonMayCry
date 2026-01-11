@@ -1,4 +1,8 @@
+#region
+
 using System;
+
+#endregion
 
 namespace DragoonMayCry.State.Tracker
 {
@@ -8,6 +12,6 @@ namespace DragoonMayCry.State.Tracker
         public T? LastValue { get; set; }
         public T? CurrentValue { get; set; }
 
-        public abstract void Update(PlayerState playerState);
+        public abstract void Update(DmcPlayerState dmcPlayerState);
     }
 }

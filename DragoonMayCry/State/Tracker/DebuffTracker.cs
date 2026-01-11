@@ -1,6 +1,10 @@
+#region
+
 using Dalamud.Game.ClientState.Statuses;
 using DragoonMayCry.Data;
 using System.Collections.Generic;
+
+#endregion
 
 namespace DragoonMayCry.State.Tracker
 {
@@ -15,15 +19,15 @@ namespace DragoonMayCry.State.Tracker
 
         private bool hasDamageDown;
 
-        public override void Update(PlayerState playerState)
+        public override void Update(DmcPlayerState dmcPlayerState)
         {
-            if (!playerState.IsInCombat)
+            if (!dmcPlayerState.IsInCombat)
             {
                 return;
             }
 
-            var player = playerState.Player;
-            if (player == null || playerState.IsDead)
+            var player = dmcPlayerState.Player;
+            if (player == null || dmcPlayerState.IsDead)
             {
                 return;
             }
@@ -54,7 +58,7 @@ namespace DragoonMayCry.State.Tracker
             }
         }
 
-        private bool StatusIndicatesFailedMechanic(Status? status)
+        private bool StatusIndicatesFailedMechanic(IStatus? status)
         {
             if (status == null || status.StatusId == 0)
             {

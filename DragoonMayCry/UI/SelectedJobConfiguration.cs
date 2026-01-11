@@ -77,7 +77,7 @@ namespace DragoonMayCry.UI
 
                        ConfigWindow.AddLabel("Enable DragoonMayCry", cursorPos);
                    })
-                   .BeginDisabled(PlayerState.GetInstance().IsInCombat)
+                   .BeginDisabled(DmcPlayerState.GetInstance().IsInCombat)
                    .AddConfigCombo(
                        Enum.GetValues(typeof(DifficultyMode)).Cast<DifficultyMode>().ToList(),
                        configuration.DifficultyMode, mode => mode.GetLabel(),
@@ -151,7 +151,8 @@ namespace DragoonMayCry.UI
                    .AddConfigCheckbox("Randomize for each announcement", configuration.RandomizeAnnouncement)
                    .EndConditional()
                    .EndDisabled()
-                   .BeginDisabled(PlayerState.GetInstance().IsInsideInstance || PlayerState.GetInstance().IsInCombat)
+                   .BeginDisabled(DmcPlayerState.GetInstance().IsInsideInstance
+                                  || DmcPlayerState.GetInstance().IsInCombat)
                    .AddConfigCombo(bgms, configuration.Bgm, DynamicBgmService.GetBgmLabel, $"Dynamic BGM##bgm-{job}",
                                    200f)
                    .StartConditional(configuration.Bgm == JobConfiguration.BgmConfiguration.DevilsNeverCry)

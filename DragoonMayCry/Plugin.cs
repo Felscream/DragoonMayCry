@@ -15,6 +15,7 @@ using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Action.JobModule;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Rank;
+using DragoonMayCry.State;
 using DragoonMayCry.UI;
 using DragoonMayCry.Util;
 using KamiLib;
@@ -24,7 +25,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using JsonSerializer = System.Text.Json.JsonSerializer;
-using PlayerState = DragoonMayCry.State.PlayerState;
 
 #endregion
 
@@ -36,7 +36,7 @@ namespace DragoonMayCry
         private const string CommandName = "/dmc";
 
         private static ScoreManager? ScoreManager;
-        private static PlayerState? PlayerState;
+        private static DmcPlayerState? DmcPlayerState;
         private static ScoreProgressBar? ScoreProgressBar;
         private static PlayerActionTracker? PlayerActionTracker;
         private static StyleRankHandler? StyleRankHandler;
@@ -55,8 +55,8 @@ namespace DragoonMayCry
             PluginInterface.Create<Service>();
 
             KamiCommon.Initialize(PluginInterface, "DragoonMayCry", () => Configuration?.Save());
-            PlayerState = PlayerState.GetInstance();
-            PlayerState.RegisterJobChangeHandler(OnJobChange);
+            DmcPlayerState = DmcPlayerState.GetInstance();
+            DmcPlayerState.RegisterJobChangeHandler(OnJobChange);
 
             Configuration = InitConfig();
             Configuration.Save();
@@ -70,8 +70,9 @@ namespace DragoonMayCry
 
             PlayerActionTracker.SetJobModuleFactory(new JobModuleFactory(ScoreManager));
 
-            ScoreProgressBar = new ScoreProgressBar(ScoreManager, StyleRankHandler, PlayerActionTracker, PlayerState);
-            FinalRankCalculator = new FinalRankCalculator(PlayerState, PlayerActionTracker);
+            ScoreProgressBar =
+                new ScoreProgressBar(ScoreManager, StyleRankHandler, PlayerActionTracker, DmcPlayerState);
+            FinalRankCalculator = new FinalRankCalculator(DmcPlayerState, PlayerActionTracker);
 
             RecordService = new RecordService(FinalRankCalculator);
             RecordService.Initialize();
@@ -124,7 +125,7 @@ namespace DragoonMayCry
             ScoreProgressBar?.Dispose();
             PlayerActionTracker?.Dispose();
             ScoreManager?.Dispose();
-            PlayerState?.Dispose();
+            DmcPlayerState?.Dispose();
             pluginUi?.Dispose();
             Service.CommandManager.RemoveHandler(CommandName);
         }
@@ -133,29 +134,28 @@ namespace DragoonMayCry
         {
             // A warning appears if PlayerState#IsCombatJob is used directly
             return JobHelper.IsCombatJob(CurrentJob)
-                   && PlayerState!.IsInCombat
-                   && !PlayerState.IsInPvp()
+                   && DmcPlayerState!.IsInCombat
+                   && !DmcPlayerState.IsInPvp()
                    && IsEnabledForCurrentJob()
-                   && (PlayerState.IsInsideInstance
+                   && (DmcPlayerState.IsInsideInstance
                        || Configuration!.ActiveOutsideInstance);
         }
 
         public static bool IsMultiHitLoaded()
         {
-            return PluginInterface.InstalledPlugins.Any(
-                plugin => plugin is
-                {
-                    IsLoaded: true,
-                    InternalName: "MultiHit",
-                });
+            return PluginInterface.InstalledPlugins.Any(plugin => plugin is
+            {
+                IsLoaded: true,
+                InternalName: "MultiHit",
+            });
         }
 
         public static bool CanHandleEvents()
         {
             return JobHelper.IsCombatJob(CurrentJob)
-                   && !PlayerState!.IsInPvp()
+                   && !DmcPlayerState!.IsInPvp()
                    && IsEnabledForCurrentJob()
-                   && (PlayerState.IsInsideInstance
+                   && (DmcPlayerState.IsInsideInstance
                        || Configuration!.ActiveOutsideInstance);
         }
 
@@ -208,7 +208,7 @@ namespace DragoonMayCry
 
         public static void OnActiveOutsideInstanceConfChange(object? sender, bool activeOutsideInstance)
         {
-            if (PlayerState!.IsInsideInstance || activeOutsideInstance)
+            if (DmcPlayerState!.IsInsideInstance || activeOutsideInstance)
             {
                 return;
             }

@@ -2,13 +2,13 @@ namespace DragoonMayCry.State.Tracker
 {
     internal class PvpStateTracker : StateTracker<bool>
     {
-        public override void Update(PlayerState playerState)
+        public override void Update(DmcPlayerState dmcPlayerState)
         {
-            if (playerState.Player == null)
+            if (dmcPlayerState.Player == null)
             {
                 return;
             }
-            CurrentValue = playerState.IsInPvp();
+            CurrentValue = dmcPlayerState.IsInPvp();
             if (CurrentValue != LastValue)
             {
                 OnChange?.Invoke(this, CurrentValue);
