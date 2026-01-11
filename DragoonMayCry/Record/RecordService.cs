@@ -1,3 +1,5 @@
+#region
+
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Configuration;
@@ -12,6 +14,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
+#endregion
+
 namespace DragoonMayCry.Record
 {
     public class RecordService
@@ -19,9 +23,10 @@ namespace DragoonMayCry.Record
 
         private const string TrackedDutiesResource = "DragoonMayCry.Data.TrackedDuties.json";
         private readonly IClientState clientState;
+        private readonly DmcPlayerState dmcPlayerState;
         private readonly IDutyState dutyState;
         private readonly FinalRankCalculator finalRankCalculator;
-        private readonly PlayerState playerState;
+        private readonly IPlayerState playerState;
         private readonly IDalamudPluginInterface pluginInterface;
         private readonly string recordDirectoryPath;
         private ulong characterId;
@@ -34,10 +39,11 @@ namespace DragoonMayCry.Record
         {
             pluginInterface = Plugin.PluginInterface;
             clientState = Service.ClientState;
+            playerState = Service.PlayerState;
             this.finalRankCalculator = finalRankCalculator;
             dutyState = Service.DutyState;
             dutyState.DutyStarted += OnDutyStarted;
-            playerState = PlayerState.GetInstance();
+            dmcPlayerState = DmcPlayerState.GetInstance();
 
             clientState.Login += OnLogin;
             finalRankCalculator.DutyCompletedFinalRank += OnDutyCompletedFinalRank;
@@ -58,12 +64,15 @@ namespace DragoonMayCry.Record
             {
                 using (var stream = assembly.GetManifestResourceStream(TrackedDutiesResource))
                 {
-                    using (var reader = new StreamReader(stream))
+                    if (stream != null)
                     {
-                        var content = reader.ReadToEnd();
-                        Extensions = JsonConvert.DeserializeObject<Extension[]>(content) ?? [];
-                        trackableDuties = ExtractTrackableDuties(Extensions);
-                        ready = true;
+                        using (var reader = new StreamReader(stream))
+                        {
+                            var content = reader.ReadToEnd();
+                            Extensions = JsonConvert.DeserializeObject<Extension[]>(content) ?? [];
+                            trackableDuties = ExtractTrackableDuties(Extensions);
+                            ready = true;
+                        }
                     }
                 }
             }
@@ -92,24 +101,24 @@ namespace DragoonMayCry.Record
                 return;
             }
 
-            if (clientState.LocalContentId == 0)
+            if (playerState.ContentId == 0)
             {
                 characterRecords = null;
                 return;
             }
 
-            if (clientState.LocalContentId == characterId && characterRecords != null)
+            if (playerState.ContentId == characterId && characterRecords != null)
             {
                 return;
             }
 
-            characterId = clientState.LocalContentId;
+            characterId = playerState.ContentId;
             characterRecords = LoadCharacterRecords(characterId);
         }
 
-        private Dictionary<JobId, JobRecord> LoadCharacterRecords(ulong characterId)
+        private Dictionary<JobId, JobRecord> LoadCharacterRecords(ulong charId)
         {
-            var characterRecordPath = GetCharacterRecordsPath(characterId);
+            var characterRecordPath = GetCharacterRecordsPath(charId);
             if (!File.Exists(characterRecordPath))
             {
                 return [];
@@ -127,7 +136,7 @@ namespace DragoonMayCry.Record
                     Service.Log.Debug(e.StackTrace);
                 }
 
-                var recordBackUp = $"{recordDirectoryPath}/{characterId}_back.json";
+                var recordBackUp = $"{recordDirectoryPath}/{charId}_back.json";
                 File.Move(characterRecordPath, recordBackUp);
                 Service.Log.Warning(
                     $"This character records are unreadable. They have been backed up here {recordBackUp}. New empty records will be used.");
@@ -142,29 +151,29 @@ namespace DragoonMayCry.Record
 
         private void OnLogin()
         {
-            if (clientState.LocalContentId == 0)
+            if (playerState.ContentId == 0)
             {
                 return;
             }
 
-            characterId = clientState.LocalContentId;
+            characterId = playerState.ContentId;
             characterRecords = LoadCharacterRecords(characterId);
         }
 
         private void OnDutyCompletedFinalRank(object? sender, FinalRank finalRank)
         {
-            if (IsInvalidEntry(finalRank) || clientState.LocalContentId == 0)
+            if (IsInvalidEntry(finalRank) || playerState.ContentId == 0)
             {
                 return;
             }
 
             if (characterRecords == null || characterId == 0)
             {
-                characterId = clientState.LocalContentId;
+                characterId = playerState.ContentId;
                 characterRecords = LoadCharacterRecords(characterId);
             }
 
-            var currentJob = playerState.GetCurrentJob();
+            var currentJob = dmcPlayerState.GetCurrentJob();
             if (!CanTrackJobRecord(currentJob))
             {
                 return;
@@ -172,7 +181,7 @@ namespace DragoonMayCry.Record
 
             var emdEnabled = Plugin.IsEmdModeEnabled();
 
-            var jobRecord = GetJobRecord(finalRank, currentJob, emdEnabled);
+            var jobRecord = GetJobRecord(currentJob);
 
             var targetDifficulty = emdEnabled ? jobRecord.EmdRecord : jobRecord.Record;
             if (!IsBetterRecord(finalRank, targetDifficulty))
@@ -195,14 +204,14 @@ namespace DragoonMayCry.Record
         private bool IsInvalidEntry(FinalRank finalRank)
         {
 
-            var playerLevel = playerState.Player != null ? playerState.Player.Level : int.MaxValue;
+            var playerLevel = dmcPlayerState.Player != null ? dmcPlayerState.Player.Level : int.MaxValue;
             return !ready
                    || !trackableDuties.ContainsKey(finalRank.InstanceId)
                    || !Plugin.IsEnabledForCurrentJob()
                    || trackableDuties[finalRank.InstanceId].LvlSync < playerLevel;
         }
 
-        private JobRecord GetJobRecord(FinalRank finalRank, JobId currentJob, bool emdEnabled)
+        private JobRecord GetJobRecord(JobId currentJob)
         {
             if (!characterRecords!.ContainsKey(currentJob))
             {
@@ -246,17 +255,17 @@ namespace DragoonMayCry.Record
 
         public Dictionary<JobId, JobRecord> GetCharacterRecords()
         {
-            if (clientState.LocalContentId == 0)
+            if (playerState.ContentId == 0)
             {
                 return new Dictionary<JobId, JobRecord>();
             }
 
-            if (characterId == clientState.LocalContentId && characterRecords != null)
+            if (characterId == playerState.ContentId && characterRecords != null)
             {
                 return new Dictionary<JobId, JobRecord>(characterRecords);
             }
 
-            return LoadCharacterRecords(clientState.LocalContentId);
+            return LoadCharacterRecords(playerState.ContentId);
         }
     }
 }

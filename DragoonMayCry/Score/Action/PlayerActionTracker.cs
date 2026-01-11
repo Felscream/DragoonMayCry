@@ -35,6 +35,7 @@ namespace DragoonMayCry.Score.Action
         private readonly ActionManagerLight* actionManagerL;
 
         private readonly Hook<AddToScreenLogWithLogMessageId>? addToScreenLogWithLogMessageId;
+        private readonly DmcPlayerState dmcPlayerState;
         private readonly IDutyState dutyState;
 
         private readonly Stopwatch limitBreakStopwatch;
@@ -45,7 +46,6 @@ namespace DragoonMayCry.Score.Action
         private readonly Hook<CastCancelDelegate>? onCastCancelHook;
 
         private readonly Hook<CastDelegate>? onCastHook;
-        private readonly PlayerState playerState;
         private readonly Stopwatch spellCastStopwatch;
 
         // added 0.1f to all duration
@@ -97,8 +97,8 @@ namespace DragoonMayCry.Score.Action
         {
             actionHistory = new Queue<UsedAction>();
             luminaActionSheet = Service.DataManager.GetExcelSheet<LuminaAction>();
-            playerState = PlayerState.GetInstance();
-            currentJob = playerState.GetCurrentJob();
+            dmcPlayerState = DmcPlayerState.GetInstance();
+            currentJob = dmcPlayerState.GetCurrentJob();
             dutyState = Service.DutyState;
             dutyState.DutyCompleted += OnDutyCompleted;
 
@@ -137,10 +137,10 @@ namespace DragoonMayCry.Score.Action
             addToScreenLogWithLogMessageId?.Enable();
 
             Service.Framework.Update += Update;
-            playerState.RegisterCombatStateChangeHandler(OnCombat);
-            playerState.RegisterDeathStateChangeHandler(OnDeath);
-            playerState.RegisterDamageDownHandler(OnFailedMechanic);
-            playerState.RegisterJobChangeHandler(OnJobChanged);
+            dmcPlayerState.RegisterCombatStateChangeHandler(OnCombat);
+            dmcPlayerState.RegisterDeathStateChangeHandler(OnDeath);
+            dmcPlayerState.RegisterDamageDownHandler(OnFailedMechanic);
+            dmcPlayerState.RegisterJobChangeHandler(OnJobChanged);
         }
 
         public void Dispose()
@@ -165,14 +165,14 @@ namespace DragoonMayCry.Score.Action
             BattleChara* target, BattleChara* dealer, int hitType, char a4, int actionId, int damage, int a7, int a8)
         {
             addToScreenLogWithLogMessageId?.Original(target, dealer, hitType, a4, actionId, damage, a7, a8);
-            
-            if (!Plugin.CanRunDmc() || dealer == null || target == null || playerState.Player == null)
+
+            if (!Plugin.CanRunDmc() || dealer == null || target == null || dmcPlayerState.Player == null)
             {
                 return;
             }
 
-            if (dealer->EntityId != playerState.Player.EntityId &&
-                dealer->CompanionOwnerId != playerState.Player.EntityId)
+            if (dealer->EntityId != dmcPlayerState.Player.EntityId &&
+                dealer->CompanionOwnerId != dmcPlayerState.Player.EntityId)
             {
                 return;
             }
@@ -233,12 +233,12 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-            var player = playerState.Player;
+            var player = dmcPlayerState.Player;
             if (player == null || sourceId != player.GameObjectId)
             {
                 return;
             }
-            if (!playerState.CanTargetEnemy())
+            if (!dmcPlayerState.CanTargetEnemy())
             {
                 return;
             }
@@ -292,7 +292,7 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-            var player = playerState.Player;
+            var player = dmcPlayerState.Player;
             if (player == null)
             {
                 return;
@@ -300,7 +300,7 @@ namespace DragoonMayCry.Score.Action
 
             if (limitBreakCast != null)
             {
-                if (playerState.CanTargetEnemy())
+                if (dmcPlayerState.CanTargetEnemy())
                 {
                     combatWastedGcd += (float)limitBreakStopwatch.Elapsed.TotalSeconds;
                 }
@@ -325,7 +325,7 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
 
-            var player = playerState.Player;
+            var player = dmcPlayerState.Player;
             if (player == null || sourceId != player.GameObjectId)
             {
                 return;
@@ -339,7 +339,7 @@ namespace DragoonMayCry.Score.Action
             {
                 StartLimitBreakUse(actionId);
             }
-            else if (playerState.CanTargetEnemy())
+            else if (dmcPlayerState.CanTargetEnemy())
             {
                 ResetLimitBreakUse();
                 spellCastId = actionId;
@@ -414,7 +414,7 @@ namespace DragoonMayCry.Score.Action
         {
             limitBreakStopwatch.Reset();
             limitBreakCast = null;
-            if (playerState.IsInCombat)
+            if (dmcPlayerState.IsInCombat)
             {
                 UsingLimitBreak?.Invoke(this, new LimitBreakEvent(false, false));
             }
@@ -424,7 +424,7 @@ namespace DragoonMayCry.Score.Action
         {
             limitBreakStopwatch.Reset();
             limitBreakCast = null;
-            if (playerState.IsInCombat)
+            if (dmcPlayerState.IsInCombat)
             {
                 LimitBreakCanceled?.Invoke(this, EventArgs.Empty);
                 UsingLimitBreak?.Invoke(this, new LimitBreakEvent(false, false));
@@ -433,12 +433,12 @@ namespace DragoonMayCry.Score.Action
 
         private void StartLimitBreakUse(uint actionId)
         {
-            if (!playerState.IsInCombat || limitBreakCast != null)
+            if (!dmcPlayerState.IsInCombat || limitBreakCast != null)
             {
                 return;
             }
 
-            var isTankLb = playerState.IsTank();
+            var isTankLb = dmcPlayerState.IsTank();
             if (isTankLb && !tankLimitBreakDelays.ContainsKey(actionId))
             {
                 return;
@@ -476,7 +476,7 @@ namespace DragoonMayCry.Score.Action
                 || actionManagerL->isGCDRecastActive
                 || actionManagerL->isCasting
                 || animationLock <= 0.1f
-                || !playerState.CanTargetEnemy()
+                || !dmcPlayerState.CanTargetEnemy()
                 || limitBreakCast != null)
             {
                 return;
@@ -520,22 +520,22 @@ namespace DragoonMayCry.Score.Action
 
         private void DetectWastedGcd()
         {
-            var isIncapacitated = playerState.IsIncapacitated();
-            var canTargetEnemy = playerState.CanTargetEnemy();
+            var isIncapacitated = dmcPlayerState.IsIncapacitated();
+            var canTargetEnemy = dmcPlayerState.CanTargetEnemy();
             if (!actionManagerL->isGCDRecastActive
                 && actionManagerL->animationLock <= 0
                 && !actionManagerL->isCasting
                 && !actionManagerL->isQueued
                 && limitBreakCast == null
                 && !isIncapacitated
-                && (canTargetEnemy || playerState.IsDead))
+                && (canTargetEnemy || dmcPlayerState.IsDead))
             {
                 combatWastedGcd += ImGui.GetIO().DeltaTime;
             }
 
             // do not track dropped GCDs if the LB is being cast
             // or the player died between 2 GCDs
-            if (playerState.IsDead)
+            if (dmcPlayerState.IsDead)
             {
                 return;
             }

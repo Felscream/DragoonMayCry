@@ -2,16 +2,16 @@ namespace DragoonMayCry.State.Tracker
 {
     internal class OnDeathStateTracker : StateTracker<bool>
     {
-        public override void Update(PlayerState playerState)
+        public override void Update(DmcPlayerState dmcPlayerState)
         {
-            if (playerState.Player == null)
+            if (dmcPlayerState.Player == null)
             {
                 return;
             }
 
             // using playerState.Player.IsDead triggers death
             // too early from the player's PoV
-            CurrentValue = playerState.Player.CurrentHp == 0;
+            CurrentValue = dmcPlayerState.Player.CurrentHp == 0;
             if (CurrentValue != LastValue)
             {
                 OnChange?.Invoke(this, CurrentValue);

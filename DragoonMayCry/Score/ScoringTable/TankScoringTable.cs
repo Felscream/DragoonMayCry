@@ -1,6 +1,10 @@
+#region
+
 using DragoonMayCry.Score.Model;
 using System;
 using System.Collections.Generic;
+
+#endregion
 
 namespace DragoonMayCry.Score.ScoringTable
 {
@@ -52,7 +56,7 @@ namespace DragoonMayCry.Score.ScoringTable
 
         protected override float GetDpsAtIlvl(int ilvl)
         {
-            return (float)(43.1f * Math.Exp(0.00821f * ilvl));
+            return (float)(42.9f * Math.Exp(0.00821f * ilvl));
         }
     }
 }

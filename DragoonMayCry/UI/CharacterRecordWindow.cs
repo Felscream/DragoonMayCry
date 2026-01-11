@@ -10,6 +10,7 @@ using DragoonMayCry.Configuration;
 using DragoonMayCry.Data;
 using DragoonMayCry.Record;
 using DragoonMayCry.Record.Model;
+using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
@@ -19,7 +20,6 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using PlayerState = DragoonMayCry.State.PlayerState;
 
 #endregion
 
@@ -36,12 +36,12 @@ namespace DragoonMayCry.UI
         private readonly IClientState clientState;
         private readonly ConfigWindow configWindow;
         private readonly ExcelSheet<ContentFinderCondition> contentFinder;
+        private readonly DmcPlayerState dmcPlayerState;
         private readonly Vector2 dutyTextureSize = new(376, 120);
         private readonly Extension[] extensions;
         private readonly List<string> extensionValues;
         private readonly HowItWorksWindow howItWorksWindow;
         private readonly List<JobId> jobs;
-        private readonly PlayerState playerState;
         private readonly Vector2 rankSize = new(130, 130);
         private readonly RecordService recordService;
         private ExtensionCategory[] categories = [];
@@ -67,8 +67,8 @@ namespace DragoonMayCry.UI
             Size = new Vector2(955f, 730f);
             SizeCondition = ImGuiCond.Appearing;
 
-            playerState = PlayerState.GetInstance();
-            playerState.RegisterJobChangeHandler(OnJobChange);
+            dmcPlayerState = DmcPlayerState.GetInstance();
+            dmcPlayerState.RegisterJobChangeHandler(OnJobChange);
 
             clientState = Service.ClientState;
             clientState.Login += OnLogin;
@@ -92,7 +92,7 @@ namespace DragoonMayCry.UI
             if (clientState.IsLoggedIn)
             {
                 characterRecords = recordService.GetCharacterRecords();
-                var job = playerState.GetCurrentJob();
+                var job = dmcPlayerState.GetCurrentJob();
                 if (job != JobId.OTHER && jobs.Contains(job))
                 {
                     selectedJob = job;
@@ -413,21 +413,18 @@ namespace DragoonMayCry.UI
             };
         }
 
-        private ContentFinderCondition? GetContent(DisplayedDuty displayedDuty)
+        private ContentFinderCondition? GetContentFinderCondition(DisplayedDuty displayedDuty)
         {
             return contentFinder.FirstOrDefault(content => content.TerritoryType.RowId == displayedDuty.DutyId);
         }
 
         private bool TryGetTexture(DisplayedDuty displayed, out IDalamudTextureWrap? texture)
         {
-            var content = GetContent(displayed);
+            var content = GetContentFinderCondition(displayed);
             uint iconToDisplay;
-
             if (content == null || content.Value.RowId == 0 || content.Value.Content.RowId == 0)
             {
-                iconToDisplay = characterRecords.Values.Any(record => record.Record.ContainsKey(displayed.DutyId)
-                                                                      || record.EmdRecord.ContainsKey(displayed.DutyId))
-                                    ? displayed.Duty.IconId : HiddenDutyIconId;
+                iconToDisplay = displayed.Duty.IconId;
             }
             else if (!UIState.IsInstanceContentUnlocked(content.Value.Content.RowId))
             {
@@ -437,7 +434,7 @@ namespace DragoonMayCry.UI
             {
                 iconToDisplay = content.Value.Image > 0 ? content.Value.Image : displayed.Duty.IconId;
             }
-            
+
             texture = null;
             if (Service.TextureProvider.TryGetFromGameIcon(iconToDisplay, out var tex))
             {
@@ -521,12 +518,10 @@ namespace DragoonMayCry.UI
 
         private string GetDutyName(DisplayedDuty displayed)
         {
-            var content = GetContent(displayed);
+            var content = GetContentFinderCondition(displayed);
             if (content == null || content.Value.RowId == 0 || content.Value.Content.RowId == 0)
             {
-                return characterRecords.Values.Any(record => record.Record.ContainsKey(displayed.DutyId)
-                                                             || record.EmdRecord.ContainsKey(displayed.DutyId))
-                           ? displayed.Duty.Name : "???";
+                return displayed.Duty.Name + " (Unavailable)";
             }
 
             if (!UIState.IsInstanceContentUnlocked(content.Value.Content.RowId))

@@ -2,9 +2,9 @@ namespace DragoonMayCry.State.Tracker
 {
     internal class LoginStateTracker : StateTracker<bool>
     {
-        public override void Update(PlayerState playerState)
+        public override void Update(DmcPlayerState dmcPlayerState)
         {
-            CurrentValue = playerState.IsLoggedIn;
+            CurrentValue = dmcPlayerState.IsLoggedIn;
             if (CurrentValue != LastValue)
             {
                 OnChange?.Invoke(this, CurrentValue);

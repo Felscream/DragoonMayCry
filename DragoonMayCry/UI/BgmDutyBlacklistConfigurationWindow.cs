@@ -5,6 +5,7 @@ using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Windowing;
 using DragoonMayCry.Configuration;
+using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using KamiLib;
 using Lumina.Excel;
@@ -12,7 +13,6 @@ using Lumina.Excel.Sheets;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using PlayerState = DragoonMayCry.State.PlayerState;
 
 #endregion
 
@@ -22,7 +22,7 @@ namespace DragoonMayCry.UI
     {
         private readonly DmcConfiguration configuration;
         private readonly ExcelSheet<ContentFinderCondition> contentFinder;
-        private readonly PlayerState playerState;
+        private readonly DmcPlayerState dmcPlayerState;
         public EventHandler? BgmBlacklistChanged;
         private ISet<uint> blacklistedIds;
         private int idToBlacklist;
@@ -41,7 +41,7 @@ namespace DragoonMayCry.UI
             SizeCondition = ImGuiCond.Appearing;
             this.configuration = configuration;
             contentFinder = Service.DataManager.GetExcelSheet<ContentFinderCondition>();
-            playerState = PlayerState.GetInstance();
+            dmcPlayerState = DmcPlayerState.GetInstance();
             blacklistedIds = new SortedSet<uint>(this.configuration.DynamicBgmBlacklistDuties.Value);
         }
 
@@ -52,7 +52,7 @@ namespace DragoonMayCry.UI
 
         public override void Draw()
         {
-            if (playerState.GetCurrentContentId() != 0)
+            if (dmcPlayerState.GetCurrentContentId() != 0)
             {
                 CreateBlacklistCurrentDutyButton();
             }
@@ -144,7 +144,7 @@ namespace DragoonMayCry.UI
         }
         private void CreateBlacklistCurrentDutyButton()
         {
-            if (contentFinder.TryGetRow(playerState.GetCurrentContentId(), out var row))
+            if (contentFinder.TryGetRow(dmcPlayerState.GetCurrentContentId(), out var row))
             {
                 var content = ToLightContentFinderCondition(row);
                 ImGui.TextUnformatted($"Current duty : {content.Name} - ID {content.RowId}");

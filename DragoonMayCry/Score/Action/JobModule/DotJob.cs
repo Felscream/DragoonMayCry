@@ -1,20 +1,24 @@
-using Dalamud.Game.ClientState.Objects;
+#region
+
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Plugin.Services;
 using DragoonMayCry.State;
 using System.Collections.Generic;
+
+#endregion
 
 namespace DragoonMayCry.Score.Action.JobModule
 {
     internal abstract class DotJob : IJobActionModifier
     {
-        protected readonly PlayerState playerState;
+        protected readonly DmcPlayerState DmcPlayerState;
         protected readonly ITargetManager targetManager;
 
         protected DotJob()
         {
             targetManager = Service.TargetManager;
-            playerState = PlayerState.GetInstance();
+            DmcPlayerState = DmcPlayerState.GetInstance();
         }
         protected abstract Dictionary<uint, uint> ActionToStatusIds { get; }
 
@@ -38,7 +42,7 @@ namespace DragoonMayCry.Score.Action.JobModule
             }
 
             var target = (IBattleChara)targetManager.Target;
-            var playerId = playerState.Player?.GameObjectId;
+            var playerId = DmcPlayerState.Player?.GameObjectId;
             var statuses = target.StatusList;
 
             if (statuses == null)

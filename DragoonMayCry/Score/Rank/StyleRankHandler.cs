@@ -1,9 +1,13 @@
+#region
+
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
 using System;
+
+#endregion
 
 namespace DragoonMayCry.Score.Rank
 {
@@ -20,17 +24,17 @@ namespace DragoonMayCry.Score.Rank
             StyleType.SS,
             StyleType.SSS);
 
-        private readonly PlayerState playerState;
+        private readonly DmcPlayerState dmcPlayerState;
 
         public EventHandler<RankChangeData>? StyleRankChange;
 
         public StyleRankHandler(PlayerActionTracker playerActionTracker)
         {
             ResetRank();
-            playerState = PlayerState.GetInstance();
-            playerState.RegisterCombatStateChangeHandler(OnCombatChange!);
-            playerState.RegisterDeathStateChangeHandler(OnDeath);
-            playerState.RegisterDamageDownHandler(OnDamageDown);
+            dmcPlayerState = DmcPlayerState.GetInstance();
+            dmcPlayerState.RegisterCombatStateChangeHandler(OnCombatChange!);
+            dmcPlayerState.RegisterDeathStateChangeHandler(OnDeath);
+            dmcPlayerState.RegisterDamageDownHandler(OnDamageDown);
             playerActionTracker.GcdDropped += OnGcdDropped;
             playerActionTracker.LimitBreakCanceled += OnLimitBreakCanceled;
             playerActionTracker.UsingLimitBreak += OnLimitBreak;
@@ -127,13 +131,13 @@ namespace DragoonMayCry.Score.Rank
 
         private void OnGcdDropped(object? sender, EventArgs args)
         {
-            if (playerState.IsDead)
+            if (dmcPlayerState.IsDead)
             {
                 return;
             }
 
             // Do not demote if Sprout mode is active for current job
-            var currentJob = playerState.GetCurrentJob();
+            var currentJob = dmcPlayerState.GetCurrentJob();
             if (Plugin.Configuration!.JobConfiguration.TryGetValue(currentJob, out var jobConfiguration) &&
                 jobConfiguration.DifficultyMode == DifficultyMode.Sprout)
             {
@@ -152,7 +156,7 @@ namespace DragoonMayCry.Score.Rank
 
         private void OnLimitBreakCanceled(object? sender, EventArgs args)
         {
-            if (playerState.IsDead)
+            if (dmcPlayerState.IsDead)
             {
                 return;
             }
@@ -184,7 +188,7 @@ namespace DragoonMayCry.Score.Rank
 
         private void OnDamageDown(object? sender, bool hasDamageDown)
         {
-            if (!hasDamageDown || playerState.IsDead)
+            if (!hasDamageDown || dmcPlayerState.IsDead)
             {
                 return;
             }

@@ -2,6 +2,7 @@
 
 using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using System;
@@ -27,7 +28,7 @@ namespace DragoonMayCry.Score
 
         public int CalculateCurrentItemLevel()
         {
-            var playerCharacter = PlayerState.GetInstance().Player;
+            var playerCharacter = DmcPlayerState.GetInstance().Player;
 
             if (playerCharacter == null)
             {
@@ -35,7 +36,7 @@ namespace DragoonMayCry.Score
             }
 
             var isLvlSync =
-                FFXIVClientStructs.FFXIV.Client.Game.UI.PlayerState.Instance()->IsLevelSynced;
+                PlayerState.Instance()->IsLevelSynced;
 
             var territory = Service.ClientState.TerritoryType;
 

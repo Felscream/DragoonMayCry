@@ -1,4 +1,8 @@
+#region
+
 using System.Collections.Generic;
+
+#endregion
 
 namespace DragoonMayCry.Score.Action.JobModule
 {
@@ -42,7 +46,7 @@ namespace DragoonMayCry.Score.Action.JobModule
 
         public override float OnActionAppliedOnTarget(uint actionId)
         {
-            if (!playerState.CanTargetEnemy())
+            if (!DmcPlayerState.CanTargetEnemy())
             {
                 return 0;
             }

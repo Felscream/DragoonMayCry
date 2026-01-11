@@ -14,19 +14,19 @@ namespace DragoonMayCry.Score.Rank
     public class FinalRankCalculator : IResettable
     {
         private readonly Stopwatch combatTimer;
+        private readonly DmcPlayerState dmcPlayerState;
         private readonly PlayerActionTracker playerActionTracker;
-        private readonly PlayerState playerState;
         public EventHandler<FinalRank>? DutyCompletedFinalRank;
         public EventHandler<StyleType>? FinalRankCalculated;
 
-        public FinalRankCalculator(PlayerState playerState, PlayerActionTracker playerActionTracker)
+        public FinalRankCalculator(DmcPlayerState dmcPlayerState, PlayerActionTracker playerActionTracker)
         {
             combatTimer = new Stopwatch();
             this.playerActionTracker = playerActionTracker;
             this.playerActionTracker.TotalCombatWastedGcd += OnTotalCombatWastedGcd;
             this.playerActionTracker.DutyCompletedWastedGcd += OnDutyCompletedWastedGcd;
-            this.playerState = playerState;
-            this.playerState.RegisterCombatStateChangeHandler(OnCombat);
+            this.dmcPlayerState = dmcPlayerState;
+            this.dmcPlayerState.RegisterCombatStateChangeHandler(OnCombat);
         }
         public FinalRank FinalRank { get; private set; }
 
@@ -117,10 +117,10 @@ namespace DragoonMayCry.Score.Rank
 
         public bool CanDisplayFinalRank()
         {
-            return JobHelper.IsCombatJob(playerState.GetCurrentJob())
-                   && !playerState.IsInPvp()
+            return JobHelper.IsCombatJob(dmcPlayerState.GetCurrentJob())
+                   && !dmcPlayerState.IsInPvp()
                    && Plugin.IsEnabledForCurrentJob()
-                   && (playerState.IsInsideInstance
+                   && (dmcPlayerState.IsInsideInstance
                        || Plugin.Configuration!.ActiveOutsideInstance);
         }
 
