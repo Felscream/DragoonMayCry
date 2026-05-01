@@ -13,14 +13,14 @@
                 "LvlSync": 70,
                 "Difficulty": 1,
                 "Category": 2,
-                "IconId": "112261"
+                "IconId": 112261
             },
             "777": {
                 "Name": "The Weapon's Refrain",
                 "LvlSync": 70,
                 "Difficulty": 1,
                 "Category": 2,
-                "IconId": "112296"
+                "IconId": 112296
             }
         }
     },
@@ -38,7 +38,7 @@
                 "LvlSync": 80,
                 "Difficulty": 1,
                 "Category": 2,
-                "IconId": "112374"
+                "IconId": 112374
             }
         }
     },
@@ -56,14 +56,14 @@
                 "LvlSync": 90,
                 "Difficulty": 1,
                 "Category": 2,
-                "IconId": "112469"
+                "IconId": 112469
             },
             "1122": {
                 "Name": "The Omega Protocol",
                 "LvlSync": 90,
                 "Difficulty": 1,
                 "Category": 2,
-                "IconId": "112518"
+                "IconId": 112518
             }
         }
     },
@@ -98,7 +98,7 @@
                 "Difficulty": 0,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "IconId": "112562"
+                "IconId": 112562
             },
             "1196": {
                 "Name": "Worqor Lar Dor",
@@ -106,7 +106,7 @@
                 "Difficulty": 1,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "IconId": "112563"
+                "IconId": 112563
             },
             "1200": {
                 "Name": "Everkeep",
@@ -114,7 +114,7 @@
                 "Difficulty": 0,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "IconId": "112564"
+                "IconId": 112564
             },
             "1201": {
                 "Name": "Everkeep",
@@ -122,7 +122,7 @@
                 "Difficulty": 1,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "IconId": "112565"
+                "IconId": 112565
             },
             "1202": {
                 "Name": "The Interphos",
@@ -130,7 +130,7 @@
                 "Difficulty": 0,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "IconId": "112566"
+                "IconId": 112566
             },
             "1225": {
                 "Name": "AAC Light-heavyweight M1",
@@ -138,7 +138,7 @@
                 "Difficulty": 0,
                 "Category": 1,
                 "Subcategory": "Light-heavyweight",
-                "IconId": "112567"
+                "IconId": 112567
             },
             "1226": {
                 "Name": "AAC Light-heavyweight M1",
@@ -146,7 +146,7 @@
                 "Difficulty": 1,
                 "Category": 1,
                 "Subcategory": "Light-heavyweight",
-                "IconId": "112568"
+                "IconId": 112568
             },
             "1227": {
                 "Name": "AAC Light-heavyweight M2",
@@ -154,7 +154,7 @@
                 "Difficulty": 0,
                 "Category": 1,
                 "Subcategory": "Light-heavyweight",
-                "IconId": "112569"
+                "IconId": 112569
             },
             "1228": {
                 "Name": "AAC Light-heavyweight M2",
@@ -162,7 +162,7 @@
                 "Difficulty": 1,
                 "Category": 1,
                 "Subcategory": "Light-heavyweight",
-                "IconId": "112570"
+                "IconId": 112570
             },
             "1229": {
                 "Name": "AAC Light-heavyweight M3",
@@ -170,7 +170,7 @@
                 "Difficulty": 0,
                 "Category": 1,
                 "Subcategory": "Light-heavyweight",
-                "IconId": "112571"
+                "IconId": 112571
             },
             "1230": {
                 "Name": "AAC Light-heavyweight M3",
@@ -178,7 +178,7 @@
                 "Difficulty": 1,
                 "Category": 1,
                 "Subcategory": "Light-heavyweight",
-                "IconId": "112572"
+                "IconId": 112572
             },
             "1231": {
                 "Name": "AAC Light-heavyweight M4",
@@ -186,7 +186,7 @@
                 "Difficulty": 0,
                 "Category": 1,
                 "Subcategory": "Light-heavyweight",
-                "IconId": "112573"
+                "IconId": 112573
             },
             "1232": {
                 "Name": "AAC Light-heavyweight M4",
@@ -194,14 +194,14 @@
                 "Difficulty": 1,
                 "Category": 1,
                 "Subcategory": "Light-heavyweight",
-                "IconId": "112574"
+                "IconId": 112574
             },
             "1238": {
                 "Name": "Futures Rewritten (Ultimate)",
                 "LvlSync": 100,
                 "Difficulty": 1,
                 "Category": 2,
-                "IconId": "112587"
+                "IconId": 112587
             },
             "1239": {
                 "Name": "The Jade Stoa (Unreal)",
@@ -209,7 +209,7 @@
                 "Difficulty": 1,
                 "Category": 0,
                 "Subcategory": "Unreal",
-                "IconId": "112590"
+                "IconId": 112590
             },
             "1243": {
                 "Name": "The Minstrel's Ballad: Sphene's Burden",
@@ -217,7 +217,7 @@
                 "Difficulty": 1,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "IconId": "112588"
+                "IconId": 112588
             },
             "1256": {
                 "Name": " AAC Cruiserweight M1",
@@ -225,7 +225,7 @@
                 "Difficulty": 0,
                 "Category": 1,
                 "Subcategory": "Cruiserweight",
-                "IconId": "112597"
+                "IconId": 112597
             },
             "1257": {
                 "Name": " AAC Cruiserweight M1 (Savage)",
@@ -233,7 +233,7 @@
                 "Difficulty": 1,
                 "Category": 1,
                 "Subcategory": "Cruiserweight",
-                "IconId": "112598"
+                "IconId": 112598
             },
             "1258": {
                 "Name": " AAC Cruiserweight M2",
@@ -241,7 +241,7 @@
                 "Difficulty": 0,
                 "Category": 1,
                 "Subcategory": "Cruiserweight",
-                "IconId": "112599"
+                "IconId": 112599
             },
             "1259": {
                 "Name": " AAC Cruiserweight M2 (Savage)",
@@ -249,7 +249,7 @@
                 "Difficulty": 1,
                 "Category": 1,
                 "Subcategory": "Cruiserweight",
-                "IconId": "112600"
+                "IconId": 112600
             },
             "1260": {
                 "Name": " AAC Cruiserweight M3",
@@ -257,7 +257,7 @@
                 "Difficulty": 0,
                 "Category": 1,
                 "Subcategory": "Cruiserweight",
-                "IconId": "112601"
+                "IconId": 112601
             },
             "1261": {
                 "Name": " AAC Cruiserweight M3 (Savage)",
@@ -265,7 +265,7 @@
                 "Difficulty": 1,
                 "Category": 1,
                 "Subcategory": "Cruiserweight",
-                "IconId": "112602"
+                "IconId": 112602
             },
             "1262": {
                 "Name": " AAC Cruiserweight M4",
@@ -273,7 +273,7 @@
                 "Difficulty": 0,
                 "Category": 1,
                 "Subcategory": "Cruiserweight",
-                "IconId": "112603"
+                "IconId": 112603
             },
             "1263": {
                 "Name": " AAC Cruiserweight M4 (Savage)",
@@ -281,7 +281,7 @@
                 "Difficulty": 1,
                 "Category": 1,
                 "Subcategory": "Cruiserweight",
-                "IconId": "112604"
+                "IconId": 112604
             },
             "1270": {
                 "Name": "Recollection",
@@ -289,7 +289,7 @@
                 "Difficulty": 0,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "IconId": "112595"
+                "IconId": 112595
             },
             "1271": {
                 "Name": "Recollection (Extreme)",
@@ -297,7 +297,7 @@
                 "Difficulty": 1,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "IconId": "112596"
+                "IconId": 112596
             },
             "1272": {
                 "Name": "Hell's Kier (Unreal)",
@@ -305,7 +305,7 @@
                 "Difficulty": 1,
                 "Category": 0,
                 "Subcategory": "Unreal",
-                "IconId": "112594"
+                "IconId": 112594
             },
             "1295": {
                 "Name": "The Ageless Necropolis",
@@ -313,7 +313,7 @@
                 "Difficulty": 0,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "IconId": "112612"
+                "IconId": 112612
             },
             "1296": {
                 "Name": "The Minstrel's Ballad: Necron's Embrace",
@@ -321,7 +321,7 @@
                 "Difficulty": 1,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "IconId": "112613"
+                "IconId": 112613
             },
             "1300": {
                 "Name": "The Windward Wilds",
@@ -329,7 +329,7 @@
                 "Difficulty": 0,
                 "Category": 0,
                 "Subcategory": "Event",
-                "IconId": "112627"
+                "IconId": 112627
             },
             "1302": {
                 "Name": "The Wreath of Snakes (Unreal) ",
@@ -337,7 +337,7 @@
                 "Difficulty": 1,
                 "Category": 0,
                 "Subcategory": "Unreal",
-                "IconId": "112631"
+                "IconId": 112631
             },
             "1306": {
                 "Name": "The Windward Wilds (Extreme)",
@@ -345,7 +345,7 @@
                 "Difficulty": 1,
                 "Category": 0,
                 "Subcategory": "Event",
-                "IconId": "112628"
+                "IconId": 112628
             },
             "1307": {
                 "Name": "Hell on Rails ",
@@ -353,7 +353,7 @@
                 "Difficulty": 0,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "IconId": "112635"
+                "IconId": 112635
             },
             "1308": {
                 "Name": "Hell on Rails (Extreme)",
@@ -361,7 +361,7 @@
                 "Difficulty": 1,
                 "Category": 0,
                 "Subcategory": "Main story quest",
-                "IconId": "112636"
+                "IconId": 112636
             },
             "1318": {
                 "Name": "Tsukuyomi's Pain (Unreal)",
@@ -369,71 +369,95 @@
                 "Difficulty": 1,
                 "Category": 0,
                 "Subcategory": "Unreal",
-                "IconId": "112650"
+                "IconId": 112650
             },
             "1320": {
-                "Name": " AAC Heavyweight M1",
+                "Name": "AAC Heavyweight M1",
                 "LvlSync": 100,
                 "Difficulty": 0,
                 "Category": 1,
                 "Subcategory": "Heavyweight",
-                "IconId": "112637"
+                "IconId": 112637
             },
             "1321": {
-                "Name": " AAC Heavyweight M1 (Savage)",
+                "Name": "AAC Heavyweight M1 (Savage)",
                 "LvlSync": 100,
                 "Difficulty": 1,
                 "Category": 1,
                 "Subcategory": "Heavyweight",
-                "IconId": "112638"
+                "IconId": 112638
             },
             "1322": {
-                "Name": " AAC Heavyweight M2",
+                "Name": "AAC Heavyweight M2",
                 "LvlSync": 100,
                 "Difficulty": 0,
                 "Category": 1,
                 "Subcategory": "Heavyweight",
-                "IconId": "112639"
+                "IconId": 112639
             },
             "1323": {
-                "Name": " AAC Heavyweight M2 (Savage)",
+                "Name": "AAC Heavyweight M2 (Savage)",
                 "LvlSync": 100,
                 "Difficulty": 1,
                 "Category": 1,
                 "Subcategory": "Heavyweight",
-                "IconId": "112640"
+                "IconId": 112640
             },
             "1324": {
-                "Name": " AAC Heavyweight M3",
+                "Name": "AAC Heavyweight M3",
                 "LvlSync": 100,
                 "Difficulty": 0,
                 "Category": 1,
                 "Subcategory": "Heavyweight",
-                "IconId": "112641"
+                "IconId": 112641
             },
             "1325": {
-                "Name": " AAC Heavyweight M3 (Savage)",
+                "Name": "AAC Heavyweight M3 (Savage)",
                 "LvlSync": 100,
                 "Difficulty": 1,
                 "Category": 1,
                 "Subcategory": "Heavyweight",
-                "IconId": "112642"
+                "IconId": 112642
             },
             "1326": {
-                "Name": " AAC Heavyweight M4",
+                "Name": "AAC Heavyweight M4",
                 "LvlSync": 100,
                 "Difficulty": 0,
                 "Category": 1,
                 "Subcategory": "Heavyweight",
-                "IconId": "112643"
+                "IconId": 112643
             },
             "1327": {
-                "Name": " AAC Heavyweight M4 (Savage)",
+                "Name": "AAC Heavyweight M4 (Savage)",
                 "LvlSync": 100,
                 "Difficulty": 1,
                 "Category": 1,
                 "Subcategory": "Heavyweight",
-                "IconId": "112644"
+                "IconId": 112644
+            },
+            "1361": {
+                "Name": "The Unmaking",
+                "LvlSync": 100,
+                "Difficulty": 0,
+                "Category": 0,
+                "Subcategory": "Main story quest",
+                "IconId": 112659
+            },
+            "1362": {
+                "Name": "The Unmaking (Extreme)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0,
+                "Subcategory": "Main story quest",
+                "IconId": 112660
+            },
+            "1372": {
+                "Name": "Shinryu's Domain (Unreal)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 0,
+                "Subcategory": "Unreal",
+                "IconId": 112670
             }
         }
     }

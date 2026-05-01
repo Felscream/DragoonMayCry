@@ -35,7 +35,7 @@ namespace DragoonMayCry.Score.Rank
             combatTimer.Reset();
         }
 
-        private FinalRank DetermineFinalRank(float wastedGcd, ushort instanceId = 0)
+        private FinalRank DetermineFinalRank(float wastedGcd, uint instanceId = 0)
         {
             var uptimePercentage = Math.Max(combatTimer.Elapsed.TotalSeconds - wastedGcd, 0) /
                                    Math.Max(combatTimer.Elapsed.TotalSeconds, 0.1);
@@ -155,9 +155,9 @@ namespace DragoonMayCry.Score.Rank
     {
         public StyleType Rank { get; private set; }
         public TimeSpan KillTime { get; private set; }
-        public ushort InstanceId { get; private set; }
+        public uint InstanceId { get; private set; }
 
-        public FinalRank(StyleType rank, TimeSpan killTime, ushort instanceId)
+        public FinalRank(StyleType rank, TimeSpan killTime, uint instanceId)
         {
             Rank = rank;
             KillTime = killTime;

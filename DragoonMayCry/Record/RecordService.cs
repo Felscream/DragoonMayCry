@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Dalamud.Game.DutyState;
 
 #endregion
 
@@ -33,7 +34,7 @@ namespace DragoonMayCry.Record
         private Dictionary<JobId, JobRecord>? characterRecords;
         public EventHandler<Dictionary<JobId, JobRecord>>? CharacterRecordsChanged;
         private bool ready;
-        private Dictionary<ushort, TrackableDuty> trackableDuties = new();
+        private Dictionary<uint, TrackableDuty> trackableDuties = new();
 
         public RecordService(FinalRankCalculator finalRankCalculator)
         {
@@ -89,14 +90,14 @@ namespace DragoonMayCry.Record
             }
         }
 
-        private Dictionary<ushort, TrackableDuty> ExtractTrackableDuties(Extension[] extensions)
+        private Dictionary<uint, TrackableDuty> ExtractTrackableDuties(Extension[] extensions)
         {
             return extensions.ToList().SelectMany(extension => extension.Instances).ToDictionary();
         }
 
-        private void OnDutyStarted(object? sender, ushort dutyId)
+        private void OnDutyStarted(IDutyStateEventArgs dutyState)
         {
-            if (!trackableDuties.ContainsKey(dutyId) || !Plugin.IsEnabledForCurrentJob())
+            if (!trackableDuties.ContainsKey(dutyState.TerritoryType.RowId) || !Plugin.IsEnabledForCurrentJob())
             {
                 return;
             }
@@ -221,7 +222,7 @@ namespace DragoonMayCry.Record
             return characterRecords[currentJob];
         }
 
-        private void UpdateCharacterRecord(FinalRank finalRank, Dictionary<ushort, DutyRecord> targetDifficulty)
+        private void UpdateCharacterRecord(FinalRank finalRank, Dictionary<uint, DutyRecord> targetDifficulty)
         {
             if (!targetDifficulty.ContainsKey(finalRank.InstanceId))
             {
@@ -233,7 +234,7 @@ namespace DragoonMayCry.Record
             }
         }
 
-        private static bool IsBetterRecord(FinalRank finalRank, Dictionary<ushort, DutyRecord> targetDifficulty)
+        private static bool IsBetterRecord(FinalRank finalRank, Dictionary<uint, DutyRecord> targetDifficulty)
         {
             return !targetDifficulty.ContainsKey(finalRank.InstanceId)
                    || targetDifficulty[finalRank.InstanceId].Result < finalRank.Rank

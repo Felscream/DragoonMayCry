@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Dalamud.Game.DutyState;
 using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
 using LuminaAction = Lumina.Excel.Sheets.Action;
 
@@ -108,10 +109,10 @@ namespace DragoonMayCry.Score.Action
             Service.FlyText.FlyTextCreated += OnFlyText;
             try
             {
-                onActionUsedHook =
+                /*onActionUsedHook =
                     Service.Hook.HookFromSignature<ActionUsedDelegate>(
                         "40 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24",
-                        OnActionUsed);
+                        OnActionUsed);*/
 
 
                 onCastCancelHook =
@@ -131,7 +132,7 @@ namespace DragoonMayCry.Score.Action
                 Service.Log.Error("Error initiating hooks: " + e.Message);
             }
 
-            onActionUsedHook?.Enable();
+            //onActionUsedHook?.Enable();
             onCastCancelHook?.Enable();
             onCastHook?.Enable();
             addToScreenLogWithLogMessageId?.Enable();
@@ -654,11 +655,11 @@ namespace DragoonMayCry.Score.Action
             }
         }
 
-        private void OnDutyCompleted(object? sender, ushort instance)
+        private void OnDutyCompleted(IDutyStateEventArgs instance)
         {
             if (Plugin.IsEnabledForCurrentJob())
             {
-                DutyCompletedWastedGcd?.Invoke(this, new DutyCompletionStats(combatWastedGcd, instance));
+                DutyCompletedWastedGcd?.Invoke(this, new DutyCompletionStats(combatWastedGcd, instance.TerritoryType.RowId));
             }
         }
 
@@ -694,9 +695,9 @@ namespace DragoonMayCry.Score.Action
         public struct DutyCompletionStats
         {
             public float WastedGcd { get; private set; }
-            public ushort InstanceId { get; private set; }
+            public uint InstanceId { get; private set; }
 
-            internal DutyCompletionStats(float wastedGcd, ushort instanceId)
+            internal DutyCompletionStats(float wastedGcd, uint instanceId)
             {
                 WastedGcd = wastedGcd;
                 InstanceId = instanceId;

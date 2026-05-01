@@ -341,6 +341,10 @@ namespace DragoonMayCry.UI
 
         private void UpdateCategories()
         {
+            if (extensions.Length == 0 || selectedExtensionId >= extensions.Length)
+            {
+                return;
+            }
             if (extensions[selectedExtensionId].Categories.Length == 0)
             {
                 return;
@@ -400,7 +404,7 @@ namespace DragoonMayCry.UI
                                                                              difficulties[selectedDifficultyId])
                                                              .Select(entry => new DisplayedDuty(entry.Key, entry.Value))
                                                              .ToList();
-            displayedDuties.Sort((dutyA, dutyB) => dutyB.DutyId - dutyA.DutyId);
+            displayedDuties.Sort((dutyA, dutyB) => dutyB.DutyId.CompareTo(dutyA.DutyId));
         }
 
         private static string GetDifficultyLabel(Difficulty diff)
@@ -455,7 +459,7 @@ namespace DragoonMayCry.UI
             ImGui.TextUnformatted(text);
         }
 
-        private static string GetKillTime(ushort dutyId, Dictionary<ushort, DutyRecord> difficultyRecord)
+        private static string GetKillTime(uint dutyId, Dictionary<uint, DutyRecord> difficultyRecord)
         {
             if (!difficultyRecord.TryGetValue(dutyId, out var dutyResult))
             {
@@ -470,7 +474,7 @@ namespace DragoonMayCry.UI
             return $"{minutes}:{seconds}";
         }
 
-        private void DrawRank(ushort dutyId, Dictionary<ushort, DutyRecord> difficultyRecord)
+        private void DrawRank(uint dutyId, Dictionary<uint, DutyRecord> difficultyRecord)
         {
             var rankIconPath = MissingRankTexPath;
             if (difficultyRecord.TryGetValue(dutyId, out var dutyRecord))
@@ -489,7 +493,7 @@ namespace DragoonMayCry.UI
             }
         }
 
-        private static string GetRecordDate(ushort dutyId, Dictionary<ushort, DutyRecord> difficultyRecord)
+        private static string GetRecordDate(uint dutyId, Dictionary<uint, DutyRecord> difficultyRecord)
         {
             return difficultyRecord.TryGetValue(dutyId, out var dutyRecord)
                        ? dutyRecord.Date.ToString(CultureInfo.CurrentCulture)
@@ -506,7 +510,7 @@ namespace DragoonMayCry.UI
             return new JobRecord();
         }
 
-        private Dictionary<ushort, DutyRecord> GetDutyRecordPerDifficulty(int column, JobRecord jobRecord)
+        private Dictionary<uint, DutyRecord> GetDutyRecordPerDifficulty(int column, JobRecord jobRecord)
         {
             if (column == 2)
             {
@@ -533,9 +537,9 @@ namespace DragoonMayCry.UI
             return string.Concat(name[0].ToString().ToUpper(), name.AsSpan(1));
         }
 
-        private struct DisplayedDuty(ushort id, TrackableDuty duty)
+        private struct DisplayedDuty(uint id, TrackableDuty duty)
         {
-            public readonly ushort DutyId = id;
+            public readonly uint DutyId = id;
             public readonly TrackableDuty Duty = duty;
         }
     }

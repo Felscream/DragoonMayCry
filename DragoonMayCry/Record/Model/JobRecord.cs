@@ -9,8 +9,8 @@ namespace DragoonMayCry.Record.Model
             Record = [];
             EmdRecord = [];
         }
-        public Dictionary<ushort, DutyRecord> Record { get; private set; }
-        public Dictionary<ushort, DutyRecord> EmdRecord { get; private set; }
+        public Dictionary<uint, DutyRecord> Record { get; private set; }
+        public Dictionary<uint, DutyRecord> EmdRecord { get; private set; }
 
         public void UpdateEmdRecord(ushort dutyId, DutyRecord dutyRecord)
         {
