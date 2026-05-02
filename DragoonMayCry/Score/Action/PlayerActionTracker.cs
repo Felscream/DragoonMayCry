@@ -241,9 +241,11 @@ namespace DragoonMayCry.Score.Action
                 return result;
             }
             
-            if (actionManagerL->isGCDRecastActive
+            if ((actionManagerL->isGCDRecastActive
                 || actionManagerL->animationLock > 0
                 || actionManagerL->isCasting)
+                && !tankLimitBreakDelays.ContainsKey(actionId))
+                
             {
                 return result;
             }
@@ -451,7 +453,7 @@ namespace DragoonMayCry.Score.Action
 
             var castTime = GetCastTime(actionId);
 
-            // the +8 is just to give leeway after the LB effect
+            // the +8 is just to give time to use a GCD after the LB effect
             var gracePeriod = isTankLb ? tankLimitBreakDelays[actionId] : castTime + 8f;
             limitBreakCast = new LimitBreak(gracePeriod, actionId);
             limitBreakStopwatch.Restart();

@@ -215,7 +215,6 @@ namespace DragoonMayCry.Score
 
         private void OnLimitBreakCast(object? sender, PlayerActionTracker.LimitBreakEvent e)
         {
-            Service.Log.Debug($"Limit break status {e.IsCasting}");
             isCastingLb = e.IsCasting;
             pointsDecayMultiplier = 1f;
         }
