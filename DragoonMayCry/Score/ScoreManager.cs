@@ -148,6 +148,10 @@ namespace DragoonMayCry.Score
 
         private void AddScore(object? sender, PlayerActionTracker.DamagePayload payload)
         {
+            if (isCastingLb)
+            {
+                return;
+            }
             pointsDecayMultiplier = 1f;
             var points = payload.Damage * CurrentScoreRank.StyleScoring.PointCoefficient * scoreMultiplier;
             if (AreGcdClippingRestrictionsActive())
@@ -211,6 +215,7 @@ namespace DragoonMayCry.Score
 
         private void OnLimitBreakCast(object? sender, PlayerActionTracker.LimitBreakEvent e)
         {
+            Service.Log.Debug($"Limit break status {e.IsCasting}");
             isCastingLb = e.IsCasting;
             pointsDecayMultiplier = 1f;
         }

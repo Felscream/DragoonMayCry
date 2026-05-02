@@ -15,6 +15,7 @@ using Lumina.Excel;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using Dalamud.Game.DutyState;
 using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
@@ -42,7 +43,7 @@ namespace DragoonMayCry.Score.Action
         private readonly Stopwatch limitBreakStopwatch;
         private readonly ExcelSheet<LuminaAction> luminaActionSheet;
 
-        private readonly Hook<ActionUsedDelegate>? onActionUsedHook;
+        private static Hook<ActionManager.Delegates.UseActionLocation> onActionUsedHook;
 
         private readonly Hook<CastCancelDelegate>? onCastCancelHook;
 
@@ -109,10 +110,9 @@ namespace DragoonMayCry.Score.Action
             Service.FlyText.FlyTextCreated += OnFlyText;
             try
             {
-                /*onActionUsedHook =
-                    Service.Hook.HookFromSignature<ActionUsedDelegate>(
-                        "40 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24",
-                        OnActionUsed);*/
+                onActionUsedHook =
+                    Service.GameInteropProvider.HookFromAddress<ActionManager.Delegates.UseActionLocation>(
+                        (nint)ActionManager.MemberFunctionPointers.UseActionLocation, OnActionUsed);
 
 
                 onCastCancelHook =
@@ -132,7 +132,7 @@ namespace DragoonMayCry.Score.Action
                 Service.Log.Error("Error initiating hooks: " + e.Message);
             }
 
-            //onActionUsedHook?.Enable();
+            onActionUsedHook?.Enable();
             onCastCancelHook?.Enable();
             onCastHook?.Enable();
             addToScreenLogWithLogMessageId?.Enable();
@@ -171,9 +171,8 @@ namespace DragoonMayCry.Score.Action
             {
                 return;
             }
-
-            if (dealer->EntityId != dmcPlayerState.Player.EntityId &&
-                dealer->CompanionOwnerId != dmcPlayerState.Player.EntityId)
+            
+            if (dealer->EntityId != dmcPlayerState.Player.EntityId && limitBreakCast != null)
             {
                 return;
             }
@@ -221,49 +220,48 @@ namespace DragoonMayCry.Score.Action
             }
         }
 
-        private void OnActionUsed(
-            uint sourceId, nint sourceCharacter, nint pos,
-            nint effectHeader,
-            nint effectArray, nint effectTrail)
+        private bool OnActionUsed(
+            ActionManager* thisPtr,
+            ActionType actionType,
+            uint actionId,
+            ulong targetId,
+            Vector3* location,
+            uint extraParam,
+            byte a7)
         {
-            onActionUsedHook?.Original(sourceId, sourceCharacter, pos,
-                                       effectHeader, effectArray, effectTrail);
-
-            if (!Plugin.CanRunDmc())
+            var result = onActionUsedHook.Original(thisPtr, actionType, actionId, targetId, location, extraParam, a7);
+            if (!Plugin.CanRunDmc() || !dmcPlayerState.CanTargetEnemy())
             {
-                return;
+                return result;
             }
-
-            var player = dmcPlayerState.Player;
-            if (player == null || sourceId != player.GameObjectId)
+            
+            if (actionManagerL->isGCDRecastActive
+                || actionManagerL->animationLock > 0
+                || actionManagerL->isCasting)
             {
-                return;
+                return result;
             }
-            if (!dmcPlayerState.CanTargetEnemy())
-            {
-                return;
-            }
-
-            var actionId = Marshal.ReadInt32(effectHeader, 0x8);
+            
             if (spellCastId == actionId)
             {
                 spellCastStopwatch.Reset();
                 spellCastId = uint.MaxValue;
             }
-
-            var type = TypeForActionId((uint)actionId);
+            
+            var type = TypeForActionId(actionId);
             if (type == PlayerActionType.LimitBreak)
             {
-                StartLimitBreakUse((uint)actionId);
+                StartLimitBreakUse(actionId);
             }
 
-            var bonusPoints = jobActionModule?.OnAction((uint)actionId);
+            var bonusPoints = jobActionModule?.OnAction(actionId);
             if (bonusPoints > 0)
             {
-
                 DamageActionUsed?.Invoke(this, new DamagePayload(bonusPoints.Value, FlyTextKind.None));
                 ResetLimitBreakUse();
             }
+            
+            return result;
         }
 
         private PlayerActionType TypeForActionId(uint actionId)
