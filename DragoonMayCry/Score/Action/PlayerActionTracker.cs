@@ -172,7 +172,14 @@ namespace DragoonMayCry.Score.Action
                 return;
             }
             
-            if (dealer->EntityId != dmcPlayerState.Player.EntityId && limitBreakCast != null)
+            // if the event is from another player or a pet that is not owned by the player, do nothing
+            if (dealer->EntityId != dmcPlayerState.Player.EntityId && dealer->OwnerId != dmcPlayerState.Player.EntityId)
+            {
+                return;
+            }
+
+            // if the event is from the player's pet while casting a LB, do nothing
+            if (dealer->OwnerId == dmcPlayerState.Player.EntityId && limitBreakCast != null && limitBreakCast.ActionId != (uint)actionId)
             {
                 return;
             }
@@ -184,7 +191,6 @@ namespace DragoonMayCry.Score.Action
                 {
                     LimitBreakEffect?.Invoke(this, EventArgs.Empty);
                 }
-
                 return;
             }
 
