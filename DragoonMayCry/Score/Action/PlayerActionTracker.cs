@@ -43,7 +43,7 @@ namespace DragoonMayCry.Score.Action
         private readonly Stopwatch limitBreakStopwatch;
         private readonly ExcelSheet<LuminaAction> luminaActionSheet;
 
-        private static Hook<ActionManager.Delegates.UseActionLocation> onActionUsedHook;
+        private readonly Hook<ActionManager.Delegates.UseActionLocation> onActionUsedHook;
 
         private readonly Hook<CastCancelDelegate>? onCastCancelHook;
 
