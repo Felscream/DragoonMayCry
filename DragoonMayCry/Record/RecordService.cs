@@ -14,6 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Dalamud.Game.DutyState;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 
 #endregion
 
@@ -202,10 +203,9 @@ namespace DragoonMayCry.Record
                    && Plugin.Configuration!.JobConfiguration[currentJob].DifficultyMode != DifficultyMode.Sprout;
         }
 
-        private bool IsInvalidEntry(FinalRank finalRank)
+        private unsafe bool IsInvalidEntry(FinalRank finalRank)
         {
-
-            var playerLevel = dmcPlayerState.Player != null ? dmcPlayerState.Player.Level : int.MaxValue;
+            var playerLevel = PlayerState.Instance()->CurrentLevel;
             return !ready
                    || !trackableDuties.ContainsKey(finalRank.InstanceId)
                    || !Plugin.IsEnabledForCurrentJob()
