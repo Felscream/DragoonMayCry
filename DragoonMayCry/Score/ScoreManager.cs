@@ -1,5 +1,8 @@
 #region
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using Dalamud.Game.Gui.FlyText;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Configuration;
@@ -10,9 +13,6 @@ using DragoonMayCry.Score.Rank;
 using DragoonMayCry.Score.ScoringTable;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using static DragoonMayCry.Score.Rank.StyleRankHandler;
 
 #endregion
@@ -31,6 +31,7 @@ namespace DragoonMayCry.Score
         private readonly Stopwatch pointsReductionStopwatch;
         private readonly StyleRankHandler rankHandler;
         private readonly ScoringTableFactory scoringTableFactory;
+        private readonly PlayerActionTracker playerActionTracker;
         private bool isCastingLb;
         private Dictionary<StyleType, StyleScoring> jobScoringTable;
 
@@ -57,11 +58,12 @@ namespace DragoonMayCry.Score
             rankHandler = styleRankHandler;
             rankHandler.StyleRankChange += OnRankChange!;
 
-            playerActionTracker.DamageActionUsed += AddScore;
-            playerActionTracker.GcdClip += OnGcdClip;
-            playerActionTracker.UsingLimitBreak += OnLimitBreakCast;
-            playerActionTracker.LimitBreakCanceled += OnLimitBreakCanceled;
-            playerActionTracker.GcdDropped += OnGcdDropped;
+            this.playerActionTracker = playerActionTracker;
+            this.playerActionTracker.DamageActionUsed += AddScore;
+            this.playerActionTracker.GcdClip += OnGcdClip;
+            this.playerActionTracker.UsingLimitBreak += OnLimitBreakCast;
+            this.playerActionTracker.LimitBreakCanceled += OnLimitBreakCanceled;
+            this.playerActionTracker.GcdDropped += OnGcdDropped;
 
             Service.Framework.Update += UpdateScore;
             Service.ClientState.Logout += ResetScore;
@@ -80,6 +82,16 @@ namespace DragoonMayCry.Score
         {
             Service.Framework.Update -= UpdateScore;
             Service.ClientState.Logout -= ResetScore;
+            playerActionTracker.DamageActionUsed -= AddScore;
+            playerActionTracker.GcdClip -= OnGcdClip;
+            playerActionTracker.UsingLimitBreak -= OnLimitBreakCast;
+            playerActionTracker.LimitBreakCanceled -= OnLimitBreakCanceled;
+            playerActionTracker.GcdDropped -= OnGcdDropped;
+            rankHandler.StyleRankChange -= OnRankChange!;
+            dmcPlayerState.UnregisterInstanceChangeHandler(OnInstanceChange!);
+            dmcPlayerState.UnregisterCombatStateChangeHandler(OnCombatChange!);
+            dmcPlayerState.UnregisterJobChangeHandler(OnJobChange);
+            dmcPlayerState.UnregisterDeathStateChangeHandler(OnDeath);
         }
 
         public void Reset()

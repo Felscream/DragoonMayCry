@@ -1,5 +1,7 @@
 #region
 
+using System;
+using System.Diagnostics;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using DragoonMayCry.Audio;
@@ -11,8 +13,6 @@ using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
 using KamiLib;
-using System;
-using System.Diagnostics;
 
 #endregion
 
@@ -87,9 +87,12 @@ namespace DragoonMayCry.UI
         public void Dispose()
         {
             styleRankUi.Dispose();
+            dmcPlayerState.UnregisterCombatStateChangeHandler(OnCombatChange!);
+            CharacterRecordWindow.Dispose();
             pluginInterface.UiBuilder.Draw -= DrawUi;
             pluginInterface.UiBuilder.OpenMainUi -= ToggleCharacterRecords;
             pluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUi;
+
             windowSystem.RemoveAllWindows();
         }
 

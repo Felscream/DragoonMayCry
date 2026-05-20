@@ -1,5 +1,11 @@
 #region
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Audio.StyleAnnouncer.Announcer;
@@ -8,19 +14,13 @@ using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using static DragoonMayCry.UI.JobConfigurationWindow;
 
 #endregion
 
 namespace DragoonMayCry.Audio.StyleAnnouncer
 {
-    public class StyleAnnouncerService
+    public class StyleAnnouncerService : IDisposable
     {
         private readonly List<IStyleAnnouncer> allAnnouncers;
         private readonly Queue<IStyleAnnouncer> announcerQueue;
@@ -33,6 +33,7 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
         private readonly IStyleAnnouncer nicoAnnouncer;
         private readonly Random random = new();
         private readonly StyleRankHandler rankHandler;
+        private readonly PlayerActionTracker playerActionTracker;
 
         private readonly float sfxCooldown = 1f;
         private readonly Dictionary<SoundId, int> soundIdsNextAvailability = new();
@@ -55,8 +56,9 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
 
             rankHandler = styleRankHandler;
             rankHandler.StyleRankChange += OnRankChange;
-            actionTracker.UsingLimitBreak += OnLimitBreak;
-            actionTracker.LimitBreakEffect += OnLimitBreakEffect;
+            playerActionTracker = actionTracker;
+            playerActionTracker.UsingLimitBreak += OnLimitBreak;
+            playerActionTracker.LimitBreakEffect += OnLimitBreakEffect;
 
             dmcAnnouncer = new DmCAnnouncer();
             dmc5Announcer = new DmC5Announcer();
@@ -72,7 +74,19 @@ namespace DragoonMayCry.Audio.StyleAnnouncer
             // to update the announcer if the user activates the plugin after character selection
             Service.Framework.Update += Initialize;
         }
-
+        
+        public void Dispose()
+        {
+            dmcPlayerState.UnregisterCombatStateChangeHandler(OnCombat);
+            dmcPlayerState.UnregisterJobChangeHandler(OnJobChange);
+            dmcPlayerState.UnregisterLoginStateChangeHandler(OnLogin);
+            dmcPlayerState.UnregisterInstanceChangeHandler(OnInstanceChange);
+            rankHandler.StyleRankChange -= OnRankChange;
+            playerActionTracker.UsingLimitBreak -= OnLimitBreak;
+            playerActionTracker.LimitBreakEffect -= OnLimitBreakEffect;
+            AssetsManager.AssetsReady -= OnAssetsReady;
+            Service.Framework.Update -= Initialize;
+        }
 
         private Queue<IStyleAnnouncer> CreateStyleAnnouncerQueue()
         {

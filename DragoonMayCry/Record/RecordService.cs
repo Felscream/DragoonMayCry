@@ -1,5 +1,11 @@
 #region
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using Dalamud.Game.DutyState;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Configuration;
@@ -7,20 +13,14 @@ using DragoonMayCry.Data;
 using DragoonMayCry.Record.Model;
 using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using Dalamud.Game.DutyState;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using Newtonsoft.Json;
 
 #endregion
 
 namespace DragoonMayCry.Record
 {
-    public class RecordService
+    public class RecordService : IDisposable
     {
 
         private const string TrackedDutiesResource = "DragoonMayCry.Data.TrackedDuties.json";
@@ -53,6 +53,13 @@ namespace DragoonMayCry.Record
             recordDirectoryPath = $"{pluginInterface.GetPluginConfigDirectory()}/records";
         }
         public Extension[] Extensions { get; private set; } = [];
+
+        public void Dispose()
+        {
+            dutyState.DutyStarted -= OnDutyStarted;
+            clientState.Login -= OnLogin;
+            finalRankCalculator.DutyCompletedFinalRank -= OnDutyCompletedFinalRank;
+        }
 
         public void Initialize()
         {

@@ -20,7 +20,6 @@ namespace DragoonMayCry.State.Tracker
             }
 
             var job = JobHelper.IdToJob(dmcPlayerState.Player.ClassJob.RowId);
-
             if (job != CurrentJob)
             {
                 CurrentJob = job;

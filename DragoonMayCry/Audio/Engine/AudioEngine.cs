@@ -79,7 +79,9 @@ namespace DragoonMayCry.Audio.Engine
         private void OnDefaultDeviceChanged()
         {
             bgmOutputDevice.Stop();
+            bgmOutputDevice.Dispose();
             sfxOutputDevice.Stop();
+            sfxOutputDevice.Dispose();
             bgmOutputDevice = new WasapiOut(deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console),
                                             AudioClientShareMode.Shared,
                                             true, 20);

@@ -1,17 +1,17 @@
 #region
 
+using System;
 using DragoonMayCry.Configuration;
 using DragoonMayCry.Score.Action;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
-using System;
 
 #endregion
 
 namespace DragoonMayCry.Score.Rank
 {
-    public class StyleRankHandler : IResettable
+    public class StyleRankHandler : IDisposable, IResettable
     {
 
         private static readonly DoubleLinkedList<StyleType> Styles = new(
@@ -25,6 +25,7 @@ namespace DragoonMayCry.Score.Rank
             StyleType.SSS);
 
         private readonly DmcPlayerState dmcPlayerState;
+        private readonly PlayerActionTracker playerActionTracker;
 
         public EventHandler<RankChangeData>? StyleRankChange;
 
@@ -35,13 +36,25 @@ namespace DragoonMayCry.Score.Rank
             dmcPlayerState.RegisterCombatStateChangeHandler(OnCombatChange!);
             dmcPlayerState.RegisterDeathStateChangeHandler(OnDeath);
             dmcPlayerState.RegisterDamageDownHandler(OnDamageDown);
-            playerActionTracker.GcdDropped += OnGcdDropped;
-            playerActionTracker.LimitBreakCanceled += OnLimitBreakCanceled;
-            playerActionTracker.UsingLimitBreak += OnLimitBreak;
-            playerActionTracker.LimitBreakEffect += OnLimitBreakEffect;
+            this.playerActionTracker = playerActionTracker;
+            this.playerActionTracker.GcdDropped += OnGcdDropped;
+            this.playerActionTracker.LimitBreakCanceled += OnLimitBreakCanceled;
+            this.playerActionTracker.UsingLimitBreak += OnLimitBreak;
+            this.playerActionTracker.LimitBreakEffect += OnLimitBreakEffect;
             CurrentStyle = Styles.Head!;
         }
         public DoubleLinkedNode<StyleType> CurrentStyle { get; private set; }
+
+        public void Dispose()
+        {
+            dmcPlayerState.UnregisterCombatStateChangeHandler(OnCombatChange!);
+            dmcPlayerState.UnregisterDeathStateChangeHandler(OnDeath);
+            dmcPlayerState.UnregisterDamageDownHandler(OnDamageDown);
+            playerActionTracker.GcdDropped -= OnGcdDropped;
+            playerActionTracker.LimitBreakCanceled -= OnLimitBreakCanceled;
+            playerActionTracker.UsingLimitBreak -= OnLimitBreak;
+            playerActionTracker.LimitBreakEffect -= OnLimitBreakEffect;
+        }
 
         public void Reset()
         {

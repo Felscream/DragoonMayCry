@@ -1,5 +1,7 @@
 #region
 
+using System;
+using System.Linq;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Plugin.Services;
@@ -9,11 +11,7 @@ using DragoonMayCry.Util;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
-using FFXIVClientStructs.FFXIV.Client.UI;
-using System;
-using System.Linq;
 using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
-using CSFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 using DalamudGameObject = Dalamud.Game.ClientState.Objects.Types.IGameObject;
 using ObjectKind = Dalamud.Game.ClientState.Objects.Enums.ObjectKind;
 
@@ -71,9 +69,6 @@ namespace DragoonMayCry.State
         public bool IsLoggedIn => Player != null;
         public IPlayerCharacter? Player => Service.ObjectTable.LocalPlayer;
         private ICondition Condition => Service.Condition;
-
-        private static RaptureAtkModule* RaptureAtkModule =>
-            CSFramework.Instance()->GetUIModule()->GetRaptureAtkModule();
 
         public void Dispose()
         {
@@ -133,9 +128,19 @@ namespace DragoonMayCry.State
             inCombatStateTracker.OnChange += inCombatHandler;
         }
 
+        public void UnregisterCombatStateChangeHandler(EventHandler<bool> inCombatHandler)
+        {
+            inCombatStateTracker.OnChange -= inCombatHandler;
+        }
+
         public void RegisterDeathStateChangeHandler(EventHandler<bool> onDeathHandler)
         {
             onDeathStateTracker.OnChange += onDeathHandler;
+        }
+
+        public void UnregisterDeathStateChangeHandler(EventHandler<bool> onDeathHandler)
+        {
+            onDeathStateTracker.OnChange -= onDeathHandler;
         }
 
         public void RegisterInstanceChangeHandler(EventHandler<bool> onEnteringInstanceHandler)
@@ -143,9 +148,19 @@ namespace DragoonMayCry.State
             onEnteringInstanceStateTracker.OnChange += onEnteringInstanceHandler;
         }
 
+        public void UnregisterInstanceChangeHandler(EventHandler<bool> onEnteringInstanceHandler)
+        {
+            onEnteringInstanceStateTracker.OnChange -= onEnteringInstanceHandler;
+        }
+
         public void RegisterLoginStateChangeHandler(EventHandler<bool> onLoginStateChange)
         {
             loginStateTracker.OnChange += onLoginStateChange;
+        }
+
+        public void UnregisterLoginStateChangeHandler(EventHandler<bool> onLoginStateChange)
+        {
+            loginStateTracker.OnChange -= onLoginStateChange;
         }
 
         public void RegisterJobChangeHandler(EventHandler<JobId> onJobChange)
@@ -153,14 +168,29 @@ namespace DragoonMayCry.State
             jobChangeTracker.OnChange += onJobChange;
         }
 
-        public void RegisterDamageDownHandler(EventHandler<bool> onDamageDown)
+        public void UnregisterJobChangeHandler(EventHandler<JobId> onJobChange)
         {
+            jobChangeTracker.OnChange -= onJobChange;
+        }
+
+        public void RegisterDamageDownHandler(EventHandler<bool> onDamageDown) {
             debuffTracker.OnChange += onDamageDown;
+        }
+
+
+        public void UnregisterDamageDownHandler(EventHandler<bool> onDamageDown)
+        {
+            debuffTracker.OnChange -= onDamageDown;
         }
 
         public void RegisterPvpStateChangeHandler(EventHandler<bool> onPvpStateChange)
         {
             pvpStateTracker.OnChange += onPvpStateChange;
+        }
+
+        public void UnregisterPvpStateChangeHandler(EventHandler<bool> onPvpStateChange)
+        {
+            pvpStateTracker.OnChange -= onPvpStateChange;
         }
 
         public JobId GetCurrentJob()
@@ -214,13 +244,22 @@ namespace DragoonMayCry.State
             if (player == null)
                 return false;
 
-            var targets = Service.ObjectTable.Where(o =>
-                                                        ObjectKind.BattleNpc.Equals(o.ObjectKind)
-                                                        && !o.Equals(Player)
-                                                        && CanAttack(o)
-                                                        && IsKillable(o)
-            ).ToArray();
-            return targets.Length > 0;
+            for(int i = 0; i < Service.ObjectTable.Length; i++){
+                var o = Service.ObjectTable[i];
+                if (o == null)
+                    continue;
+                if (o.ObjectKind != ObjectKind.BattleNpc)
+                    continue;
+                if (o.Equals(Player))
+                    continue;
+                if (!CanAttack(o))
+                    continue;
+                if (!IsKillable(o))
+                    continue;
+                return true;
+            }
+
+            return false;
         }
 
         private static bool IsKillable(DalamudGameObject o)

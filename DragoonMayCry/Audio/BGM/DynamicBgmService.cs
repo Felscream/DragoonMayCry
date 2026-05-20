@@ -114,6 +114,11 @@ namespace DragoonMayCry.Audio.BGM
         public void Dispose()
         {
             bgmFsm.Dispose();
+            dmcPlayerState.UnregisterInstanceChangeHandler(OnInstanceChange);
+            dmcPlayerState.UnregisterJobChangeHandler(OnJobChange);
+            dmcPlayerState.UnregisterPvpStateChangeHandler(OnPvpStateChange);
+            dmcPlayerState.UnregisterDeathStateChangeHandler(OnDeath);
+            AssetsManager.AssetsReady -= OnAssetsAvailable;
         }
 
         public DynamicBgmFsm GetFsm()

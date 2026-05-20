@@ -119,12 +119,17 @@ namespace DragoonMayCry
 
         public void Dispose()
         {
+            StyleRankHandler?.Dispose();
+            FinalRankCalculator?.Dispose();
+            RecordService?.Dispose();
+            StyleAnnouncerService?.Dispose();
             DynamicBgmService?.Dispose();
             AudioService?.Dispose();
             KamiCommon.Dispose();
             ScoreProgressBar?.Dispose();
             PlayerActionTracker?.Dispose();
             ScoreManager?.Dispose();
+            DmcPlayerState?.UnregisterJobChangeHandler(OnJobChange);
             DmcPlayerState?.Dispose();
             pluginUi?.Dispose();
             Service.CommandManager.RemoveHandler(CommandName);

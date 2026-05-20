@@ -47,6 +47,7 @@ namespace DragoonMayCry.Audio
 
         public void Dispose()
         {
+            Service.GameConfig.SystemChanged -= OnSystemChange;
             audioEngine.Dispose();
         }
 

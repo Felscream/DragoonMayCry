@@ -58,6 +58,11 @@ namespace DragoonMayCry.Score
         public void Dispose()
         {
             Service.Framework.Update -= UpdateScoreInterpolation;
+            this.scoreManager.StyleScoringChange -= OnStyleScoringChange;
+            this.styleRankHandler.StyleRankChange -= OnRankChange;
+            this.playerActionTracker.UsingLimitBreak -= OnLimitBreakCast;
+            this.playerActionTracker.LimitBreakCanceled -= OnLimitBreakCanceled;
+            dmcPlayerState.UnregisterCombatStateChangeHandler(OnCombat);
         }
 
         public void Reset()

@@ -60,6 +60,8 @@ namespace DragoonMayCry.Audio.BGM.FSM
         {
             audioService.StopBgm();
             framework.Update -= Update;
+            styleRankHandler.StyleRankChange -= OnRankChange;
+            dmcPlayerState.UnregisterCombatStateChangeHandler(OnCombatChange);
         }
 
         public void Start()

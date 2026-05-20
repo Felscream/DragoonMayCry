@@ -122,6 +122,14 @@ namespace DragoonMayCry.UI
         public void Dispose()
         {
             fonts.Dispose();
+
+            styleRankHandler.StyleRankChange -= OnRankChange!;
+            scoreManager.Scoring -= OnScoring!;
+            finalRankCalculator.FinalRankCalculated -= OnFinalRankCalculated!;
+            dmcPlayerState.UnregisterCombatStateChangeHandler(OnCombatChange!);
+            playerActionTracker.ActionFlyTextCreated -= OnActionFlyTextCreated!;
+            scoreProgressBar.DemotionCanceled -= OnDemotionCanceled;
+            scoreProgressBar.DemotionStart -= OnDemotionStarted;
         }
 
         public void Draw()

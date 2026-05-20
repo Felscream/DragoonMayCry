@@ -1,5 +1,11 @@
 #region
 
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Numerics;
+using System.Reflection;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
@@ -14,12 +20,6 @@ using DragoonMayCry.State;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Numerics;
-using System.Reflection;
 
 #endregion
 
@@ -98,6 +98,13 @@ namespace DragoonMayCry.UI
                     selectedJob = job;
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            dmcPlayerState.UnregisterJobChangeHandler(OnJobChange);
+            clientState.Login -= OnLogin;
+            recordService.CharacterRecordsChanged -= OnCharacterRecordChanged;
         }
 
         public override void Draw()

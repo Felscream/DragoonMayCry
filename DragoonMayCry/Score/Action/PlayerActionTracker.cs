@@ -147,7 +147,13 @@ namespace DragoonMayCry.Score.Action
         public void Dispose()
         {
             Service.Framework.Update -= Update;
+            Service.FlyText.FlyTextCreated -= OnFlyText;
             dutyState.DutyCompleted -= OnDutyCompleted;
+
+            dmcPlayerState.UnregisterCombatStateChangeHandler(OnCombat);
+            dmcPlayerState.UnregisterDeathStateChangeHandler(OnDeath);
+            dmcPlayerState.UnregisterDamageDownHandler(OnFailedMechanic);
+            dmcPlayerState.UnregisterJobChangeHandler(OnJobChanged);
 
             onActionUsedHook?.Disable();
             onActionUsedHook?.Dispose();

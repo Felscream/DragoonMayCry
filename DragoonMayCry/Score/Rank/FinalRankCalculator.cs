@@ -11,7 +11,7 @@ using System.Diagnostics;
 
 namespace DragoonMayCry.Score.Rank
 {
-    public class FinalRankCalculator : IResettable
+    public class FinalRankCalculator : IDisposable, IResettable
     {
         private readonly Stopwatch combatTimer;
         private readonly DmcPlayerState dmcPlayerState;
@@ -29,6 +29,13 @@ namespace DragoonMayCry.Score.Rank
             this.dmcPlayerState.RegisterCombatStateChangeHandler(OnCombat);
         }
         public FinalRank FinalRank { get; private set; }
+
+        public void Dispose()
+        {
+            playerActionTracker.TotalCombatWastedGcd -= OnTotalCombatWastedGcd;
+            playerActionTracker.DutyCompletedWastedGcd -= OnDutyCompletedWastedGcd;
+            dmcPlayerState.UnregisterCombatStateChangeHandler(OnCombat);
+        }
 
         public void Reset()
         {
