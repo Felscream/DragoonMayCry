@@ -66,6 +66,12 @@ namespace DragoonMayCry.Data
             4471, // M5 in the spotlight
         ];
 
+        public static readonly HashSet<uint> DancingMadIds =
+        [
+            1283,
+            4894
+        ];
+
         public static bool IsIncapacitatingDebuff(uint debuffId)
         {
             return ToadIds.Contains(debuffId)
@@ -74,7 +80,8 @@ namespace DragoonMayCry.Data
                    || OutOfTheActionIds.Contains(debuffId)
                    || ForcedMarchIds.Contains(debuffId)
                    || PyreticIds.Contains(debuffId)
-                   || StopAndStunsIds.Contains(debuffId);
+                   || StopAndStunsIds.Contains(debuffId)
+                   || DancingMadIds.Contains(debuffId);
         }
     }
 }

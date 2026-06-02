@@ -451,6 +451,13 @@
                 "Subcategory": "Main story quest",
                 "IconId": 112660
             },
+            "1363": {
+                "Name": "Dancing Mad (Ultimate)",
+                "LvlSync": 100,
+                "Difficulty": 1,
+                "Category": 2,
+                "IconId": 112658
+            },
             "1372": {
                 "Name": "Shinryu's Domain (Unreal)",
                 "LvlSync": 100,
