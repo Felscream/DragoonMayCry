@@ -222,18 +222,21 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
         private void OnDutyWiped(IDutyStateEventArgs instance)
         {
+            if(!IsActive) return;
             if (Plugin.Configuration!.DisableEndOfCombatTrigger && Plugin.Configuration.BgmTransitionAfterWipe)
                 LeaveCombat();
         }
 
         private void OnDutyCompleted(IDutyStateEventArgs instance)
         {
+            if(!IsActive) return;
             if (Plugin.Configuration!.DisableEndOfCombatTrigger) LeaveCombat();
         }
         
 
         public void OnRankChange(object? sender, StyleRankHandler.RankChangeData rankChangeData)
         {
+            if(!IsActive) return;
             if (rankChangeData.NewRank >= StyleType.S && currentState?.Id == BgmState.CombatLoop
                                                       && candidateState?.Id != BgmState.CombatPeak)
             {
