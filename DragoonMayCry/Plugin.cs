@@ -1,5 +1,9 @@
 #region
 
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -20,10 +24,6 @@ using DragoonMayCry.UI;
 using DragoonMayCry.Util;
 using KamiLib;
 using Newtonsoft.Json;
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 #endregion

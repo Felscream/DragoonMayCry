@@ -1,5 +1,9 @@
 #region
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Components;
 using DragoonMayCry.Audio.BGM;
@@ -10,10 +14,6 @@ using DragoonMayCry.State;
 using KamiLib;
 using KamiLib.Drawing;
 using KamiLib.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
 
 #endregion
 

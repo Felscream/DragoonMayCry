@@ -44,6 +44,8 @@ namespace DragoonMayCry.Configuration
         public Setting<bool> ApplyGameVolumeSfx = new(true);
         public Setting<int> BgmVolume = new(80);
         public Setting<bool> DisableAnnouncerBlunder = new(false);
+
+        [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public Setting<ISet<uint>> DynamicBgmBlacklistDuties = new(new SortedSet<uint>());
         public Setting<bool> EnabledFinalRankChatLogging = new(true);
         public Setting<bool> EnableDynamicBgm = new(false);

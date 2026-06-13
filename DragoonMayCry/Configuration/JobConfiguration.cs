@@ -5,6 +5,7 @@ using DragoonMayCry.Audio.StyleAnnouncer;
 using KamiLib.Configuration;
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 #endregion
 
@@ -25,6 +26,7 @@ namespace DragoonMayCry.Configuration
 
         public Setting<AnnouncerType> Announcer = new(AnnouncerType.DmC5);
         public Setting<BgmConfiguration> Bgm = new(BgmConfiguration.Off);
+        [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public Setting<HashSet<long>> BgmRandomSelection = new([
             BgmKeys.BuryTheLight, BgmKeys.CrimsonCloud, BgmKeys.DevilTrigger, BgmKeys.Subhuman,
         ]);
