@@ -103,9 +103,9 @@ namespace DragoonMayCry.Record
             return extensions.ToList().SelectMany(extension => extension.Instances).ToDictionary();
         }
 
-        private void OnDutyStarted(IDutyStateEventArgs dutyState)
+        private void OnDutyStarted(IDutyStateEventArgs duty)
         {
-            if (!trackableDuties.ContainsKey(dutyState.TerritoryType.RowId) || !Plugin.IsEnabledForCurrentJob())
+            if (!trackableDuties.ContainsKey(duty.TerritoryType.RowId) || !Plugin.IsEnabledForCurrentJob())
             {
                 return;
             }

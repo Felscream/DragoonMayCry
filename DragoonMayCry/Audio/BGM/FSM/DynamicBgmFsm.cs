@@ -1,14 +1,15 @@
 #region
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using Dalamud.Game.DutyState;
 using Dalamud.Plugin.Services;
 using DragoonMayCry.Audio.BGM.FSM.States;
 using DragoonMayCry.Score.Model;
 using DragoonMayCry.Score.Rank;
 using DragoonMayCry.State;
 using DragoonMayCry.Util;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 
 #endregion
 
@@ -23,10 +24,10 @@ namespace DragoonMayCry.Audio.BGM.FSM
 
         private readonly DmcPlayerState dmcPlayerState;
 
-
         private readonly IFramework framework;
         private readonly Stopwatch stateTransitionStopwatch;
         private readonly StyleRankHandler styleRankHandler;
+        private readonly IDutyState dutyState;
         private IFsmState? candidateState;
 
 
@@ -46,6 +47,9 @@ namespace DragoonMayCry.Audio.BGM.FSM
             dmcPlayerState.RegisterCombatStateChangeHandler(OnCombatChange);
             framework = Service.Framework;
             audioService = AudioService.Instance;
+            dutyState = Service.DutyState;
+            dutyState.DutyWiped += OnDutyWiped;
+            dutyState.DutyCompleted += OnDutyCompleted;
             stateTransitionStopwatch = new Stopwatch();
 
             bgmStates = new DoubleLinkedList<BgmState>(BgmState.Intro, BgmState.CombatLoop, BgmState.CombatPeak);
@@ -61,6 +65,8 @@ namespace DragoonMayCry.Audio.BGM.FSM
             audioService.StopBgm();
             framework.Update -= Update;
             styleRankHandler.StyleRankChange -= OnRankChange;
+            dutyState.DutyWiped -= OnDutyWiped;
+            dutyState.DutyCompleted -= OnDutyCompleted;
             dmcPlayerState.UnregisterCombatStateChangeHandler(OnCombatChange);
         }
 
@@ -77,7 +83,7 @@ namespace DragoonMayCry.Audio.BGM.FSM
             currentState?.Enter(false);
         }
 
-        private void Update(IFramework framework)
+        private void Update(IFramework f)
         {
             if (!IsActive)
             {
@@ -200,16 +206,31 @@ namespace DragoonMayCry.Audio.BGM.FSM
             {
                 return;
             }
-
+            
             if (isInCombat && currentState?.Id == BgmState.Intro)
             {
                 Promote();
             }
-            else
+            else if (!isInCombat)
             {
-                LeaveCombat();
+                if (Plugin.Configuration!.DisableEndOfCombatTrigger)
+                    Demote();
+                else
+                    LeaveCombat();
             }
         }
+
+        private void OnDutyWiped(IDutyStateEventArgs instance)
+        {
+            if (Plugin.Configuration!.DisableEndOfCombatTrigger && Plugin.Configuration.BgmTransitionAfterWipe)
+                LeaveCombat();
+        }
+
+        private void OnDutyCompleted(IDutyStateEventArgs instance)
+        {
+            if (Plugin.Configuration!.DisableEndOfCombatTrigger) LeaveCombat();
+        }
+        
 
         public void OnRankChange(object? sender, StyleRankHandler.RankChangeData rankChangeData)
         {

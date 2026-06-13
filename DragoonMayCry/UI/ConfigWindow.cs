@@ -1,5 +1,7 @@
 #region
 
+using System;
+using System.Numerics;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
@@ -10,8 +12,6 @@ using DragoonMayCry.Score.Model;
 using KamiLib;
 using KamiLib.Configuration;
 using KamiLib.Drawing;
-using System;
-using System.Numerics;
 
 #endregion
 
@@ -175,6 +175,25 @@ namespace DragoonMayCry.UI
                    .AddAction(() =>
                    {
                        var cursorPosition = ImGui.GetCursorPos();
+                       if (ImGui.Checkbox("##DisableEndCombatTrigger",
+                                          ref configuration.DisableEndOfCombatTrigger.Value))
+                           KamiCommon.SaveConfiguration();
+
+                       AddLabel("Disable end of combat detection", cursorPosition);
+                   })
+                   .BeginDisabled(!configuration.DisableEndOfCombatTrigger)
+                   .AddAction(() =>
+                   {
+                       var cursorPosition = ImGui.GetCursorPos();
+                       if (ImGui.Checkbox("##BgmTransitionAfterWipe", ref configuration.BgmTransitionAfterWipe.Value))
+                           KamiCommon.SaveConfiguration();
+
+                       AddLabel("Play next song after a wipe", cursorPosition);
+                   })
+                   .EndDisabled()
+                   .AddAction(() =>
+                   {
+                       var cursorPosition = ImGui.GetCursorPos();
                        if (ImGui.Checkbox("##BgmGameVolume", ref configuration.ApplyGameVolumeBgm.Value))
                        {
                            KamiCommon.SaveConfiguration();
@@ -230,7 +249,7 @@ namespace DragoonMayCry.UI
             var spacing = ImGui.GetStyle().ItemSpacing;
             cursorPosition += spacing;
             ImGui.SetCursorPos(cursorPosition with { X = cursorPosition.X + 27.0f * ImGuiHelpers.GlobalScale });
-
+            
             ImGui.TextUnformatted(label);
         }
     }

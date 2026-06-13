@@ -1,11 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
 using Dalamud.Configuration;
 using DragoonMayCry.Audio.StyleAnnouncer;
 using DragoonMayCry.Data;
 using KamiLib.Configuration;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
 
 namespace DragoonMayCry.Configuration
 {
@@ -47,6 +47,8 @@ namespace DragoonMayCry.Configuration
         public Setting<ISet<uint>> DynamicBgmBlacklistDuties = new(new SortedSet<uint>());
         public Setting<bool> EnabledFinalRankChatLogging = new(true);
         public Setting<bool> EnableDynamicBgm = new(false);
+        public Setting<bool> DisableEndOfCombatTrigger = new(false);
+        public Setting<bool> BgmTransitionAfterWipe = new(false);
         public Setting<bool> EnableHitCounter = new(true);
         public Setting<bool> EnableMuffledEffectOnDeath = new(false);
         public Setting<bool> EnableProgressGauge = new(true);
