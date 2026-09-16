@@ -6,7 +6,7 @@
     "ApplicableVersion": "any",
     "LoadPriority": 0,
     "InternalName": "DragoonMayCry",
-    "AssemblyVersion": "1.4.0.2",
+    "AssemblyVersion": "1.4.0.3",
     "RepoUrl": "https://github.com/Felscream/DragoonMayCry",
     "Tags": [
         "dmc",

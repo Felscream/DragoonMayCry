@@ -1,6 +1,12 @@
 #region
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Numerics;
+using System.Runtime.InteropServices;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Game.DutyState;
 using Dalamud.Game.Gui.FlyText;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
@@ -12,12 +18,6 @@ using DragoonMayCry.Util;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using Lumina.Excel;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Numerics;
-using System.Runtime.InteropServices;
-using Dalamud.Game.DutyState;
 using ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager;
 using LuminaAction = Lumina.Excel.Sheets.Action;
 
@@ -28,7 +28,7 @@ namespace DragoonMayCry.Score.Action
     public unsafe class PlayerActionTracker : IDisposable
     {
         public delegate void AddToScreenLogWithLogMessageId(
-            BattleChara* target, BattleChara* dealer, int a3, char a4, int castId, int a6, int a7, int a8);
+            BattleChara* target, BattleChara* dealer, int a3, byte a4, int castId, int a6, int a7, int a8);
 
         private const float DefaultGcdDropThreshold = 0.2f;
         private const int MaxActionHistorySize = 6;
@@ -169,7 +169,7 @@ namespace DragoonMayCry.Score.Action
         }
 
         private void OnLogMessage(
-            BattleChara* target, BattleChara* dealer, int hitType, char a4, int actionId, int damage, int a7, int a8)
+            BattleChara* target, BattleChara* dealer, int hitType, byte a4, int actionId, int damage, int a7, int a8)
         {
             addToScreenLogWithLogMessageId?.Original(target, dealer, hitType, a4, actionId, damage, a7, a8);
 
