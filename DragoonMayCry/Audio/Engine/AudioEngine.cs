@@ -16,24 +16,17 @@ namespace DragoonMayCry.Audio.Engine
         private readonly ConcurrentDictionary<SoundId, CachedSound> announcerSfx;
         private readonly MixingSampleProvider bgmMixer;
         private readonly VolumeSampleProvider bgmSampleProvider;
-        private readonly MMDeviceEnumerator deviceEnumerator;
-        private readonly DeviceNotificationClient notificationClient;
+
         private readonly MixingSampleProvider sfxMixer;
         private readonly VolumeSampleProvider sfxSampleProvider;
-        private WasapiOut bgmOutputDevice;
+        private IWavePlayer bgmOutputDevice;
         private ConcurrentDictionary<string, CachedSound> bgmStems;
-        private ISampleProvider lastBgmSampleApplied;
-        private WasapiOut sfxOutputDevice;
+        private IWavePlayer sfxOutputDevice;
 
         public AudioEngine()
         {
-            deviceEnumerator = new MMDeviceEnumerator();
-            sfxOutputDevice = new WasapiOut(deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console),
-                                            AudioClientShareMode.Shared,
-                                            true, 200);
-            bgmOutputDevice = new WasapiOut(deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console),
-                                            AudioClientShareMode.Shared,
-                                            true, 20);
+            sfxOutputDevice = new WaveOutEvent { DesiredLatency = 200 };
+            bgmOutputDevice = new WaveOutEvent { DesiredLatency = 200 };
 
             announcerSfx = new ConcurrentDictionary<SoundId, CachedSound>();
             bgmStems = new ConcurrentDictionary<string, CachedSound>();
@@ -57,14 +50,9 @@ namespace DragoonMayCry.Audio.Engine
 
             sfxOutputDevice.Play();
             bgmOutputDevice.Play();
-
-
-            notificationClient = new DeviceNotificationClient();
-            notificationClient.DefaultOutputDeviceChanged += OnDefaultDeviceChanged;
-            deviceEnumerator.RegisterEndpointNotificationCallback(notificationClient);
-
-            lastBgmSampleApplied = bgmSampleProvider;
         }
+
+
 
         public void Dispose()
         {
@@ -72,27 +60,9 @@ namespace DragoonMayCry.Audio.Engine
             bgmMixer.RemoveAllMixerInputs();
             sfxOutputDevice.Dispose();
             bgmOutputDevice.Dispose();
-            deviceEnumerator.UnregisterEndpointNotificationCallback(notificationClient);
-            deviceEnumerator.Dispose();
         }
 
-        private void OnDefaultDeviceChanged()
-        {
-            bgmOutputDevice.Stop();
-            bgmOutputDevice.Dispose();
-            sfxOutputDevice.Stop();
-            sfxOutputDevice.Dispose();
-            bgmOutputDevice = new WasapiOut(deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console),
-                                            AudioClientShareMode.Shared,
-                                            true, 20);
-            sfxOutputDevice = new WasapiOut(deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console),
-                                            AudioClientShareMode.Shared,
-                                            true, 200);
-            bgmOutputDevice.Init(lastBgmSampleApplied);
-            sfxOutputDevice.Init(sfxSampleProvider);
-            bgmOutputDevice.Play();
-            sfxOutputDevice.Play();
-        }
+
 
         public void UpdateSfxVolume(float value)
         {
@@ -214,12 +184,9 @@ namespace DragoonMayCry.Audio.Engine
             var deathEffect = new DeathEffect(bgmSampleProvider, 500, 200, 0.35f);
             bgmOutputDevice.Stop();
             bgmOutputDevice.Dispose();
-            bgmOutputDevice = new WasapiOut(deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console),
-                                            AudioClientShareMode.Shared,
-                                            true, 20);
+            bgmOutputDevice = new WaveOutEvent { DesiredLatency = 200 };
             bgmOutputDevice.Init(deathEffect);
             bgmOutputDevice.Play();
-            lastBgmSampleApplied = deathEffect;
         }
 
         [Conditional("DEBUG")]
@@ -228,24 +195,18 @@ namespace DragoonMayCry.Audio.Engine
             var deathEffect = new DeathEffect(bgmSampleProvider, 500, 200, value);
             bgmOutputDevice.Stop();
             bgmOutputDevice.Dispose();
-            bgmOutputDevice = new WasapiOut(deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console),
-                                            AudioClientShareMode.Shared,
-                                            true, 20);
+            bgmOutputDevice = new WaveOutEvent { DesiredLatency = 200 };
             bgmOutputDevice.Init(deathEffect);
             bgmOutputDevice.Play();
-            lastBgmSampleApplied = deathEffect;
         }
 
         public void RemoveDeathEffect()
         {
             bgmOutputDevice.Stop();
             bgmOutputDevice.Dispose();
-            bgmOutputDevice = new WasapiOut(deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console),
-                                            AudioClientShareMode.Shared,
-                                            true, 20);
+            bgmOutputDevice = new WaveOutEvent { DesiredLatency = 200 };
             bgmOutputDevice.Init(bgmSampleProvider);
             bgmOutputDevice.Play();
-            lastBgmSampleApplied = bgmSampleProvider;
         }
 
         public void RemoveInput(ISampleProvider sample)
@@ -290,26 +251,6 @@ namespace DragoonMayCry.Audio.Engine
                     bgmMixer.RemoveMixerInput(input);
                 }
             }
-        }
-
-        private class DeviceNotificationClient : IMMNotificationClient
-        {
-            public delegate void DefaultDeviceChanged();
-
-            public DefaultDeviceChanged? DefaultOutputDeviceChanged;
-
-            public void OnDeviceStateChanged(string deviceId, DeviceState newState) { }
-
-            public void OnDeviceAdded(string pwstrDeviceId) { }
-
-            public void OnDeviceRemoved(string deviceId) { }
-
-            public void OnDefaultDeviceChanged(DataFlow flow, Role role, string defaultDeviceId)
-            {
-                DefaultOutputDeviceChanged?.Invoke();
-            }
-
-            public void OnPropertyValueChanged(string pwstrDeviceId, PropertyKey key) { }
         }
     }
 }
