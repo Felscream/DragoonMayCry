@@ -28,7 +28,7 @@ namespace DragoonMayCry.Score.Action
     public unsafe class PlayerActionTracker : IDisposable
     {
         public delegate void AddToScreenLogWithLogMessageId(
-            BattleChara* target, BattleChara* dealer, int a3, byte a4, int castId, int a6, int a7, int a8);
+            BattleChara* target, BattleChara* dealer, int a3, byte a4, uint castId, int a6, int a7, int a8);
 
         private const float DefaultGcdDropThreshold = 0.2f;
         private const int MaxActionHistorySize = 6;
@@ -169,7 +169,7 @@ namespace DragoonMayCry.Score.Action
         }
 
         private void OnLogMessage(
-            BattleChara* target, BattleChara* dealer, int hitType, byte a4, int actionId, int damage, int a7, int a8)
+            BattleChara* target, BattleChara* dealer, int hitType, byte a4, uint actionId, int damage, int a7, int a8)
         {
             addToScreenLogWithLogMessageId?.Original(target, dealer, hitType, a4, actionId, damage, a7, a8);
 
