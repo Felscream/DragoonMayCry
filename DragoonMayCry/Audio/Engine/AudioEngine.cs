@@ -73,9 +73,16 @@ namespace DragoonMayCry.Audio.Engine
         {
             if (deviceEnumerator != null)
             {
-                return new WasapiOut(deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console),
+                try
+                {
+                    return new WasapiOut(deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console),
                                      AudioClientShareMode.Shared,
                                      true, 200);
+                } catch (Exception e)
+                {
+                    Service.Log.Error(e, "Failed to create WasapiOut for SFX. Falling back to WaveOutEvent.");
+                }
+                
             }
             return new WaveOutEvent { DesiredLatency = 200 };
         }
@@ -84,9 +91,16 @@ namespace DragoonMayCry.Audio.Engine
         {
             if (deviceEnumerator != null)
             {
-                return new WasapiOut(deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console),
+                try
+                {
+                    return new WasapiOut(deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Console),
                                      AudioClientShareMode.Shared,
                                      true, 20);
+                }
+                catch (Exception e)
+                {
+                    Service.Log.Error(e, "Failed to create WasapiOut for BGM. Falling back to WaveOutEvent.");
+                }
             }
             return new WaveOutEvent { DesiredLatency = 150 };
         }
